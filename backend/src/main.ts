@@ -6,9 +6,11 @@ import * as admin from 'firebase-admin';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
+console.log("ue42FM0pORPEeNGw:", process.env.MONGODB_URI);
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   const serviceAccount = JSON.parse(
     readFileSync(join(process.cwd(), 'firebase-admin.json'), 'utf8'),
   );
@@ -37,7 +39,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .build();
-    
+
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 

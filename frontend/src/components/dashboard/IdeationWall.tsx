@@ -137,6 +137,7 @@ const IdeationWall = () => {
   const [formChallenge, setFormChallenge] = useState<any>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileError, setProfileError] = useState('');
+  if (profileError) console.debug('[Pista8] Error de perfil:', profileError);
   const [formSaving, setFormSaving] = useState(false);
   const [savingAction, setSavingAction] = useState<'draft' | 'public' | null>(null);
   const [formFeedback, setFormFeedback] = useState<FeedbackMessage | null>(null);
@@ -162,7 +163,6 @@ const IdeationWall = () => {
   const firstName = user?.displayName?.split(' ')[0] || 'Innovador';
   const fullName = user?.displayName?.trim() || user?.email || 'Guest';
   const isGuest = !user;
-  const profileStatusText = profileError || (profile ? `ID interno: ${profile._id}` : 'Sincronizando perfil...');
   const consentItems: Array<{ key: ConsentKey; title: string; desc: string }> = [
     { key: 'terms', title: 'Aceptación de términos', desc: 'Acepto las políticas del programa y la guía de participación institucional.' },
     { key: 'usage', title: 'Autorización de uso de la idea', desc: 'Autorizo a la universidad a compartir y prototipar esta propuesta dando el crédito correspondiente.' },
