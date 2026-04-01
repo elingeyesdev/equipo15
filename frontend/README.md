@@ -5,28 +5,38 @@ Interfaz de usuario interactiva y responsiva construida con **React** y **Vite**
 ## 🛠️ Stack Tecnológico
 * **Framework:** React + TypeScript
 * **Herramienta de construcción:** Vite
-* **Estilos:** Tailwind CSS (alineado al Brand Book de Pista 8)
-* **Estado Global:** Zustand / Redux (para sincronización de interacciones).
+* **Estilos:** Styled-Components (alineado al Brand Book de Pista 8)
+* **Estado Global:** React Context API (`AuthContext`)
+* **Enrutamiento:** React Router DOM
 
-## 📁 Estructura de Carpetas (Basada en Features)
+## 📁 Estructura de Carpetas (Basada en Arquitectura de Componentes)
 ```text
 src/
 ├── assets/       # Imágenes, logo de UNIVALLE y el PNG del avión de papel.
-├── components/   # Componentes atómicos globales (Botones, Inputs, Modales).
-├── features/     # Lógica dividida por funcionalidad principal.
-│   ├── challenges/ # Listado de retos y filtros de búsqueda.
-│   ├── ideas/      # Formulario de postulación y animación de aviones.
-│   └── evaluations/# Dashboard del Top 10 y visualización de resultados.
-├── services/     # Clientes de API (Axios) para comunicación con el backend.
-├── store/        # Manejo del estado para likes y comentarios en tiempo real.
-└── pages/        # Rutas principales (Home, Admin Dashboard, Vistas de Retos).
+├── components/   # Componentes atómicos e interfaces principales.
+│   ├── admin/      # Utilidades de uso interno para administradores (ShareChallenge).
+│   ├── auth/       # Formulario interactivo, SVG Vectorizado de Google.
+│   ├── challenges/ # Gestor de validación visual y proxy de retos privados.
+│   ├── dashboard/  # Estructuras maestras del Muro de Ideación y Logout Animado.
+│   └── errors/     # Pantallas exclusivas de intercepción e ilusiones 404.
+├── config/       # Parámetros y Constantes de inicialización (Firebase y Pista8Theme).
+├── context/      # Cerebro Reactivo: Estado global de sesión y protección de rutas.
+└── services/     # Clientes de API Axios (`idea.service`, `auth.service`) para handshakes.
 ```
 
 ## 🚀 Instalación y Uso
 
 Instalar dependencias: `pnpm install`
 
-Iniciar servidor de desarrollo: `pnpm run dev`
+Asegurarse de crear el archivo `.env` transparente a GIT con las variables vitales y seguras del proyecto:
+- VITE_FIREBASE_API_KEY
+- VITE_FIREBASE_AUTH_DOMAIN
+- VITE_FIREBASE_PROJECT_ID
+- VITE_FIREBASE_STORAGE_BUCKET
+- VITE_FIREBASE_MESSAGING_SENDER_ID
+- VITE_FIREBASE_APP_ID
+
+Iniciar servidor de desarrollo: `pnpm run dev` o `pnpm dev`
 
 Abrir en el navegador: `http://localhost:5173`
 
