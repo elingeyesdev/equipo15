@@ -31,6 +31,12 @@ export class User extends Document {
   @Prop()
   specialty?: string;
 
+  @Prop({ type: Number })
+  facultyId?: number;
+
+  @Prop({ type: Boolean, default: false })
+  isFacultyVerified: boolean;
+
   @Prop({ default: true })
   isActive: boolean;
 }

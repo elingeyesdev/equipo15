@@ -21,6 +21,12 @@ export class UsersController {
     return this.usersService.findByUid(req.user.uid);
   }
 
+  @Patch('faculty')
+  @UseGuards(FirebaseAuthGuard)
+  updateFaculty(@Req() req: any, @Body('facultyId') facultyId: number) {
+    return this.usersService.updateFaculty(req.user.uid, facultyId);
+  }
+
   @Patch(':id/role')
   @UseGuards(FirebaseAuthGuard, RolesGuard)
   @Roles('admin')
