@@ -3,11 +3,15 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { IdeasService } from './ideas.service';
 import { IdeasController } from './ideas.controller';
 import { Idea, IdeaSchema } from './entities/idea.schema';
+import { DraftIdea, DraftIdeaSchema } from './entities/draft-idea.schema';
 import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Idea.name, schema: IdeaSchema }]),
+    MongooseModule.forFeature([
+      { name: Idea.name, schema: IdeaSchema },
+      { name: DraftIdea.name, schema: DraftIdeaSchema },
+    ]),
     UsersModule
   ],
   controllers: [IdeasController],

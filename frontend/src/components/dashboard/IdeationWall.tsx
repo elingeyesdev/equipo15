@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import type { FormEvent, KeyboardEvent } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { Pista8Theme } from '../../config/theme';
 import { useAuth } from '../../context/AuthContext';
 import LogoutButton from './LogoutButton';
+import { ideaService } from '../../services/idea.service';
+import { userService } from '../../services/user.service';
+import type { UserProfile } from '../../services/user.service';
 
 const mockChallenges = [
   { id: 1, title: 'Reto de Ingeniería UNIVALLE 2026', category: 'Ingeniería', ideas: 24, likes: 187, badge: 'ACTIVO' },
@@ -26,14 +30,456 @@ const topLideres = [
   { name: 'Sofía M.', ideas: 5 },
 ];
 
+type ConsentKey = 'terms' | 'usage' | 'originality';
+type FormErrorKey = 'challenge' | 'ideaName' | 'ideaDevelopment' | 'consents';
+type FormErrors = Partial<Record<FormErrorKey, string>>;
+type FeedbackTone = 'success' | 'error' | 'info' | 'critical';
+type FeedbackMessage = {
+  tone: FeedbackTone;
+  message: string;
+  title?: string;
+  persist?: boolean;
+};
+
+const FEEDBACK_GLYPH: Record<FeedbackTone, string> = {
+  success: 'OK',
+  error: '✕',
+  info: 'i',
+  critical: '!',
+};
+
+const FEEDBACK_PALETTE: Record<FeedbackTone, { border: string; background: string; color: string }> = {
+  success: {
+    border: 'rgba(34,134,58,0.3)',
+    background: 'rgba(34,134,58,0.1)',
+    color: '#205732',
+  },
+  error: {
+    border: 'rgba(198,40,40,0.32)',
+    background: 'rgba(198,40,40,0.12)',
+    color: '#7a1b1b',
+  },
+  info: {
+    border: 'rgba(21,83,138,0.3)',
+    background: 'rgba(21,83,138,0.12)',
+    color: '#12446c',
+  },
+  critical: {
+    border: 'rgba(156,80,0,0.32)',
+    background: 'rgba(156,80,0,0.14)',
+    color: '#6d3800',
+  },
+};
+
+const extractMessage = (raw: unknown): string | undefined => {
+  if (typeof raw === 'string') {
+    return raw;
+  }
+  if (Array.isArray(raw)) {
+    return raw.join(' ');
+  }
+  return undefined;
+};
+
+const interpretBackendError = (error: any): FeedbackMessage => {
+  if (error?.code === 'ERR_NETWORK') {
+    return {
+      tone: 'critical',
+      title: 'Sin conexión',
+      message: 'Perdimos contacto con el servidor. Revisa tu red e inténtalo nuevamente.',
+      persist: true,
+    };
+  }
+
+  const status = error?.response?.status;
+  const backendMessage = extractMessage(error?.response?.data?.message);
+
+  if (status === 400) {
+    return {
+      tone: 'error',
+      title: 'Revisa los campos',
+      message: backendMessage || 'Hay información pendiente antes de continuar.',
+    };
+  }
+
+  if (status === 401) {
+    return {
+      tone: 'critical',
+      title: 'Sesión caducada',
+      message: 'Vuelve a iniciar sesión para continuar.',
+      persist: true,
+    };
+  }
+
+  if (status && status >= 500) {
+    return {
+      tone: 'critical',
+      title: 'Servicio en pausa',
+      message: 'El hub está teniendo problemas. Estamos trabajando para restablecerlo.',
+      persist: true,
+    };
+  }
+
+  return {
+    tone: 'error',
+    title: 'No pudimos completar la acción',
+    message: backendMessage || 'Intenta nuevamente en unos segundos.',
+  };
+};
+
 const IdeationWall = () => {
   const { user } = useAuth();
   const [selectedChallenge, setSelectedChallenge] = useState<any>(mockChallenges[0]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('Todos');
   const [filterOpen, setFilterOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [formChallenge, setFormChallenge] = useState<any>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileError, setProfileError] = useState('');
+  const [formSaving, setFormSaving] = useState(false);
+  const [savingAction, setSavingAction] = useState<'draft' | 'public' | null>(null);
+  const [formFeedback, setFormFeedback] = useState<FeedbackMessage | null>(null);
+  const [toastMessage, setToastMessage] = useState<FeedbackMessage | null>(null);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [consentsTouched, setConsentsTouched] = useState(false);
+  const [ideaName, setIdeaName] = useState('');
+  const [ideaDevelopment, setIdeaDevelopment] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  const [consents, setConsents] = useState<Record<ConsentKey, boolean>>({
+    terms: false,
+    usage: false,
+    originality: false,
+  });
+  const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
+  const maxIdeaName = 150;
+  const maxIdeaDevelopment = 5000;
+  const minIdeaName = 5;
+  const minIdeaDevelopment = 20;
+  const maxTags = 6;
   const filters = ['Todos', 'Ingeniería', 'Tecnología', 'Sostenibilidad'];
   const firstName = user?.displayName?.split(' ')[0] || 'Innovador';
+  const fullName = user?.displayName?.trim() || user?.email || 'Guest';
+  const isGuest = !user;
+  const profileStatusText = profileError || (profile ? `ID interno: ${profile._id}` : 'Sincronizando perfil...');
+  const consentItems: Array<{ key: ConsentKey; title: string; desc: string }> = [
+    { key: 'terms', title: 'Aceptación de términos', desc: 'Acepto las políticas del programa y la guía de participación institucional.' },
+    { key: 'usage', title: 'Autorización de uso de la idea', desc: 'Autorizo a la universidad a compartir y prototipar esta propuesta dando el crédito correspondiente.' },
+    { key: 'originality', title: 'Declaración de originalidad', desc: 'Declaro que la idea es resultado de mi trabajo y citando cualquier referencia externa.' },
+  ];
+  const allConsentsAccepted = Object.values(consents).every(Boolean);
+  const checklist = [
+    { label: 'Reto asignado', done: !!formChallenge },
+    { label: 'Nombre de la idea', done: ideaName.trim().length >= minIdeaName },
+    { label: 'Desarrollo narrado', done: ideaDevelopment.trim().length >= minIdeaDevelopment },
+    { label: 'Consentimientos', done: allConsentsAccepted },
+  ];
+
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      setProfile(null);
+      return;
+    }
+    (async () => {
+      try {
+        setProfileError('');
+        const data = await userService.getProfile();
+        if (active) {
+          setProfile(data);
+        }
+      } catch (error: any) {
+        if (active) {
+          setProfileError(error?.message || 'No pudimos cargar tu perfil.');
+        }
+      }
+    })();
+    return () => { active = false; };
+  }, [user]);
+
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    if (formOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = originalOverflow;
+    }
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [formOpen]);
+
+  useEffect(() => {
+    if (!toastMessage || toastMessage.persist) {
+      return;
+    }
+    const timeout = window.setTimeout(() => setToastMessage(null), 4800);
+    return () => window.clearTimeout(timeout);
+  }, [toastMessage]);
+
+  const showToast = (payload: FeedbackMessage) => {
+    setToastMessage(payload);
+  };
+
+  const dismissToast = () => setToastMessage(null);
+
+  const clearFieldError = (field: FormErrorKey) => {
+    setFormErrors(prev => {
+      if (!prev[field]) {
+        return prev;
+      }
+      const { [field]: _removed, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const getFieldError = (field: FormErrorKey): string | undefined => {
+    if (field === 'challenge' && !formChallenge) {
+      return 'Selecciona un reto para vincular tu propuesta.';
+    }
+    if (field === 'ideaName' && ideaName.trim().length < minIdeaName) {
+      return `Ingresa al menos ${minIdeaName} caracteres.`;
+    }
+    if (field === 'ideaDevelopment' && ideaDevelopment.trim().length < minIdeaDevelopment) {
+      return `Describe tu idea con mínimo ${minIdeaDevelopment} caracteres.`;
+    }
+    if (field === 'consents' && !allConsentsAccepted) {
+      return 'Acepta los tres consentimientos (ejemplo: si “App para Bienestar Estudiantil” llega al laboratorio, debemos poder prototiparla citándote).';
+    }
+    return undefined;
+  };
+
+  const validateField = (field: FormErrorKey) => {
+    const errorMessage = getFieldError(field);
+    setFormErrors(prev => {
+      const next = { ...prev };
+      if (errorMessage) {
+        next[field] = errorMessage;
+      } else {
+        delete next[field];
+      }
+      return next;
+    });
+    return !errorMessage;
+  };
+
+  const validatePublicSubmission = (): FormErrors => {
+    const errors: FormErrors = {};
+    (['challenge', 'ideaName', 'ideaDevelopment', 'consents'] as FormErrorKey[]).forEach(field => {
+      const errorMessage = getFieldError(field);
+      if (errorMessage) {
+        errors[field] = errorMessage;
+      }
+    });
+    return errors;
+  };
+
+  useEffect(() => {
+    if (!consentsTouched) {
+      return;
+    }
+    setFormErrors(prev => {
+      const next = { ...prev };
+      if (!allConsentsAccepted) {
+        next.consents = 'Acepta los tres consentimientos (ejemplo: si “App para Bienestar Estudiantil” llega al laboratorio, debemos poder prototiparla citándote).';
+      } else {
+        delete next.consents;
+      }
+      return next;
+    });
+  }, [consentsTouched, allConsentsAccepted]);
+
+  const resetForm = () => {
+    setIdeaName('');
+    setIdeaDevelopment('');
+    setTags([]);
+    setTagInput('');
+    setConsents({ terms: false, usage: false, originality: false });
+    setFormErrors({});
+    setConsentsTouched(false);
+  };
+
+  const handleOpenForm = (challenge: any) => {
+    setFormChallenge(challenge);
+    setSelectedChallenge(challenge);
+    resetForm();
+    setFormFeedback(null);
+    setFormSaving(false);
+    setSavingAction(null);
+    clearFieldError('challenge');
+    setFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setFormOpen(false);
+    setFormChallenge(null);
+    resetForm();
+    setFormFeedback(null);
+    setFormSaving(false);
+    setSavingAction(null);
+    clearFieldError('challenge');
+    setConfirmSubmitOpen(false);
+  };
+
+  const handleTagAddition = () => {
+    const sanitized = tagInput.trim();
+    if (!sanitized) return;
+    setTags(prev => {
+      if (prev.includes(sanitized) || prev.length >= maxTags) {
+        return prev;
+      }
+      return [...prev, sanitized];
+    });
+    setTagInput('');
+  };
+
+  // Allow ideators to capture tags rápidamente sin abandonar el teclado.
+  const handleTagKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' || event.key === ',') {
+      event.preventDefault();
+      handleTagAddition();
+    }
+    if (event.key === 'Backspace' && !tagInput && tags.length) {
+      event.preventDefault();
+      setTags(prev => prev.slice(0, -1));
+    }
+  };
+
+  const handleTagRemoval = (target: string) => {
+    setTags(prev => prev.filter(tag => tag !== target));
+  };
+
+  const toggleConsent = (key: ConsentKey) => {
+    setConsents(prev => ({ ...prev, [key]: !prev[key] }));
+    setConsentsTouched(true);
+  };
+
+  const readyToSend = Boolean(
+    formChallenge &&
+    ideaName.trim().length >= minIdeaName &&
+    ideaDevelopment.trim().length >= minIdeaDevelopment &&
+    allConsentsAccepted,
+  );
+
+  const normalizedTags = () => Array.from(new Set(tags.map(tag => tag.trim()).filter(Boolean)));
+
+  const handleIdeaSubmit = async (targetStatus: 'draft' | 'public'): Promise<boolean> => {
+    if (!profile?._id) {
+      const message = {
+        tone: 'critical' as FeedbackTone,
+        title: 'Perfil no disponible',
+        message: 'Necesitamos sincronizar tu sesión nuevamente antes de continuar.',
+        persist: true,
+      };
+      setFormFeedback(message);
+      showToast(message);
+      return false;
+    }
+    if (!formChallenge) {
+      setFormFeedback({
+        tone: 'info',
+        title: 'Elige un reto',
+        message: 'Vincula tu idea a uno de los retos activos antes de continuar.',
+      });
+      return false;
+    }
+    const title = ideaName.trim();
+    const description = ideaDevelopment.trim();
+
+    if (targetStatus === 'public') {
+      const publicErrors = validatePublicSubmission();
+      setFormErrors(publicErrors);
+      setConsentsTouched(true);
+      if (Object.keys(publicErrors).length) {
+        setFormFeedback({
+          tone: 'error',
+          title: 'Revisa los campos',
+          message: 'Corrige los campos marcados en rojo antes de compartir tu idea.',
+        });
+        return false;
+      }
+    }
+
+    setFormSaving(true);
+    setSavingAction(targetStatus);
+    setFormFeedback(null);
+
+    let success = false;
+    try {
+      if (targetStatus === 'draft') {
+        await ideaService.saveDraftIdea({
+          title: title || undefined,
+          description: description || undefined,
+          tags: normalizedTags(),
+          author: profile._id,
+          isAnonymous: isGuest,
+        });
+        showToast({
+          tone: 'info',
+          title: 'Borrador guardado',
+          message: 'Guardamos tus avances. Puedes retomarlos cuando quieras.',
+        });
+        success = true;
+      } else {
+        await ideaService.createIdea({
+          title,
+          description,
+          tags: normalizedTags(),
+          status: targetStatus,
+          author: profile._id,
+          isAnonymous: isGuest,
+        });
+        const successMessage: FeedbackMessage = {
+          tone: 'success',
+          title: 'Idea enviada',
+          message: 'Tu propuesta ya está registrada. Te avisaremos si necesitamos más información.',
+        };
+        setFormFeedback(successMessage);
+        showToast(successMessage);
+        resetForm();
+        success = true;
+      }
+    } catch (error: any) {
+      const interpreted = interpretBackendError(error);
+      setFormFeedback(interpreted);
+      if (interpreted.persist || interpreted.tone === 'critical') {
+        showToast(interpreted);
+      }
+    } finally {
+      setFormSaving(false);
+      setSavingAction(null);
+    }
+    return success;
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (formSaving) {
+      return;
+    }
+    setConfirmSubmitOpen(false);
+    const success = await handleIdeaSubmit('public');
+    if (success) {
+      handleCloseForm();
+    }
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const publicErrors = validatePublicSubmission();
+    setFormErrors(publicErrors);
+    setConsentsTouched(true);
+    if (Object.keys(publicErrors).length) {
+      setFormFeedback({
+        tone: 'error',
+        title: 'Revisa tu propuesta',
+        message: 'Completa los campos marcados en rojo antes de compartir.',
+      });
+      return;
+    }
+    setFormFeedback(null);
+    setConfirmSubmitOpen(true);
+  };
 
   return (
     <Root>
@@ -154,6 +600,18 @@ const IdeationWall = () => {
                     </CardTop>
                     <CardTitle>{c.title}</CardTitle>
                     <CardMeta>{c.ideas} ideas enviadas</CardMeta>
+                    <CardActionRow>
+                      <RespondButton
+                        type="button"
+                        onClick={event => {
+                          event.stopPropagation();
+                          handleOpenForm(c);
+                        }}
+                      >
+                        Responder reto
+                        <span aria-hidden="true">{'>'}</span>
+                      </RespondButton>
+                    </CardActionRow>
                   </ChallengeCard>
                 ))}
             </ChallengeList>
@@ -227,6 +685,227 @@ const IdeationWall = () => {
           </RightPanel>
         </MainGrid>
       </Page>
+      {toastMessage && (
+        <ToastViewport role="status" aria-live="polite">
+          <ToastCard data-tone={toastMessage.tone} $tone={toastMessage.tone}>
+            <ToastGlyph aria-hidden="true">{FEEDBACK_GLYPH[toastMessage.tone]}</ToastGlyph>
+            <ToastContent>
+              {toastMessage.title && <ToastTitle>{toastMessage.title}</ToastTitle>}
+              <p>{toastMessage.message}</p>
+            </ToastContent>
+            <ToastDismiss type="button" onClick={dismissToast}>
+              Cerrar
+            </ToastDismiss>
+          </ToastCard>
+        </ToastViewport>
+      )}
+      {formOpen && (
+        <>
+          <ModalBackdrop onClick={handleCloseForm} />
+          <ModalWrapper role="dialog" aria-modal="true" aria-labelledby="idea-form-title">
+            <ModalCard>
+              <ModalHalo />
+              <ModalHeader>
+                <div>
+                  <ModalEyebrow>E02 / Formulario estructurado</ModalEyebrow>
+                  <ModalTitle id="idea-form-title">{formChallenge?.title || 'Selecciona un reto'}</ModalTitle>
+                  <ModalLead>
+                    Comparte tu propuesta para este reto. Puedes guardar conceptos en borrador o compartirlos con el hub de innovación.
+                  </ModalLead>
+                </div>
+                <ModalClose type="button" onClick={handleCloseForm} aria-label="Cerrar formulario">
+                  ×
+                </ModalClose>
+              </ModalHeader>
+
+              <FormGrid>
+                <MetaColumn>
+                  <MetaCard>
+                    <MetaLabel>Nombre completo</MetaLabel>
+                    <MetaValue>{fullName}</MetaValue>
+                    <MetaFoot>{isGuest ? 'Participando como invitado (Guest)' : 'Sesión autenticada'}</MetaFoot>
+                  </MetaCard>
+
+                  <MetaCard $invalid={Boolean(formErrors.challenge)}>
+                    <MetaLabel>Reto que respondes</MetaLabel>
+                    <MetaValue>{formChallenge?.title || 'Selecciona un reto'}</MetaValue>
+                    {formChallenge && <MetaBadge>{formChallenge.category}</MetaBadge>}
+                    <MetaFoot>
+                      {formChallenge ? `${formChallenge.ideas} ideas publicadas en este reto` : 'Elige un reto para asociar tu idea.'}
+                    </MetaFoot>
+                    {formErrors.challenge && <MetaError>{formErrors.challenge}</MetaError>}
+                  </MetaCard>
+
+                  <Checklist>
+                    {checklist.map(item => (
+                      <ChecklistItem key={item.label}>
+                        <StatusDot done={item.done} />
+                        <ChecklistLabel>{item.label}</ChecklistLabel>
+                      </ChecklistItem>
+                    ))}
+                  </Checklist>
+                </MetaColumn>
+
+                <FormCard onSubmit={handleSubmit}>
+                  {formFeedback && (
+                    <FeedbackBanner
+                      data-tone={formFeedback.tone}
+                      $tone={formFeedback.tone}
+                      role={formFeedback.tone === 'error' || formFeedback.tone === 'critical' ? 'alert' : 'status'}
+                    >
+                      <BannerGlyph aria-hidden="true">{FEEDBACK_GLYPH[formFeedback.tone]}</BannerGlyph>
+                      <div>
+                        {formFeedback.title && <BannerTitle>{formFeedback.title}</BannerTitle>}
+                        <p>{formFeedback.message}</p>
+                      </div>
+                    </FeedbackBanner>
+                  )}
+                  <Field>
+                    <FieldHeader>
+                      <Label>Nombre y/o info básica de la idea</Label>
+                      <CharCounter>{ideaName.length}/{maxIdeaName}</CharCounter>
+                    </FieldHeader>
+                    <Tip>Usa un titular memorable de máximo {maxIdeaName} caracteres.</Tip>
+                    <TextInput
+                      value={ideaName}
+                      onChange={event => {
+                        setIdeaName(event.target.value);
+                        if (formErrors.ideaName) {
+                          clearFieldError('ideaName');
+                        }
+                      }}
+                      onBlur={() => validateField('ideaName')}
+                      placeholder="Ej. Corredor solar para el campus central"
+                      maxLength={maxIdeaName}
+                      $invalid={Boolean(formErrors.ideaName)}
+                    />
+                    {formErrors.ideaName && <FieldError>{formErrors.ideaName}</FieldError>}
+                  </Field>
+
+                  <Field>
+                    <FieldHeader>
+                      <Label>Desarrollo de la idea</Label>
+                      <CharCounter>{ideaDevelopment.length}/{maxIdeaDevelopment}</CharCounter>
+                    </FieldHeader>
+                    <Tip>Describe problema, solución, impacto y actores clave.</Tip>
+                    <TextArea
+                      value={ideaDevelopment}
+                      onChange={event => {
+                        setIdeaDevelopment(event.target.value);
+                        if (formErrors.ideaDevelopment) {
+                          clearFieldError('ideaDevelopment');
+                        }
+                      }}
+                      onBlur={() => validateField('ideaDevelopment')}
+                      placeholder="Explica cómo surge la idea, qué recursos necesita y cómo mediremos el éxito..."
+                      rows={7}
+                      maxLength={maxIdeaDevelopment}
+                      $invalid={Boolean(formErrors.ideaDevelopment)}
+                    />
+                    {formErrors.ideaDevelopment && <FieldError>{formErrors.ideaDevelopment}</FieldError>}
+                  </Field>
+
+                  <Field>
+                    <FieldHeader>
+                      <Label>Etiquetas</Label>
+                      <TagCounter>{tags.length}/{maxTags}</TagCounter>
+                    </FieldHeader>
+                    <Tip>Agrega palabras clave y presiona Enter o coma para guardarlas.</Tip>
+                    <TagInputWrap>
+                      {tags.map(tag => (
+                        <TagChip key={tag}>
+                          {tag}
+                          <RemoveTag type="button" onClick={() => handleTagRemoval(tag)} aria-label={`Quitar etiqueta ${tag}`}>
+                            ×
+                          </RemoveTag>
+                        </TagChip>
+                      ))}
+                      <TagField
+                        type="text"
+                        value={tagInput}
+                        onChange={event => setTagInput(event.target.value)}
+                        onKeyDown={handleTagKeyDown}
+                        placeholder="impacto, movilidad, energía..."
+                        disabled={tags.length >= maxTags}
+                      />
+                      <AddTagButton type="button" onClick={handleTagAddition} disabled={tags.length >= maxTags}>
+                        Añadir
+                      </AddTagButton>
+                    </TagInputWrap>
+                  </Field>
+
+                  <Field>
+                    <Label>Consentimientos y condiciones</Label>
+                    <Tip>Marca cada casilla para habilitar el envío.</Tip>
+                    <ConsentList $invalid={Boolean(formErrors.consents) && consentsTouched}>
+                      {consentItems.map(item => (
+                        <ConsentItem key={item.key} checked={consents[item.key]}>
+                          <ConsentCheckbox
+                            type="checkbox"
+                            checked={consents[item.key]}
+                            onChange={() => toggleConsent(item.key)}
+                          />
+                          <div>
+                            <ConsentTitle>{item.title}</ConsentTitle>
+                            <ConsentDescription>{item.desc}</ConsentDescription>
+                          </div>
+                        </ConsentItem>
+                      ))}
+                    </ConsentList>
+                    {formErrors.consents && consentsTouched && (
+                      <FieldError>{formErrors.consents}</FieldError>
+                    )}
+                  </Field>
+
+                  <ButtonRow>
+                    <GhostButton
+                      type="button"
+                      onClick={() => handleIdeaSubmit('draft')}
+                      disabled={formSaving}
+                    >
+                      {formSaving && savingAction === 'draft' ? 'Guardando...' : 'Guardar como borrador'}
+                    </GhostButton>
+                    <CTAButton type="submit" disabled={formSaving || !readyToSend}>
+                      {formSaving && savingAction === 'public' ? 'Enviando...' : 'Compartir idea'}
+                    </CTAButton>
+                  </ButtonRow>
+                  <ButtonHint>
+                    {readyToSend
+                      ? 'Lista para enviarse o guardar cambios en cualquier momento.'
+                      : 'Puedes guardar avances como borrador o completar los campos para enviarla.'}
+                  </ButtonHint>
+                </FormCard>
+              </FormGrid>
+            </ModalCard>
+          </ModalWrapper>
+          {confirmSubmitOpen && (
+            <>
+              <ConfirmBackdrop />
+              <ConfirmDialog role="dialog" aria-modal="true" aria-labelledby="confirm-submit-title">
+                <ConfirmCard>
+                  <ConfirmTitle id="confirm-submit-title">¿Compartir esta idea con el hub?</ConfirmTitle>
+                  <ConfirmText>
+                    {ideaName.trim() ? `“${ideaName.trim()}”` : 'Tu propuesta'} se enviará a revisión del hub de innovación.
+                    Confirma para cerrar el formulario y registrar el envío.
+                  </ConfirmText>
+                  <ConfirmSummary>
+                    <SummaryPill>{formChallenge?.title || 'Reto sin seleccionar'}</SummaryPill>
+                    <SummaryPill>{normalizedTags().length} etiquetas</SummaryPill>
+                  </ConfirmSummary>
+                  <ConfirmActions>
+                    <ConfirmGhost type="button" onClick={() => setConfirmSubmitOpen(false)} disabled={formSaving}>
+                      Seguir editando
+                    </ConfirmGhost>
+                    <ConfirmCTA type="button" onClick={handleConfirmSubmit} disabled={formSaving}>
+                      {formSaving ? 'Enviando...' : 'Sí, compartir'}
+                    </ConfirmCTA>
+                  </ConfirmActions>
+                </ConfirmCard>
+              </ConfirmDialog>
+            </>
+          )}
+        </>
+      )}
     </Root>
   );
 };
@@ -451,6 +1130,9 @@ const MainGrid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
   animation: ${fadeUp} 0.4s 0.1s ease both;
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const LeftPanel = styled.div`
@@ -618,6 +1300,35 @@ const CardMeta = styled.p`
   font-weight: 500;
 `;
 
+const CardActionRow = styled.div`
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const RespondButton = styled.button`
+  border: none;
+  background: ${Pista8Theme.primary};
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(254,65,10,0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  span { font-size: 14px; }
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 32px rgba(254,65,10,0.35);
+  }
+`;
+
 const RightPanel = styled.div<{ hasChallenge: boolean }>`
   background: ${Pista8Theme.secondary};
   border-radius: 24px;
@@ -774,6 +1485,641 @@ const EmptyIcon = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+`;
+
+const ModalBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 22, 26, 0.65);
+  backdrop-filter: blur(3px);
+  z-index: 80;
+`;
+
+const ModalWrapper = styled.div`
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  z-index: 90;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+`;
+
+const ModalCard = styled.section`
+  width: min(1100px, 100%);
+  padding: 48px;
+  border-radius: 32px;
+  background: linear-gradient(135deg, #fff5ed 0%, #eef2ff 60%, #f8fbff 100%);
+  border: 1px solid rgba(72,80,84,0.08);
+  position: relative;
+  overflow: hidden;
+  animation: ${fadeUp} 0.3s ease both;
+  box-shadow: 0 45px 90px rgba(26,31,36,0.25);
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  @media (max-width: 640px) {
+    padding: 32px 22px;
+  }
+`;
+
+const ModalHalo = styled.div`
+  position: absolute;
+  inset: -20% auto auto -15%;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(254,65,10,0.15) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+`;
+
+const ModalHeader = styled.div`
+  position: relative;
+  z-index: 1;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+`;
+
+const ModalEyebrow = styled.p`
+  font-size: 12px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: rgba(72,80,84,0.6);
+  margin: 0 0 12px;
+`;
+
+const ModalTitle = styled.h2`
+  font-size: 34px;
+  font-weight: 800;
+  margin: 0 0 10px;
+  color: ${Pista8Theme.secondary};
+`;
+
+const ModalLead = styled.p`
+  font-size: 16px;
+  color: rgba(72,80,84,0.8);
+  line-height: 1.6;
+  margin: 0;
+`;
+
+const ModalClose = styled.button`
+  border: none;
+  background: rgba(255,255,255,0.7);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  color: ${Pista8Theme.secondary};
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+  &:hover {
+    transform: scale(1.05);
+    background: white;
+  }
+`;
+
+const FormGrid = styled.div`
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 28px;
+  @media (max-width: 1100px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const MetaColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+`;
+
+const FieldError = styled.p`
+  font-size: 12px;
+  color: #c62828;
+  margin: -4px 0 0;
+  font-weight: 600;
+`;
+
+const MetaCard = styled.div<{ $invalid?: boolean }>`
+  background: rgba(255,255,255,0.92);
+  border-radius: 22px;
+  padding: 22px;
+  border: 1px solid ${p => (p.$invalid ? '#ff8a8a' : 'rgba(72,80,84,0.08)')};
+  box-shadow: 0 20px 35px rgba(72,80,84,0.1);
+  ${p => p.$invalid && css`
+    box-shadow: 0 0 0 2px rgba(255,138,138,0.3);
+  `}
+`;
+
+const MetaLabel = styled.p`
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(72,80,84,0.55);
+  margin: 0 0 6px;
+`;
+
+const MetaValue = styled.p`
+  font-size: 20px;
+  font-weight: 800;
+  color: ${Pista8Theme.secondary};
+  margin: 0;
+  line-height: 1.4;
+`;
+
+const MetaFoot = styled.p`
+  font-size: 13px;
+  color: rgba(72,80,84,0.65);
+  margin: 6px 0 0;
+`;
+
+const MetaError = styled(FieldError)`
+  margin-top: 8px;
+`;
+
+const MetaBadge = styled.span`
+  display: inline-flex;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: ${Pista8Theme.primary}18;
+  color: ${Pista8Theme.primary};
+  font-size: 11px;
+  font-weight: 700;
+`;
+
+const Checklist = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const ChecklistItem = styled.li`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.8);
+  border: 1px dashed rgba(72,80,84,0.15);
+`;
+
+const StatusDot = styled.span<{ done: boolean }>`
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid ${p => (p.done ? Pista8Theme.primary : 'rgba(72,80,84,0.25)')};
+  background: ${p => (p.done ? Pista8Theme.primary : 'transparent')};
+  transition: background 0.2s ease, border 0.2s ease;
+`;
+
+const ChecklistLabel = styled.span`
+  font-size: 13px;
+  font-weight: 600;
+  color: ${Pista8Theme.secondary};
+`;
+
+const FormCard = styled.form`
+  background: white;
+  border-radius: 28px;
+  border: 1px solid rgba(72,80,84,0.08);
+  box-shadow: 0 30px 60px rgba(72,80,84,0.12);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+const Field = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const FieldHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+const Label = styled.label`
+  font-size: 15px;
+  font-weight: 700;
+  color: ${Pista8Theme.secondary};
+  text-transform: none;
+`;
+
+const CharCounter = styled.span`
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(72,80,84,0.5);
+`;
+
+const Tip = styled.p`
+  font-size: 13px;
+  color: rgba(72,80,84,0.65);
+  margin: 0;
+`;
+
+const FeedbackBanner = styled.div<{ $tone: FeedbackTone }>`
+  border-radius: 18px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  ${({ $tone }) => css`
+    border: 1px solid ${FEEDBACK_PALETTE[$tone].border};
+    background: ${FEEDBACK_PALETTE[$tone].background};
+    color: ${FEEDBACK_PALETTE[$tone].color};
+  `}
+  p {
+    margin: 0;
+  }
+`;
+
+const BannerGlyph = styled.span`
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+`;
+
+const BannerTitle = styled.p`
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+`;
+
+const TextInput = styled.input<{ $invalid?: boolean }>`
+  border: 1.5px solid ${p => (p.$invalid ? '#ff8a8a' : 'rgba(72,80,84,0.15)')};
+  border-radius: 16px;
+  padding: 16px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  color: ${Pista8Theme.secondary};
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+  ${p => p.$invalid && css`
+    box-shadow: 0 0 0 2px rgba(255,138,138,0.2);
+  `}
+  &:focus {
+    outline: none;
+    border-color: ${Pista8Theme.primary};
+    box-shadow: 0 0 0 3px ${Pista8Theme.primary}25;
+  }
+`;
+
+const TextArea = styled.textarea<{ $invalid?: boolean }>`
+  border: 1.5px solid ${p => (p.$invalid ? '#ff8a8a' : 'rgba(72,80,84,0.15)')};
+  border-radius: 18px;
+  padding: 18px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.6;
+  resize: vertical;
+  color: ${Pista8Theme.secondary};
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+  ${p => p.$invalid && css`
+    box-shadow: 0 0 0 2px rgba(255,138,138,0.2);
+  `}
+  &:focus {
+    outline: none;
+    border-color: ${Pista8Theme.primary};
+    box-shadow: 0 0 0 3px ${Pista8Theme.primary}25;
+  }
+`;
+
+const TagCounter = styled.span`
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(72,80,84,0.5);
+`;
+
+const TagInputWrap = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1.5px dashed rgba(72,80,84,0.2);
+  background: rgba(248,249,250,0.8);
+`;
+
+const TagChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: ${Pista8Theme.secondary}10;
+  color: ${Pista8Theme.secondary};
+  font-size: 12px;
+  font-weight: 600;
+`;
+
+const RemoveTag = styled.button`
+  border: none;
+  background: transparent;
+  color: rgba(72,80,84,0.6);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+`;
+
+const TagField = styled.input`
+  flex: 1;
+  min-width: 180px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: ${Pista8Theme.secondary};
+  &:focus { outline: none; }
+  &:disabled { color: rgba(72,80,84,0.4); }
+`;
+
+const AddTagButton = styled.button`
+  border: none;
+  background: ${Pista8Theme.primary};
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  &:not(:disabled):hover {
+    transform: translateY(-1px);
+  }
+`;
+
+const ConsentList = styled.div<{ $invalid?: boolean }>`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  ${p => p.$invalid && css`
+    padding: 12px;
+    border-radius: 18px;
+    border: 1.5px solid #ff8a8a;
+    background: #fff7f7;
+  `}
+`;
+
+const ConsentItem = styled.label<{ checked: boolean }>`
+  display: flex;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1.5px solid ${p => (p.checked ? Pista8Theme.primary : 'rgba(72,80,84,0.12)')};
+  background: ${p => (p.checked ? `${Pista8Theme.primary}08` : 'rgba(248,249,250,0.9)')};
+  cursor: pointer;
+  transition: border 0.2s ease, background 0.2s ease;
+`;
+
+const ConsentCheckbox = styled.input`
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: ${Pista8Theme.primary};
+`;
+
+const ConsentTitle = styled.p`
+  font-size: 14px;
+  font-weight: 700;
+  color: ${Pista8Theme.secondary};
+  margin: 0 0 2px;
+`;
+
+const ConsentDescription = styled.p`
+  font-size: 13px;
+  color: rgba(72,80,84,0.7);
+  margin: 0;
+`;
+
+const ButtonRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+`;
+
+const GhostButton = styled.button`
+  border: 1.5px solid rgba(72,80,84,0.25);
+  background: transparent;
+  color: ${Pista8Theme.secondary};
+  font-weight: 700;
+  padding: 14px 18px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: border 0.2s ease, color 0.2s ease;
+  &:hover {
+    border-color: ${Pista8Theme.primary};
+    color: ${Pista8Theme.primary};
+  }
+`;
+
+const CTAButton = styled.button`
+  border: none;
+  background: ${Pista8Theme.primary};
+  color: white;
+  font-weight: 800;
+  padding: 14px 28px;
+  border-radius: 18px;
+  box-shadow: 0 20px 30px rgba(254,65,10,0.3);
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  &:not(:disabled):hover {
+    transform: translateY(-2px);
+  }
+`;
+
+const ButtonHint = styled.p`
+  text-align: right;
+  font-size: 12px;
+  color: rgba(72,80,84,0.55);
+  margin: -8px 0 0;
+`;
+
+const ToastViewport = styled.div`
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 140;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  @media (max-width: 640px) {
+    left: 16px;
+    right: 16px;
+  }
+`;
+
+const ToastCard = styled.div<{ $tone: FeedbackTone }>`
+  min-width: min(340px, calc(100vw - 32px));
+  padding: 16px 18px;
+  border-radius: 18px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  ${({ $tone }) => css`
+    border: 1px solid ${FEEDBACK_PALETTE[$tone].border};
+    background: ${FEEDBACK_PALETTE[$tone].background};
+    color: ${FEEDBACK_PALETTE[$tone].color};
+  `}
+`;
+
+const ToastGlyph = styled(BannerGlyph)`
+  width: 28px;
+  height: 28px;
+`;
+
+const ToastContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  p {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+  }
+`;
+
+const ToastTitle = styled.span`
+  font-size: 15px;
+  font-weight: 700;
+`;
+
+const ToastDismiss = styled.button`
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+  &:hover {
+    background: rgba(255,255,255,0.16);
+  }
+`;
+
+const ConfirmBackdrop = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(7,10,13,0.65);
+  backdrop-filter: blur(3px);
+  z-index: 120;
+`;
+
+const ConfirmDialog = styled.div`
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 130;
+`;
+
+const ConfirmCard = styled.div`
+  width: min(420px, 100%);
+  background: white;
+  border-radius: 26px;
+  padding: 28px 32px;
+  border: 1px solid rgba(72,80,84,0.08);
+  box-shadow: 0 35px 80px rgba(10,12,15,0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: ${fadeUp} 0.2s ease both;
+`;
+
+const ConfirmTitle = styled.h3`
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: ${Pista8Theme.secondary};
+`;
+
+const ConfirmText = styled.p`
+  margin: 0;
+  font-size: 14px;
+  color: rgba(72,80,84,0.75);
+  line-height: 1.5;
+`;
+
+const ConfirmSummary = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const SummaryPill = styled.span`
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(72,80,84,0.08);
+  color: ${Pista8Theme.secondary};
+  font-size: 12px;
+  font-weight: 600;
+`;
+
+const ConfirmActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+  @media (min-width: 420px) {
+    flex-direction: row;
+  }
+`;
+
+const ConfirmGhost = styled(GhostButton)`
+  flex: 1;
+  width: 100%;
+`;
+
+const ConfirmCTA = styled(CTAButton)`
+  flex: 1;
+  width: 100%;
+  text-align: center;
 `;
 
 export default IdeationWall;

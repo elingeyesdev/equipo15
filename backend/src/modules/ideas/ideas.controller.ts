@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Patch, Param, UseGuards } from '@nestjs/common';
 import { IdeasService } from './ideas.service';
 import { CreateIdeaDto } from './dto/create-idea.dto';
+import { CreateDraftIdeaDto } from './dto/create-draft-idea.dto';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/guards/roles.decorator';
@@ -13,6 +14,12 @@ export class IdeasController {
   @UseGuards(FirebaseAuthGuard)
   create(@Body() createIdeaDto: CreateIdeaDto) {
     return this.ideasService.create(createIdeaDto);
+  }
+
+  @Post('drafts')
+  @UseGuards(FirebaseAuthGuard)
+  createDraft(@Body() createDraftIdeaDto: CreateDraftIdeaDto) {
+    return this.ideasService.createDraft(createDraftIdeaDto);
   }
 
   @Get()
