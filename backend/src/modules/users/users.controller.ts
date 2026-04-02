@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Req, Patch, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Req, Patch, Param, NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
@@ -17,8 +17,10 @@ export class UsersController {
 
   @Get('profile')
   @UseGuards(FirebaseAuthGuard)
-  getProfile(@Req() req: any) {
-    return this.usersService.findByUid(req.user.uid);
+  async getProfile(@Req() req: any) {
+    const user = await this.usersService.findByUid(req.user.uid);
+    if (!user) throw new NotFoundException('Perfil no encontrado');
+    return user;
   }
 
   @Patch('faculty')

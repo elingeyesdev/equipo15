@@ -13,7 +13,8 @@ node_modules/
 
 # Firebase
 firebase-admin.json
-backend/firebase-admin.json
+**/serviceAccountKey.json
+src/config/serviceAccountKey.json
 
 # Archivos de variables de entorno
 .env

@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { User } from './entities/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { extractFacultyFromEmail } from './utils/email-parser.util';
+import { getRoleFromEmail, DOMAIN_FACULTY_MAP } from './utils/user-metadata.util';
 
 @Injectable()
 export class UsersService {
@@ -11,30 +12,28 @@ export class UsersService {
     @InjectModel(User.name) private readonly userModel: Model<User>
   ) {}
 
-  async findOrCreate(createUserDto: CreateUserDto): Promise<User> {
+  async findOrCreate(createUserDto: CreateUserDto): Promise<User | null> {
     const { firebaseUid, email } = createUserDto;
     let user = await this.userModel.findOne({ firebaseUid });
 
-    if (!user) {
-      if (email) {
-        const detectedFacultyId = extractFacultyFromEmail(email);
-        if (detectedFacultyId !== null) {
-          createUserDto.facultyId = detectedFacultyId;
-          createUserDto.isFacultyVerified = true;
-        }
+    if (!user && email) {
+      const role = getRoleFromEmail(email);
+      createUserDto.role = role;
+
+      const detectedFacultyId = extractFacultyFromEmail(email);
+      if (detectedFacultyId !== null) {
+        createUserDto.facultyId = detectedFacultyId;
+        createUserDto.isFacultyVerified = true;
       }
+
       user = new this.userModel(createUserDto);
       await user.save();
     }
     return user;
   }
 
-  async findByUid(firebaseUid: string): Promise<User> {
-    const user = await this.userModel.findOne({ firebaseUid });
-    if (!user) {
-      throw new NotFoundException();
-    }
-    return user;
+  async findByUid(firebaseUid: string): Promise<User | null> {
+    return await this.userModel.findOne({ firebaseUid });
   }
 
   async updateRole(id: string, role: string): Promise<User> {

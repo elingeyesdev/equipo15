@@ -483,9 +483,9 @@ const IdeationWall = () => {
 
   return (
     <Root>
-      <Overlay open={sidebarOpen} onClick={() => setSidebarOpen(false)} />
+      <Overlay $open={sidebarOpen} onClick={() => setSidebarOpen(false)} />
 
-      <Sidebar open={sidebarOpen}>
+      <Sidebar $open={sidebarOpen}>
         <SidebarTop>
           <SidebarBrand>
             <svg viewBox="0 0 280 72" xmlns="http://www.w3.org/2000/svg" width="110" height="28">
@@ -506,7 +506,7 @@ const IdeationWall = () => {
         </SidebarTop>
 
         <SidebarNav>
-          <SidebarNavItem active>
+          <SidebarNavItem $active>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
             </svg>
@@ -555,7 +555,7 @@ const IdeationWall = () => {
             <PanelHeader>
               <PanelTitle>Retos activos</PanelTitle>
               <FilterWrap>
-                <FilterBtn onClick={() => setFilterOpen(!filterOpen)} active={filterOpen}>
+                <FilterBtn onClick={() => setFilterOpen(!filterOpen)} $active={filterOpen}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="4" y1="6" x2="20" y2="6" />
                     <line x1="8" y1="12" x2="16" y2="12" />
@@ -567,7 +567,7 @@ const IdeationWall = () => {
                     {filters.map(f => (
                       <FilterOption
                         key={f}
-                        active={activeFilter === f}
+                        $active={activeFilter === f}
                         onClick={() => { setActiveFilter(f); setFilterOpen(false); }}
                       >
                         {f}
@@ -584,7 +584,7 @@ const IdeationWall = () => {
                 .map(c => (
                   <ChallengeCard
                     key={c.id}
-                    active={selectedChallenge?.id === c.id}
+                    $active={selectedChallenge?.id === c.id}
                     onClick={() => setSelectedChallenge(c)}
                   >
                     {selectedChallenge?.id === c.id && <ActiveBar />}
@@ -617,7 +617,7 @@ const IdeationWall = () => {
             </ChallengeList>
           </LeftPanel>
 
-          <RightPanel hasChallenge={!!selectedChallenge}>
+          <RightPanel $hasChallenge={!!selectedChallenge}>
             {selectedChallenge ? (
               <>
                 <StatsHeader>
@@ -648,7 +648,7 @@ const IdeationWall = () => {
                         <RankNum>{i + 1}</RankNum>
                         <RankName>{f.name}</RankName>
                         <RankBar>
-                          <RankFill pct={Math.round((f.likes / topFacultades[0].likes) * 100)} delay={i * 80} />
+                          <RankFill $pct={Math.round((f.likes / topFacultades[0].likes) * 100)} $delay={i * 80} />
                         </RankBar>
                         <RankVal>{f.likes}</RankVal>
                       </RankRow>
@@ -664,7 +664,7 @@ const IdeationWall = () => {
                         <RankNum>{i + 1}</RankNum>
                         <RankName>{l.name}</RankName>
                         <RankBar>
-                          <RankFill pct={Math.round((l.ideas / topLideres[0].ideas) * 100)} delay={i * 80} />
+                          <RankFill $pct={Math.round((l.ideas / topLideres[0].ideas) * 100)} $delay={i * 80} />
                         </RankBar>
                         <RankVal>{l.ideas}</RankVal>
                       </RankRow>
@@ -739,7 +739,7 @@ const IdeationWall = () => {
                   <Checklist>
                     {checklist.map(item => (
                       <ChecklistItem key={item.label}>
-                        <StatusDot done={item.done} />
+                        <StatusDot $done={item.done} />
                         <ChecklistLabel>{item.label}</ChecklistLabel>
                       </ChecklistItem>
                     ))}
@@ -839,7 +839,7 @@ const IdeationWall = () => {
                     <Tip>Marca cada casilla para habilitar el envío.</Tip>
                     <ConsentList $invalid={Boolean(formErrors.consents) && consentsTouched}>
                       {consentItems.map(item => (
-                        <ConsentItem key={item.key} checked={consents[item.key]}>
+                        <ConsentItem key={item.key} $checked={consents[item.key]}>
                           <ConsentCheckbox
                             type="checkbox"
                             checked={consents[item.key]}
@@ -937,18 +937,18 @@ const Root = styled.div`
   overflow-x: hidden;
 `;
 
-const Overlay = styled.div<{ open: boolean }>`
+const Overlay = styled.div<{ $open: boolean }>`
   position: fixed;
   inset: 0;
   background: rgba(72, 80, 84, 0.4);
   backdrop-filter: blur(4px);
   z-index: 40;
-  opacity: ${p => p.open ? 1 : 0};
-  pointer-events: ${p => p.open ? 'all' : 'none'};
+  opacity: ${p => p.$open ? 1 : 0};
+  pointer-events: ${p => p.$open ? 'all' : 'none'};
   transition: opacity 0.3s ease;
 `;
 
-const Sidebar = styled.aside<{ open: boolean }>`
+const Sidebar = styled.aside<{ $open: boolean }>`
   position: fixed;
   top: 0;
   right: 0;
@@ -959,8 +959,8 @@ const Sidebar = styled.aside<{ open: boolean }>`
   display: flex;
   flex-direction: column;
   padding: 36px 28px 40px;
-  animation: ${p => p.open ? css`${slideIn} 0.32s cubic-bezier(.22,.68,0,1.1) both` : css`${slideOut} 0.28s ease both`};
-  ${p => !p.open && 'pointer-events: none;'}
+  animation: ${p => p.$open ? css`${slideIn} 0.32s cubic-bezier(.22,.68,0,1.1) both` : css`${slideOut} 0.28s ease both`};
+  ${p => !p.$open && 'pointer-events: none;'}
 `;
 
 const SidebarTop = styled.div`
@@ -994,7 +994,7 @@ const SidebarNav = styled.nav`
   flex: 1;
 `;
 
-const SidebarNavItem = styled.button<{ active?: boolean }>`
+const SidebarNavItem = styled.button<{ $active?: boolean }>`
   display: flex;
   align-items: center;
   gap: 16px;
@@ -1007,8 +1007,8 @@ const SidebarNavItem = styled.button<{ active?: boolean }>`
   font-weight: 700;
   cursor: pointer;
   transition: background 0.18s, color 0.18s;
-  background: ${p => p.active ? 'rgba(254,65,10,0.18)' : 'transparent'};
-  color: ${p => p.active ? '#FE410A' : 'rgba(255,255,255,0.55)'};
+  background: ${p => p.$active ? 'rgba(254,65,10,0.18)' : 'transparent'};
+  color: ${p => p.$active ? '#FE410A' : 'rgba(255,255,255,0.55)'};
   letter-spacing: 0.01em;
   svg { width: 20px; height: 20px; flex-shrink: 0; }
   &:hover { background: rgba(255,255,255,0.07); color: white; }
@@ -1161,16 +1161,16 @@ const FilterWrap = styled.div`
   position: relative;
 `;
 
-const FilterBtn = styled.button<{ active: boolean }>`
+const FilterBtn = styled.button<{ $active: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
   border-radius: 11px;
-  border: 1.5px solid ${p => p.active ? Pista8Theme.primary : 'rgba(72,80,84,0.15)'};
-  background: ${p => p.active ? `${Pista8Theme.primary}12` : 'transparent'};
-  color: ${p => p.active ? Pista8Theme.primary : Pista8Theme.secondary};
+  border: 1.5px solid ${p => p.$active ? Pista8Theme.primary : 'rgba(72,80,84,0.15)'};
+  background: ${p => p.$active ? `${Pista8Theme.primary}12` : 'transparent'};
+  color: ${p => p.$active ? Pista8Theme.primary : Pista8Theme.secondary};
   cursor: pointer;
   transition: all 0.18s;
   &:hover { border-color: ${Pista8Theme.primary}; color: ${Pista8Theme.primary}; }
@@ -1190,7 +1190,7 @@ const FilterDropdown = styled.div`
   animation: ${fadeUp} 0.18s ease both;
 `;
 
-const FilterOption = styled.button<{ active: boolean }>`
+const FilterOption = styled.button<{ $active: boolean }>`
   display: block;
   width: 100%;
   text-align: left;
@@ -1198,9 +1198,9 @@ const FilterOption = styled.button<{ active: boolean }>`
   border: none;
   border-radius: 10px;
   font-size: 13px;
-  font-weight: ${p => p.active ? '700' : '500'};
-  color: ${p => p.active ? Pista8Theme.primary : Pista8Theme.secondary};
-  background: ${p => p.active ? `${Pista8Theme.primary}10` : 'transparent'};
+  font-weight: ${p => p.$active ? '700' : '500'};
+  color: ${p => p.$active ? Pista8Theme.primary : Pista8Theme.secondary};
+  background: ${p => p.$active ? `${Pista8Theme.primary}10` : 'transparent'};
   cursor: pointer;
   transition: background 0.15s;
   &:hover { background: rgba(72,80,84,0.05); }
@@ -1212,12 +1212,12 @@ const ChallengeList = styled.div`
   gap: 14px;
 `;
 
-const ChallengeCard = styled.div<{ active: boolean }>`
+const ChallengeCard = styled.div<{ $active: boolean }>`
   position: relative;
   padding: 20px 22px;
   border-radius: 18px;
-  border: 1.5px solid ${p => p.active ? Pista8Theme.primary : 'rgba(72,80,84,0.07)'};
-  background: ${p => p.active ? `${Pista8Theme.primary}07` : 'rgba(248,249,250,0.8)'};
+  border: 1.5px solid ${p => p.$active ? Pista8Theme.primary : 'rgba(72,80,84,0.07)'};
+  background: ${p => p.$active ? `${Pista8Theme.primary}07` : 'rgba(248,249,250,0.8)'};
   cursor: pointer;
   transition: all 0.22s ease;
   overflow: hidden;
@@ -1329,12 +1329,12 @@ const RespondButton = styled.button`
   }
 `;
 
-const RightPanel = styled.div<{ hasChallenge: boolean }>`
+const RightPanel = styled.div<{ $hasChallenge: boolean }>`
   background: ${Pista8Theme.secondary};
   border-radius: 24px;
   padding: 32px;
   border: 1px solid rgba(72,80,84,0.1);
-  opacity: ${p => p.hasChallenge ? 1 : 0.35};
+  opacity: ${p => p.$hasChallenge ? 1 : 0.35};
   transition: opacity 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -1448,12 +1448,12 @@ const RankBar = styled.div`
   overflow: hidden;
 `;
 
-const RankFill = styled.div<{ pct: number; delay: number }>`
+const RankFill = styled.div<{ $pct: number; $delay: number }>`
   height: 100%;
-  width: ${p => p.pct}%;
+  width: ${p => p.$pct}%;
   background: ${Pista8Theme.primary};
   border-radius: 2px;
-  animation: ${fillBar} 0.55s ${p => p.delay}ms ease both;
+  animation: ${fillBar} 0.55s ${p => p.$delay}ms ease both;
 `;
 
 const RankVal = styled.span`
@@ -1676,12 +1676,12 @@ const ChecklistItem = styled.li`
   border: 1px dashed rgba(72,80,84,0.15);
 `;
 
-const StatusDot = styled.span<{ done: boolean }>`
+const StatusDot = styled.span<{ $done: boolean }>`
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 2px solid ${p => (p.done ? Pista8Theme.primary : 'rgba(72,80,84,0.25)')};
-  background: ${p => (p.done ? Pista8Theme.primary : 'transparent')};
+  border: 2px solid ${p => (p.$done ? Pista8Theme.primary : 'rgba(72,80,84,0.25)')};
+  background: ${p => (p.$done ? Pista8Theme.primary : 'transparent')};
   transition: background 0.2s ease, border 0.2s ease;
 `;
 
@@ -1893,13 +1893,13 @@ const ConsentList = styled.div<{ $invalid?: boolean }>`
   `}
 `;
 
-const ConsentItem = styled.label<{ checked: boolean }>`
+const ConsentItem = styled.label<{ $checked: boolean }>`
   display: flex;
   gap: 14px;
   padding: 16px 18px;
   border-radius: 18px;
-  border: 1.5px solid ${p => (p.checked ? Pista8Theme.primary : 'rgba(72,80,84,0.12)')};
-  background: ${p => (p.checked ? `${Pista8Theme.primary}08` : 'rgba(248,249,250,0.9)')};
+  border: 1.5px solid ${p => (p.$checked ? Pista8Theme.primary : 'rgba(72,80,84,0.12)')};
+  background: ${p => (p.$checked ? `${Pista8Theme.primary}08` : 'rgba(248,249,250,0.9)')};
   cursor: pointer;
   transition: border 0.2s ease, background 0.2s ease;
 `;

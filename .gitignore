@@ -1,0 +1,4 @@
+# Credenciales - NUNCA subir
+**/serviceAccountKey.json
+**/firebase-admin.json
+*.env

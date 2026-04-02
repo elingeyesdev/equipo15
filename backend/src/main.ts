@@ -2,22 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import * as admin from 'firebase-admin';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-
-console.log("ue42FM0pORPEeNGw:", process.env.MONGODB_URI);
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  const serviceAccount = JSON.parse(
-    readFileSync(join(process.cwd(), 'firebase-admin.json'), 'utf8'),
-  );
-
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
 
   app.setGlobalPrefix('api');
 

@@ -7,10 +7,25 @@ const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ email: '', password: '', name: '' });
   const [loading, setLoading] = useState(false);
+  const [errorVisible, setErrorVisible] = useState<string | null>(null);
+
+  const getFriendlyError = (error: any): string => {
+    const code = error?.code || error?.response?.data?.code || '';
+    switch (code) {
+      case 'auth/email-already-in-use': return 'Este correo ya está registrado. Intenta iniciar sesión.';
+      case 'auth/invalid-credential': return 'Correo o contraseña incorrectos.';
+      case 'auth/weak-password': return 'La contraseña debe tener al menos 6 caracteres.';
+      case 'auth/invalid-email': return 'El formato del correo no es válido.';
+      case 'auth/user-not-found': return 'No existe una cuenta con este correo.';
+      case 'auth/popup-closed-by-user': return 'El login de Google fue cancelado.';
+      default: return error?.message || 'Ocurrió un error inesperado. Intenta de nuevo.';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorVisible(null);
     try {
       if (isLogin) {
         await authService.login(formData.email, formData.password);
@@ -18,6 +33,7 @@ const AuthPage = () => {
         await authService.register(formData.email, formData.password, formData.name);
       }
     } catch (error: any) {
+      setErrorVisible(getFriendlyError(error));
       console.error(error);
     } finally {
       setLoading(false);
@@ -26,9 +42,11 @@ const AuthPage = () => {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
+    setErrorVisible(null);
     try {
       await authService.loginWithGoogle();
     } catch (error: any) {
+      setErrorVisible(getFriendlyError(error));
       console.error(error);
     } finally {
       setLoading(false);
@@ -51,6 +69,17 @@ const AuthPage = () => {
         </div>
 
         <div className="sep-line" />
+
+        {errorVisible && (
+          <div className="error-banner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            {errorVisible}
+          </div>
+        )}
 
         <div className="tabs">
           <button
@@ -194,6 +223,25 @@ const StyledWrapper = styled.div`
     height: 1px;
     background: rgba(72, 80, 84, 0.09);
     margin-bottom: 30px;
+  }
+
+  .error-banner {
+    background: #fff5f5;
+    border: 1px solid #feb2b2;
+    color: #c53030;
+    padding: 12px 16px;
+    border-radius: 14px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: ${slideDown} 0.3s ease both;
+    
+    svg {
+      flex-shrink: 0;
+    }
   }
 
   .tabs {
