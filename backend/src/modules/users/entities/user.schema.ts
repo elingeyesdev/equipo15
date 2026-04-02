@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class User extends Document {
@@ -12,12 +12,14 @@ export class User extends Document {
   @Prop({ required: true })
   displayName: string;
 
-  @Prop({ 
-    type: String, 
-    enum: ['student', 'judge', 'admin'], 
-    default: 'student' 
-  })
-  role: string;
+  @Prop()
+  bio?: string;
+
+  @Prop()
+  avatarUrl?: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Role' })
+  roleId: Types.ObjectId;
 
   @Prop()
   fcmToken?: string;

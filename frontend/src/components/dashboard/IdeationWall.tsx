@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { FormEvent, KeyboardEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled, { keyframes, css } from 'styled-components';
 import { Pista8Theme } from '../../config/theme';
 import { useAuth } from '../../context/AuthContext';
@@ -129,6 +130,7 @@ const interpretBackendError = (error: any): FeedbackMessage => {
 
 const IdeationWall = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [selectedChallenge, setSelectedChallenge] = useState<any>(mockChallenges[0]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('Todos');
@@ -506,11 +508,18 @@ const IdeationWall = () => {
         </SidebarTop>
 
         <SidebarNav>
-          <SidebarNavItem $active>
+          <SidebarNavItem $active onClick={() => { setSidebarOpen(false); navigate('/'); }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
             </svg>
             Ver Retos
+          </SidebarNavItem>
+          <SidebarNavItem onClick={() => { setSidebarOpen(false); navigate('/profile'); }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            Mi Perfil
           </SidebarNavItem>
           <SidebarNavItem>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -1,0 +1,5 @@
+src/components/Form/DynamicForm.tsx(1,17): error TS1484: 'FormEvent' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/components/Form/DynamicForm.tsx(5,10): error TS1484: 'FieldConfig' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/components/Form/ValidationStrategies.ts(15,15): error TS1294: This syntax is not allowed when 'erasableSyntaxOnly' is enabled.
+src/components/Form/ValidationStrategies.ts(35,15): error TS1294: This syntax is not allowed when 'erasableSyntaxOnly' is enabled.
+src/hooks/useForm.ts(2,10): error TS1484: 'FieldConfig' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.

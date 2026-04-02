@@ -23,6 +23,12 @@ export class UsersController {
     return user;
   }
 
+  @Patch('profile')
+  @UseGuards(FirebaseAuthGuard)
+  updateBio(@Req() req: any, @Body('bio') bio: string) {
+    return this.usersService.updateBio(req.user.uid, bio);
+  }
+
   @Patch('faculty')
   @UseGuards(FirebaseAuthGuard)
   updateFaculty(@Req() req: any, @Body('facultyId') facultyId: number) {

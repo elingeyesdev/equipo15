@@ -23,8 +23,9 @@ export class RolesGuard implements CanActivate {
     const firebaseUser = request.user;
 
     const user = await this.usersService.findByUid(firebaseUser.uid);
+    const roleName = (user?.roleId as any)?.name;
 
-    if (!user || !requiredRoles.includes(user.role)) {
+    if (!user || !roleName || !requiredRoles.includes(roleName)) {
       throw new ForbiddenException();
     }
 

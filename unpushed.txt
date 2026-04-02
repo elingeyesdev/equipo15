@@ -1,0 +1,2 @@
+ffce247 merge: integrar cambios de amigo desde origin/main
+7999b4b feat(E07-E10): formulario dinamico, privacidad, motor facultades, completeProfile

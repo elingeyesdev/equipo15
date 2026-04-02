@@ -1,14 +1,16 @@
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { UserContext } from './context/UserContext';
 import AuthPage from './components/auth/AuthPage';
 import IdeationWall from './components/dashboard/IdeationWall';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AdminTestView } from './components/admin/AdminTestView';
 import { CompleteProfileView } from './components/auth/CompleteProfileView';
 import { useState, useEffect, useCallback } from 'react';
+import type { ReactNode } from 'react';
 
 const API_URL = 'http://localhost:3000/api';
 
-const AppContent = () => {
+const AppContent = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [mongoProfile, setMongoProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -37,12 +39,17 @@ const AppContent = () => {
         firebaseUid: user.uid,
         email: user.email,
         displayName: user.displayName || 'Innovador',
-        role: 'student'
+        role: 'student' // Se enviará pero el backend ahora usará getRoleFromEmail
       })
     });
     if (res.ok) return await res.json();
     return null;
   }, [user]);
+
+  const refetchProfile = useCallback(async () => {
+    const profile = await fetchProfile();
+    setMongoProfile(profile);
+  }, [fetchProfile]);
 
   useEffect(() => {
     if (!user) {
@@ -80,10 +87,7 @@ const AppContent = () => {
   }, [user, fetchProfile, syncProfile]);
 
   const handleFacultyComplete = async () => {
-    const profile = await fetchProfile();
-    if (profile) {
-      setMongoProfile(profile);
-    }
+    await refetchProfile();
   };
 
   if (!user) return <AuthPage />;
@@ -91,12 +95,8 @@ const AppContent = () => {
   if (loading) {
     return (
       <div style={{
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: 'Inter, sans-serif',
-        color: '#485054'
+        height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'Inter, sans-serif', color: '#485054'
       }}>
         Conectando con Servidor...
       </div>
@@ -110,23 +110,14 @@ const AppContent = () => {
   if (profileChecked && !mongoProfile) {
     return (
       <div style={{
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column' as const,
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: 'Inter, sans-serif',
-        color: '#485054',
-        gap: '1rem'
+        height: '100vh', display: 'flex', flexDirection: 'column' as const,
+        alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif',
+        color: '#485054', gap: '1rem'
       }}>
         <p>No se pudo cargar tu perfil. Verifica que el servidor esté activo.</p>
         <button onClick={() => window.location.reload()} style={{
-          padding: '10px 20px',
-          background: '#FE410A',
-          color: 'white',
-          border: 'none',
-          borderRadius: '8px',
-          cursor: 'pointer'
+          padding: '10px 20px', background: '#FE410A', color: 'white', border: 'none',
+          borderRadius: '8px', cursor: 'pointer'
         }}>
           Reintentar
         </button>
@@ -134,8 +125,14 @@ const AppContent = () => {
     );
   }
 
-  return <IdeationWall />;
+  return (
+    <UserContext.Provider value={{ profile: mongoProfile, refetchProfile }}>
+      {children}
+    </UserContext.Provider>
+  );
 };
+
+import { ProfileView } from './components/profile/ProfileView';
 
 function App() {
   return (
@@ -143,7 +140,8 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/admin-test" element={<AdminTestView />} />
-          <Route path="*" element={<AppContent />} />
+          <Route path="/profile" element={<AppContent><ProfileView /></AppContent>} />
+          <Route path="*" element={<AppContent><IdeationWall /></AppContent>} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
