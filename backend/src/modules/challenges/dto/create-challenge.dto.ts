@@ -4,7 +4,8 @@ import {
   IsDateString, 
   IsBoolean, 
   IsOptional, 
-  IsEnum 
+  IsEnum,
+  IsNumber
 } from 'class-validator';
 import { ChallengeStatus } from '../entities/challenge.status';
 
@@ -14,25 +15,28 @@ export class CreateChallengeDto {
   title: string;
 
   @IsString()
-  @IsNotEmpty()
-  problemDescription: string;
+  @IsOptional()
+  problemDescription?: string;
 
   @IsString()
-  @IsNotEmpty()
-  companyContext: string;
+  @IsOptional()
+  companyContext?: string;
 
   @IsString()
-  @IsNotEmpty()
-  participationRules: string;
+  @IsOptional()
+  participationRules?: string;
 
   @IsDateString()
-  startDate: string;
+  @IsOptional()
+  startDate?: string;
 
   @IsDateString()
-  endDate: string;
+  @IsOptional()
+  endDate?: string;
 
   @IsDateString()
-  publicationDate: string;
+  @IsOptional()
+  publicationDate?: string;
 
   @IsBoolean()
   @IsOptional()
@@ -43,8 +47,8 @@ export class CreateChallengeDto {
   companyId?: string;
 
   @IsOptional()
-  @IsString()
-  facultyId?: string;
+  @IsNumber()
+  facultyId?: number;
 
   @IsEnum(ChallengeStatus)
   @IsOptional()

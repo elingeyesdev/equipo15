@@ -1,5 +1,5 @@
 import React from 'react';
-import * as S from '../styles/DashboardStyles';
+import * as S from '../styles/ChallengeStyles';
 import ChallengeCard from './ChallengeCard';
 
 interface ChallengeListProps {

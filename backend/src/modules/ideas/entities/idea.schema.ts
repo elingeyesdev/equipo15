@@ -27,6 +27,9 @@ export class Idea extends Document {
   @Prop({ default: 0 })
   commentsCount: number;
 
+  @Prop({ type: Types.ObjectId, ref: 'Challenge', required: true })
+  challengeId: Types.ObjectId;
+
   @Prop({ default: false })
   isAnonymous: boolean;
 }

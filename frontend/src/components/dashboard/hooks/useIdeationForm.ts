@@ -216,6 +216,7 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
           description: description || undefined,
           tags: normalizedTags(),
           author: profile._id,
+          challengeId: formChallenge?._id,
           isAnonymous: isGuest,
         });
         showToast({
@@ -231,6 +232,7 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
           tags: normalizedTags(),
           status: targetStatus,
           author: profile._id,
+          challengeId: formChallenge._id,
           isAnonymous: isGuest,
         });
         const successMessage: FeedbackMessage = {

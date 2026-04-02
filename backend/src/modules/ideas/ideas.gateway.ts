@@ -13,20 +13,18 @@ export class IdeasGateway implements OnGatewayInit {
   @WebSocketServer()
   server: Server;
 
-  // Mock para control de retos (E04 Fase 2)
   private closedChallenges = new Set<string>();
 
   constructor(private readonly ideasService: IdeasService) {}
 
   afterInit() {
-    // Sincronización del Timer: Mandar la hora oficial del servidor cada 10s
     setInterval(() => {
       this.server.emit('timer:sync', { serverTime: Date.now() });
     }, 10000);
   }
 
   private isChallengeActive(challengeId?: string): boolean {
-    if (!challengeId) return true; // Si no hay ID, permitimos (para compatibilidad actual)
+    if (!challengeId) return true;
     return !this.closedChallenges.has(challengeId);
   }
 

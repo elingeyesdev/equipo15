@@ -2,20 +2,11 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import * as admin from 'firebase-admin';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  const serviceAccount = JSON.parse(
-    readFileSync(join(process.cwd(), 'firebase-admin.json'), 'utf8'),
-  );
-
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
 
   app.setGlobalPrefix('api');
 
@@ -24,6 +15,9 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
+
+  app.useGlobalInterceptors(new TransformInterceptor());
+  app.useGlobalFilters(new HttpExceptionFilter());
 
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,

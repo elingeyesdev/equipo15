@@ -2,13 +2,13 @@ import { memo } from 'react';
 import styled, { keyframes } from 'styled-components';
 
 const driftLtr = keyframes`
-  from { transform: translateX(-160px); }
-  to   { transform: translateX(calc(100vw + 160px)); }
+  from { left: -15%; }
+  to   { left: 110%; }
 `;
 
 const driftRtl = keyframes`
-  from { transform: translateX(calc(100vw + 160px)); }
-  to   { transform: translateX(-160px); }
+  from { left: 110%; }
+  to   { left: -15%; }
 `;
 
 const CloudShape = styled.div<{
@@ -20,11 +20,12 @@ const CloudShape = styled.div<{
 }>`
   position: absolute;
   top: ${p => p.$y}px;
-  left: 0;
+  left: ${p => p.$rtl ? '110%' : '-15%'};
   width: ${p => 120 * p.$scale}px;
   height: ${p => 50 * p.$scale}px;
   opacity: 0.55;
   animation: ${p => (p.$rtl ? driftRtl : driftLtr)} ${p => p.$duration}s linear ${p => p.$delay}s infinite;
+  animation-fill-mode: none;
 `;
 
 const CloudSvg = () => (

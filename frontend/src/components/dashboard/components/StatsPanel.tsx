@@ -1,13 +1,14 @@
 import React from 'react';
-import * as S from '../styles/DashboardStyles';
+import * as S from '../styles/StatsStyles';
 
 interface StatsPanelProps {
   selectedChallenge: any;
+  challengeStats: any;
   topFacultades: any[];
   topLideres: any[];
 }
 
-const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, topFacultades, topLideres }) => {
+const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeStats, topFacultades, topLideres }) => {
   return (
     <S.RightPanel hasChallenge={!!selectedChallenge}>
       {selectedChallenge ? (
@@ -19,11 +20,11 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, topFacultade
 
           <S.StatsSummary>
             <S.SummaryCard>
-              <S.SummaryVal>{selectedChallenge.ideas}</S.SummaryVal>
+              <S.SummaryVal>{challengeStats?.totalIdeas || 0}</S.SummaryVal>
               <S.SummaryLabel>Ideas</S.SummaryLabel>
             </S.SummaryCard>
             <S.SummaryCard>
-              <S.SummaryVal>{selectedChallenge.likes}</S.SummaryVal>
+              <S.SummaryVal>{challengeStats?.totalLikes || 0}</S.SummaryVal>
               <S.SummaryLabel>Likes</S.SummaryLabel>
             </S.SummaryCard>
             <S.SummaryCard>
@@ -40,7 +41,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, topFacultade
                   <S.RankNum>{i + 1}</S.RankNum>
                   <S.RankName>{f.name}</S.RankName>
                   <S.RankBar>
-                    <S.RankFill pct={Math.round((f.likes / topFacultades[0].likes) * 100)} delay={i * 80} />
+                    <S.RankFill pct={topFacultades[0]?.likes > 0 ? Math.round((f.likes / topFacultades[0].likes) * 100) : 0} delay={i * 80} />
                   </S.RankBar>
                   <S.RankVal>{f.likes}</S.RankVal>
                 </S.RankRow>
@@ -56,7 +57,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, topFacultade
                   <S.RankNum>{i + 1}</S.RankNum>
                   <S.RankName>{l.name}</S.RankName>
                   <S.RankBar>
-                    <S.RankFill pct={Math.round((l.ideas / topLideres[0].ideas) * 100)} delay={i * 80} />
+                    <S.RankFill pct={topLideres[0]?.ideas > 0 ? Math.round((l.ideas / topLideres[0].ideas) * 100) : 0} delay={i * 80} />
                   </S.RankBar>
                   <S.RankVal>{l.ideas}</S.RankVal>
                 </S.RankRow>

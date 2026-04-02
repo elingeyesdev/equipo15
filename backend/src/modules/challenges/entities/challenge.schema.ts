@@ -7,35 +7,35 @@ export class Challenge extends Document {
   @Prop({ required: true, index: true, trim: true })
   title: string;
 
-  @Prop({ required: true })
+  @Prop()
   problemDescription: string;
 
-  @Prop({ required: true })
+  @Prop()
   companyContext: string;
 
-  @Prop({ required: true })
+  @Prop()
   participationRules: string;
 
-  @Prop({ required: true })
+  @Prop()
   startDate: Date;
 
-  @Prop({ required: true })
+  @Prop()
   endDate: Date;
 
-  @Prop({ required: true })
+  @Prop()
   publicationDate: Date;
 
   @Prop({ default: false })
   isPrivate: boolean;
 
   @Prop({ unique: true, sparse: true })
-  accessToken: string;
+  accessToken?: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Company', required: false })
   companyId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Faculty', required: false })
-  facultyId: Types.ObjectId;
+  @Prop({ type: Number, required: false })
+  facultyId: number;
 
   @Prop({
     type: String,
@@ -47,9 +47,8 @@ export class Challenge extends Document {
 
 export const ChallengeSchema = SchemaFactory.createForClass(Challenge);
 
-ChallengeSchema.pre('save', function (next: any) {
-  if (this.endDate <= this.startDate) {
-    return next(new Error('La fecha de cierre no puede ser anterior o igual a la de inicio.'));
+ChallengeSchema.pre('save', async function () {
+  if (this.endDate && this.startDate && this.endDate <= this.startDate) {
+    throw new Error('La fecha de cierre no puede ser anterior o igual a la de inicio.');
   }
-  next();
 });

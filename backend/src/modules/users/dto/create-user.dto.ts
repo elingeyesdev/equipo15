@@ -15,9 +15,21 @@ export class CreateUserDto {
   @IsNotEmpty()
   displayName: string;
 
-  @IsEnum(['student', 'judge', 'admin'])
+  @IsString()
   @IsOptional()
   role?: string;
+
+  @IsString()
+  @IsOptional()
+  roleId?: string;
+
+  @IsString()
+  @IsOptional()
+  bio?: string;
+
+  @IsString()
+  @IsOptional()
+  avatarUrl?: string;
 
   @IsString()
   @IsOptional()

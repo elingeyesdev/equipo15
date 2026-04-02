@@ -1,5 +1,6 @@
 import React from 'react';
-import * as S from '../styles/DashboardStyles';
+import { NavLink } from 'react-router-dom';
+import * as S from '../styles/SidebarStyles';
 import LogoutButton from '../LogoutButton';
 
 interface SidebarProps {
@@ -32,19 +33,31 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
         </S.SidebarTop>
 
         <S.SidebarNav>
-          <S.SidebarNavItem active>
+          <S.SidebarNavItem as={NavLink} to="/dashboard/perfil" onClick={onClose}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            Mi Perfil
+          </S.SidebarNavItem>
+
+          <S.SidebarDivider />
+
+          <S.SidebarNavItem as={NavLink} to="/dashboard" end onClick={onClose}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
             </svg>
             Ver Retos
           </S.SidebarNavItem>
-          <S.SidebarNavItem>
+
+          <S.SidebarNavItem as={NavLink} to="/dashboard/mis-ideas" onClick={onClose} style={{ pointerEvents: 'none', opacity: 0.4 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
+              <path d="M12 2a7 7 0 0 1 7 7c0 3-1.8 5.4-4 6.5V17a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-1.5C6.8 14.4 5 12 5 9a7 7 0 0 1 7-7z" />
+              <line x1="9" y1="21" x2="15" y2="21" />
+              <line x1="10" y1="18" x2="14" y2="18" />
             </svg>
             Mis Ideas
+            <S.ComingSoonBadge>Próximamente</S.ComingSoonBadge>
           </S.SidebarNavItem>
         </S.SidebarNav>
 

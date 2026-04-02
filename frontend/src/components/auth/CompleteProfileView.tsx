@@ -68,7 +68,7 @@ const IconWrap = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 28px;
+  margin: 0 auto 20px;
 `;
 
 const Title = styled.h2`
@@ -84,7 +84,7 @@ const Title = styled.h2`
 const Subtitle = styled.p`
   font-size: 14px;
   color: #a8b0b8;
-  margin: 0 0 36px;
+  margin: 0 0 20px;
   line-height: 1.65;
   text-align: center;
   font-weight: 500;
@@ -173,7 +173,7 @@ const Button = styled.button<{ disabled: boolean }>`
 const Divider = styled.div`
   height: 1px;
   background: rgba(72, 80, 84, 0.07);
-  margin: 32px 0;
+  margin: 16px 0;
 `;
 
 export const CompleteProfileView = ({ onComplete }: { onComplete: () => void }) => {

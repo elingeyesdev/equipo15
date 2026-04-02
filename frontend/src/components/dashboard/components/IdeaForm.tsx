@@ -1,5 +1,7 @@
 import React from 'react';
-import * as S from '../styles/DashboardStyles';
+import * as S from '../styles/FormStyles';
+import * as FM from '../styles/FeedbackAndMiscStyles';
+import { FEEDBACK_GLYPH } from '../styles/CommonStyles';
 import { useIdeationForm } from '../hooks/useIdeationForm';
 import type { ConsentKey } from '../hooks/useIdeationForm';
 
@@ -93,7 +95,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
             <S.FormCard onSubmit={handleSubmit}>
               {form.formFeedback && (
                 <S.FeedbackBanner $tone={form.formFeedback.tone} role={form.formFeedback.tone === 'error' || form.formFeedback.tone === 'critical' ? 'alert' : 'status'}>
-                  <S.BannerGlyph aria-hidden="true">{S.FEEDBACK_GLYPH[form.formFeedback.tone]}</S.BannerGlyph>
+                  <S.BannerGlyph aria-hidden="true">{FEEDBACK_GLYPH[form.formFeedback.tone]}</S.BannerGlyph>
                   <div>
                     {form.formFeedback.title && <S.BannerTitle>{form.formFeedback.title}</S.BannerTitle>}
                     <p>{form.formFeedback.message}</p>
@@ -208,26 +210,26 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
 
       {confirmOpen && (
         <>
-          <S.ConfirmBackdrop />
-          <S.ConfirmDialog role="dialog" aria-modal="true" aria-labelledby="confirm-submit-title">
-            <S.ConfirmCard>
-              <S.ConfirmTitle id="confirm-submit-title">¿Compartir esta idea con el hub?</S.ConfirmTitle>
-              <S.ConfirmText>
+          <FM.ConfirmBackdrop />
+          <FM.ConfirmDialog role="dialog" aria-modal="true" aria-labelledby="confirm-submit-title">
+            <FM.ConfirmCard>
+              <FM.ConfirmTitle id="confirm-submit-title">¿Compartir esta idea con el hub?</FM.ConfirmTitle>
+              <FM.ConfirmText>
                 {form.ideaName.trim() ? `“${form.ideaName.trim()}”` : 'Tu propuesta'} se enviará a revisión del hub de innovación.
                 Confirma para cerrar el formulario y registrar el envío.
-              </S.ConfirmText>
-              <S.ConfirmSummary>
-                <S.SummaryPill>{challenge?.title || 'Reto sin seleccionar'}</S.SummaryPill>
-                <S.SummaryPill>{form.tags.length} etiquetas</S.SummaryPill>
-              </S.ConfirmSummary>
-              <S.ConfirmActions>
-                <S.ConfirmGhost type="button" onClick={() => setConfirmOpen(false)} disabled={form.formSaving}>Seguir editando</S.ConfirmGhost>
-                <S.ConfirmCTA type="button" onClick={onConfirm} disabled={form.formSaving}>
+              </FM.ConfirmText>
+              <FM.ConfirmSummary>
+                <FM.SummaryPill>{challenge?.title || 'Reto sin seleccionar'}</FM.SummaryPill>
+                <FM.SummaryPill>{form.tags.length} etiquetas</FM.SummaryPill>
+              </FM.ConfirmSummary>
+              <FM.ConfirmActions>
+                <FM.ConfirmGhost type="button" onClick={() => setConfirmOpen(false)} disabled={form.formSaving}>Seguir editando</FM.ConfirmGhost>
+                <FM.ConfirmCTA type="button" onClick={onConfirm} disabled={form.formSaving}>
                   {form.formSaving ? 'Enviando...' : 'Sí, compartir'}
-                </S.ConfirmCTA>
-              </S.ConfirmActions>
-            </S.ConfirmCard>
-          </S.ConfirmDialog>
+                </FM.ConfirmCTA>
+              </FM.ConfirmActions>
+            </FM.ConfirmCard>
+          </FM.ConfirmDialog>
         </>
       )}
     </>

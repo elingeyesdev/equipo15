@@ -9,6 +9,7 @@ export interface CreateIdeaPayload {
   title: string;
   description: string;
   author: string;
+  challengeId: string;
   tags?: string[];
   status?: IdeaStatus;
   isAnonymous?: boolean;
@@ -18,6 +19,7 @@ export interface CreateDraftIdeaPayload {
   title?: string;
   description?: string;
   author: string;
+  challengeId?: string;
   tags?: string[];
   isAnonymous?: boolean;
 }

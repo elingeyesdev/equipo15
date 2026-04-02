@@ -12,6 +12,9 @@ export class CreateIdeaDto {
   @IsMongoId()
   author: string;
 
+  @IsMongoId()
+  challengeId: string;
+
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
