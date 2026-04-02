@@ -1,46 +1,76 @@
-# 🎨 Frontend - Sistema de Generación de Ideas Potenciales (Pista 8)
+# Pista 8 - Frontend (Experiencia de Usuario)
 
-Interfaz de usuario interactiva y responsiva construida con **React** y **Vite**. Este módulo se encarga de la visualización dinámica del muro de ideas y la gamificación mediante la animación de **aviones de papel**.
+Este repositorio contiene la interfaz de usuario interactiva de Pista 8. Construida con React y TypeScript, la aplicación ofrece una experiencia fluida, responsiva y visualmente premium, centrada en la gamificación y la ideación colaborativa.
 
-## 🛠️ Stack Tecnológico
-* **Framework:** React + TypeScript
-* **Herramienta de construcción:** Vite
-* **Estilos:** Styled-Components (alineado al Brand Book de Pista 8)
-* **Estado Global:** React Context API (`AuthContext`)
-* **Enrutamiento:** React Router DOM
+## Arquitectura Frontend
 
-## 📁 Estructura de Carpetas (Basada en Arquitectura de Componentes)
-```text
-src/
-├── assets/       # Imágenes, logo de UNIVALLE y el PNG del avión de papel.
-├── components/   # Componentes atómicos e interfaces principales.
-│   ├── admin/      # Utilidades de uso interno para administradores (ShareChallenge).
-│   ├── auth/       # Formulario interactivo, SVG Vectorizado de Google.
-│   ├── challenges/ # Gestor de validación visual y proxy de retos privados.
-│   ├── dashboard/  # Estructuras maestras del Muro de Ideación y Logout Animado.
-│   └── errors/     # Pantallas exclusivas de intercepción e ilusiones 404.
-├── config/       # Parámetros y Constantes de inicialización (Firebase y Pista8Theme).
-├── context/      # Cerebro Reactivo: Estado global de sesión y protección de rutas.
-└── services/     # Clientes de API Axios (`idea.service`, `auth.service`) para handshakes.
+La aplicación utiliza una arquitectura basada en Componentes de Función y Hooks Personalizados, organizada por dominios de funcionalidad.
+
+```mermaid
+graph TD
+    A[App Root] --> B[BrowserRouter]
+    B --> C[AuthProvider]
+    C --> D[UserProvider]
+    D --> E[Routes & Guards]
+    E -->|Protección| F[IdeationWall]
+    E -->|Admin| G[AdminDashboard]
+    E -->|Evaluación| H[EvaluationPanel]
+    F & G & H --> I[Custom Hooks]
+    I --> J[API Services - Axios]
 ```
 
-## 🚀 Instalación y Uso
+### Gestión de Estado y Contexto
+- AuthContext: Gestiona la sesión de Firebase y los tokens de acceso.
+- UserContext: Cachea el perfil del usuario de MongoDB, incluyendo puntos, facultad y rol.
+- Custom Hooks: Encapsulan la lógica de formularios (useIdeationForm) y estados complejos del dashboard (useDashboardState).
 
-Instalar dependencias: `pnpm install`
+## Estructura del Proyecto
 
-Asegurarse de crear el archivo `.env` transparente a GIT con las variables vitales y seguras del proyecto:
-- VITE_FIREBASE_API_KEY
-- VITE_FIREBASE_AUTH_DOMAIN
-- VITE_FIREBASE_PROJECT_ID
-- VITE_FIREBASE_STORAGE_BUCKET
-- VITE_FIREBASE_MESSAGING_SENDER_ID
-- VITE_FIREBASE_APP_ID
+```text
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── admin/        # Panel de control y constructor de retos.
+│   │   ├── auth/         # Login, Registro y Autenticación con Google.
+│   │   ├── challenges/   # Tarjetas, validaciones y filtros de retos.
+│   │   ├── common/       # Componentes reutilizables (Botones, Guards, Toasts).
+│   │   ├── dashboard/    # Muro de ideas, lista de retos y estadísticas.
+│   │   ├── errors/       # Intercepción de errores y vistas 404.
+│   │   ├── evaluations/  # Criterios de evaluación y vistas de juez.
+│   │   ├── profile/      # Gestión de perfil, bio y actividad.
+│   │   └── form/         # Utilidades y primitivas de formulario.
+│   ├── config/           # Configuración de Firebase y Pista8Theme.
+│   ├── context/          # Estado global (Auth y User).
+│   ├── services/         # Clientes API (auth, challenge, idea, user).
+│   ├── hooks/            # Lógica compartida (Navegación, Toasts).
+│   └── styles/           # Estilos globales y animaciones de keyframes.
+```
 
-Iniciar servidor de desarrollo: `pnpm run dev` o `pnpm dev`
+## Stack Tecnológico
+- Core: React 18 + TypeScript
+- Construcción: Vite
+- Estilos: Styled-Components (CSS-in-JS)
+- Navegación: React Router DOM v6
+- Autenticación: Firebase SDK
 
-Abrir en el navegador: `http://localhost:5173`
+## Guía de Diseño (UI/UX)
+Pista 8 sigue un lenguaje visual centrado en:
+- Gradients & Shadows: Uso de sombras sutiles y gradientes profundos para jerarquía.
+- Micro-interacciones: Animaciones fadeUp y estados hover reactivos.
+- Tipografía: Tipografía moderna (Inter) para máxima legibilidad.
 
-## 👥 Equipo de Desarrollo (Equipo 15)
+## Configuración y Desarrollo
+
+1. Instalación: `pnpm install`
+2. Entorno: Crear `.env` con las credenciales de Firebase API.
+3. Desarrollo: `pnpm run dev`
+4. Build para Producción: `pnpm run build`
+
+---
+
+## Equipo 15 - Desarrollo
 - Franco Leonel Avaro Oliva 
 - Guilherme da Silva Santana de Almeida 
 - Roberto Rodriguez Giorgetti
+
+*Proyecto de Sistemas II - UNIVALLE 2026*

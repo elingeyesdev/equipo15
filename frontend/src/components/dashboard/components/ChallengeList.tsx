@@ -1,6 +1,7 @@
 import React from 'react';
 import * as S from '../styles/ChallengeStyles';
 import ChallengeCard from './ChallengeCard';
+import { FACULTIES } from '../../../config/faculties';
 
 interface ChallengeListProps {
   challenges: any[];
@@ -17,7 +18,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
   challenges, activeFilter, onFilterChange, filterOpen, setFilterOpen,
   selectedChallengeId, onSelectChallenge, onRespond
 }) => {
-  const filters = ['Todos', 'Ingeniería', 'Tecnología', 'Sostenibilidad'];
+  const filters = ['Todos', ...FACULTIES.map(f => f.slug)];
 
   return (
     <S.LeftPanel>

@@ -2,15 +2,7 @@ import { useState } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { useAuth } from '../../context/AuthContext';
 import { Pista8Theme } from '../../config/theme';
-
-const FACULTIES = [
-  { id: 1, name: 'Facultad de Ciencia y Tecnología' },
-  { id: 2, name: 'Facultad de Medicina' },
-  { id: 3, name: 'Facultad de Ciencias Económicas' },
-  { id: 4, name: 'Facultad de Ciencias Jurídicas' },
-  { id: 5, name: 'Facultad de Arquitectura' },
-  { id: 6, name: 'Facultad de Ingeniería' },
-];
+import { FACULTIES } from '../../config/faculties';
 
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(18px); }
