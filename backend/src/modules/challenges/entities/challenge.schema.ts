@@ -34,6 +34,9 @@ export class Challenge extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Company', required: false })
   companyId: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, ref: 'Faculty', required: false })
+  facultyId: Types.ObjectId;
+
   @Prop({
     type: String,
     enum: ChallengeStatus,

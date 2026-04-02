@@ -15,7 +15,10 @@ export class ChallengesService {
   ) {}
 
   async create(createChallengeDto: CreateChallengeDto): Promise<Challenge> {
-    const newChallenge = new this.challengeModel(createChallengeDto);
+    const newChallenge = new this.challengeModel({
+      ...createChallengeDto,
+      status: ChallengeStatus.DRAFT,
+    });
 
     if (newChallenge.isPrivate) {
       newChallenge.accessToken = uuidv4();
@@ -25,6 +28,13 @@ export class ChallengesService {
   }
 
   async findAllPublic(): Promise<Challenge[]> {
+    const serverDate = new Date();
+
+    await this.challengeModel.updateMany(
+      { status: ChallengeStatus.ACTIVE, endDate: { $lt: serverDate } },
+      { $set: { status: ChallengeStatus.FINISHED } }
+    );
+
     return this.challengeModel
       .find({
         isPrivate: false,
@@ -36,6 +46,8 @@ export class ChallengesService {
   }
 
   async findPrivateByToken(token: string): Promise<Challenge> {
+    const serverDate = new Date();
+
     const challenge = await this.challengeModel
       .findOne({ accessToken: token, isPrivate: true })
       .populate('companyId', 'name')
@@ -43,6 +55,11 @@ export class ChallengesService {
 
     if (!challenge) {
       throw new NotFoundException('El reto privado no existe o el token es inválido');
+    }
+
+    if (challenge.endDate < serverDate && challenge.status === ChallengeStatus.ACTIVE) {
+      challenge.status = ChallengeStatus.FINISHED;
+      await challenge.save();
     }
 
     return challenge;
@@ -57,5 +74,27 @@ export class ChallengesService {
       { $set: { userId, challengeId } },
       { upsert: true }
     );
+  }
+
+  async update(id: string, updateChallengeDto: any): Promise<Challenge> {
+    const challenge = await this.challengeModel.findById(id).exec();
+
+    if (!challenge) {
+      throw new NotFoundException('El reto no existe');
+    }
+
+    const serverDate = new Date();
+    const updatedData = { ...updateChallengeDto };
+
+    if (updatedData.endDate) {
+      const newEndDate = new Date(updatedData.endDate);
+      if (newEndDate > serverDate && challenge.status === ChallengeStatus.FINISHED) {
+        updatedData.status = ChallengeStatus.ACTIVE;
+      }
+    }
+
+    return this.challengeModel
+      .findByIdAndUpdate(id, { $set: updatedData }, { new: true })
+      .exec() as Promise<Challenge>;
   }
 }

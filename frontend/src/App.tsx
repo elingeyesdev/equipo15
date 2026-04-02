@@ -1,50 +1,52 @@
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AuthPage from './components/auth/AuthPage';
 import IdeationWall from './components/dashboard/IdeationWall';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AdminTestView } from './components/admin/AdminTestView';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CompleteProfileView } from './components/auth/CompleteProfileView';
-import { useState, useEffect } from 'react';
+import { AdminDashboard } from './components/admin/AdminDashboard';
+import { EvaluationPanel } from './components/evaluations/EvaluationPanel';
 
-const AppContent = () => {
-  const { user } = useAuth();
-  const [mongoProfile, setMongoProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      setLoading(true);
-      user.getIdToken()
-        .then(token => fetch('http://localhost:3000/api/users/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        }))
-        .then(res => res.json())
-        .then(data => {
-          setMongoProfile(data);
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    }
-  }, [user]);
-
-  if (!user) return <AuthPage />;
-  if (loading) return <div style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Conectando con Servidor...</div>;
+const RoleRouter = () => {
+  const { user, userProfile, setProfile } = useAuth();
   
-  if (mongoProfile && mongoProfile.facultyId == null) {
-    return <CompleteProfileView onComplete={() => setMongoProfile({ ...mongoProfile, facultyId: 1 })} />;
+  if (!user) return <Navigate to="/auth" />;
+  if (!userProfile) return <div style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Cargando Perfil...</div>;
+  
+  if (userProfile.facultyId == null && userProfile.role === 'student') {
+    return <CompleteProfileView onComplete={() => setProfile({ ...userProfile, facultyId: 1 })} />;
   }
 
-  return <IdeationWall />;
+  switch (userProfile.role) {
+    case 'company':
+    case 'admin':
+      return <AdminDashboard />;
+    case 'judge':
+      return <EvaluationPanel />;
+    case 'student':
+    default:
+      return <IdeationWall />;
+  }
+};
+
+const AppContent = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Conectando con Servidor...</div>;
+
+  return (
+    <Routes>
+      <Route path="/auth" element={user ? <Navigate to="/dashboard" /> : <AuthPage />} />
+      <Route path="/dashboard/*" element={<RoleRouter />} />
+      <Route path="*" element={<Navigate to={user ? "/dashboard" : "/auth"} />} />
+    </Routes>
+  );
 };
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/admin-test" element={<AdminTestView />} />
-          <Route path="*" element={<AppContent />} />
-        </Routes>
+        <AppContent />
       </AuthProvider>
     </BrowserRouter>
   );

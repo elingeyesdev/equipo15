@@ -42,6 +42,10 @@ export class CreateChallengeDto {
   @IsString()
   companyId?: string;
 
+  @IsOptional()
+  @IsString()
+  facultyId?: string;
+
   @IsEnum(ChallengeStatus)
   @IsOptional()
   status?: ChallengeStatus;

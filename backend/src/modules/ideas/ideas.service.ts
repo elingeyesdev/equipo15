@@ -31,7 +31,30 @@ export class IdeasService {
     return this.ideaModel.find().populate('author', 'displayName role').exec();
   }
 
+  async findAllPublic() {
+    return this.ideaModel
+      .find({ status: 'public' })
+      .populate('author', 'displayName role')
+      .exec();
+  }
+
   async updateStatus(id: string, status: string) {
     return this.ideaModel.findByIdAndUpdate(id, { status }, { new: true });
+  }
+
+  async addLike(ideaId: string): Promise<Idea | null> {
+    return this.ideaModel.findByIdAndUpdate(
+      ideaId,
+      { $inc: { likesCount: 1 } },
+      { new: true },
+    );
+  }
+
+  async addComment(ideaId: string): Promise<Idea | null> {
+    return this.ideaModel.findByIdAndUpdate(
+      ideaId,
+      { $inc: { commentsCount: 1 } },
+      { new: true },
+    );
   }
 }

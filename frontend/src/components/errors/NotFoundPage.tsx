@@ -4,7 +4,7 @@ import { Pista8Theme } from '../../config/theme';
 const NotFoundPage = () => (
   <ErrorWrapper>
     <div className="card">
-      <div className="icon">🚀</div>
+      <div className="icon"></div>
       <h1 className="code">404</h1>
       <p className="msg">El reto solicitado no existe o el enlace es inválido.</p>
       <button onClick={() => window.location.href = '/'} className="btn-home">

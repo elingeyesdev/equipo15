@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
 import { IdeasModule } from './modules/ideas/ideas.module';
 import { EvaluationsModule } from './modules/evaluations/evaluations.module';
+import { ChallengesModule } from './modules/challenges/challenges.module';
 
 @Module({
   imports: [
@@ -16,8 +15,9 @@ import { EvaluationsModule } from './modules/evaluations/evaluations.module';
     UsersModule,
     IdeasModule,
     EvaluationsModule,
+    ChallengesModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

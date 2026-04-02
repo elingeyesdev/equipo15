@@ -1,0 +1,134 @@
+.admin-container {
+  display: flex;
+  height: 100vh;
+  background-color: #0b0f1a;
+  color: #e2e8f0;
+  font-family: 'Inter', sans-serif;
+}
+
+.sidebar {
+  width: 280px;
+  background-color: #161b2b;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #2d3748;
+}
+
+.role-tag {
+  background: #38bdf8;
+  color: #0b0f1a;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 0.7rem;
+  margin-bottom: 0.5rem;
+  display: inline-block;
+}
+
+.sidebar-nav { margin-top: 3rem; flex-grow: 1; display: flex; flex-direction: column; gap: 0.75rem; }
+
+.sidebar-nav button {
+  background: none; border: none; color: #94a3b8; text-align: left;
+  padding: 0.8rem 1rem; border-radius: 10px; cursor: pointer; font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.sidebar-nav button:hover, .sidebar-nav button.active {
+  background-color: #242c45; color: #38bdf8;
+}
+
+.admin-content { flex-grow: 1; padding: 3rem; overflow-y: auto; }
+
+.e01-container { max-width: 800px; }
+
+.challenge-builder {
+  background: #161b2b;
+  border-radius: 20px;
+  border: 1px solid #2d3748;
+  overflow: hidden;
+}
+
+.builder-nav {
+  display: flex;
+  background: #0b0f1a;
+  border-bottom: 1px solid #2d3748;
+}
+
+.builder-nav button {
+  flex: 1;
+  padding: 1rem;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.builder-nav button.tab-active {
+  color: #38bdf8;
+  background: #161b2b;
+}
+
+.form-e01 { padding: 2rem; }
+
+.form-input {
+  width: 100%;
+  background: #0b0f1a;
+  border: 1px solid #2d3748;
+  padding: 1rem;
+  border-radius: 12px;
+  color: white;
+  margin-bottom: 1.5rem;
+  font-family: inherit;
+}
+
+.date-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.date-group label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.date-group input {
+  background: #0b0f1a;
+  border: 1px solid #2d3748;
+  padding: 0.75rem;
+  border-radius: 10px;
+  color: white;
+}
+
+.form-actions { display: flex; gap: 1rem; justify-content: flex-end; }
+
+.primary-btn {
+  background: #38bdf8; color: #0b0f1a; border: none; padding: 0.8rem 1.5rem;
+  border-radius: 10px; font-weight: bold; cursor: pointer;
+}
+
+.draft-btn {
+  background: #1e293b; color: white; border: 1px solid #334155; padding: 0.8rem 1.5rem;
+  border-radius: 10px; font-weight: bold; cursor: pointer;
+}
+
+.cancel-btn {
+  background: none; border: none; color: #94a3b8; padding: 0.8rem 1.5rem;
+  cursor: pointer;
+}
+
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.challenge-preview { padding: 3rem; background: #161b2b; }
+
+.preview-header span { color: #38bdf8; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; }
+.preview-header h2 { font-size: 2.5rem; margin: 0.5rem 0 1.5rem; }
+.preview-body p { line-height: 1.8; color: #cbd5e1; font-size: 1.1rem; }
+.preview-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #2d3748; color: #94a3b8; font-size: 0.9rem; }

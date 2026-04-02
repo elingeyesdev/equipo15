@@ -21,6 +21,12 @@ export class Idea extends Document {
   @Prop({ default: 0 })
   votesCount: number;
 
+  @Prop({ default: 0 })
+  likesCount: number;
+
+  @Prop({ default: 0 })
+  commentsCount: number;
+
   @Prop({ default: false })
   isAnonymous: boolean;
 }

@@ -6,8 +6,6 @@ import * as admin from 'firebase-admin';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-console.log("ue42FM0pORPEeNGw:", process.env.MONGODB_URI);
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 

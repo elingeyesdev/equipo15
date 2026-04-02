@@ -54,7 +54,7 @@ export class UsersService {
   async updateFaculty(firebaseUid: string, facultyId: number): Promise<User> {
     const updatedUser = await this.userModel.findOneAndUpdate(
       { firebaseUid },
-      { facultyId: facultyId, isFacultyVerified: false }, // Se marca como false porque es selección manual
+      { facultyId: facultyId, isFacultyVerified: false },
       { new: true }
     ).exec();
     

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { IdeasService } from './ideas.service';
 import { IdeasController } from './ideas.controller';
+import { IdeasGateway } from './ideas.gateway';
 import { Idea, IdeaSchema } from './entities/idea.schema';
 import { DraftIdea, DraftIdeaSchema } from './entities/draft-idea.schema';
 import { UsersModule } from '../users/users.module';
@@ -12,10 +13,10 @@ import { UsersModule } from '../users/users.module';
       { name: Idea.name, schema: IdeaSchema },
       { name: DraftIdea.name, schema: DraftIdeaSchema },
     ]),
-    UsersModule
+    UsersModule,
   ],
   controllers: [IdeasController],
-  providers: [IdeasService],
+  providers: [IdeasService, IdeasGateway],
   exports: [IdeasService],
 })
 export class IdeasModule {}
