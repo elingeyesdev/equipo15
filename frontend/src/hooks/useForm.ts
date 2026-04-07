@@ -1,9 +1,11 @@
 import { useState, useCallback } from 'react';
 import type { FieldConfig } from '../components/Form/FieldFactory';
 
-export const useForm = (configs: FieldConfig[], initialValues: Record<string, any> = {}) => {
+type FormValue = string | number | boolean | null;
+
+export const useForm = (configs: FieldConfig[], initialValues: Record<string, FormValue> = {}) => {
   const buildDefaults = () => {
-    const defaults: Record<string, any> = {};
+    const defaults: Record<string, FormValue> = {};
     configs.forEach(c => {
       if (c.defaultValue !== undefined) {
         defaults[c.name] = c.defaultValue;
@@ -11,11 +13,11 @@ export const useForm = (configs: FieldConfig[], initialValues: Record<string, an
     });
     return { ...defaults, ...initialValues };
   };
-  const [values, setValues] = useState<Record<string, any>>(buildDefaults);
+  const [values, setValues] = useState<Record<string, FormValue>>(buildDefaults);
   const [errors, setErrors] = useState<Record<string, string | null>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateField = useCallback((name: string, value: any, configsCurrent: FieldConfig[]) => {
+  const validateField = useCallback((name: string, value: FormValue, configsCurrent: FieldConfig[]) => {
     const config = configsCurrent.find(c => c.name === name);
     if (config) {
       const error = config.validator.validate(value);
@@ -25,9 +27,9 @@ export const useForm = (configs: FieldConfig[], initialValues: Record<string, an
     return true;
   }, []);
 
-  const handleChange = useCallback((name: string, value: any) => {
+  const handleChange = useCallback((name: string, value: FormValue) => {
     let nextEndDate = '';
-    if (name === 'startDate' && value) {
+    if (name === 'startDate' && typeof value === 'string') {
       const start = new Date(value);
       if (!isNaN(start.getTime())) {
         start.setDate(start.getDate() + 7);

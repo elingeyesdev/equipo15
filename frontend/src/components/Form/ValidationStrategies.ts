@@ -1,9 +1,9 @@
 export interface ValidationStrategy {
-  validate(value: any): string | null;
+  validate(value: unknown): string | null;
 }
 
 export class RequiredValidation implements ValidationStrategy {
-  validate(value: any): string | null {
+  validate(value: unknown): string | null {
     if (value === undefined || value === null || value === '' || (typeof value === 'string' && value.trim() === '')) {
       return 'Este campo es requerido';
     }
@@ -17,7 +17,7 @@ export class MaxLengthValidation implements ValidationStrategy {
     this.maxLength = maxLength;
   }
 
-  validate(value: any): string | null {
+  validate(value: unknown): string | null {
     if (typeof value === 'string' && value.length > this.maxLength) {
       return `El límite es de ${this.maxLength} caracteres`;
     }
@@ -26,8 +26,8 @@ export class MaxLengthValidation implements ValidationStrategy {
 }
 
 export class RichTextRequiredValidation implements ValidationStrategy {
-  validate(value: any): string | null {
-    if (!value || value.trim() === '') {
+  validate(value: unknown): string | null {
+    if (typeof value !== 'string' || !value || value.trim() === '') {
       return 'Este campo es requerido';
     }
     return null;
@@ -39,9 +39,9 @@ export class MinDateValidation implements ValidationStrategy {
   constructor(minDate: Date) {
     this.minDate = minDate;
   }
-  validate(value: any): string | null {
+  validate(value: unknown): string | null {
     if (!value) return null;
-    const inputDate = new Date(value);
+    const inputDate = new Date(value as string | number | Date);
     const min = new Date(this.minDate.toDateString());
     const input = new Date(inputDate.toDateString());
     if (input < min) {
@@ -56,7 +56,7 @@ export class RequiredImageValidation implements ValidationStrategy {
   constructor(maxSizeMb = 2) {
     this.maxSizeMb = maxSizeMb;
   }
-  validate(value: any): string | null {
+  validate(value: unknown): string | null {
     if (!value || typeof value !== 'string' || !value.startsWith('data:image/')) {
       return 'Debe adjuntar una imagen válida';
     }
@@ -74,7 +74,7 @@ export class Validator {
     this.strategies = strategies;
   }
 
-  validate(value: any): string | null {
+  validate(value: unknown): string | null {
     for (const strategy of this.strategies) {
       const error = strategy.validate(value);
       if (error) return error;

@@ -1,9 +1,17 @@
-import { Controller, Get, Body, Patch, Param, UseGuards, Request, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Body,
+  Patch,
+  UseGuards,
+  Request,
+  Post,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UserService } from '../../Services/user.service';
-import { CreateUserDto } from '../../DTOs/create-user.dto';
 import { UpdateUserDto } from '../../DTOs/update-user.dto';
 import { FirebaseAuthGuard } from '../../../common/guards/firebase-auth.guard';
+import type { AuthenticatedRequest } from '../../../common/types/authenticated-request.interface';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -14,41 +22,70 @@ export class UsersController {
 
   @Get('me')
   @ApiOperation({ summary: 'Get current authorized user' })
-  async getMe(@Request() req: any) {
+  async getMe(@Request() req: AuthenticatedRequest) {
+    const { user } = req;
     return this.userService.findOrCreate({
-      firebaseUid: req.user.uid,
-      email: req.user.email,
-      displayName: req.user.name || req.user.displayName || req.user.email?.split('@')[0] || 'Usuario de Pista 8',
-      avatarUrl: req.user.picture || req.user.photoURL,
+      firebaseUid: user.uid,
+      email: user.email || '',
+      displayName:
+        (user as { name?: string }).name ||
+        (user as { displayName?: string }).displayName ||
+        user.email?.split('@')[0] ||
+        'Usuario de Pista 8',
+      avatarUrl:
+        (user as { picture?: string }).picture ||
+        (user as { photoURL?: string }).photoURL,
     });
   }
 
   @Get('profile')
   @ApiOperation({ summary: 'Get current profile' })
-  async getProfile(@Request() req: any) {
+  async getProfile(@Request() req: AuthenticatedRequest) {
     return this.getMe(req);
   }
 
   @Post('sync')
   @ApiOperation({ summary: 'Force sync user profile with Firebase' })
-  async syncUser(@Request() req: any, @Body() body: any) {
-    return this.userService.findOrCreate({
-      firebaseUid: req.user.uid,
-      email: req.user.email,
-      displayName: body.displayName || req.user.name || req.user.email?.split('@')[0] || 'Usuario de Pista 8',
-      avatarUrl: body.avatarUrl || req.user.picture || req.user.photoURL,
-    }, true); // Pass true to force update/sync
+  async syncUser(
+    @Request() req: AuthenticatedRequest,
+    @Body() body: { displayName?: string; avatarUrl?: string },
+  ) {
+    const { user } = req;
+    return this.userService.findOrCreate(
+      {
+        firebaseUid: user.uid,
+        email: user.email || '',
+        displayName:
+          body.displayName ||
+          (user as { name?: string }).name ||
+          user.email?.split('@')[0] ||
+          'Usuario de Pista 8',
+        avatarUrl:
+          body.avatarUrl ||
+          (user as { picture?: string }).picture ||
+          (user as { photoURL?: string }).photoURL,
+      },
+      true,
+    );
   }
 
   @Patch('bio')
   @ApiOperation({ summary: 'Update user biography' })
-  async updateBio(@Request() req: any, @Body() updateUserDto: UpdateUserDto) {
+  async updateBio(
+    @Request() req: AuthenticatedRequest,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
     return this.userService.updateBio(req.user.uid, updateUserDto.bio || '');
   }
 
   @Patch('faculty')
   @ApiOperation({ summary: 'Update user faculty' })
-  async updateFaculty(@Request() req: any, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.updateFaculty(req.user.uid, { facultyId: updateUserDto.facultyId });
+  async updateFaculty(
+    @Request() req: AuthenticatedRequest,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.userService.updateFaculty(req.user.uid, {
+      facultyId: updateUserDto.facultyId,
+    });
   }
 }

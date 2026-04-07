@@ -1,4 +1,11 @@
-import { IsString, IsEmail, IsEnum, IsOptional, IsNotEmpty, Matches, IsNumber, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsNotEmpty,
+  IsNumber,
+  IsBoolean,
+} from 'class-validator';
 import { IsAllowedDomain } from '../../common/validators/is-allowed-domain.validator';
 
 export class CreateUserDto {

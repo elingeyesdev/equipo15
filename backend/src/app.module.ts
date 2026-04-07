@@ -12,16 +12,20 @@ import { HealthController } from './app/Http/Controllers/health.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, 
+      isGlobal: true,
     }),
     DatabaseModule,
     FirebaseAdminModule,
     HttpModule,
-    ThrottlerModule.forRoot([{
-      ttl: 60000, 
-      limit: 300, 
-    }]),
-    MongooseModule.forRoot(process.env.MONGO_URI || 'mongodb://localhost:27017/pista8'),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 300,
+      },
+    ]),
+    MongooseModule.forRoot(
+      process.env.MONGO_URI || 'mongodb://localhost:27017/pista8',
+    ),
   ],
   controllers: [HealthController],
   providers: [

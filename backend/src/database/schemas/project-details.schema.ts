@@ -18,12 +18,15 @@ export class ProjectDetails extends Document {
   @Prop({ default: 0 })
   innovationScore: number;
 
-  @Prop([{
-    mentorId: String,
-    feedback: String,
-    date: { type: Date, default: Date.now }
-  }])
+  @Prop([
+    {
+      mentorId: String,
+      feedback: String,
+      date: { type: Date, default: Date.now },
+    },
+  ])
   mentorshipHistory: any[];
 }
 
-export const ProjectDetailsSchema = SchemaFactory.createForClass(ProjectDetails);
+export const ProjectDetailsSchema =
+  SchemaFactory.createForClass(ProjectDetails);

@@ -11,7 +11,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
   const { userProfile } = useAuth();
-  const role = (userProfile?.roleId?.name || userProfile?.role || '').toLowerCase();
+  const role = (userProfile?.roleInfo?.name || userProfile?.role || '').toLowerCase();
 
   return (
     <>

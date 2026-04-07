@@ -43,7 +43,11 @@ export class UserRepository {
     });
   }
 
-  async upsert(firebaseUid: string, createData: any, updateData: any): Promise<User> {
+  async upsert(
+    firebaseUid: string,
+    createData: any,
+    updateData: any,
+  ): Promise<User> {
     return this.prisma.user.upsert({
       where: { firebaseUid },
       update: updateData,

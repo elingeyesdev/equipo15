@@ -1,43 +1,58 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserRepository } from '../Repositories/user.repository';
 import { RoleRepository } from '../Repositories/role.repository';
-import { User } from '@prisma/client';
+import { User, Role } from '@prisma/client';
 import { extractFacultyFromEmail } from '../Utils/email-parser.util';
 import { getRoleFromEmail } from '../Utils/user-metadata.util';
 
+export type UserWithRole = User & { role?: Role | null };
+
+export interface UserResponse extends Omit<User, 'roleId'> {
+  role: string;
+  roleInfo?: Role | null;
+}
+
 @Injectable()
 export class UserService {
-
   constructor(
     private readonly userRepository: UserRepository,
     private readonly roleRepository: RoleRepository,
   ) {}
 
-  async findOrCreate(createUserDto: any, forceUpdate = false): Promise<User | null> {
+  async findOrCreate(
+    createUserDto: {
+      firebaseUid: string;
+      email: string;
+      displayName: string;
+      avatarUrl?: string;
+    },
+    forceUpdate = false,
+  ): Promise<UserResponse | null> {
     const { firebaseUid, email } = createUserDto;
 
     let user = await this.userRepository.findByUid(firebaseUid);
     if (user && !forceUpdate) {
-      return this.formatUserResponse(user);
+      return this.formatUserResponse(user as UserWithRole);
     }
 
     if (!email) {
-       return null;
+      return null;
     }
 
     const roleName = getRoleFromEmail(email);
     const roleDoc = await this.roleRepository.findByName(roleName);
-    
+
     if (!roleDoc) {
       throw new NotFoundException(`Rol ${roleName} no encontrado.`);
     }
 
-    const userData: any = {
+    const userData = {
       firebaseUid,
       email,
       displayName: createUserDto.displayName,
       avatarUrl: createUserDto.avatarUrl,
       roleId: roleDoc.id,
+      facultyId: undefined as number | undefined,
     };
 
     const detectedFacultyId = extractFacultyFromEmail(email);
@@ -46,41 +61,53 @@ export class UserService {
     }
 
     user = await this.userRepository.upsert(firebaseUid, userData, {
-        displayName: createUserDto.displayName,
-        avatarUrl: createUserDto.avatarUrl,
+      displayName: createUserDto.displayName,
+      avatarUrl: createUserDto.avatarUrl,
     });
-    
-    return this.formatUserResponse(user);
+
+    return this.formatUserResponse(user as UserWithRole);
   }
 
-  private formatUserResponse(user: any): any {
+  private formatUserResponse(user: UserWithRole | null): UserResponse | null {
     if (!user) return null;
-    
+
+    const { roleId: _roleId, ...userData } = user;
     return {
-      ...user,
+      ...userData,
       role: user.role?.name || 'student',
-      roleInfo: user.role
+      roleInfo: user.role,
     };
   }
 
-  async findByUid(firebaseUid: string): Promise<any> {
+  async findByUid(firebaseUid: string): Promise<UserResponse | null> {
     const user = await this.userRepository.findByUid(firebaseUid);
-    return this.formatUserResponse(user);
+    return this.formatUserResponse(user as UserWithRole);
   }
 
-  async updateBio(firebaseUid: string, bio: string): Promise<any> {
-    const updatedUser = await this.userRepository.updateByUid(firebaseUid, { bio });
+  async updateBio(
+    firebaseUid: string,
+    bio: string,
+  ): Promise<UserResponse | null> {
+    const updatedUser = await this.userRepository.updateByUid(firebaseUid, {
+      bio,
+    });
     if (!updatedUser) {
       throw new NotFoundException('Usuario no encontrado');
     }
-    return this.formatUserResponse(updatedUser);
+    return this.formatUserResponse(updatedUser as UserWithRole);
   }
 
-  async updateFaculty(firebaseUid: string, data: { facultyId?: number }): Promise<any> {
-    const updatedUser = await this.userRepository.updateByUid(firebaseUid, data);
+  async updateFaculty(
+    firebaseUid: string,
+    data: { facultyId?: number },
+  ): Promise<UserResponse | null> {
+    const updatedUser = await this.userRepository.updateByUid(
+      firebaseUid,
+      data,
+    );
     if (!updatedUser) {
       throw new NotFoundException('Usuario no encontrado');
     }
-    return this.formatUserResponse(updatedUser);
+    return this.formatUserResponse(updatedUser as UserWithRole);
   }
 }

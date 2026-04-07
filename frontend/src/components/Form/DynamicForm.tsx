@@ -2,12 +2,14 @@ import React from 'react';
 import styled from 'styled-components';
 import type { FieldConfig } from './FieldFactory';
 
+type FormValue = string | number | boolean | null;
+
 interface DynamicFormProps {
   fields: FieldConfig[];
-  values: Record<string, any>;
+  values: Record<string, FormValue>;
   errors: Record<string, string | null>;
   isSubmitting?: boolean;
-  onChange: (name: string, value: any) => void;
+  onChange: (name: string, value: FormValue) => void;
   onSubmit: (action: 'publish' | 'draft') => void;
 }
 
@@ -190,8 +192,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     if (!file.type.startsWith('image/')) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      if (ev.target?.result) {
-        onChange(name, ev.target.result);
+      const result = ev.target?.result;
+      if (typeof result === 'string') {
+        onChange(name, result);
       }
     };
     reader.readAsDataURL(file);
@@ -228,15 +231,16 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                   input.id = field.name;
                   input.type = 'file';
                   input.accept = 'image/*';
-                  input.onchange = (e: any) => {
-                    const file = e.target?.files?.[0];
+                  input.onchange = (e: Event) => {
+                    const target = e.target as HTMLInputElement;
+                    const file = target.files?.[0];
                     if (file) processFile(file, field.name);
                   };
                   input.click();
                 }}
               >
                 {values[field.name] ? (
-                  <PreviewImage src={values[field.name]} alt="Preview" />
+                  <PreviewImage src={String(values[field.name])} alt="Preview" />
                 ) : (
                   <p>{field.disabled ? 'Logotipo configurado (no editable)' : 'Arrastra tu logo aquí o haz clic para subir'}</p>
                 )}
@@ -277,6 +281,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
           );
         }
 
+        const rawValue = values[field.name];
+        const displayValue = (typeof rawValue === 'string' || typeof rawValue === 'number') ? rawValue : '';
+
         return (
           <FormGroup key={field.name}>
             <Label htmlFor={field.name}>{field.label}</Label>
@@ -285,7 +292,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 id={field.name}
                 type="text"
                 disabled={field.disabled}
-                value={values[field.name] || ''}
+                value={displayValue}
                 onChange={(e) => onChange(field.name, e.target.value)}
               />
             )}
@@ -295,7 +302,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                 type="date"
                 disabled={field.disabled}
                 min={new Date().toISOString().split('T')[0]}
-                value={values[field.name] || ''}
+                value={displayValue}
                 onChange={(e) => onChange(field.name, e.target.value)}
               />
             )}
@@ -303,7 +310,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
               <RichTextArea
                 id={field.name}
                 disabled={field.disabled}
-                value={values[field.name] || ''}
+                value={displayValue}
                 onChange={(e) => onChange(field.name, e.target.value)}
                 placeholder="Describe las reglas y detalles del reto..."
               />

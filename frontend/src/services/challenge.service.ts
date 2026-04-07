@@ -1,4 +1,5 @@
 import axiosInstance from '../api/axiosConfig';
+import type { Challenge, ChallengeStatus } from '../types/models';
 
 export interface ChallengePayload {
   title: string;
@@ -9,34 +10,41 @@ export interface ChallengePayload {
   endDate: string;
   publicationDate?: string;
   isPrivate?: boolean;
-  status?: 'Borrador' | 'Activo' | 'Finalizado' | 'En Evaluación';
+  status?: ChallengeStatus;
+  facultyId?: number | null;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
 }
 
 export const challengeService = {
-  getPublicChallenges: async (page = 1, limit = 10, status?: string) => {
+  getPublicChallenges: async (page = 1, limit = 10, status?: string): Promise<ApiResponse<{ data: Challenge[]; total: number }>> => {
     let url = `/challenges?page=${page}&limit=${limit}`;
     if (status) url += `&status=${status}`;
-    const response = await axiosInstance.get(url);
+    const response = await axiosInstance.get<ApiResponse<{ data: Challenge[]; total: number }>>(url);
     return response.data;
   },
 
-  createChallenge: async (payload: ChallengePayload) => {
-    const response = await axiosInstance.post('/challenges', payload);
+  createChallenge: async (payload: ChallengePayload): Promise<ApiResponse<Challenge>> => {
+    const response = await axiosInstance.post<ApiResponse<Challenge>>('/challenges', payload);
     return response.data;
   },
 
-  updateChallenge: async (id: string, payload: Partial<ChallengePayload>) => {
-    const response = await axiosInstance.patch(`/challenges/${id}`, payload);
+  updateChallenge: async (id: string, payload: Partial<ChallengePayload>): Promise<ApiResponse<Challenge>> => {
+    const response = await axiosInstance.patch<ApiResponse<Challenge>>(`/challenges/${id}`, payload);
     return response.data;
   },
 
-  getChallengeStats: async (id: string) => {
-    const response = await axiosInstance.get(`/challenges/${id}/stats`);
+  getChallengeStats: async (id: string): Promise<ApiResponse<any>> => {
+    const response = await axiosInstance.get<ApiResponse<any>>(`/challenges/${id}/stats`);
     return response.data;
   },
 
-  getGlobalStats: async () => {
-    const response = await axiosInstance.get('/challenges/global-stats');
+  getGlobalStats: async (): Promise<ApiResponse<any>> => {
+    const response = await axiosInstance.get<ApiResponse<any>>('/challenges/global-stats');
     return response.data;
   }
 };

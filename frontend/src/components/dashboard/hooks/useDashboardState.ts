@@ -33,34 +33,34 @@ export const useDashboardState = () => {
           challengeService.getPublicChallenges(1, 40, 'Activo'),
           challengeService.getGlobalStats()
         ]);
-        
-        if (!active) return;
-        
-        const rawResponse = cloudChallenges as any;
-        const challengesResult = rawResponse?.success ? rawResponse.data : rawResponse;
-        const rawData = Array.isArray(challengesResult?.data) ? challengesResult.data : [];
 
-        const mapped = rawData.map((c: any) => ({
+        if (!active) return;
+
+        const challengesResult = (cloudChallenges as any)?.success ? (cloudChallenges as any).data : cloudChallenges;
+        const rawData = Array.isArray(challengesResult?.data) ? (challengesResult.data as Challenge[]) : [];
+
+        const mapped: Challenge[] = rawData.map((c) => ({
           ...c,
-          id: c.id,
-          category: getFacultySlug(c.facultyId),
+          category: getFacultySlug(c.facultyId || null),
           badge: c.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
         }));
 
-        const pAny = profile as any;
-        setProfile(pAny?.success ? pAny.data : pAny);
+        const profileData = (profile as any)?.success ? (profile as any).data : profile;
+        setProfile(profileData as UserProfile);
         setChallenges(mapped);
-        
-        const sAny = stats as any;
-        const finalStats = sAny?.success ? sAny.data : sAny;
+
+        const finalStats = (stats as any)?.success ? (stats as any).data : stats;
         setTopFacultades(finalStats?.topFacultades || []);
         setTopLideres(finalStats?.topLeaders || []);
-        
+
         if (mapped.length > 0) {
           setSelectedChallenge(mapped[0]);
         }
-      } catch (error: any) {
-        if (active) setProfileError(error?.message || 'Error de conexión.');
+      } catch (error: unknown) {
+        if (active) {
+          const message = error instanceof Error ? error.message : 'Error de conexión.';
+          setProfileError(message);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -75,7 +75,6 @@ export const useDashboardState = () => {
         const stats = await challengeService.getChallengeStats(selectedChallenge.id);
         setChallengeStats(stats);
       } catch (e) {
-      // Error stats
       }
     })();
   }, [selectedChallenge?.id]);

@@ -10,13 +10,13 @@ import { computeCanvasHeight } from './flight.engine';
 import type { PlaneIdea, WallPhase } from './types';
 
 const CLOUD_CONFIG = [
-  { y: 40,  scale: 1.2, duration: 38, delay: 0,    rtl: false },
-  { y: 90,  scale: 0.8, duration: 52, delay: 8,    rtl: true  },
-  { y: 180, scale: 1.0, duration: 44, delay: 3,    rtl: false },
-  { y: 260, scale: 0.7, duration: 60, delay: 15,   rtl: true  },
-  { y: 340, scale: 1.1, duration: 41, delay: 5,    rtl: false },
-  { y: 430, scale: 0.9, duration: 56, delay: 20,   rtl: true  },
-  { y: 520, scale: 0.75,duration: 48, delay: 10,   rtl: false },
+  { y: 40, scale: 1.2, duration: 38, delay: 0, rtl: false },
+  { y: 90, scale: 0.8, duration: 52, delay: 8, rtl: true },
+  { y: 180, scale: 1.0, duration: 44, delay: 3, rtl: false },
+  { y: 260, scale: 0.7, duration: 60, delay: 15, rtl: true },
+  { y: 340, scale: 1.1, duration: 41, delay: 5, rtl: false },
+  { y: 430, scale: 0.9, duration: 56, delay: 20, rtl: true },
+  { y: 520, scale: 0.75, duration: 48, delay: 10, rtl: false },
 ];
 
 const Sky = styled.div<{ $height: number }>`
@@ -55,13 +55,12 @@ const EmptyHint = styled.p`
 `;
 
 interface SkyCanvasProps {
-  initialIdeas?: any[];
+  initialIdeas?: PlaneIdea[];
 }
 
 const SkyCanvas = memo(({ initialIdeas = [] }: SkyCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState(800);
-  const [phase, setPhase] = useState<WallPhase>('active');
   const [showPodium, setShowPodium] = useState(false);
   const [token, setToken] = useState<string>();
   const { user } = useAuth();
@@ -74,8 +73,8 @@ const SkyCanvas = memo(({ initialIdeas = [] }: SkyCanvasProps) => {
 
   const { ideas, phase: socketPhase } = useWallSocket(token, initialIdeas);
 
-  useEffect(() => {
-    if (socketPhase === 'race') setPhase('race');
+  const phase: WallPhase = useMemo(() => {
+    return socketPhase === 'race' ? 'race' : 'active';
   }, [socketPhase]);
 
   const canvasHeight = useMemo(() => computeCanvasHeight(ideas.length), [ideas.length]);

@@ -14,9 +14,10 @@ export interface Response<T> {
 }
 
 @Injectable()
-export class TransformInterceptor<T>
-  implements NestInterceptor<T, Response<T>>
-{
+export class TransformInterceptor<T> implements NestInterceptor<
+  T,
+  Response<T>
+> {
   intercept(
     context: ExecutionContext,
     next: CallHandler,
@@ -36,13 +37,21 @@ export class TransformInterceptor<T>
       return data.map((item) => this.transform(item));
     }
 
-    if (data instanceof Date || data._bsontype === 'ObjectID' || data.constructor.name === 'ObjectId') {
+    if (
+      data instanceof Date ||
+      data._bsontype === 'ObjectID' ||
+      data.constructor.name === 'ObjectId'
+    ) {
       return data;
     }
 
     const transformed = data.toObject ? data.toObject() : { ...data };
 
-    if (transformed.roleId && typeof transformed.roleId === 'object' && transformed.roleId.name) {
+    if (
+      transformed.roleId &&
+      typeof transformed.roleId === 'object' &&
+      transformed.roleId.name
+    ) {
       transformed.role = transformed.roleId.name;
     }
 

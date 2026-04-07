@@ -4,7 +4,7 @@ import { Challenge } from '@prisma/client';
 import { CreateChallengeDto } from '../DTOs/create-challenge.dto';
 import { UpdateChallengeDto } from '../DTOs/update-challenge.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-import { UserService } from './user.service';
+import { UserService, UserResponse } from './user.service';
 
 @Injectable()
 export class ChallengeService {
@@ -15,32 +15,53 @@ export class ChallengeService {
     private readonly userService: UserService,
   ) {}
 
-  async getUserByUid(uid: string) {
+  async getUserByUid(uid: string): Promise<UserResponse | null> {
     return this.userService.findByUid(uid);
   }
 
-  async create(createChallengeDto: CreateChallengeDto, authorId: string): Promise<Challenge> {
-    const payload: any = { ...createChallengeDto };
-    
+  async create(
+    createChallengeDto: CreateChallengeDto,
+    authorId: string,
+  ): Promise<Challenge> {
+    const { startDate, endDate, publicationDate, ...rest } = createChallengeDto;
+
+    const payload: Partial<Challenge> = {
+      ...rest,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      publicationDate: publicationDate ? new Date(publicationDate) : undefined,
+    };
+
     // Auto-set publicationDate if created as Activo
     if (payload.status === 'Activo' && !payload.publicationDate) {
-      payload.publicationDate = new Date().toISOString();
+      payload.publicationDate = new Date();
     }
 
     const createdChallenge = await this.challengeRepository.create({
       ...payload,
-      authorId
-    });
-    this.logger.log(`Nuevo reto creado: "${createdChallenge.title}" con ID: ${createdChallenge.id} por autor: ${authorId}`);
+      authorId,
+    } as any);
+    this.logger.log(
+      `Nuevo reto creado: "${createdChallenge.title}" con ID: ${createdChallenge.id} por autor: ${authorId}`,
+    );
     return createdChallenge;
   }
 
   async findAll(paginationDto?: PaginationDto, status?: string) {
-    const limit = paginationDto?.limit ? Number(paginationDto.limit) : undefined;
-    const skip = paginationDto?.page && limit ? (Number(paginationDto.page) - 1) * limit : undefined;
+    const limit = paginationDto?.limit
+      ? Number(paginationDto.limit)
+      : undefined;
+    const skip =
+      paginationDto?.page && limit
+        ? (Number(paginationDto.page) - 1) * limit
+        : undefined;
     const normalizedStatus = status?.trim();
-    
-    const { data, total } = await this.challengeRepository.findAll(skip, limit, normalizedStatus);
+
+    const { data, total } = await this.challengeRepository.findAll(
+      skip,
+      limit,
+      normalizedStatus,
+    );
 
     return {
       data,
@@ -48,7 +69,7 @@ export class ChallengeService {
         total,
         page: paginationDto?.page || 1,
         limit,
-      }
+      },
     };
   }
 
@@ -70,24 +91,35 @@ export class ChallengeService {
   }
 
   async update(id: string, updateChallengeDto: UpdateChallengeDto) {
-    const payload: any = { ...updateChallengeDto };
+    const { startDate, endDate, publicationDate, ...rest } = updateChallengeDto;
+
+    const payload: Partial<Challenge> = {
+      ...rest,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      publicationDate: publicationDate ? new Date(publicationDate) : undefined,
+    };
 
     // If publishing for the first time, set publicationDate
     if (payload.status === 'Activo') {
       const existing = await this.challengeRepository.findById(id);
       if (existing && !existing.publicationDate) {
-        payload.publicationDate = new Date().toISOString();
+        payload.publicationDate = new Date();
       }
     }
 
     const updatedChallenge = await this.challengeRepository.update(id, payload);
-    this.logger.log(`Reto actualizado: "${updatedChallenge.title}" con ID: ${id}`);
+    this.logger.log(
+      `Reto actualizado: "${updatedChallenge.title}" con ID: ${id}`,
+    );
     return updatedChallenge;
   }
 
   async delete(id: string) {
     const deletedChallenge = await this.challengeRepository.delete(id);
-    this.logger.log(`Reto eliminado: "${deletedChallenge.title}" con ID: ${id}`);
+    this.logger.log(
+      `Reto eliminado: "${deletedChallenge.title}" con ID: ${id}`,
+    );
     return deletedChallenge;
   }
 

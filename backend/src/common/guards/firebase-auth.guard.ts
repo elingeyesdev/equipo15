@@ -1,6 +1,14 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, Inject, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+  Inject,
+  Logger,
+} from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { FIREBASE_ADMIN_TOKEN } from '../../config/firebase-admin.module';
+import { AuthenticatedRequest } from '../types/authenticated-request.interface';
 
 @Injectable()
 export class FirebaseAuthGuard implements CanActivate {
@@ -11,7 +19,7 @@ export class FirebaseAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -25,7 +33,11 @@ export class FirebaseAuthGuard implements CanActivate {
       request.user = decodedToken;
       return true;
     } catch (error: any) {
-      this.logger.error(`[FirebaseAuthGuard] Error verificando token: ${error.message}`);
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido';
+      this.logger.error(
+        `[FirebaseAuthGuard] Error verificando token: ${message}`,
+      );
       throw new UnauthorizedException('Token inválido');
     }
   }

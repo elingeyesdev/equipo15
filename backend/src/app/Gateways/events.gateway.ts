@@ -15,25 +15,36 @@ import * as admin from 'firebase-admin';
     credentials: true,
   },
 })
-export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class EventsGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer() server: Server;
   private readonly logger = new Logger(EventsGateway.name);
 
-  afterInit(server: Server) {
+  afterInit() {
+    this.logger.log('EventsGateway Initialized');
   }
 
-  async handleConnection(client: Socket, ...args: any[]) {
+  async handleConnection(client: Socket) {
     try {
-      const token = client.handshake.auth?.token;
+      const auth = client.handshake.auth as { token?: string } | undefined;
+      const token = auth?.token;
+
       if (!token) {
-        this.logger.warn(`Websocket auth failed: No token provided (Client: ${client.id})`);
+        this.logger.warn(
+          `Websocket auth failed: No token provided (Client: ${client.id})`,
+        );
         client.disconnect();
         return;
       }
       await admin.auth().verifyIdToken(token);
       this.logger.log(`Client authenticated and connected: ${client.id}`);
-    } catch (error) {
-      this.logger.error(`Websocket connection rejected (Client: ${client.id})`, error);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido';
+      this.logger.error(
+        `Websocket connection rejected (Client: ${client.id}): ${message}`,
+      );
       client.disconnect();
     }
   }

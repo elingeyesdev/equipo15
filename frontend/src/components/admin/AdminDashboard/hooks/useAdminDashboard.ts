@@ -2,24 +2,26 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { authService } from '../../../../services/auth.service';
 import { challengeService } from '../../../../services/challenge.service';
+import type { Challenge, ChallengeStatus } from '../../../../types/models';
 
 export const useAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('challenges');
   const [showForm, setShowForm] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
   const [copyStatus, setCopyStatus] = useState(false);
-  const [challenges, setChallenges] = useState<any[]>([]);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loadingChallenges, setLoadingChallenges] = useState(false);
 
   const fetchChallenges = async () => {
     setLoadingChallenges(true);
     try {
-      const data = await challengeService.getPublicChallenges();
-      setChallenges(data);
-    } catch (error: any) {
-      const message = error?.response?.data?.message || 'Hubo un problema al guardar el reto.';
+      const response = await challengeService.getPublicChallenges();
+      if (response.success) {
+        setChallenges(response.data.data);
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? (error as any).response?.data?.message || error.message : 'Hubo un problema al obtener los retos.';
       toast.error(message);
-      return false;
     } finally {
       setLoadingChallenges(false);
     }
@@ -86,24 +88,24 @@ export const useAdminDashboard = () => {
 
   const [saving, setSaving] = useState(false);
 
-  const handleSaveChallenge = async (status: 'Borrador' | 'Activo') => {
+  const handleSaveChallenge = async (status: ChallengeStatus) => {
     setSaving(true);
     try {
-      const payload: any = {
+      const payload: Partial<Challenge> & { authorId?: string } = {
         title: formData.title,
         problemDescription: formData.description || undefined,
         companyContext: formData.companyContext || undefined,
         participationRules: formData.participationRules || undefined,
         startDate: formData.startDate,
         isPrivate: formData.isPrivate,
-        facultyId: formData.facultyId === 0 ? null : formData.facultyId,
+        facultyId: formData.facultyId === 0 ? undefined : formData.facultyId,
         status: status
       };
       if (formData.endDate) {
         payload.endDate = formData.endDate;
       }
       
-      await challengeService.createChallenge(payload);
+      await challengeService.createChallenge(payload as any);
       toast.success(status === 'Activo' ? '¡Reto publicado con éxito!' : 'Borrador guardado correctamente.');
 
       await fetchChallenges();
@@ -123,8 +125,8 @@ export const useAdminDashboard = () => {
         });
       }
       return true;
-    } catch (error: any) {
-      const message = error?.response?.data?.message || 'Hubo un problema al guardar el reto.';
+    } catch (error: unknown) {
+      const message = error instanceof Error ? (error as any).response?.data?.message || error.message : 'Hubo un problema al guardar el reto.';
       toast.error(message);
       return false;
     } finally {

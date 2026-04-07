@@ -7,11 +7,20 @@ import { assignLanes, computeCanvasHeight } from './flight.engine';
 const DEFAULT_SOCKET_URL = 'http://localhost:3000';
 const DEBOUNCE_MS = 200;
 
-const buildPlanes = (rawIdeas: any[]): PlaneIdea[] => {
+interface RawIdea {
+  _id?: string;
+  id?: string;
+  title: string;
+  author?: { displayName?: string };
+  likesCount?: number;
+  commentsCount?: number;
+}
+
+const buildPlanes = (rawIdeas: RawIdea[]): PlaneIdea[] => {
   const height = computeCanvasHeight(rawIdeas.length);
   const lanes = assignLanes(rawIdeas.length, height);
   return rawIdeas.map((idea, i) => ({
-    id: idea._id ?? String(i),
+    id: idea.id ?? idea._id ?? String(i),
     title: idea.title,
     authorName: idea.author?.displayName ?? 'Anónimo',
     likesCount: idea.likesCount ?? 0,
@@ -27,7 +36,7 @@ interface UseWallSocketResult {
   serverTimeOffset: number;
 }
 
-export const useWallSocket = (token?: string, initialIdeas: any[] = []): UseWallSocketResult => {
+export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): UseWallSocketResult => {
   const [ideas, setIdeas] = useState<PlaneIdea[]>(() => buildPlanes(initialIdeas));
   const [phase, setPhase] = useState<WallPhase>('active');
   const [serverTimeOffset, setServerTimeOffset] = useState(0);

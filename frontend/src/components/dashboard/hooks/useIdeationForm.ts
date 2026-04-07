@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { ideaService } from '../../../services/idea.service';
-import type { UserProfile } from '../../../services/user.service';
+import type { Challenge, UserProfile } from '../../../types/models';
 
 export type ConsentKey = 'terms' | 'usage' | 'originality';
 export type FormErrorKey = 'challenge' | 'ideaName' | 'ideaProblem' | 'ideaSolution' | 'consents';
@@ -21,8 +21,9 @@ const extractMessage = (raw: unknown): string | undefined => {
   return undefined;
 };
 
-const interpretBackendError = (error: any): FeedbackMessage => {
-  if (error?.code === 'ERR_NETWORK') {
+const interpretBackendError = (error: unknown): FeedbackMessage => {
+  const eAny = error as any;
+  if (eAny?.code === 'ERR_NETWORK') {
     return {
       tone: 'critical',
       title: 'Sin conexión',
@@ -31,8 +32,8 @@ const interpretBackendError = (error: any): FeedbackMessage => {
     };
   }
 
-  const status = error?.response?.status;
-  const backendMessage = extractMessage(error?.response?.data?.message);
+  const status = eAny?.response?.status;
+  const backendMessage = extractMessage(eAny?.response?.data?.message);
 
   if (status === 400) {
     return {
@@ -105,12 +106,12 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
   const clearFieldError = (field: FormErrorKey) => {
     setFormErrors(prev => {
       if (!prev[field]) return prev;
-      const { [field]: _removed, ...rest } = prev;
+      const { [field]: _, ...rest } = prev;
       return rest;
     });
   };
 
-  const getFieldError = (field: FormErrorKey, formChallenge: any): string | undefined => {
+  const getFieldError = (field: FormErrorKey, formChallenge: Challenge | null): string | undefined => {
     if (field === 'challenge' && !formChallenge) return 'Selecciona un reto para vincular tu propuesta.';
     if (field === 'ideaName' && ideaName.trim().length < minIdeaName) return `Ingresa al menos ${minIdeaName} caracteres.`;
     if (field === 'ideaProblem' && ideaProblem.trim().length < minIdeaProblem) return `Describe el problema con al menos ${minIdeaProblem} caracteres.`;
@@ -119,7 +120,7 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
     return undefined;
   };
 
-  const validateField = (field: FormErrorKey, formChallenge: any) => {
+  const validateField = (field: FormErrorKey, formChallenge: Challenge | null) => {
     const errorMessage = getFieldError(field, formChallenge);
     setFormErrors(prev => {
       const next = { ...prev };
@@ -130,7 +131,7 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
     return !errorMessage;
   };
 
-  const validatePublicSubmission = (formChallenge: any): FormErrors => {
+  const validatePublicSubmission = (formChallenge: Challenge | null): FormErrors => {
     const errors: FormErrors = {};
     (['challenge', 'ideaName', 'ideaProblem', 'ideaSolution', 'consents'] as FormErrorKey[]).forEach(field => {
       const errorMessage = getFieldError(field, formChallenge);
@@ -169,7 +170,7 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
     setConsentsTouched(true);
   };
 
-  const handleIdeaSubmit = async (targetStatus: 'draft' | 'public', formChallenge: any): Promise<boolean> => {
+  const handleIdeaSubmit = async (targetStatus: 'draft' | 'public', formChallenge: Challenge | null): Promise<boolean> => {
     if (!profile?.id) {
       const message = {
         tone: 'critical' as FeedbackTone,
@@ -214,7 +215,7 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
     let success = false;
     try {
       if (targetStatus === 'draft') {
-        await ideaService.saveDraftIdea({
+        const payload = {
           title: title || undefined,
           problem: ideaProblem.trim() || undefined,
           solution: ideaSolution.trim() || undefined,
@@ -222,7 +223,8 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
           author: profile.id,
           challengeId: formChallenge?.id,
           isAnonymous: isGuest,
-        });
+        };
+        await ideaService.saveDraftIdea(payload);
         showToast({
           tone: 'info',
           title: 'Borrador guardado',
@@ -250,7 +252,7 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
         resetForm();
         success = true;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       const interpreted = interpretBackendError(error);
       setFormFeedback(interpreted);
       if (interpreted.persist || interpreted.tone === 'critical') showToast(interpreted);

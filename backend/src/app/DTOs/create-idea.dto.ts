@@ -1,4 +1,11 @@
-import { IsString, MinLength, IsArray, IsOptional, IsBoolean, IsEnum } from 'class-validator';
+import {
+  IsString,
+  MinLength,
+  IsArray,
+  IsOptional,
+  IsBoolean,
+  IsEnum,
+} from 'class-validator';
 
 export class CreateIdeaDto {
   @IsString()
@@ -6,11 +13,17 @@ export class CreateIdeaDto {
   title: string;
 
   @IsString()
-  @MinLength(50, { message: 'Describe el problema con al menos 50 caracteres para dar contexto.' })
+  @MinLength(50, {
+    message:
+      'Describe el problema con al menos 50 caracteres para dar contexto.',
+  })
   problem: string;
 
   @IsString()
-  @MinLength(50, { message: 'La solución debe tener al menos 50 caracteres para ser evaluable.' })
+  @MinLength(50, {
+    message:
+      'La solución debe tener al menos 50 caracteres para ser evaluable.',
+  })
   solution: string;
 
   @IsString()

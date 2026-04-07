@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../Providers/database.service';
-import { Challenge } from '@prisma/client';
+import { Challenge, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ChallengeRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(skip?: number, take?: number, status?: string): Promise<{ data: Challenge[]; total: number }> {
-    const where: any = {};
+  async findAll(
+    skip?: number,
+    take?: number,
+    status?: string,
+  ): Promise<{ data: any[]; total: number }> {
+    const where: Prisma.ChallengeWhereInput = {};
     if (status) {
       where.status = status;
     }
@@ -44,30 +48,39 @@ export class ChallengeRepository {
     });
   }
 
-  private prepareData(data: any) {
+  private prepareData(data: Record<string, any>): Record<string, any> {
     const prepared = { ...data };
-    if (prepared.startDate) prepared.startDate = new Date(prepared.startDate);
-    if (prepared.endDate) prepared.endDate = new Date(prepared.endDate);
-    if (prepared.publicationDate) prepared.publicationDate = new Date(prepared.publicationDate);
+    if (prepared.startDate)
+      prepared.startDate = new Date(
+        prepared.startDate as string | number | Date,
+      );
+    if (prepared.endDate)
+      prepared.endDate = new Date(prepared.endDate as string | number | Date);
+    if (prepared.publicationDate)
+      prepared.publicationDate = new Date(
+        prepared.publicationDate as string | number | Date,
+      );
     return prepared;
   }
 
-  async create(data: any): Promise<Challenge> {
+  async create(
+    data: { authorId: string } & Partial<Challenge>,
+  ): Promise<Challenge> {
     const { authorId, ...challengeData } = this.prepareData(data);
     return this.prisma.challenge.create({
       data: {
-        ...challengeData,
+        ...(challengeData as Prisma.ChallengeCreateInput),
         author: {
-          connect: { id: authorId }
-        }
+          connect: { id: authorId },
+        },
       },
     });
   }
 
-  async update(id: string, data: any): Promise<Challenge> {
+  async update(id: string, data: Partial<Challenge>): Promise<Challenge> {
     return this.prisma.challenge.update({
       where: { id },
-      data: this.prepareData(data),
+      data: this.prepareData(data) as Prisma.ChallengeUpdateInput,
     });
   }
 
@@ -104,6 +117,6 @@ export class ChallengeRepository {
   }
 
   async getFacultyStats(): Promise<any[]> {
-    return [];
+    return Promise.resolve([]);
   }
 }

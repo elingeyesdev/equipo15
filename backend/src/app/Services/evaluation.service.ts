@@ -6,13 +6,13 @@ import { Evaluation } from '@prisma/client';
 export class EvaluationService {
   private readonly logger = new Logger(EvaluationService.name);
 
-  constructor(
-    private readonly evaluationRepository: EvaluationRepository,
-  ) {}
+  constructor(private readonly evaluationRepository: EvaluationRepository) {}
 
   async evaluateIdea(evaluationData: any): Promise<Evaluation> {
     const evaluation = await this.evaluationRepository.create(evaluationData);
-    this.logger.log(`Idea evaluada: ID ${evaluation.ideaId} por Juez ${evaluation.judgeId} con puntaje ${evaluation.score}`);
+    this.logger.log(
+      `Idea evaluada: ID ${evaluation.ideaId} por Juez ${evaluation.judgeId} con puntaje ${evaluation.score}`,
+    );
     return evaluation;
   }
 

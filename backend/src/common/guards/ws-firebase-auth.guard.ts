@@ -1,4 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+  Logger,
+} from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { Socket } from 'socket.io';
 
@@ -12,20 +18,26 @@ export class WsFirebaseAuthGuard implements CanActivate {
     }
 
     const client: Socket = context.switchToWs().getClient();
-    const token = client.handshake.auth?.token;
+    const auth = client.handshake.auth as { token?: string } | undefined;
+    const token = auth?.token;
 
     if (!token) {
-      this.logger.warn(`Websocket Connection Refused: Missing auth token (ID: ${client.id})`);
+      this.logger.warn(
+        `Websocket Connection Refused: Missing auth token (ID: ${client.id})`,
+      );
       throw new UnauthorizedException('Missing authentication token');
     }
 
     try {
       const decodedToken = await admin.auth().verifyIdToken(token);
-      // Attach the decoded token/user to the socket context if needed later
       client.data.user = decodedToken;
       return true;
-    } catch (error) {
-      this.logger.error(`Websocket Connection Refused: Invalid token (ID: ${client.id})`, error);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Error desconocido';
+      this.logger.error(
+        `Websocket Connection Refused: Invalid token (ID: ${client.id}): ${message}`,
+      );
       throw new UnauthorizedException('Invalid authentication token');
     }
   }

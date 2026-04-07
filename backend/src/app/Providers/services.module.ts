@@ -5,24 +5,19 @@ import { IdeaService } from '../Services/idea.service';
 import { ChallengeService } from '../Services/challenge.service';
 import { EvaluationService } from '../Services/evaluation.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ProjectDetails, ProjectDetailsSchema } from '../../database/schemas/project-details.schema';
+import {
+  ProjectDetails,
+  ProjectDetailsSchema,
+} from '../../database/schemas/project-details.schema';
 
 @Module({
   imports: [
     RepositoriesModule,
-    MongooseModule.forFeature([{ name: ProjectDetails.name, schema: ProjectDetailsSchema }]),
+    MongooseModule.forFeature([
+      { name: ProjectDetails.name, schema: ProjectDetailsSchema },
+    ]),
   ],
-  providers: [
-    UserService,
-    IdeaService,
-    ChallengeService,
-    EvaluationService,
-  ],
-  exports: [
-    UserService,
-    IdeaService,
-    ChallengeService,
-    EvaluationService,
-  ],
+  providers: [UserService, IdeaService, ChallengeService, EvaluationService],
+  exports: [UserService, IdeaService, ChallengeService, EvaluationService],
 })
 export class ServicesModule {}

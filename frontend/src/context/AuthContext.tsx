@@ -3,31 +3,31 @@ import type { ReactNode } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth } from '../config/firebase';
-
-const API_URL = 'http://localhost:3000/api';
+import { API_URL } from '../config/constants';
+import type { UserProfile } from '../types/models';
 
 interface AuthContextType {
   user: User | null;
-  userProfile: any | null;
+  userProfile: UserProfile | null;
   loading: boolean;
-  setProfile: (profile: any) => void;
+  setProfile: (profile: UserProfile | null) => void;
   refetchProfile: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({ 
-  user: null, 
-  userProfile: null, 
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  userProfile: null,
   loading: true,
-  setProfile: () => {},
-  refetchProfile: async () => {}
+  setProfile: () => { },
+  refetchProfile: async () => { }
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<any | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = useCallback(async (firebaseUser: User) => {
+  const fetchProfile = useCallback(async (firebaseUser: User): Promise<UserProfile | null> => {
     try {
       const token = await firebaseUser.getIdToken();
       const res = await fetch(`${API_URL}/users/profile`, {
@@ -37,13 +37,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const result = await res.json();
         return result.data || null;
       }
-    } catch (e) {
-      // remove log
+    } catch {
     }
     return null;
   }, []);
 
-  const syncProfile = useCallback(async (firebaseUser: User) => {
+  const syncProfile = useCallback(async (firebaseUser: User): Promise<UserProfile | null> => {
     try {
       const token = await firebaseUser.getIdToken();
       const res = await fetch(`${API_URL}/users/sync`, {
@@ -62,8 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const result = await res.json();
         return result.data || null;
       }
-    } catch (e) {
-      // remove log
+    } catch {
     }
     return null;
   }, []);
@@ -85,12 +83,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (!profile) {
             profile = await syncProfile(currentUser);
           }
-          
+
           if (profile) {
             setUserProfile(profile);
           } else {
-             await auth.signOut();
-             setUserProfile(null);
+            await auth.signOut();
+            setUserProfile(null);
           }
         } catch (error) {
           await auth.signOut();
@@ -104,10 +102,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchProfile, syncProfile]);
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      userProfile, 
-      loading, 
+    <AuthContext.Provider value={{
+      user,
+      userProfile,
+      loading,
       setProfile: setUserProfile,
       refetchProfile
     }}>

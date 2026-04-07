@@ -6,7 +6,10 @@ import { Idea } from '@prisma/client';
 export class IdeaRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(skip?: number, take?: number): Promise<{ data: Idea[]; total: number }> {
+  async findAll(
+    skip?: number,
+    take?: number,
+  ): Promise<{ data: Idea[]; total: number }> {
     const [data, total] = await this.prisma.$transaction([
       this.prisma.idea.findMany({
         skip,
@@ -21,7 +24,10 @@ export class IdeaRepository {
     return { data, total };
   }
 
-  async findPublic(skip?: number, take?: number): Promise<{ data: Idea[]; total: number }> {
+  async findPublic(
+    skip?: number,
+    take?: number,
+  ): Promise<{ data: Idea[]; total: number }> {
     const where = { status: 'public' };
     const [data, total] = await this.prisma.$transaction([
       this.prisma.idea.findMany({

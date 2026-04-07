@@ -1,5 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+  Request,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { Challenge } from '@prisma/client';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { ChallengeService } from '../../Services/challenge.service';
 import { CreateChallengeDto } from '../../DTOs/create-challenge.dto';
@@ -7,6 +26,7 @@ import { UpdateChallengeDto } from '../../DTOs/update-challenge.dto';
 import { FirebaseAuthGuard } from '../../../common/guards/firebase-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/guards/roles.decorator';
+import type { AuthenticatedRequest } from '../../../common/types/authenticated-request.interface';
 
 @ApiTags('Challenges')
 @ApiBearerAuth()
@@ -19,9 +39,18 @@ export class ChallengesController {
   @UseGuards(RolesGuard)
   @Roles('company')
   @ApiOperation({ summary: 'Create a new challenge (Company only)' })
-  @ApiResponse({ status: 201, description: 'The challenge has been successfully created.' })
-  async create(@Body() createChallengeDto: CreateChallengeDto, @Request() req: any) {
+  @ApiResponse({
+    status: 201,
+    description: 'The challenge has been successfully created.',
+  })
+  async create(
+    @Body() createChallengeDto: CreateChallengeDto,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<Challenge> {
     const user = await this.challengeService.getUserByUid(req.user.uid);
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado en el sistema.');
+    }
     return this.challengeService.create(createChallengeDto, user.id);
   }
 
@@ -63,7 +92,10 @@ export class ChallengesController {
   @UseGuards(RolesGuard)
   @Roles('company')
   @ApiOperation({ summary: 'Update a challenge (Company only)' })
-  update(@Param('id') id: string, @Body() updateChallengeDto: UpdateChallengeDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateChallengeDto: UpdateChallengeDto,
+  ) {
     return this.challengeService.update(id, updateChallengeDto);
   }
 

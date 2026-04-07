@@ -1,5 +1,19 @@
-import { Controller, Post, Body, Get, Patch, Param, UseGuards, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Patch,
+  Param,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { IdeaService } from '../../Services/idea.service';
 import { CreateIdeaDto } from '../../DTOs/create-idea.dto';
@@ -32,7 +46,10 @@ export class IdeasController {
   @ApiQuery({ name: 'public', required: false, type: String })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  findAll(@Query('public') isPublic?: string, @Query() paginationDto?: PaginationDto) {
+  findAll(
+    @Query('public') isPublic?: string,
+    @Query() paginationDto?: PaginationDto,
+  ) {
     if (isPublic === 'true') {
       return this.ideaService.findAllPublic(paginationDto);
     }

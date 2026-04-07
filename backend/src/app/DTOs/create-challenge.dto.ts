@@ -1,11 +1,11 @@
-import { 
-  IsString, 
-  IsNotEmpty, 
-  IsDateString, 
-  IsBoolean, 
-  IsOptional, 
+import {
+  IsString,
+  IsNotEmpty,
+  IsDateString,
+  IsBoolean,
+  IsOptional,
   IsEnum,
-  IsNumber
+  IsNumber,
 } from 'class-validator';
 import { ChallengeStatus } from '../Models/challenge-status.enum';
 

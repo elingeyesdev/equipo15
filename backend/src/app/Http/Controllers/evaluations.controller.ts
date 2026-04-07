@@ -1,9 +1,18 @@
-import { Controller, Post, Body, Get, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { EvaluationService } from '../../Services/evaluation.service';
 import { CreateEvaluationDto } from '../../DTOs/create-evaluation.dto';
 import { FirebaseAuthGuard } from '../../../common/guards/firebase-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/guards/roles.decorator';
+import type { AuthenticatedRequest } from '../../../common/types/authenticated-request.interface';
 
 @Controller('evaluations')
 export class EvaluationsController {
@@ -12,7 +21,10 @@ export class EvaluationsController {
   @Post()
   @UseGuards(FirebaseAuthGuard, RolesGuard)
   @Roles('judge', 'admin')
-  async create(@Body() createEvaluationDto: CreateEvaluationDto, @Request() req: any) {
+  async create(
+    @Body() createEvaluationDto: CreateEvaluationDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     return this.evaluationService.evaluateIdea({
       ...createEvaluationDto,
       judgeId: req.user.uid,
