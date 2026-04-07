@@ -66,6 +66,15 @@ jobs:
       - name: Frontend Unit Tests (Vitest)
         working-directory: ./frontend
         run: pnpm test
+        env:
+          VITE_API_URL: 'http://localhost:3000/api'
+          VITE_FIREBASE_API_KEY: 'dummy'
+          VITE_FIREBASE_AUTH_DOMAIN: 'dummy'
+          VITE_FIREBASE_PROJECT_ID: 'dummy'
+          VITE_FIREBASE_STORAGE_BUCKET: 'dummy'
+          VITE_FIREBASE_MESSAGING_SENDER_ID: 'dummy'
+          VITE_FIREBASE_APP_ID: 'dummy'
+          VITE_FIREBASE_MEASUREMENT_ID: 'dummy'
 
       - name: Frontend Build
         working-directory: ./frontend

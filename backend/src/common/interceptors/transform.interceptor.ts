@@ -25,42 +25,50 @@ export class TransformInterceptor<T> implements NestInterceptor<
     return next.handle().pipe(
       map((data) => ({
         success: true,
-        data: this.transform(data),
+        data: this.transform(data) as T,
       })),
     );
   }
 
-  private transform(data: any): any {
+  private transform(data: unknown): unknown {
     if (!data || typeof data !== 'object') return data;
 
     if (Array.isArray(data)) {
       return data.map((item) => this.transform(item));
     }
 
+    const obj = data as Record<string, unknown>;
+
+    // Handle Dates and ObjectIds
     if (
-      data instanceof Date ||
-      data._bsontype === 'ObjectID' ||
-      data.constructor.name === 'ObjectId'
+      obj instanceof Date ||
+      (obj._bsontype === 'ObjectID') ||
+      (obj.constructor && obj.constructor.name === 'ObjectId')
     ) {
-      return data;
+      return obj;
     }
 
-    const transformed = data.toObject ? data.toObject() : { ...data };
+    // Convert Mongoose/Prisma objects if toObject exists
+    const transformed = typeof obj.toObject === 'function' 
+      ? (obj.toObject() as Record<string, unknown>) 
+      : { ...obj };
 
+    // Role flattening logic
     if (
       transformed.roleId &&
       typeof transformed.roleId === 'object' &&
-      transformed.roleId.name
+      (transformed.roleId as Record<string, unknown>).name
     ) {
-      transformed.role = transformed.roleId.name;
+      transformed.role = (transformed.roleId as Record<string, unknown>).name;
     }
 
+    // Recursive transform for children
     Object.keys(transformed).forEach((key) => {
       const val = transformed[key];
       if (val && typeof val === 'object' && key !== 'roleId') {
         if (Array.isArray(val)) {
           transformed[key] = val.map((item) => this.transform(item));
-        } else if (val.constructor.name === 'Object') {
+        } else if (val.constructor && val.constructor.name === 'Object') {
           transformed[key] = this.transform(val);
         }
       }

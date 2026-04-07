@@ -71,7 +71,7 @@ export class UserService {
   private formatUserResponse(user: UserWithRole | null): UserResponse | null {
     if (!user) return null;
 
-    const { roleId: _roleId, ...userData } = user;
+    const { roleId: _, ...userData } = user;
     return {
       ...userData,
       role: user.role?.name || 'student',
