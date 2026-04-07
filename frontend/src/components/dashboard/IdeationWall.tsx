@@ -1,5 +1,5 @@
 import { useAuth } from '../../context/AuthContext';
-import SkyCanvas from '../../features/sky-wall/SkyCanvas';
+import SkyCanvas from '../../features/sky-wall';
 
 import * as S from './styles/LayoutStyles';
 
@@ -8,6 +8,7 @@ import ChallengeList from './components/ChallengeList';
 import StatsPanel from './components/StatsPanel';
 import IdeaForm from './components/IdeaForm';
 import FeedbackToast from './components/FeedbackToast';
+import type { Challenge } from '../../types/models';
 
 import { useDashboardState } from './hooks/useDashboardState';
 import { useIdeationForm } from './hooks/useIdeationForm';
@@ -83,7 +84,7 @@ const IdeationWall = () => {
             setFilterOpen={ds.setFilterOpen}
             selectedChallengeId={ds.selectedChallenge?.id || ''}
             onSelectChallenge={ds.setSelectedChallenge}
-            onRespond={c => ds.handleOpenForm(c, form.resetForm)}
+            onRespond={(c: Challenge) => ds.handleOpenForm(c, form.resetForm)}
           />
 
           <StatsPanel

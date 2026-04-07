@@ -7,7 +7,17 @@ import PodiumScreen from './PodiumScreen';
 import { useAuth } from '../../context/AuthContext';
 import { useWallSocket } from './useWallSocket';
 import { computeCanvasHeight } from './flight.engine';
-import type { PlaneIdea, WallPhase } from './types';
+import { ideaService } from '../../services/idea.service';
+import type { WallPhase } from './types';
+
+interface RawIdea {
+  _id?: string;
+  id?: string;
+  title: string;
+  author?: { displayName?: string };
+  likesCount?: number;
+  commentsCount?: number;
+}
 
 const CLOUD_CONFIG = [
   { y: 40, scale: 1.2, duration: 38, delay: 0, rtl: false },
@@ -55,22 +65,20 @@ const EmptyHint = styled.p`
 `;
 
 interface SkyCanvasProps {
-  initialIdeas?: PlaneIdea[];
+  initialIdeas?: RawIdea[];
 }
 
-const SkyCanvas = memo(({ initialIdeas = [] }: SkyCanvasProps) => {
+const EMPTY_RAW_IDEAS: RawIdea[] = [];
+
+interface SkyCanvasSceneProps {
+  initialIdeas: RawIdea[];
+  token?: string;
+}
+
+const SkyCanvasScene = memo(({ initialIdeas, token }: SkyCanvasSceneProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState(800);
   const [showPodium, setShowPodium] = useState(false);
-  const [token, setToken] = useState<string>();
-  const { user } = useAuth();
-
-  useEffect(() => {
-    if (user) {
-      user.getIdToken().then(setToken).catch(console.error);
-    }
-  }, [user]);
-
   const { ideas, phase: socketPhase } = useWallSocket(token, initialIdeas);
 
   const phase: WallPhase = useMemo(() => {
@@ -93,8 +101,6 @@ const SkyCanvas = memo(({ initialIdeas = [] }: SkyCanvasProps) => {
 
   const handleShowPodium = useCallback(() => setShowPodium(true), []);
 
-  const displayIdeas: PlaneIdea[] = ideas;
-
   return (
     <Sky ref={containerRef} $height={canvasHeight}>
       <CloudLayer>
@@ -104,8 +110,8 @@ const SkyCanvas = memo(({ initialIdeas = [] }: SkyCanvasProps) => {
       </CloudLayer>
 
       <PlaneLayer>
-        {displayIdeas.length === 0 && <EmptyHint>Las ideas aparecerán aquí al publicarse</EmptyHint>}
-        {displayIdeas.map(idea => (
+        {ideas.length === 0 && <EmptyHint>Las ideas aparecerán aquí al publicarse</EmptyHint>}
+        {ideas.map(idea => (
           <Plane key={idea.id} idea={idea} canvasWidth={canvasWidth} phase={phase} />
         ))}
       </PlaneLayer>
@@ -114,9 +120,80 @@ const SkyCanvas = memo(({ initialIdeas = [] }: SkyCanvasProps) => {
         <RaceOverlay onShowPodium={handleShowPodium} />
       )}
 
-      {showPodium && <PodiumScreen ideas={displayIdeas} />}
+      {showPodium && <PodiumScreen ideas={ideas} />}
     </Sky>
   );
+});
+
+SkyCanvasScene.displayName = 'SkyCanvasScene';
+
+const extractRawIdeas = (payload: unknown): RawIdea[] => {
+  const candidate = (payload as { data?: unknown } | null)?.data ?? payload;
+  if (!candidate || !Array.isArray(candidate)) return [];
+
+  return candidate
+    .filter((item): item is RawIdea => typeof item === 'object' && item !== null)
+    .map((item) => ({
+      _id: typeof item._id === 'string' ? item._id : undefined,
+      id: typeof item.id === 'string' ? item.id : undefined,
+      title: typeof item.title === 'string' ? item.title : 'Idea sin titulo',
+      author: typeof item.author === 'object' && item.author !== null
+        ? { displayName: typeof (item.author as { displayName?: unknown }).displayName === 'string'
+          ? (item.author as { displayName?: string }).displayName
+          : undefined }
+        : undefined,
+      likesCount: typeof item.likesCount === 'number' ? item.likesCount : 0,
+      commentsCount: typeof item.commentsCount === 'number' ? item.commentsCount : 0,
+    }));
+};
+
+const SkyCanvas = memo(({ initialIdeas = EMPTY_RAW_IDEAS }: SkyCanvasProps) => {
+  const [token, setToken] = useState<string>();
+  const [publicIdeas, setPublicIdeas] = useState<RawIdea[]>(initialIdeas);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+
+    let active = true;
+    user.getIdToken().then((nextToken: string) => {
+      if (active) setToken(nextToken);
+    }).catch(console.error);
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    let active = true;
+
+    console.info('[SkyCanvas] Iniciando carga de ideas desde la base de datos...');
+
+    (async () => {
+      try {
+        const response = await ideaService.getAllIdeas();
+        if (!active) return;
+        const payload = (response as { success?: boolean; data?: unknown })?.success
+          ? (response as { data?: unknown }).data
+          : response;
+        const ideas = extractRawIdeas(payload);
+        console.info(
+          `[SkyCanvas] Ideas cargadas correctamente: ${ideas.length}`,
+        );
+        setPublicIdeas(ideas.length > 0 ? ideas : initialIdeas);
+      } catch (loadError: unknown) {
+        console.error('[SkyCanvas] Error leyendo ideas desde la base de datos:', loadError);
+        if (active) setPublicIdeas(initialIdeas);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return <SkyCanvasScene initialIdeas={publicIdeas} token={token} />;
 });
 
 SkyCanvas.displayName = 'SkyCanvas';

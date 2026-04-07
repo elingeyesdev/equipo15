@@ -20,6 +20,28 @@ export class IdeaService {
     private projectDetailsModel: Model<ProjectDetails>,
   ) {}
 
+  private async persistProjectDetails(data: {
+    projectId: string;
+    problem?: string;
+    solution?: string;
+    tags?: string[];
+    multimediaLinks?: string[];
+  }): Promise<void> {
+    try {
+      await this.projectDetailsModel.create({
+        projectId: data.projectId,
+        description: `${data.problem ?? ''}\n${data.solution ?? ''}`.trim(),
+        tags: data.tags || [],
+        multimediaLinks: data.multimediaLinks || [],
+      });
+    } catch (error) {
+      // La idea principal se guarda en PostgreSQL; si falla Mongo, no bloqueamos al usuario.
+      this.logger.warn(
+        `No se pudo guardar ProjectDetails para idea ${data.projectId}: ${(error as Error).message}`,
+      );
+    }
+  }
+
   async create(createIdeaDto: CreateIdeaDto): Promise<Idea> {
     const challenge = await this.challengeRepository.findById(
       createIdeaDto.challengeId,
@@ -37,13 +59,23 @@ export class IdeaService {
       );
     }
 
-    const createdIdea = await this.ideaRepository.create(createIdeaDto);
-
-    await this.projectDetailsModel.create({
-      projectId: createdIdea.id,
-      description: createIdeaDto.problem + ' \n ' + createIdeaDto.solution,
+    const createdIdea = await this.ideaRepository.create({
+      title: createIdeaDto.title,
+      problem: createIdeaDto.problem,
+      solution: createIdeaDto.solution,
+      status: createIdeaDto.status || 'public',
       tags: createIdeaDto.tags || [],
-      multimediaLinks: createIdeaDto.multimediaLinks || [],
+      isAnonymous: createIdeaDto.isAnonymous || false,
+      authorId: createIdeaDto.author,
+      challengeId: createIdeaDto.challengeId,
+    });
+
+    await this.persistProjectDetails({
+      projectId: createdIdea.id,
+      problem: createIdeaDto.problem,
+      solution: createIdeaDto.solution,
+      tags: createIdeaDto.tags,
+      multimediaLinks: createIdeaDto.multimediaLinks,
     });
 
     this.logger.log(
@@ -53,19 +85,38 @@ export class IdeaService {
   }
 
   async createDraft(createIdeaDraftDto: CreateDraftIdeaDto): Promise<Idea> {
+    if (!createIdeaDraftDto.challengeId) {
+      throw new BadRequestException(
+        'Selecciona un reto antes de guardar el borrador.',
+      );
+    }
+
+    const challenge = await this.challengeRepository.findById(
+      createIdeaDraftDto.challengeId,
+    );
+    if (!challenge) {
+      throw new BadRequestException('El reto vinculado no existe.');
+    }
+
     const draftPayload = {
-      ...createIdeaDraftDto,
+      title: createIdeaDraftDto.title || 'Borrador sin titulo',
+      problem: createIdeaDraftDto.problem || 'Pendiente de descripcion del problema.',
+      solution:
+        createIdeaDraftDto.solution ||
+        'Pendiente de descripcion de la solucion propuesta.',
+      tags: createIdeaDraftDto.tags || [],
+      isAnonymous: createIdeaDraftDto.isAnonymous || false,
+      authorId: createIdeaDraftDto.author,
+      challengeId: createIdeaDraftDto.challengeId,
       status: 'draft',
     };
     const createdDraft = await this.ideaRepository.create(draftPayload);
 
-    await this.projectDetailsModel.create({
+    await this.persistProjectDetails({
       projectId: createdDraft.id,
-      description:
-        createIdeaDraftDto.problem ||
-        '' + ' \n ' + createIdeaDraftDto.solution ||
-        '',
-      tags: createIdeaDraftDto.tags || [],
+      problem: createIdeaDraftDto.problem,
+      solution: createIdeaDraftDto.solution,
+      tags: createIdeaDraftDto.tags,
     });
 
     this.logger.log(

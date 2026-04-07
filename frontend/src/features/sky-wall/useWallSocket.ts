@@ -62,6 +62,10 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
   }, [flushUpdates]);
 
   useEffect(() => {
+    setIdeas(buildPlanes(initialIdeas));
+  }, [initialIdeas]);
+
+  useEffect(() => {
     if (!token) return; // Prevent connecting without token
     
     // Resolve proper URL from env, removing /api suffix if present

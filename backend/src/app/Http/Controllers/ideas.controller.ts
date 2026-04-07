@@ -8,6 +8,7 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
@@ -42,6 +43,7 @@ export class IdeasController {
   }
 
   @Get()
+  @SkipThrottle()
   @ApiOperation({ summary: 'Get all ideas (optionally filter by public only)' })
   @ApiQuery({ name: 'public', required: false, type: String })
   @ApiQuery({ name: 'page', required: false, type: Number })

@@ -54,6 +54,14 @@ const AvatarLabel = styled.div<{ $size: number }>`
   pointer-events: none;
 `;
 
+const PlaneImage = styled.img`
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(255, 64, 0, 0.24));
+`;
+
 interface PlaneProps {
   idea: PlaneIdea;
   canvasWidth: number;
@@ -71,7 +79,7 @@ const Plane = memo(
 
     return (
       <PlaneWrapper $x={x} $y={idea.laneY} $size={size} $delay={idea.floatDelay} $isRacing={isRacing}>
-        <img src={planeImg} alt={idea.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        <PlaneImage src={planeImg} alt={idea.title} />
         <AvatarLabel $size={size}>{idea.title.slice(0, 24)}</AvatarLabel>
       </PlaneWrapper>
     );
