@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import type { PlaneIdea, WallPhase, IdeaUpdatedPayload } from './types';
-import { assignLanes, computeCanvasHeight } from './flight.engine';
+import { computeCanvasHeight } from './flight.engine';
 
 const DEFAULT_SOCKET_URL = 'http://localhost:3000';
 const DEBOUNCE_MS = 200;
@@ -16,16 +16,23 @@ interface RawIdea {
   commentsCount?: number;
 }
 
+const randomBetween = (min: number, max: number): number => {
+  return Math.random() * (max - min) + min;
+};
+
 const buildPlanes = (rawIdeas: RawIdea[]): PlaneIdea[] => {
   const height = computeCanvasHeight(rawIdeas.length);
-  const lanes = assignLanes(rawIdeas.length, height);
+  const minY = 72;
+  const maxY = Math.max(minY + 1, height - 72);
+
   return rawIdeas.map((idea, i) => ({
     id: idea.id ?? idea._id ?? String(i),
     title: idea.title,
     authorName: idea.author?.displayName ?? 'Anónimo',
     likesCount: idea.likesCount ?? 0,
     commentsCount: idea.commentsCount ?? 0,
-    laneY: lanes[i],
+    randomXRatio: randomBetween(0.08, 0.78),
+    laneY: randomBetween(minY, maxY),
     floatDelay: Math.random() * 2,
   }));
 };

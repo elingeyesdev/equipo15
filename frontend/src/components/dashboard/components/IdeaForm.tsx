@@ -57,7 +57,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
           <S.ModalHalo />
           <S.ModalHeader>
             <div>
-              <S.ModalEyebrow>E02 / Formulario estructurado</S.ModalEyebrow>
+              <S.ModalEyebrow>E02 / Formulario Estructurado - Modelo NASA</S.ModalEyebrow>
               <S.ModalTitle id="idea-form-title">{challenge?.title || 'Selecciona un reto'}</S.ModalTitle>
               <S.ModalLead>
                 Comparte tu propuesta para este reto. Puedes guardar conceptos en borrador o compartirlos con el hub de innovación.

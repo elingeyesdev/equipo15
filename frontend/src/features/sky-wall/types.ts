@@ -4,6 +4,7 @@ export interface PlaneIdea {
   authorName: string;
   likesCount: number;
   commentsCount: number;
+  randomXRatio: number;
   laneY: number;
   floatDelay: number;
 }
