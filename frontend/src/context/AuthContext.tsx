@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return result.data || null;
       }
     } catch (e) {
-      console.error('Error fetching profile:', e);
+      // remove log
     }
     return null;
   }, []);
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return result.data || null;
       }
     } catch (e) {
-      console.error('Error syncing profile:', e);
+      // remove log
     }
     return null;
   }, []);

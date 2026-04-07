@@ -1,28 +1,25 @@
 import { useState, useEffect } from 'react';
 import { userService } from '../../../services/user.service';
-import type { UserProfile } from '../../../services/user.service';
+import type { UserProfile } from '../../../types/models';
+import type { Challenge } from '../../../types/models';
 import { challengeService } from '../../../services/challenge.service';
 import { getFacultySlug } from '../../../config/faculties';
 import type { FeedbackMessage } from './useIdeationForm';
 
-export const useDashboardState = (
-  initialChallenges: any[] = [], 
-  initialFacultades: any[] = [], 
-  initialLideres: any[] = []
-) => {
+export const useDashboardState = () => {
   const [userProfile, setProfile] = useState<UserProfile | null>(null);
   const [profileError, setProfileError] = useState('');
-  const [challenges, setChallenges] = useState<any[]>(initialChallenges);
-  const [topFacultades, setTopFacultades] = useState<any[]>(initialFacultades);
-  const [topLideres, setTopLideres] = useState<any[]>(initialLideres);
-  const [selectedChallenge, setSelectedChallenge] = useState<any>(null);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [topFacultades, setTopFacultades] = useState<any[]>([]);
+  const [topLideres, setTopLideres] = useState<any[]>([]);
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [challengeStats, setChallengeStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('Todos');
   const [filterOpen, setFilterOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
-  const [formChallenge, setFormChallenge] = useState<any>(null);
+  const [formChallenge, setFormChallenge] = useState<Challenge | null>(null);
   const [toastMessage, setToastMessage] = useState<FeedbackMessage | null>(null);
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
 
@@ -33,28 +30,34 @@ export const useDashboardState = (
         setLoading(true);
         const [profile, cloudChallenges, stats] = await Promise.all([
           userService.getProfile(),
-          challengeService.getPublicChallenges(),
+          challengeService.getPublicChallenges(1, 40, 'Activo'),
           challengeService.getGlobalStats()
         ]);
         
         if (!active) return;
         
-        const mapped = cloudChallenges.map((c: any) => ({
+        const rawResponse = cloudChallenges as any;
+        const challengesResult = rawResponse?.success ? rawResponse.data : rawResponse;
+        const rawData = Array.isArray(challengesResult?.data) ? challengesResult.data : [];
+
+        const mapped = rawData.map((c: any) => ({
           ...c,
-          id: c._id,
+          id: c.id,
           category: getFacultySlug(c.facultyId),
           badge: c.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
         }));
 
-        setProfile(profile);
-        setChallenges([...mapped, ...initialChallenges]);
-        setTopFacultades(stats.topFacultades.length > 0 ? stats.topFacultades : initialFacultades);
-        setTopLideres(stats.topLeaders.length > 0 ? stats.topLeaders : initialLideres);
+        const pAny = profile as any;
+        setProfile(pAny?.success ? pAny.data : pAny);
+        setChallenges(mapped);
+        
+        const sAny = stats as any;
+        const finalStats = sAny?.success ? sAny.data : sAny;
+        setTopFacultades(finalStats?.topFacultades || []);
+        setTopLideres(finalStats?.topLeaders || []);
         
         if (mapped.length > 0) {
           setSelectedChallenge(mapped[0]);
-        } else if (initialChallenges.length > 0) {
-          setSelectedChallenge(initialChallenges[0]);
         }
       } catch (error: any) {
         if (active) setProfileError(error?.message || 'Error de conexión.');
@@ -72,7 +75,7 @@ export const useDashboardState = (
         const stats = await challengeService.getChallengeStats(selectedChallenge.id);
         setChallengeStats(stats);
       } catch (e) {
-        console.error('Error stats:', e);
+      // Error stats
       }
     })();
   }, [selectedChallenge?.id]);
@@ -92,7 +95,7 @@ export const useDashboardState = (
   const showToast = (payload: FeedbackMessage) => setToastMessage(payload);
   const dismissToast = () => setToastMessage(null);
 
-  const handleOpenForm = (challenge: any, resetForm: () => void) => {
+  const handleOpenForm = (challenge: Challenge, resetForm: () => void) => {
     setFormChallenge(challenge);
     setSelectedChallenge(challenge);
     resetForm();

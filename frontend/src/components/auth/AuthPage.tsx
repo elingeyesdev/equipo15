@@ -3,7 +3,8 @@ import * as S from './AuthPage/styles/AuthStyles';
 
 const AuthPage = () => {
   const {
-    isLogin, setIsLogin, formData, setFormData, loading, errorVisible, handleSubmit, handleGoogleLogin
+    isLogin, setIsLogin, formData, setFormData, loading, errorVisible, handleSubmit, handleGoogleLogin,
+    passwordChecks, isFormValid
   } = useAuthForm();
 
   return (
@@ -71,13 +72,42 @@ const AuthPage = () => {
             />
           </S.FieldWrap>
 
+          {!isLogin && (
+            <S.ValidationList>
+              <S.ValidationItem isValid={passwordChecks.length}>
+                {passwordChecks.length ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                )}
+                8+ caracteres
+              </S.ValidationItem>
+              <S.ValidationItem isValid={passwordChecks.uppercase}>
+                {passwordChecks.uppercase ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                )}
+                1 mayúscula
+              </S.ValidationItem>
+              <S.ValidationItem isValid={passwordChecks.symbol}>
+                {passwordChecks.symbol ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                )}
+                1 símbolo
+              </S.ValidationItem>
+            </S.ValidationList>
+          )}
+
           {isLogin && (
             <S.ForgotRow>
               <S.ForgotLink href="#">¿Olvidaste tu contraseña?</S.ForgotLink>
             </S.ForgotRow>
           )}
 
-          <S.BtnMain type="submit" disabled={loading}>
+          <S.BtnMain type="submit" disabled={loading || !isFormValid}>
             {loading ? <S.Spinner /> : (isLogin ? 'Entrar' : 'Registrarme')}
           </S.BtnMain>
         </S.Form>

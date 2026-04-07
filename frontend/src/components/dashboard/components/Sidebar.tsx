@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import * as S from '../styles/SidebarStyles';
 import LogoutButton from '../LogoutButton';
+import { useAuth } from '../../../context/AuthContext';
 
 interface SidebarProps {
   open: boolean;
@@ -9,6 +10,9 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
+  const { userProfile } = useAuth();
+  const role = (userProfile?.roleId?.name || userProfile?.role || '').toLowerCase();
+
   return (
     <>
       <S.Overlay open={open} onClick={onClose} />
@@ -43,22 +47,46 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
 
           <S.SidebarDivider />
 
-          <S.SidebarNavItem as={NavLink} to="/dashboard" end onClick={onClose}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-            </svg>
-            Ver Retos
-          </S.SidebarNavItem>
+          {role === 'judge' && (
+            <S.SidebarNavItem as={NavLink} to="/dashboard" end onClick={onClose}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 11l3 3L22 4" />
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+              </svg>
+              Panel de Evaluación
+            </S.SidebarNavItem>
+          )}
 
-          <S.SidebarNavItem as={NavLink} to="/dashboard/mis-ideas" onClick={onClose} style={{ pointerEvents: 'none', opacity: 0.4 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2a7 7 0 0 1 7 7c0 3-1.8 5.4-4 6.5V17a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-1.5C6.8 14.4 5 12 5 9a7 7 0 0 1 7-7z" />
-              <line x1="9" y1="21" x2="15" y2="21" />
-              <line x1="10" y1="18" x2="14" y2="18" />
-            </svg>
-            Mis Ideas
-            <S.ComingSoonBadge>Próximamente</S.ComingSoonBadge>
-          </S.SidebarNavItem>
+          {(role === 'admin' || role === 'company') && (
+            <S.SidebarNavItem as={NavLink} to="/dashboard" end onClick={onClose}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <line x1="9" y1="3" x2="9" y2="21" />
+              </svg>
+              Administración
+            </S.SidebarNavItem>
+          )}
+
+          {role === 'student' && (
+            <>
+              <S.SidebarNavItem as={NavLink} to="/dashboard" end onClick={onClose}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                </svg>
+                Ver Retos
+              </S.SidebarNavItem>
+
+              <S.SidebarNavItem as={NavLink} to="/dashboard/mis-ideas" onClick={onClose} style={{ pointerEvents: 'none', opacity: 0.4 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a7 7 0 0 1 7 7c0 3-1.8 5.4-4 6.5V17a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-1.5C6.8 14.4 5 12 5 9a7 7 0 0 1 7-7z" />
+                  <line x1="9" y1="21" x2="15" y2="21" />
+                  <line x1="10" y1="18" x2="14" y2="18" />
+                </svg>
+                Mis Ideas
+                <S.ComingSoonBadge>Próximamente</S.ComingSoonBadge>
+              </S.SidebarNavItem>
+            </>
+          )}
         </S.SidebarNav>
 
         <S.SidebarFooter>

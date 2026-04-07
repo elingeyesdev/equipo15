@@ -60,6 +60,22 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
               <S.PreviewDescription>
                 {formData.description || 'Sin descripción todavía...'}
               </S.PreviewDescription>
+
+              <S.TwoColumnRow style={{ marginTop: '20px', gap: '24px', opacity: 0.9 }}>
+                {formData.companyContext && (
+                  <div>
+                    <S.FieldLabel style={{ fontSize: '10px', marginBottom: '6px' }}>CONTEXTO</S.FieldLabel>
+                    <p style={{ fontSize: '12.5px', color: '#4a5568', lineHeight: '1.5', margin: 0 }}>{formData.companyContext}</p>
+                  </div>
+                )}
+
+                {formData.participationRules && (
+                  <div>
+                    <S.FieldLabel style={{ fontSize: '10px', marginBottom: '6px' }}>REGLAS</S.FieldLabel>
+                    <p style={{ fontSize: '12.5px', color: '#4a5568', lineHeight: '1.5', margin: 0 }}>{formData.participationRules}</p>
+                  </div>
+                )}
+              </S.TwoColumnRow>
               <S.PreviewFooter>
                 <S.PreviewBadge type="privacy">{getFacultySlug(formData.facultyId)}</S.PreviewBadge>
                 <S.PreviewBadge type="privacy">{formData.isPrivate ? 'Privado' : 'Público'}</S.PreviewBadge>
@@ -69,36 +85,61 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
           </S.PreviewCard>
         ) : (
           <>
-            <S.FormGroup>
-              <S.FieldLabel>Título del Desafío</S.FieldLabel>
-              <S.Input 
-                placeholder="Ej: Rediseñar el sistema de becas..."
-                value={formData.title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
-              />
-            </S.FormGroup>
+            <S.TwoColumnRow>
+              <S.FormGroup>
+                <S.FieldLabel>Título del Desafío</S.FieldLabel>
+                <S.Input 
+                  placeholder="Ej: Rediseñar el sistema de becas..."
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                />
+              </S.FormGroup>
+
+              <S.FormGroup>
+                <S.FieldLabel>Asignar a Facultad</S.FieldLabel>
+                <S.Select 
+                  value={formData.facultyId}
+                  onChange={(e) => setFormData({...formData, facultyId: Number(e.target.value)})}
+                >
+                  <option value="0">Todas las Facultades</option>
+                  {FACULTIES.map(f => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
+                </S.Select>
+              </S.FormGroup>
+            </S.TwoColumnRow>
 
             <S.FormGroup>
               <S.FieldLabel>Planteamiento del Problema</S.FieldLabel>
               <S.Textarea 
                 placeholder="Describe el problema que los participantes deben resolver..."
-                rows={5}
+                rows={4}
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
               />
             </S.FormGroup>
 
-            <S.FormGroup>
-              <S.FieldLabel>Asignar a Facultad</S.FieldLabel>
-              <S.Select 
-                value={formData.facultyId}
-                onChange={(e) => setFormData({...formData, facultyId: Number(e.target.value)})}
-              >
-                {FACULTIES.map(f => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
-              </S.Select>
-            </S.FormGroup>
+            <S.TwoColumnRow style={{ marginBottom: '16px' }}>
+              <S.FormGroup>
+                <S.FieldLabel>Contexto de la Empresa (Opcional)</S.FieldLabel>
+                <S.Textarea 
+                  placeholder="Cuéntanos un poco sobre tu empresa o el área del reto..."
+                  rows={4}
+                  value={formData.companyContext}
+                  onChange={(e) => setFormData({...formData, companyContext: e.target.value})}
+                />
+              </S.FormGroup>
+
+              <S.FormGroup>
+                <S.FieldLabel>Reglas de Participación (Opcional)</S.FieldLabel>
+                <S.Textarea 
+                  placeholder="Ej: Solo estudiantes de 5to semestre, grupos de 3 personas, etc."
+                  rows={4}
+                  value={formData.participationRules}
+                  onChange={(e) => setFormData({...formData, participationRules: e.target.value})}
+                />
+              </S.FormGroup>
+            </S.TwoColumnRow>
 
             <S.PrivacyToggleRow>
               <div>

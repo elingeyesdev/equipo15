@@ -4,6 +4,7 @@ import Cloud from './Cloud';
 import Plane from './Plane';
 import RaceOverlay from './RaceOverlay';
 import PodiumScreen from './PodiumScreen';
+import { useAuth } from '../../context/AuthContext';
 import { useWallSocket } from './useWallSocket';
 import { computeCanvasHeight } from './flight.engine';
 import type { PlaneIdea, WallPhase } from './types';
@@ -62,8 +63,16 @@ const SkyCanvas = memo(({ initialIdeas = [] }: SkyCanvasProps) => {
   const [canvasWidth, setCanvasWidth] = useState(800);
   const [phase, setPhase] = useState<WallPhase>('active');
   const [showPodium, setShowPodium] = useState(false);
+  const [token, setToken] = useState<string>();
+  const { user } = useAuth();
 
-  const { ideas, phase: socketPhase } = useWallSocket(initialIdeas);
+  useEffect(() => {
+    if (user) {
+      user.getIdToken().then(setToken).catch(console.error);
+    }
+  }, [user]);
+
+  const { ideas, phase: socketPhase } = useWallSocket(token, initialIdeas);
 
   useEffect(() => {
     if (socketPhase === 'race') setPhase('race');
@@ -85,15 +94,7 @@ const SkyCanvas = memo(({ initialIdeas = [] }: SkyCanvasProps) => {
 
   const handleShowPodium = useCallback(() => setShowPodium(true), []);
 
-  const mockedIdeas: PlaneIdea[] = useMemo(() => {
-    if (ideas.length > 0) return ideas;
-    return [
-      { id: '1', title: 'Corredor Solar Campus', authorName: 'Valentina R.', likesCount: 12, commentsCount: 5, laneY: 120, floatDelay: 0 },
-      { id: '2', title: 'App Bienestar Mental', authorName: 'Mateo G.',     likesCount: 8,  commentsCount: 2, laneY: 250, floatDelay: 0.7 },
-      { id: '3', title: 'Reciclaje Inteligente', authorName: 'Camila P.',   likesCount: 20, commentsCount: 8, laneY: 380, floatDelay: 1.3 },
-      { id: '4', title: 'Hub Emprendimiento',    authorName: 'Andrés L.',   likesCount: 5,  commentsCount: 1, laneY: 500, floatDelay: 0.4 },
-    ];
-  }, [ideas]);
+  const displayIdeas: PlaneIdea[] = ideas;
 
   return (
     <Sky ref={containerRef} $height={canvasHeight}>
@@ -104,8 +105,8 @@ const SkyCanvas = memo(({ initialIdeas = [] }: SkyCanvasProps) => {
       </CloudLayer>
 
       <PlaneLayer>
-        {mockedIdeas.length === 0 && <EmptyHint>Las ideas aparecerán aquí al publicarse</EmptyHint>}
-        {mockedIdeas.map(idea => (
+        {displayIdeas.length === 0 && <EmptyHint>Las ideas aparecerán aquí al publicarse</EmptyHint>}
+        {displayIdeas.map(idea => (
           <Plane key={idea.id} idea={idea} canvasWidth={canvasWidth} phase={phase} />
         ))}
       </PlaneLayer>
@@ -114,7 +115,7 @@ const SkyCanvas = memo(({ initialIdeas = [] }: SkyCanvasProps) => {
         <RaceOverlay onShowPodium={handleShowPodium} />
       )}
 
-      {showPodium && <PodiumScreen ideas={mockedIdeas} />}
+      {showPodium && <PodiumScreen ideas={displayIdeas} />}
     </Sky>
   );
 });

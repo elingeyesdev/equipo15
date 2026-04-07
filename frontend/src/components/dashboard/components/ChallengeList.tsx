@@ -1,21 +1,24 @@
 import React from 'react';
 import * as S from '../styles/ChallengeStyles';
 import ChallengeCard from './ChallengeCard';
+import ChallengeCardSkeleton from './ChallengeCardSkeleton';
 import { FACULTIES } from '../../../config/faculties';
+import type { Challenge } from '../../../types/models';
 
 interface ChallengeListProps {
-  challenges: any[];
+  loading?: boolean;
+  challenges: Challenge[];
   activeFilter: string;
   onFilterChange: (f: string) => void;
   filterOpen: boolean;
   setFilterOpen: (open: boolean) => void;
-  selectedChallengeId: number;
-  onSelectChallenge: (c: any) => void;
-  onRespond: (c: any) => void;
+  selectedChallengeId: string | number;
+  onSelectChallenge: (c: Challenge) => void;
+  onRespond: (c: Challenge) => void;
 }
 
 const ChallengeList: React.FC<ChallengeListProps> = ({
-  challenges, activeFilter, onFilterChange, filterOpen, setFilterOpen,
+  loading, challenges, activeFilter, onFilterChange, filterOpen, setFilterOpen,
   selectedChallengeId, onSelectChallenge, onRespond
 }) => {
   const filters = ['Todos', ...FACULTIES.map(f => f.slug)];
@@ -49,17 +52,37 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
       </S.PanelHeader>
 
       <S.ChallengeList>
-        {challenges
-          .filter(c => activeFilter === 'Todos' || c.category === activeFilter)
-          .map(c => (
-            <ChallengeCard
-              key={c.id}
-              challenge={c}
-              active={selectedChallengeId === c.id}
-              onSelect={() => onSelectChallenge(c)}
-              onRespond={(e) => { e.stopPropagation(); onRespond(c); }}
-            />
-          ))}
+        {loading ? (
+          <>
+            <ChallengeCardSkeleton />
+            <ChallengeCardSkeleton />
+            <ChallengeCardSkeleton />
+          </>
+        ) : challenges.filter(c => activeFilter === 'Todos' || c.category === activeFilter).length > 0 ? (
+          challenges
+            .filter(c => activeFilter === 'Todos' || c.category === activeFilter)
+            .map(c => (
+              <ChallengeCard
+                key={c.id}
+                challenge={c}
+                active={selectedChallengeId === c.id}
+                onSelect={() => onSelectChallenge(c)}
+                onRespond={(e) => { e.stopPropagation(); onRespond(c); }}
+              />
+            ))
+        ) : (
+          <div style={{ 
+            padding: '40px 20px', 
+            textAlign: 'center', 
+            color: '#718096', 
+            fontSize: '14px',
+            background: 'white',
+            borderRadius: '16px',
+            border: '1px dashed #cbd5e0'
+          }}>
+            No hay retos activos disponibles para tu facultad por ahora.
+          </div>
+        )}
       </S.ChallengeList>
     </S.LeftPanel>
   );

@@ -253,3 +253,31 @@ export const SwitchBtn = styled.button`
   transition: opacity 0.15s;
   &:hover { opacity: 0.75; }
 `;
+
+export const ValidationList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: -6px;
+  margin-bottom: 8px;
+  padding: 0 4px;
+  animation: ${slideDown} 0.3s cubic-bezier(.22, .68, 0, 1.1) both;
+  overflow: hidden;
+`;
+
+export const ValidationItem = styled.div<{ isValid: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: ${p => p.isValid ? '#34A853' : '#9aa0a6'};
+  transition: color 0.3s ease;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: ${p => p.isValid ? '#34A853' : '#EA4335'};
+    transition: color 0.3s ease;
+  }
+`;

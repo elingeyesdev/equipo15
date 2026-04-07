@@ -4,7 +4,7 @@ import { ideaService } from '../../../services/idea.service';
 import type { UserProfile } from '../../../services/user.service';
 
 export type ConsentKey = 'terms' | 'usage' | 'originality';
-export type FormErrorKey = 'challenge' | 'ideaName' | 'ideaDevelopment' | 'consents';
+export type FormErrorKey = 'challenge' | 'ideaName' | 'ideaProblem' | 'ideaSolution' | 'consents';
 export type FormErrors = Partial<Record<FormErrorKey, string>>;
 export type FeedbackTone = 'success' | 'error' | 'info' | 'critical';
 
@@ -74,7 +74,8 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [consentsTouched, setConsentsTouched] = useState(false);
   const [ideaName, setIdeaName] = useState('');
-  const [ideaDevelopment, setIdeaDevelopment] = useState('');
+  const [ideaProblem, setIdeaProblem] = useState('');
+  const [ideaSolution, setIdeaSolution] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [consents, setConsents] = useState<Record<ConsentKey, boolean>>({
@@ -84,14 +85,16 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
   });
 
   const minIdeaName = 5;
-  const minIdeaDevelopment = 20;
+  const minIdeaProblem = 50;
+  const minIdeaSolution = 50;
   const maxTags = 6;
 
   const allConsentsAccepted = Object.values(consents).every(Boolean);
 
   const resetForm = () => {
     setIdeaName('');
-    setIdeaDevelopment('');
+    setIdeaProblem('');
+    setIdeaSolution('');
     setTags([]);
     setTagInput('');
     setConsents({ terms: false, usage: false, originality: false });
@@ -110,7 +113,8 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
   const getFieldError = (field: FormErrorKey, formChallenge: any): string | undefined => {
     if (field === 'challenge' && !formChallenge) return 'Selecciona un reto para vincular tu propuesta.';
     if (field === 'ideaName' && ideaName.trim().length < minIdeaName) return `Ingresa al menos ${minIdeaName} caracteres.`;
-    if (field === 'ideaDevelopment' && ideaDevelopment.trim().length < minIdeaDevelopment) return `Describe tu idea con mínimo ${minIdeaDevelopment} caracteres.`;
+    if (field === 'ideaProblem' && ideaProblem.trim().length < minIdeaProblem) return `Describe el problema con al menos ${minIdeaProblem} caracteres.`;
+    if (field === 'ideaSolution' && ideaSolution.trim().length < minIdeaSolution) return `Explica la solución con al menos ${minIdeaSolution} caracteres.`;
     if (field === 'consents' && !allConsentsAccepted) return 'Acepta los tres consentimientos (ejemplo: si “App para Bienestar Estudiantil” llega al laboratorio, debemos poder prototiparla citándote).';
     return undefined;
   };
@@ -128,7 +132,7 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
 
   const validatePublicSubmission = (formChallenge: any): FormErrors => {
     const errors: FormErrors = {};
-    (['challenge', 'ideaName', 'ideaDevelopment', 'consents'] as FormErrorKey[]).forEach(field => {
+    (['challenge', 'ideaName', 'ideaProblem', 'ideaSolution', 'consents'] as FormErrorKey[]).forEach(field => {
       const errorMessage = getFieldError(field, formChallenge);
       if (errorMessage) errors[field] = errorMessage;
     });
@@ -166,7 +170,7 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
   };
 
   const handleIdeaSubmit = async (targetStatus: 'draft' | 'public', formChallenge: any): Promise<boolean> => {
-    if (!profile?._id) {
+    if (!profile?.id) {
       const message = {
         tone: 'critical' as FeedbackTone,
         title: 'Perfil no disponible',
@@ -187,7 +191,6 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
     }
 
     const title = ideaName.trim();
-    const description = ideaDevelopment.trim();
     const normalizedTags = () => Array.from(new Set(tags.map(tag => tag.trim()).filter(Boolean)));
 
     if (targetStatus === 'public') {
@@ -213,10 +216,11 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
       if (targetStatus === 'draft') {
         await ideaService.saveDraftIdea({
           title: title || undefined,
-          description: description || undefined,
+          problem: ideaProblem.trim() || undefined,
+          solution: ideaSolution.trim() || undefined,
           tags: normalizedTags(),
-          author: profile._id,
-          challengeId: formChallenge?._id,
+          author: profile.id,
+          challengeId: formChallenge?.id,
           isAnonymous: isGuest,
         });
         showToast({
@@ -227,12 +231,13 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
         success = true;
       } else {
         await ideaService.createIdea({
-          title,
-          description,
+          title: ideaName.trim(),
+          problem: ideaProblem.trim(),
+          solution: ideaSolution.trim(),
           tags: normalizedTags(),
           status: targetStatus,
-          author: profile._id,
-          challengeId: formChallenge._id,
+          author: profile.id,
+          challengeId: formChallenge.id,
           isAnonymous: isGuest,
         });
         const successMessage: FeedbackMessage = {
@@ -258,7 +263,8 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
 
   return {
     ideaName, setIdeaName,
-    ideaDevelopment, setIdeaDevelopment,
+    ideaProblem, setIdeaProblem,
+    ideaSolution, setIdeaSolution,
     tags, tagInput, setTagInput,
     handleTagAddition, handleTagKeyDown, handleTagRemoval,
     consents, toggleConsent, consentsTouched, setConsentsTouched,

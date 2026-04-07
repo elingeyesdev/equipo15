@@ -1,20 +1,19 @@
-import axios from 'axios';
-import { auth } from '../config/firebase';
-
-const API_URL = 'http://localhost:3000/api';
+import axiosInstance from '../api/axiosConfig';
 
 export interface Role {
-  _id: string;
+  id: string;
   name: string;
   description: string;
 }
 
 export interface UserProfile {
-  _id: string;
+  id: string;
   displayName: string;
   email: string;
   firebaseUid: string;
-  roleId: Role;
+  roleId: string;
+  role?: string;
+  roleInfo?: Role;
   bio?: string;
   avatarUrl?: string;
   facultyId?: number;
@@ -22,27 +21,19 @@ export interface UserProfile {
   specialty?: string;
 }
 
-const ensureToken = async () => {
-  const token = await auth.currentUser?.getIdToken();
-  if (!token) {
-    throw new Error('Usuario no autenticado');
-  }
-  return token;
-};
-
 export const userService = {
   getProfile: async (): Promise<UserProfile> => {
-    const token = await ensureToken();
-    const response = await axios.get(`${API_URL}/users/profile`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.get('/users/profile');
     return response.data;
   },
+  
   updateBio: async (bio: string): Promise<UserProfile> => {
-    const token = await ensureToken();
-    const response = await axios.patch(`${API_URL}/users/profile`, { bio }, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.patch('/users/bio', { bio });
+    return response.data;
+  },
+
+  updateFaculty: async (facultyId: number): Promise<UserProfile> => {
+    const response = await axiosInstance.patch('/users/faculty', { facultyId });
     return response.data;
   }
 };

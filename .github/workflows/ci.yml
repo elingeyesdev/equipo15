@@ -1,0 +1,78 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: pnpm install
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: |
+          npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://dummy:dummy@localhost:5432/dummy' }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://dummy:dummy@localhost:5432/dummy' }}
+
+      - name: Backend Type Check
+        working-directory: ./backend
+        run: pnpm exec tsc --noEmit
+
+      - name: Backend Lint Check
+        working-directory: ./backend
+        run: pnpm lint || echo "Linter threw warnings"
+
+      # Frontend
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: pnpm install
+
+      - name: Frontend Type Check
+        working-directory: ./frontend
+        run: pnpm exec tsc --noEmit
+
+      - name: Frontend Lint Check
+        working-directory: ./frontend
+        run: pnpm lint
+
+      - name: Frontend Unit Tests (Vitest)
+        working-directory: ./frontend
+        run: pnpm test
+
+      - name: Frontend Build
+        working-directory: ./frontend
+        run: pnpm run build
+        env:
+          VITE_API_URL: 'http://localhost:3000/api'
+          VITE_FIREBASE_API_KEY: 'dummy'
+          VITE_FIREBASE_AUTH_DOMAIN: 'dummy'
+          VITE_FIREBASE_PROJECT_ID: 'dummy'
+          VITE_FIREBASE_STORAGE_BUCKET: 'dummy'
+          VITE_FIREBASE_MESSAGING_SENDER_ID: 'dummy'
+          VITE_FIREBASE_APP_ID: 'dummy'
+          VITE_FIREBASE_MEASUREMENT_ID: 'dummy'

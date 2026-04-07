@@ -1,7 +1,4 @@
-import axios from 'axios';
-import { auth } from '../config/firebase';
-
-const API_URL = 'http://localhost:3000/api';
+import axiosInstance from '../api/axiosConfig';
 
 export interface ChallengePayload {
   title: string;
@@ -15,43 +12,31 @@ export interface ChallengePayload {
   status?: 'Borrador' | 'Activo' | 'Finalizado' | 'En Evaluación';
 }
 
-const ensureToken = async () => {
-  const token = await auth.currentUser?.getIdToken();
-  if (!token) {
-    throw new Error('Usuario no autenticado');
-  }
-  return token;
-};
-
 export const challengeService = {
-  getPublicChallenges: async () => {
-    const response = await axios.get(`${API_URL}/challenges`);
+  getPublicChallenges: async (page = 1, limit = 10, status?: string) => {
+    let url = `/challenges?page=${page}&limit=${limit}`;
+    if (status) url += `&status=${status}`;
+    const response = await axiosInstance.get(url);
     return response.data;
   },
 
   createChallenge: async (payload: ChallengePayload) => {
-    const token = await ensureToken();
-    const response = await axios.post(`${API_URL}/challenges`, payload, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.post('/challenges', payload);
     return response.data;
   },
 
   updateChallenge: async (id: string, payload: Partial<ChallengePayload>) => {
-    const token = await ensureToken();
-    const response = await axios.patch(`${API_URL}/challenges/${id}`, payload, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.patch(`/challenges/${id}`, payload);
     return response.data;
   },
 
   getChallengeStats: async (id: string) => {
-    const response = await axios.get(`${API_URL}/challenges/${id}/stats`);
+    const response = await axiosInstance.get(`/challenges/${id}/stats`);
     return response.data;
   },
 
   getGlobalStats: async () => {
-    const response = await axios.get(`${API_URL}/challenges/global-stats`);
+    const response = await axiosInstance.get('/challenges/global-stats');
     return response.data;
   }
 };

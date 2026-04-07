@@ -1,12 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { authService } from '../../../../services/auth.service';
 import { challengeService } from '../../../../services/challenge.service';
 
 export const useAdminDashboard = () => {
-  const [activeTab, setActiveTab ] = useState('challenges');
+  const [activeTab, setActiveTab] = useState('challenges');
   const [showForm, setShowForm] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
   const [copyStatus, setCopyStatus] = useState(false);
+  const [challenges, setChallenges] = useState<any[]>([]);
+  const [loadingChallenges, setLoadingChallenges] = useState(false);
+
+  const fetchChallenges = async () => {
+    setLoadingChallenges(true);
+    try {
+      const data = await challengeService.getPublicChallenges();
+      setChallenges(data);
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Hubo un problema al guardar el reto.';
+      toast.error(message);
+      return false;
+    } finally {
+      setLoadingChallenges(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'challenges') {
+      fetchChallenges();
+    }
+  }, [activeTab]);
 
   const defaultStart = new Date().toISOString().split('T')[0];
   const defaultEnd = (() => {
@@ -18,11 +41,13 @@ export const useAdminDashboard = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    companyContext: '',
+    participationRules: '',
     startDate: defaultStart,
     endDate: defaultEnd,
     isPrivate: false,
     token: '',
-    facultyId: 1
+    facultyId: 0
   });
 
   const togglePrivacy = () => {
@@ -38,10 +63,10 @@ export const useAdminDashboard = () => {
     const start = e.target.value;
     const end = new Date(start);
     end.setDate(end.getDate() + 7);
-    setFormData({ 
-      ...formData, 
-      startDate: start, 
-      endDate: end.toISOString().split('T')[0] 
+    setFormData({
+      ...formData,
+      startDate: start,
+      endDate: end.toISOString().split('T')[0]
     });
   };
 
@@ -67,21 +92,40 @@ export const useAdminDashboard = () => {
       const payload: any = {
         title: formData.title,
         problemDescription: formData.description || undefined,
+        companyContext: formData.companyContext || undefined,
+        participationRules: formData.participationRules || undefined,
         startDate: formData.startDate,
         isPrivate: formData.isPrivate,
-        facultyId: formData.facultyId,
+        facultyId: formData.facultyId === 0 ? null : formData.facultyId,
         status: status
       };
       if (formData.endDate) {
         payload.endDate = formData.endDate;
       }
+      
       await challengeService.createChallenge(payload);
+      toast.success(status === 'Activo' ? '¡Reto publicado con éxito!' : 'Borrador guardado correctamente.');
+
+      await fetchChallenges();
+
       if (status === 'Activo') {
         setShowForm(false);
+        setFormData({
+          title: '',
+          description: '',
+          companyContext: '',
+          participationRules: '',
+          startDate: defaultStart,
+          endDate: defaultEnd,
+          isPrivate: false,
+          token: '',
+          facultyId: 0
+        });
       }
       return true;
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Hubo un problema al guardar el reto.';
+      toast.error(message);
       return false;
     } finally {
       setSaving(false);
@@ -104,6 +148,9 @@ export const useAdminDashboard = () => {
     handleLogout,
     isFormValid,
     handleSaveChallenge,
-    saving
+    saving,
+    challenges,
+    loadingChallenges,
+    fetchChallenges
   };
 };

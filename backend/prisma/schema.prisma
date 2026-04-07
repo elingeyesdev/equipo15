@@ -1,0 +1,97 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id                String       @id @default(uuid())
+  firebaseUid       String       @unique
+  email             String       @unique
+  displayName       String
+  bio               String?      @db.Text
+  avatarUrl         String?
+  role              Role?        @relation(fields: [roleId], references: [id])
+  roleId            String?
+  fcmToken          String?
+  totalPoints       Int          @default(0)
+  facultyId         Int?
+  isActive          Boolean      @default(true)
+  ideas             Idea[]
+  evaluations       Evaluation[]
+  challenges        Challenge[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+}
+
+model Challenge {
+  id                 String   @id @default(uuid())
+  title              String
+  problemDescription String?  @db.Text
+  companyContext     String?  @db.Text
+  participationRules String?  @db.Text
+  startDate          DateTime?
+  endDate            DateTime?
+  publicationDate    DateTime?
+  isPrivate          Boolean  @default(false)
+  accessToken        String?  @unique
+  facultyId          Int?
+  status             String   @default("DRAFT")
+  author             User     @relation(fields: [authorId], references: [id])
+  authorId           String
+  ideas              Idea[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Idea {
+  id            String       @id @default(uuid())
+  title         String
+  problem       String       @db.Text
+  solution      String       @db.Text
+  status        String       @default("draft")
+  votesCount    Int          @default(0)
+  likesCount    Int          @default(0)
+  commentsCount Int          @default(0)
+  isAnonymous   Boolean      @default(false)
+  tags          String[]     @default([])
+  author        User         @relation(fields: [authorId], references: [id])
+  authorId      String
+  challenge     Challenge    @relation(fields: [challengeId], references: [id])
+  challengeId   String
+  evaluations   Evaluation[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([challengeId])
+  @@index([authorId])
+  @@index([status])
+}
+
+model Evaluation {
+  id        String   @id @default(uuid())
+  idea      Idea     @relation(fields: [ideaId], references: [id])
+  ideaId    String
+  judge     User     @relation(fields: [judgeId], references: [id])
+  judgeId   String
+  score     Int
+  feedback  String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ideaId])
+  @@index([judgeId])
+}

@@ -1,13 +1,11 @@
-import axios from 'axios';
-import { auth } from '../config/firebase';
-
-const API_URL = 'http://localhost:3000/api';
+import axiosInstance from '../api/axiosConfig';
 
 export type IdeaStatus = 'draft' | 'public' | 'top5' | 'archived';
 
 export interface CreateIdeaPayload {
   title: string;
-  description: string;
+  problem: string;
+  solution: string;
   author: string;
   challengeId: string;
   tags?: string[];
@@ -17,43 +15,27 @@ export interface CreateIdeaPayload {
 
 export interface CreateDraftIdeaPayload {
   title?: string;
-  description?: string;
+  problem?: string;
+  solution?: string;
   author: string;
   challengeId?: string;
   tags?: string[];
   isAnonymous?: boolean;
 }
 
-const ensureToken = async () => {
-  const token = await auth.currentUser?.getIdToken();
-  if (!token) {
-    throw new Error('Usuario no autenticado');
-  }
-  return token;
-};
-
 export const ideaService = {
   getAllIdeas: async () => {
-    const token = await ensureToken();
-    const response = await axios.get(`${API_URL}/ideas`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.get('/ideas');
     return response.data;
   },
 
   createIdea: async (payload: CreateIdeaPayload) => {
-    const token = await ensureToken();
-    const response = await axios.post(`${API_URL}/ideas`, payload, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.post('/ideas', payload);
     return response.data;
   },
 
   saveDraftIdea: async (payload: CreateDraftIdeaPayload) => {
-    const token = await ensureToken();
-    const response = await axios.post(`${API_URL}/ideas/drafts`, payload, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axiosInstance.post('/ideas/drafts', payload);
     return response.data;
   },
 };

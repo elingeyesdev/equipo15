@@ -7,6 +7,26 @@ export const useAuthForm = () => {
   const [loading, setLoading] = useState(false);
   const [errorVisible, setErrorVisible] = useState<string | null>(null);
 
+  const passwordChecks = {
+    length: formData.password.length >= 8,
+    uppercase: /[A-Z]/.test(formData.password),
+    symbol: /[\W_]/.test(formData.password)
+  };
+  const isPasswordValid = Object.values(passwordChecks).every(Boolean);
+
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.(com|edu|org|net|bo|info|biz|co|mx)$/i.test(email);
+  };
+  
+  const validateName = (name: string) => {
+    if (!name) return false;
+    return /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(name);
+  };
+
+  const isFormValid = isLogin 
+    ? validateEmail(formData.email) && formData.password.length > 0
+    : validateName(formData.name) && validateEmail(formData.email) && isPasswordValid;
+
   const getFriendlyError = (error: any): string => {
     const code = error?.code || error?.response?.data?.code || '';
     switch (code) {
@@ -32,7 +52,6 @@ export const useAuthForm = () => {
       }
     } catch (error: any) {
       setErrorVisible(getFriendlyError(error));
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -45,7 +64,6 @@ export const useAuthForm = () => {
       await authService.loginWithGoogle();
     } catch (error: any) {
       setErrorVisible(getFriendlyError(error));
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -59,6 +77,10 @@ export const useAuthForm = () => {
     loading,
     errorVisible,
     handleSubmit,
-    handleGoogleLogin
+    handleGoogleLogin,
+    passwordChecks,
+    isFormValid,
+    validateEmail,
+    validateName
   };
 };

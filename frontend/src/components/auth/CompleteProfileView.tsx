@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import styled, { keyframes, css } from 'styled-components';
+import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { Pista8Theme } from '../../config/theme';
 import { FACULTIES } from '../../config/faculties';
+import { userService } from '../../services/user.service';
 
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(18px); }
@@ -178,22 +180,11 @@ export const CompleteProfileView = ({ onComplete }: { onComplete: () => void }) 
     setLoading(true);
 
     try {
-      const token = await user.getIdToken();
-
-      const res = await fetch('http://localhost:3000/api/users/faculty', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ facultyId: Number(selectedFaculty) }),
-      });
-
-      if (!res.ok) throw new Error('Error al guardar');
-
+      await userService.updateFaculty(Number(selectedFaculty));
+      toast.success('Facultad guardada exitosamente');
       onComplete();
     } catch {
-      alert('Error sincronizando la facultad. Intente de nuevo.');
+      toast.error('Error sincronizando el perfil. Intente de nuevo.');
       setLoading(false);
     }
   };
@@ -210,7 +201,7 @@ export const CompleteProfileView = ({ onComplete }: { onComplete: () => void }) 
 
         <Title>Último <span>Paso</span></Title>
         <Subtitle>
-          Tu correo no especifica una rama clara. Para mostrarte retos acordes y puntuar correctamente tus ideas, seleccioná tu facultad.
+          Para mostrarte retos acordes a tu facultad y puntuar tus ideas, necesitamos que selecciones tu facultad actual.
         </Subtitle>
 
         <Divider />
@@ -221,7 +212,7 @@ export const CompleteProfileView = ({ onComplete }: { onComplete: () => void }) 
             value={selectedFaculty}
             onChange={e => setSelectedFaculty(e.target.value)}
           >
-            <option value="" disabled>Selecciona una opción...</option>
+            <option value="" disabled>Selecciona tu facultad...</option>
             {FACULTIES.map(fac => (
               <option key={fac.id} value={fac.id}>{fac.name}</option>
             ))}

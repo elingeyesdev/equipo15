@@ -9,9 +9,10 @@ interface RoleGuardProps {
 export const RoleGuard = ({ allowedRoles, children }: RoleGuardProps) => {
   const { profile } = useUser();
 
-  if (!profile || !profile.roleId) return null;
+  if (!profile) return null;
 
-  if (allowedRoles.includes(profile.roleId.name)) {
+  const currentRole = profile.roleInfo?.name || profile.role;
+  if (currentRole && allowedRoles.includes(currentRole)) {
     return <>{children}</>;
   }
 

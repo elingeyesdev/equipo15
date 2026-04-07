@@ -12,37 +12,15 @@ import FeedbackToast from './components/FeedbackToast';
 import { useDashboardState } from './hooks/useDashboardState';
 import { useIdeationForm } from './hooks/useIdeationForm';
 
-const mockChallenges = [
-  { id: 'mock1', title: 'Reto de Ingeniería UNIVALLE 2026', category: 'Ingeniería', ideasCount: 24, likesCount: 187, badge: 'ACTIVO' },
-  { id: 'mock2', title: 'Innovación Sostenible Campus', category: 'Sostenibilidad', ideasCount: 15, likesCount: 102, badge: 'NUEVO' },
-  { id: 'mock3', title: 'App para Bienestar Estudiantil', category: 'Tecnología', ideasCount: 31, likesCount: 243, badge: 'ACTIVO' },
-];
-
-const mockFacultades = [
-  { name: 'Ingeniería', likes: 1870 },
-  { name: 'Ciencias', likes: 1430 },
-  { name: 'Humanidades', likes: 980 },
-  { name: 'Medicina', likes: 760 },
-  { name: 'Derecho', likes: 540 },
-];
-
-const mockLideres = [
-  { name: 'Valentina R.', ideas: 120 },
-  { name: 'Mateo G.', ideas: 95 },
-  { name: 'Camila P.', ideas: 78 },
-  { name: 'Andrés L.', ideas: 62 },
-  { name: 'Sofía M.', ideas: 51 },
-];
-
 const IdeationWall = () => {
   const { user, userProfile } = useAuth();
-  const ds = useDashboardState(mockChallenges, mockFacultades, mockLideres);
+  const ds = useDashboardState();
   const form = useIdeationForm(userProfile, !user, ds.showToast);
 
   const firstName = userProfile?.displayName?.split(' ')[0] || user?.displayName?.split(' ')[0] || '';
   const fullName = userProfile?.displayName || user?.displayName || user?.email || '';
 
-  const roleName: string = (userProfile?.roleId?.name || userProfile?.role || '').toLowerCase();
+  const roleName: string = (userProfile?.roleInfo?.name || userProfile?.role || '').toLowerCase();
   const roleLabels: Record<string, string> = {
     admin: 'administrador',
     student: 'estudiante',
@@ -67,6 +45,21 @@ const IdeationWall = () => {
           <S.WelcomeZone>
             <S.Greeting>Hola, {userRole} <span>{firstName}</span></S.Greeting>
             <S.Sub>¿Listo para despegar tu próxima gran idea?</S.Sub>
+            
+            {ds.profileError && (
+              <div style={{ 
+                margin: '12px 0 0', 
+                padding: '8px 16px', 
+                background: '#fff5f5', 
+                color: '#e53e3e', 
+                borderRadius: '8px', 
+                fontSize: '12px',
+                border: '1px solid #feb2b2',
+                fontWeight: '600'
+              }}>
+                ⚠️ {ds.profileError}
+              </div>
+            )}
           </S.WelcomeZone>
 
           <S.HamburgerBtn onClick={() => ds.setSidebarOpen(true)}>
@@ -80,29 +73,26 @@ const IdeationWall = () => {
 
         <SkyCanvas />
 
-        {ds.loading ? (
-          <div style={{ color: 'white', textAlign: 'center', padding: '40px' }}>Cargando desafíos...</div>
-        ) : (
-          <S.MainGrid>
-            <ChallengeList
-              challenges={ds.challenges}
-              activeFilter={ds.activeFilter}
-              onFilterChange={ds.setActiveFilter}
-              filterOpen={ds.filterOpen}
-              setFilterOpen={ds.setFilterOpen}
-              selectedChallengeId={ds.selectedChallenge?.id}
-              onSelectChallenge={ds.setSelectedChallenge}
-              onRespond={c => ds.handleOpenForm(c, form.resetForm)}
-            />
+        <S.MainGrid>
+          <ChallengeList
+            loading={ds.loading}
+            challenges={ds.challenges}
+            activeFilter={ds.activeFilter}
+            onFilterChange={ds.setActiveFilter}
+            filterOpen={ds.filterOpen}
+            setFilterOpen={ds.setFilterOpen}
+            selectedChallengeId={ds.selectedChallenge?.id || ''}
+            onSelectChallenge={ds.setSelectedChallenge}
+            onRespond={c => ds.handleOpenForm(c, form.resetForm)}
+          />
 
-            <StatsPanel
-              selectedChallenge={ds.selectedChallenge}
-              challengeStats={ds.challengeStats}
-              topFacultades={ds.topFacultades}
-              topLideres={ds.topLideres}
-            />
-          </S.MainGrid>
-        )}
+          <StatsPanel
+            selectedChallenge={ds.selectedChallenge}
+            challengeStats={ds.challengeStats}
+            topFacultades={ds.topFacultades}
+            topLideres={ds.topLideres}
+          />
+        </S.MainGrid>
       </S.Page>
 
       <FeedbackToast message={ds.toastMessage} onDismiss={ds.dismissToast} />

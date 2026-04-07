@@ -1,9 +1,11 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, Inject } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, Inject, Logger } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { FIREBASE_ADMIN_TOKEN } from '../../config/firebase-admin.module';
 
 @Injectable()
 export class FirebaseAuthGuard implements CanActivate {
+  private readonly logger = new Logger(FirebaseAuthGuard.name);
+
   constructor(
     @Inject(FIREBASE_ADMIN_TOKEN) private readonly firebaseAdmin: admin.app.App,
   ) {}
@@ -22,7 +24,8 @@ export class FirebaseAuthGuard implements CanActivate {
       const decodedToken = await this.firebaseAdmin.auth().verifyIdToken(token);
       request.user = decodedToken;
       return true;
-    } catch {
+    } catch (error: any) {
+      this.logger.error(`[FirebaseAuthGuard] Error verificando token: ${error.message}`);
       throw new UnauthorizedException('Token inválido');
     }
   }

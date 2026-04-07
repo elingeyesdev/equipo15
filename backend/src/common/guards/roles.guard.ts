@@ -1,12 +1,12 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UsersService } from '../../modules/users/users.service';
+import { UserService } from '../../app/Services/user.service';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
-    private reflector: Reflector,
-    private usersService: UsersService,
+    private readonly reflector: Reflector,
+    private readonly userService: UserService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -22,11 +22,13 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const firebaseUser = request.user;
 
-    const user = await this.usersService.findByUid(firebaseUser.uid);
-    const roleName = (user?.roleId as any)?.name;
+    const user = await this.userService.findByUid(firebaseUser.uid);
+    const roleName = user?.roleInfo?.name || user?.role;
 
     if (!user || !roleName || !requiredRoles.includes(roleName)) {
-      throw new ForbiddenException();
+      throw new ForbiddenException(
+        'Acceso Restringido: Solo las empresas vinculadas pueden lanzar y gestionar retos en Pista 8.'
+      );
     }
 
     return true;

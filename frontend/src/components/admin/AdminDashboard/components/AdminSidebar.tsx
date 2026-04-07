@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 import * as S from '../styles/AdminStyles';
 import LogoutButton from '../../../dashboard/LogoutButton';
 
@@ -34,11 +35,21 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         </S.SidebarBrand>
 
         <S.UserProfileBlock>
-          <S.RoleTag>{userProfile?.role?.toUpperCase()}</S.RoleTag>
+          <S.RoleTag>{userProfile?.roleId?.name?.toUpperCase() || userProfile?.role?.toUpperCase()}</S.RoleTag>
           <S.UserName>{userProfile?.displayName}</S.UserName>
         </S.UserProfileBlock>
 
         <S.SidebarNav>
+          <S.NavBtn as={NavLink} to="/dashboard/perfil">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            Mi Perfil
+          </S.NavBtn>
+
+          <S.SidebarDivider />
+
           <S.NavBtn active={activeTab === 'challenges'} onClick={() => { setActiveTab('challenges'); resetVews(); }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />

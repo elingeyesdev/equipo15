@@ -1,72 +1,59 @@
-# Dependencias de paquetes
+# Dependencias
 node_modules/
-**/node_modules/
-/backend/node_modules/
-/frontend/node_modules/
 
-# Salidas de compilación (NestJS y Vite)
-/dist
-/backend/dist
-/frontend/dist
-/build
+# Salidas de compilación
+dist/
+build/
 *.tsbuildinfo
 
-# Firebase
+# Prisma - cliente generado
+/generated/prisma
+
+# Firebase - credenciales sensibles
 firebase-admin.json
 **/serviceAccountKey.json
-src/config/serviceAccountKey.json
 
-# Archivos de variables de entorno
+# Variables de entorno
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-backend/.env
-frontend/.env
 
-# Logs y Debugging 
-logs
+# Logs
+logs/
 *.log
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
 
-# --- Archivos del Sistema Operativo ---
+# Archivos del Sistema Operativo
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# Pruebas y Cobertura 
-/coverage
-/.nyc_output
+# Cobertura de pruebas
+coverage/
+.nyc_output/
 
-# IDEs y Editores 
+# IDEs y Editores
 .idea/
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-.history/
-
-# Configuración de VSCode (permitiendo archivos compartidos de equipo)
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+.history/
+*.sublime-workspace
 
 # Datos de tiempo de ejecución
-pids
+pids/
 *.pid
 *.seed
 *.pid.lock
-.temp
-.tmp
+.temp/
+.tmp/
 
-# Reportes de diagnóstico de Node
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+# Scripts de auditoría / scratch files
+audit-*.ts

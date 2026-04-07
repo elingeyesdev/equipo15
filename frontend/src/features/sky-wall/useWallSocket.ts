@@ -4,7 +4,7 @@ import type { Socket } from 'socket.io-client';
 import type { PlaneIdea, WallPhase, IdeaUpdatedPayload } from './types';
 import { assignLanes, computeCanvasHeight } from './flight.engine';
 
-const SOCKET_URL = 'http://localhost:3000';
+const DEFAULT_SOCKET_URL = 'http://localhost:3000';
 const DEBOUNCE_MS = 200;
 
 const buildPlanes = (rawIdeas: any[]): PlaneIdea[] => {
@@ -27,7 +27,7 @@ interface UseWallSocketResult {
   serverTimeOffset: number;
 }
 
-export const useWallSocket = (initialIdeas: any[] = []): UseWallSocketResult => {
+export const useWallSocket = (token?: string, initialIdeas: any[] = []): UseWallSocketResult => {
   const [ideas, setIdeas] = useState<PlaneIdea[]>(() => buildPlanes(initialIdeas));
   const [phase, setPhase] = useState<WallPhase>('active');
   const [serverTimeOffset, setServerTimeOffset] = useState(0);
@@ -53,7 +53,18 @@ export const useWallSocket = (initialIdeas: any[] = []): UseWallSocketResult => 
   }, [flushUpdates]);
 
   useEffect(() => {
-    const socket = io(SOCKET_URL, { reconnection: true, reconnectionDelay: 1000 });
+    if (!token) return; // Prevent connecting without token
+    
+    // Resolve proper URL from env, removing /api suffix if present
+    let socketURL = import.meta.env.VITE_API_URL 
+      ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') 
+      : DEFAULT_SOCKET_URL;
+      
+    const socket = io(socketURL, { 
+      reconnection: true, 
+      reconnectionDelay: 1000,
+      auth: { token }
+    });
     socketRef.current = socket;
 
     socket.on('idea:updated', (payload: IdeaUpdatedPayload) => {
@@ -75,7 +86,7 @@ export const useWallSocket = (initialIdeas: any[] = []): UseWallSocketResult => 
       socket.disconnect();
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
-  }, [scheduleFlush]);
+  }, [scheduleFlush, token]);
 
   return { ideas, phase, serverTimeOffset };
 };

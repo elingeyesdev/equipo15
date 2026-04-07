@@ -7,5 +7,8 @@ export const FACULTIES = [
   { id: 6, name: 'Facultad de Arquitectura', slug: 'Arquitectura' },
 ];
 
-export const getFacultyName = (id: number) => FACULTIES.find(f => f.id === id)?.name || `Facultad ${id}`;
-export const getFacultySlug = (id: number) => FACULTIES.find(f => f.id === id)?.slug || 'General';
+export const getFacultyName = (id: number | null) => 
+  id ? (FACULTIES.find(f => f.id === id)?.name || `Facultad ${id}`) : 'Todas las Facultades';
+
+export const getFacultySlug = (id: number | null) => 
+  id ? (FACULTIES.find(f => f.id === id)?.slug || 'General') : 'Todas';

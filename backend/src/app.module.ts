@@ -1,27 +1,35 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
-import { UsersModule } from './modules/users/users.module';
-import { IdeasModule } from './modules/ideas/ideas.module';
-import { EvaluationsModule } from './modules/evaluations/evaluations.module';
-import { ChallengesModule } from './modules/challenges/challenges.module';
-import { RolesModule } from './modules/roles/roles.module';
+import { HttpModule } from './app/Providers/http.module';
+import { DatabaseModule } from './app/Providers/database.module';
 import { FirebaseAdminModule } from './config/firebase-admin.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { EventsGateway } from './app/Gateways/events.gateway';
+import { HealthController } from './app/Http/Controllers/health.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, 
     }),
-    MongooseModule.forRoot(process.env.MONGO_URI!),
+    DatabaseModule,
     FirebaseAdminModule,
-    RolesModule,
-    UsersModule,
-    IdeasModule,
-    EvaluationsModule,
-    ChallengesModule,
+    HttpModule,
+    ThrottlerModule.forRoot([{
+      ttl: 60000, 
+      limit: 300, 
+    }]),
+    MongooseModule.forRoot(process.env.MONGO_URI || 'mongodb://localhost:27017/pista8'),
   ],
-  controllers: [],
-  providers: [],
+  controllers: [HealthController],
+  providers: [
+    EventsGateway,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

@@ -25,7 +25,8 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
   const checklist = [
     { label: 'Reto asignado', done: !!challenge },
     { label: 'Nombre de la idea', done: form.ideaName.trim().length >= 5 },
-    { label: 'Desarrollo narrado', done: form.ideaDevelopment.trim().length >= 20 },
+    { label: 'Problema definido', done: form.ideaProblem.trim().length >= 50 },
+    { label: 'Solución propuesta', done: form.ideaSolution.trim().length >= 50 },
     { label: 'Consentimientos', done: Object.values(form.consents).every(Boolean) },
   ];
 
@@ -36,7 +37,8 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
   ];
 
   const maxIdeaName = 150;
-  const maxIdeaDevelopment = 5000;
+  const maxIdeaProblem = 1000;
+  const maxIdeaSolution = 1000;
   const maxTags = 6;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -125,23 +127,44 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
 
               <S.Field>
                 <S.FieldHeader>
-                  <S.Label>Desarrollo de la idea</S.Label>
-                  <S.CharCounter>{form.ideaDevelopment.length}/{maxIdeaDevelopment}</S.CharCounter>
+                  <S.Label>El Problema</S.Label>
+                  <S.CharCounter>{form.ideaProblem.length}/{maxIdeaProblem}</S.CharCounter>
                 </S.FieldHeader>
-                <S.Tip>Describe problema, solución, impacto y actores clave.</S.Tip>
+                <S.Tip>¿Qué dolor o necesidad detectaste en el entorno?</S.Tip>
                 <S.TextArea
-                  value={form.ideaDevelopment}
+                  value={form.ideaProblem}
                   onChange={e => {
-                    form.setIdeaDevelopment(e.target.value);
-                    if (form.formErrors.ideaDevelopment) form.clearFieldError('ideaDevelopment');
+                    form.setIdeaProblem(e.target.value);
+                    if (form.formErrors.ideaProblem) form.clearFieldError('ideaProblem');
                   }}
-                  onBlur={() => form.validateField('ideaDevelopment', challenge)}
-                  placeholder="Explica cómo surge la idea, qué recursos necesita y cómo mediremos el éxito..."
-                  rows={7}
-                  maxLength={maxIdeaDevelopment}
-                  $invalid={Boolean(form.formErrors.ideaDevelopment)}
+                  onBlur={() => form.validateField('ideaProblem', challenge)}
+                  placeholder="Explica el vacío o la oportunidad de mejora que motiva esta idea..."
+                  rows={4}
+                  maxLength={maxIdeaProblem}
+                  $invalid={Boolean(form.formErrors.ideaProblem)}
                 />
-                {form.formErrors.ideaDevelopment && <S.FieldError>{form.formErrors.ideaDevelopment}</S.FieldError>}
+                {form.formErrors.ideaProblem && <S.FieldError>{form.formErrors.ideaProblem}</S.FieldError>}
+              </S.Field>
+
+              <S.Field>
+                <S.FieldHeader>
+                  <S.Label>La Propuesta</S.Label>
+                  <S.CharCounter>{form.ideaSolution.length}/{maxIdeaSolution}</S.CharCounter>
+                </S.FieldHeader>
+                <S.Tip>¿Cómo funciona tu solución y cuál es su impacto?</S.Tip>
+                <S.TextArea
+                  value={form.ideaSolution}
+                  onChange={e => {
+                    form.setIdeaSolution(e.target.value);
+                    if (form.formErrors.ideaSolution) form.clearFieldError('ideaSolution');
+                  }}
+                  onBlur={() => form.validateField('ideaSolution', challenge)}
+                  placeholder="Describe los pasos, recursos y el cambio positivo que generará..."
+                  rows={5}
+                  maxLength={maxIdeaSolution}
+                  $invalid={Boolean(form.formErrors.ideaSolution)}
+                />
+                {form.formErrors.ideaSolution && <S.FieldError>{form.formErrors.ideaSolution}</S.FieldError>}
               </S.Field>
 
               <S.Field>

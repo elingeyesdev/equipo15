@@ -66,8 +66,15 @@ export const UserName = styled.p`
 export const SidebarNav = styled.nav`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
+`;
+
+export const SidebarDivider = styled.div`
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 16px 0;
+  width: 100%;
 `;
 
 export const NavBtn = styled.button<{ active?: boolean }>`
@@ -79,13 +86,32 @@ export const NavBtn = styled.button<{ active?: boolean }>`
   padding: 14px 18px;
   border-radius: 14px;
   border: none;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.18s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
   background: ${p => p.active ? 'rgba(254,65,10,0.18)' : 'transparent'};
   color: ${p => p.active ? '#FE410A' : 'rgba(255,255,255,0.45)'};
-  &:hover { background: rgba(255,255,255,0.07); color: white; }
+  
+  svg { 
+    width: 20px; 
+    height: 20px; 
+    opacity: 0.7;
+    transition: transform 0.2s;
+  }
+
+  &:hover { 
+    background: rgba(255, 255, 255, 0.07); 
+    color: white; 
+    svg { transform: translateX(2px); opacity: 1; }
+  }
+
+  &.active {
+    background: rgba(254, 65, 10, 0.18);
+    color: #FE410A;
+    svg { opacity: 1; color: #FE410A; }
+  }
 `;
 
 export const SidebarFooter = styled.div`
@@ -206,9 +232,9 @@ export const BuilderBody = styled.div`
 export const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   width: 100%;
-  max-width: 650px;
+  max-width: 750px;
 `;
 
 export const FieldLabel = styled.label`
@@ -279,11 +305,20 @@ export const Textarea = styled.textarea`
 export const DateRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 32px;
+  gap: 20px;
+  margin-bottom: 24px;
   width: 100%;
-  max-width: 650px;
-  align-items: flex-end;
+  max-width: 750px;
+  align-items: flex-start;
+`;
+
+export const TwoColumnRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 8px;
+  width: 100%;
+  max-width: 750px;
 `;
 
 export const PrivacyToggleRow = styled.div`
@@ -296,7 +331,7 @@ export const PrivacyToggleRow = styled.div`
   border: 1.5px solid rgba(72,80,84,0.12);
   margin-bottom: 24px;
   width: 100%;
-  max-width: 650px;
+  max-width: 750px;
   transition: all 0.2s;
   &:hover { border-color: ${Pista8Theme.primary}40; background: ${Pista8Theme.primary}05; }
 `;
@@ -308,7 +343,7 @@ export const ShareLinkSection = styled.div`
   border: 1px solid rgba(72,80,84,0.1);
   margin-bottom: 24px;
   width: 100%;
-  max-width: 650px;
+  max-width: 750px;
   animation: ${fadeUp} 0.3s ease both;
 `;
 
@@ -336,7 +371,7 @@ export const FormActions = styled.div`
   padding-top: 20px;
   border-top: 1px solid rgba(72,80,84,0.07);
   width: 100%;
-  max-width: 650px;
+  max-width: 750px;
 `;
 
 export const GhostBtn = styled.button`
@@ -380,7 +415,7 @@ export const PreviewCard = styled.div`
   border: 1.5px solid rgba(72,80,84,0.1);
   animation: ${fadeUp} 0.3s ease both;
   width: 100%;
-  max-width: 650px;
+  max-width: 750px;
 `;
 
 export const PreviewHead = styled.div`
