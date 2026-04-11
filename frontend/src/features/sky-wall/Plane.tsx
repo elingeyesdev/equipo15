@@ -23,11 +23,11 @@ const PlaneWrapper = styled.div<{
   $isRacing: boolean;
 }>`
   position: absolute;
-  top: ${p => p.$y - p.$size / 2}px;
-  left: ${p => p.$x}px;
+  top: ${p => p.$y - p.$size / 2 + 16}px;
+  left: ${p => p.$x + 20}px;
   width: ${p => p.$size}px;
   height: ${p => p.$size}px;
-  --plane-x: ${p => p.$x}px;
+  --plane-x: ${p => p.$x + 20}px;
   transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1), width 0.8s ease, top 0.4s ease;
   animation: ${p =>
     p.$isRacing
@@ -78,8 +78,13 @@ const Plane = memo(
   ({ idea, canvasWidth, phase }: PlaneProps) => {
     const size = useMemo(() => computeSize(idea.likesCount), [idea.likesCount]);
     const x = useMemo(
-      () => computeXPosition(idea.commentsCount, canvasWidth),
-      [idea.commentsCount, canvasWidth],
+      () => {
+        const fromRandomRatio = idea.randomXRatio * canvasWidth;
+        const fallback = computeXPosition(idea.commentsCount, canvasWidth);
+        const base = Number.isFinite(fromRandomRatio) ? fromRandomRatio : fallback;
+        return Math.max(0, Math.min(canvasWidth - size, base));
+      },
+      [idea.randomXRatio, idea.commentsCount, canvasWidth, size],
     );
     const isRacing = phase === 'race';
 
@@ -91,6 +96,8 @@ const Plane = memo(
     );
   },
   (prev, next) =>
+    prev.idea.randomXRatio === next.idea.randomXRatio &&
+    prev.idea.laneY === next.idea.laneY &&
     prev.idea.likesCount === next.idea.likesCount &&
     prev.idea.commentsCount === next.idea.commentsCount &&
     prev.phase === next.phase &&
