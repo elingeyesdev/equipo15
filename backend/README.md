@@ -164,14 +164,22 @@ backend/
 
 ---
 
-## 🔐 Seguridad
+### Base de Datos Híbrida (Hybrid Data Strategy)
 
-- **Helmet**: cabeceras HTTP seguras en todas las rutas.
-- **ThrottlerGuard**: límite de 300 peticiones por minuto por IP (global).
-- **FirebaseAuthGuard**: valida el token Bearer con el SDK de Firebase Admin en cada request protegida.
-- **RolesGuard**: consulta el perfil del usuario en PostgreSQL para verificar si su rol cumple el requisito del endpoint (`@Roles('admin', 'company', 'judge')`).
-- **IsAllowedDomainValidator**: el registro solo acepta emails `@univalle.edu`, `@est.univalle.edu` o `@pista8.com`.
-- **ValidationPipe** global: `whitelist: true`, `forbidNonWhitelisted: true` — rechaza cualquier campo no declarado en los DTOs.
+Pista 8 utiliza una estrategia de almacenamiento dual para maximizar la integridad y el rendimiento:
+1.  **PostgreSQL (Supabase)**: Almacena el núcleo relacional del sistema: Usuarios, Roles, Retos, Ideas y Evaluaciones. Garantiza integridad referencial y consistencia mediante Prisma.
+2.  **MongoDB Atlas**: Almacena los `ProjectDetails` (descripciones largas, multimedia, metadatos dinámicos). Ideal para contenido que requiere flexibilidad y escalabilidad.
+
+---
+
+## 🔐 Seguridad e Infraestructura
+
+- **Security Shield (Backend Validation)**: Se implementó un "escudo" en la capa de servicios (`isAuthorizedEmail`) que valida que solo correos de dominios oficiales (`@univalle.edu`, `@est.univalle.edu`, `@pista8.com`) puedan interactuar con la API. Esto previene el registro de cuentas "fantasma" incluso si se intenta saltar la validación del frontend.
+- **FirebaseAuthGuard**: Valida en cada petición el token JWT emitido por Firebase, asegurando que la identidad del usuario esté certificada por Google.
+- **RolesGuard**: Autorización basada en roles nativos sincronizados en PostgreSQL. Controla el acceso a nivel de controlador (`@Roles('admin', 'judge')`).
+- **ThrottlerGuard**: Protección contra ataques de fuerza bruta y denegación de servicio (DoS) limitada por IP.
+- **CORS Estricto**: Solo permite peticiones desde el `FRONTEND_URL` configurado.
+- **Password Recovery Shield**: Lógica personalizada para validación de tokens `oobCode` de Firebase, permitiendo una experiencia de recuperación dentro del dominio de Pista 8.
 
 ---
 

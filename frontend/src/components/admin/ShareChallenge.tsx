@@ -16,7 +16,7 @@ const ShareChallenge = ({ token }: ShareProps) => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      // Error
+
     }
   };
 

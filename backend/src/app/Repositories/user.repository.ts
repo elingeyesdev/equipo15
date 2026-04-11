@@ -13,6 +13,13 @@ export class UserRepository {
     });
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { email },
+      include: { role: true },
+    });
+  }
+
   async findById(id: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { id },
@@ -38,6 +45,14 @@ export class UserRepository {
   async updateByUid(firebaseUid: string, data: any): Promise<User> {
     return this.prisma.user.update({
       where: { firebaseUid },
+      data,
+      include: { role: true },
+    });
+  }
+
+  async updateByEmail(email: string, data: any): Promise<User> {
+    return this.prisma.user.update({
+      where: { email },
       data,
       include: { role: true },
     });

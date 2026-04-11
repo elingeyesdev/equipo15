@@ -2,7 +2,7 @@ import styled, { css } from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 import { fadeUp, FEEDBACK_PALETTE } from './CommonStyles';
 
-// --- HANGAR STYLES ---
+
 export const Hangar = styled.section`
   position: relative;
   width: 100%;
@@ -45,7 +45,7 @@ export const HangarSub = styled.p`
   margin: 0;
 `;
 
-// --- TOAST STYLES ---
+
 export const ToastViewport = styled.div`
   position: fixed;
   top: 24px;
@@ -106,7 +106,7 @@ export const ToastDismiss = styled.button`
   cursor: pointer;
 `;
 
-// --- CONFIRM DIALOG STYLES ---
+
 export const ConfirmBackdrop = styled.div`
   position: fixed;
   inset: 0;

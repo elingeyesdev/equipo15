@@ -1,14 +1,17 @@
 import React from 'react';
 import * as S from '../styles/StatsStyles';
 
+import { Reorder, AnimatePresence } from 'framer-motion';
+
 interface StatsPanelProps {
   selectedChallenge: any;
   challengeStats: any;
-  topFacultades: any[];
-  topLideres: any[];
 }
 
-const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeStats, topFacultades, topLideres }) => {
+const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeStats }) => {
+  const pulse = challengeStats?.communityPulse || [];
+  const topIdeas = challengeStats?.topIdeas || [];
+
   return (
     <S.RightPanel hasChallenge={!!selectedChallenge}>
       {selectedChallenge ? (
@@ -20,48 +23,63 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
 
           <S.StatsSummary>
             <S.SummaryCard>
+              <S.SummaryVal>{challengeStats?.impactoTotal || 0}</S.SummaryVal>
+              <S.SummaryLabel>Impacto Total</S.SummaryLabel>
+            </S.SummaryCard>
+            <S.SummaryCard>
               <S.SummaryVal>{challengeStats?.totalIdeas || 0}</S.SummaryVal>
-              <S.SummaryLabel>Ideas</S.SummaryLabel>
+              <S.SummaryLabel>Ideas en Vuelo</S.SummaryLabel>
             </S.SummaryCard>
             <S.SummaryCard>
-              <S.SummaryVal>{challengeStats?.totalLikes || 0}</S.SummaryVal>
-              <S.SummaryLabel>Likes</S.SummaryLabel>
-            </S.SummaryCard>
-            <S.SummaryCard>
-              <S.SummaryVal>{topLideres.length}</S.SummaryVal>
-              <S.SummaryLabel>Líderes</S.SummaryLabel>
+              <S.SummaryVal>{challengeStats?.facultadesUnidas || 0}</S.SummaryVal>
+              <S.SummaryLabel>Facultades Unidas</S.SummaryLabel>
             </S.SummaryCard>
           </S.StatsSummary>
 
           <S.StatsColumns>
             <S.StatsCol>
-              <S.ColLabel>Top Facultades</S.ColLabel>
-              {topFacultades.map((f, i) => (
-                <S.RankRow key={f.name}>
-                  <S.RankNum>{i + 1}</S.RankNum>
-                  <S.RankName>{f.name}</S.RankName>
-                  <S.RankBar>
-                    <S.RankFill pct={topFacultades[0]?.likes > 0 ? Math.round((f.likes / topFacultades[0].likes) * 100) : 0} delay={i * 80} />
-                  </S.RankBar>
-                  <S.RankVal>{f.likes}</S.RankVal>
-                </S.RankRow>
-              ))}
+              <S.ColLabel>Tripulación del Reto</S.ColLabel>
+              <S.PulseListContainer>
+                {pulse.map((p: any) => (
+                  <S.PulseItem key={p.id}>
+                    <S.Avatar src={p.avatar} alt={p.name} />
+                    <S.ParticipantInfo>
+                      <S.ParticipantName>{p.name}</S.ParticipantName>
+                      <div><S.RoleBadge $role={p.role}>{p.role === 'student' ? 'Estudiante' : p.role === 'company' ? 'Empresa' : p.role}</S.RoleBadge></div>
+                    </S.ParticipantInfo>
+                  </S.PulseItem>
+                ))}
+                {pulse.length === 0 && <S.StatsSub style={{ textAlign: 'center', marginTop: '20px' }}>No hay tripulación aún.</S.StatsSub>}
+              </S.PulseListContainer>
             </S.StatsCol>
 
             <S.StatsDivider />
 
             <S.StatsCol>
-              <S.ColLabel>Top Líderes</S.ColLabel>
-              {topLideres.map((l, i) => (
-                <S.RankRow key={l.name}>
-                  <S.RankNum>{i + 1}</S.RankNum>
-                  <S.RankName>{l.name}</S.RankName>
-                  <S.RankBar>
-                    <S.RankFill pct={topLideres[0]?.ideas > 0 ? Math.round((l.ideas / topLideres[0].ideas) * 100) : 0} delay={i * 80} />
-                  </S.RankBar>
-                  <S.RankVal>{l.ideas}</S.RankVal>
-                </S.RankRow>
-              ))}
+              <S.ColLabel>Líderes de la Pista</S.ColLabel>
+              <Reorder.Group axis="y" values={topIdeas} onReorder={() => { }} style={{ padding: 0, margin: 0 }}>
+                <AnimatePresence>
+                  {topIdeas.map((idea: any, i: number) => (
+                    <Reorder.Item
+                      key={idea.id}
+                      value={idea}
+                      id={idea.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      style={{ listStyle: 'none' }}
+                    >
+                      <S.PodiumItem $isFirst={i === 0}>
+                        <S.PodiumRank $isFirst={i === 0}>{i + 1}</S.PodiumRank>
+                        <S.PodiumTitle>{idea.title}</S.PodiumTitle>
+                        <S.PodiumImpact>♥ {idea.impact}</S.PodiumImpact>
+                      </S.PodiumItem>
+                    </Reorder.Item>
+                  ))}
+                </AnimatePresence>
+              </Reorder.Group>
+              {topIdeas.length === 0 && <S.StatsSub style={{ textAlign: 'center', marginTop: '20px' }}>No hay ideas en vuelo.</S.StatsSub>}
             </S.StatsCol>
           </S.StatsColumns>
         </>

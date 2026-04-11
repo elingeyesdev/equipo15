@@ -60,6 +60,11 @@ export const ideaService = {
     return request;
   },
 
+  getIdeasByChallenge: async (challengeId: string) => {
+    const response = await axiosInstance.get(`/ideas?public=true&challengeId=${challengeId}`);
+    return response.data;
+  },
+
   createIdea: async (payload: CreateIdeaPayload) => {
     const response = await axiosInstance.post('/ideas', payload);
     return response.data;

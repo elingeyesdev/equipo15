@@ -9,9 +9,14 @@ export class IdeaRepository {
   async findAll(
     skip?: number,
     take?: number,
+    challengeId?: string,
   ): Promise<{ data: Idea[]; total: number }> {
+    const where: any = {};
+    if (challengeId) where.challengeId = challengeId;
+    
     const [data, total] = await this.prisma.$transaction([
       this.prisma.idea.findMany({
+        where,
         skip,
         take,
         include: {
@@ -19,7 +24,7 @@ export class IdeaRepository {
           challenge: true,
         },
       }),
-      this.prisma.idea.count(),
+      this.prisma.idea.count({ where }),
     ]);
     return { data, total };
   }
@@ -27,8 +32,11 @@ export class IdeaRepository {
   async findPublic(
     skip?: number,
     take?: number,
+    challengeId?: string,
   ): Promise<{ data: Idea[]; total: number }> {
-    const where = { status: 'public' };
+    const where: any = { status: 'public' };
+    if (challengeId) where.challengeId = challengeId;
+    
     const [data, total] = await this.prisma.$transaction([
       this.prisma.idea.findMany({
         where,

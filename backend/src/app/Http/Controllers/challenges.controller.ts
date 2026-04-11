@@ -59,8 +59,8 @@ export class ChallengesController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, type: String })
-  findAll(@Query() paginationDto: PaginationDto) {
-    return this.challengeService.findAll(paginationDto, paginationDto.status);
+  findAll(@Query() paginationDto: PaginationDto, @Request() req: AuthenticatedRequest) {
+    return this.challengeService.findAll(paginationDto, paginationDto.status, req.user.uid);
   }
 
   @Get('global-stats')
@@ -78,8 +78,8 @@ export class ChallengesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific challenge by ID' })
-  findOne(@Param('id') id: string) {
-    return this.challengeService.findOne(id);
+  findOne(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    return this.challengeService.findOne(id, req.user.uid);
   }
 
   @Get(':id/stats')

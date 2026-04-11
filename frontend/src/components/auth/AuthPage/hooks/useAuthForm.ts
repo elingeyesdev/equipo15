@@ -6,6 +6,7 @@ export const useAuthForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '', name: '' });
   const [loading, setLoading] = useState(false);
   const [errorVisible, setErrorVisible] = useState<string | null>(null);
+  const [isResetMode, setIsResetMode] = useState(false);
 
   const passwordChecks = {
     length: formData.password.length >= 8,
@@ -36,7 +37,26 @@ export const useAuthForm = () => {
       case 'auth/invalid-email': return 'El formato del correo no es válido.';
       case 'auth/user-not-found': return 'No existe una cuenta con este correo.';
       case 'auth/popup-closed-by-user': return 'El login de Google fue cancelado.';
+      case 'auth/network-request-failed': return 'Error de red. Verifica tu conexión.';
       default: return error?.message || 'Ocurrió un error inesperado. Intenta de nuevo.';
+    }
+  };
+
+  const handleResetPassword = async (email: string) => {
+    if (!validateEmail(email)) {
+      setErrorVisible('Por favor ingresa un correo institucional válido.');
+      return false;
+    }
+    setLoading(true);
+    setErrorVisible(null);
+    try {
+      await authService.sendPasswordReset(email);
+      return true;
+    } catch (error: any) {
+      setErrorVisible(getFriendlyError(error));
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,6 +101,9 @@ export const useAuthForm = () => {
     passwordChecks,
     isFormValid,
     validateEmail,
-    validateName
+    validateName,
+    isResetMode,
+    setIsResetMode,
+    handleResetPassword
   };
 };

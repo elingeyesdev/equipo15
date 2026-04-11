@@ -24,3 +24,16 @@ export function getRoleFromEmail(
 
   return 'student';
 }
+
+export function isAuthorizedEmail(email: string): boolean {
+  const normalizedEmail = email.toLowerCase();
+  const allowedDomains = ['@univalle.edu', '@est.univalle.edu', '@pista8.com'];
+  const allowedEmails = ['elingeyesdev@gmail.com'];
+
+  const hasAllowedDomain = allowedDomains.some((domain) =>
+    normalizedEmail.endsWith(domain),
+  );
+  const isWhitelisted = allowedEmails.includes(normalizedEmail);
+
+  return hasAllowedDomain || isWhitelisted;
+}

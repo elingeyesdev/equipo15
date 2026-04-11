@@ -54,12 +54,18 @@ const AvatarLabel = styled.div<{ $size: number }>`
   pointer-events: none;
 `;
 
+const flyIn = keyframes`
+  0% { opacity: 0; transform: translateX(-50px) scale(0.9); }
+  100% { opacity: 1; transform: translateX(0) scale(1); }
+`;
+
 const PlaneImage = styled.img`
   width: 100%;
   height: 100%;
   display: block;
   object-fit: contain;
   filter: drop-shadow(0 6px 10px rgba(255, 64, 0, 0.24));
+  animation: ${flyIn} 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 `;
 
 interface PlaneProps {

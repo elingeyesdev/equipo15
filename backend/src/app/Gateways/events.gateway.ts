@@ -11,7 +11,11 @@ import * as admin from 'firebase-admin';
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: [
+      process.env.FRONTEND_URL || 'http://localhost:5173',
+      'https://pista8-f8e6e.web.app',
+      'https://pista8.com'
+    ],
     credentials: true,
   },
 })

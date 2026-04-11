@@ -5,8 +5,13 @@ import type { Challenge } from '../../../types/models';
 import { challengeService } from '../../../services/challenge.service';
 import { getFacultySlug } from '../../../config/faculties';
 import type { FeedbackMessage } from './useIdeationForm';
+import { useParams } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
+import { io } from 'socket.io-client';
 
 export const useDashboardState = () => {
+  const { challengeId } = useParams<{ challengeId: string }>();
+  const { user } = useAuth();
   const [userProfile, setProfile] = useState<UserProfile | null>(null);
   const [profileError, setProfileError] = useState('');
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -39,11 +44,33 @@ export const useDashboardState = () => {
         const challengesResult = (cloudChallenges as any)?.success ? (cloudChallenges as any).data : cloudChallenges;
         const rawData = Array.isArray(challengesResult?.data) ? (challengesResult.data as Challenge[]) : [];
 
-        const mapped: Challenge[] = rawData.map((c) => ({
+        let mapped: Challenge[] = rawData.map((c: any) => ({
           ...c,
+          ideasCount: c._count?.ideas || 0,
+          likesCount: (c._count?.ideas || 0) * 4,
           category: getFacultySlug(c.facultyId || null),
           badge: c.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
         }));
+
+        if (challengeId) {
+          try {
+            const privateChallengeResp = await challengeService.getChallengeById(challengeId);
+            const privateChallengeRaw = (privateChallengeResp as any)?.success ? (privateChallengeResp as any).data : privateChallengeResp;
+            if (privateChallengeRaw && privateChallengeRaw.id) {
+              const exists = mapped.some(c => c.id === privateChallengeRaw.id);
+              if (!exists) {
+                const mappedPrivate = {
+                  ...privateChallengeRaw,
+                  category: getFacultySlug(privateChallengeRaw.facultyId || null),
+                  badge: privateChallengeRaw.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
+                };
+                mapped = [mappedPrivate, ...mapped];
+              }
+            }
+          } catch (err) {
+            console.error('Error fetching private challenge:', err);
+          }
+        }
 
         const profileData = (profile as any)?.success ? (profile as any).data : profile;
         setProfile(profileData as UserProfile);
@@ -53,7 +80,9 @@ export const useDashboardState = () => {
         setTopFacultades(finalStats?.topFacultades || []);
         setTopLideres(finalStats?.topLeaders || []);
 
-        if (mapped.length > 0) {
+        if (challengeId && mapped.some(c => c.id === challengeId)) {
+          setSelectedChallenge(mapped.find(c => c.id === challengeId) || mapped[0]);
+        } else if (mapped.length > 0) {
           setSelectedChallenge(mapped[0]);
         }
       } catch (error: unknown) {
@@ -69,15 +98,53 @@ export const useDashboardState = () => {
   }, []);
 
   useEffect(() => {
-    if (!selectedChallenge?.id) return;
-    (async () => {
+    if (!selectedChallenge?.id || !user) return;
+
+    let active = true;
+    let socket: any = null;
+
+    const fetchStats = async () => {
       try {
         const stats = await challengeService.getChallengeStats(selectedChallenge.id);
-        setChallengeStats(stats);
+        if (active) {
+          const finalStats = (stats as any)?.success ? (stats as any).data : stats;
+          setChallengeStats(finalStats);
+        }
       } catch (e) {
       }
-    })();
-  }, [selectedChallenge?.id]);
+    };
+
+    fetchStats();
+
+    user.getIdToken().then(token => {
+      if (!active) return;
+      const socketURL = import.meta.env.VITE_API_URL
+        ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
+        : 'http://localhost:3000';
+
+      socket = io(socketURL, {
+        reconnection: true,
+        auth: { token }
+      });
+
+      socket.on('idea_liked', (payload: any) => {
+        if (payload.challengeId === selectedChallenge.id) {
+          fetchStats();
+        }
+      });
+
+      socket.on('idea_commented', (payload: any) => {
+        if (payload.challengeId === selectedChallenge.id) {
+          fetchStats();
+        }
+      });
+    });
+
+    return () => {
+      active = false;
+      if (socket) socket.disconnect();
+    };
+  }, [selectedChallenge?.id, user]);
 
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;

@@ -6,10 +6,15 @@ import {
   IsOptional,
   IsEnum,
   IsNumber,
+  IsUUID,
 } from 'class-validator';
 import { ChallengeStatus } from '../Models/challenge-status.enum';
 
 export class CreateChallengeDto {
+  @IsUUID()
+  @IsOptional()
+  id?: string;
+
   @IsString()
   @IsNotEmpty()
   title: string;

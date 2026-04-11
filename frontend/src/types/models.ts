@@ -33,7 +33,7 @@ export interface Challenge {
   isPrivate: boolean;
   status: ChallengeStatus;
   facultyId?: number;
-  // UI extended props
+
   category?: string;
   badge?: string;
   ideasCount?: number;

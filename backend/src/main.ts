@@ -16,7 +16,11 @@ async function bootstrap() {
   app.use(helmet());
 
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: [
+      process.env.FRONTEND_URL || 'http://localhost:5173',
+      'https://pista8-f8e6e.web.app',
+      'https://pista8.com'
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

@@ -162,8 +162,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <S.Input 
                     readOnly 
-                    style={{ flex: 1, fontSize: '13px', background: 'white' }}
-                    value={`pista8.com/challenges/private/${formData.token}`}
+                    value={`${window.location.origin}/dashboard/reto/${formData.token}`}
                   />
                   <S.CopyBtn onClick={copyToClipboard}>
                     {copyStatus ? '¡Copiado!' : 'Copiar'}

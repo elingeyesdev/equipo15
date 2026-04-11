@@ -31,4 +31,18 @@ export class PaginationDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar por id de reto asociado',
+  })
+  @IsOptional()
+  @IsString()
+  challengeId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filtrar solo públicos',
+  })
+  @IsOptional()
+  @IsString()
+  public?: string;
 }

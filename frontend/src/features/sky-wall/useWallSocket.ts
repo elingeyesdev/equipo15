@@ -66,9 +66,9 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
   }, [initialIdeas]);
 
   useEffect(() => {
-    if (!token) return; // Prevent connecting without token
+    if (!token) return;
     
-    // Resolve proper URL from env, removing /api suffix if present
+
     let socketURL = import.meta.env.VITE_API_URL 
       ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') 
       : DEFAULT_SOCKET_URL;

@@ -8,6 +8,7 @@ import { ProjectDetails } from '../../database/schemas/project-details.schema';
 import { CreateIdeaDto } from '../DTOs/create-idea.dto';
 import { CreateDraftIdeaDto } from '../DTOs/create-draft-idea.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
+import { EventsGateway } from '../Gateways/events.gateway';
 
 @Injectable()
 export class IdeaService {
@@ -18,7 +19,8 @@ export class IdeaService {
     private readonly challengeRepository: ChallengeRepository,
     @InjectModel(ProjectDetails.name)
     private projectDetailsModel: Model<ProjectDetails>,
-  ) {}
+    private readonly eventsGateway: EventsGateway,
+  ) { }
 
   private async persistProjectDetails(data: {
     projectId: string;
@@ -35,7 +37,6 @@ export class IdeaService {
         multimediaLinks: data.multimediaLinks || [],
       });
     } catch (error) {
-      // La idea principal se guarda en PostgreSQL; si falla Mongo, no bloqueamos al usuario.
       this.logger.warn(
         `No se pudo guardar ProjectDetails para idea ${data.projectId}: ${(error as Error).message}`,
       );
@@ -134,7 +135,7 @@ export class IdeaService {
         ? (Number(paginationDto.page) - 1) * limit
         : undefined;
 
-    const { data, total } = await this.ideaRepository.findAll(skip, limit);
+    const { data, total } = await this.ideaRepository.findAll(skip, limit, paginationDto?.challengeId);
     return {
       data,
       meta: {
@@ -154,7 +155,7 @@ export class IdeaService {
         ? (Number(paginationDto.page) - 1) * limit
         : undefined;
 
-    const { data, total } = await this.ideaRepository.findPublic(skip, limit);
+    const { data, total } = await this.ideaRepository.findPublic(skip, limit, paginationDto?.challengeId);
     return {
       data,
       meta: {
@@ -172,10 +173,18 @@ export class IdeaService {
   }
 
   async addLike(ideaId: string): Promise<Idea | null> {
-    return this.ideaRepository.incrementLikes(ideaId);
+    const updated = await this.ideaRepository.incrementLikes(ideaId);
+    if (updated) {
+      this.eventsGateway.server.emit('idea_liked', { challengeId: updated.challengeId, ideaId: updated.id });
+    }
+    return updated;
   }
 
   async addComment(ideaId: string): Promise<Idea | null> {
-    return this.ideaRepository.incrementComments(ideaId);
+    const updated = await this.ideaRepository.incrementComments(ideaId);
+    if (updated) {
+      this.eventsGateway.server.emit('idea_commented', { challengeId: updated.challengeId, ideaId: updated.id });
+    }
+    return updated;
   }
 }

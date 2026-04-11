@@ -58,7 +58,7 @@ const IdeationWall = () => {
                 border: '1px solid #feb2b2',
                 fontWeight: '600'
               }}>
-                ⚠️ {ds.profileError}
+                {ds.profileError}
               </div>
             )}
           </S.WelcomeZone>
@@ -72,7 +72,7 @@ const IdeationWall = () => {
           </S.HamburgerBtn>
         </S.Header>
 
-        <SkyCanvas />
+        <SkyCanvas challengeId={ds.selectedChallenge?.id} />
 
         <S.MainGrid>
           <ChallengeList

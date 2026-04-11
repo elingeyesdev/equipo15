@@ -2,7 +2,7 @@
 import { render, screen } from '@testing-library/react';
 import App from '../App';
 
-// Mock simple de AuthContext para no lanzar Firebase en los test
+
 vi.mock('../context/AuthContext', () => {
   return {
     AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,

@@ -39,7 +39,7 @@ export class TransformInterceptor<T> implements NestInterceptor<
 
     const obj = data as Record<string, unknown>;
 
-    // Handle Dates and ObjectIds
+
     if (
       obj instanceof Date ||
       (obj._bsontype === 'ObjectID') ||
@@ -48,12 +48,12 @@ export class TransformInterceptor<T> implements NestInterceptor<
       return obj;
     }
 
-    // Convert Mongoose/Prisma objects if toObject exists
+
     const transformed = typeof obj.toObject === 'function' 
       ? (obj.toObject() as Record<string, unknown>) 
       : { ...obj };
 
-    // Role flattening logic
+
     if (
       transformed.roleId &&
       typeof transformed.roleId === 'object' &&
@@ -62,7 +62,7 @@ export class TransformInterceptor<T> implements NestInterceptor<
       transformed.role = (transformed.roleId as Record<string, unknown>).name;
     }
 
-    // Recursive transform for children
+
     Object.keys(transformed).forEach((key) => {
       const val = transformed[key];
       if (val && typeof val === 'object' && key !== 'roleId') {

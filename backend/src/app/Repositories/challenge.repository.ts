@@ -10,10 +10,31 @@ export class ChallengeRepository {
     skip?: number,
     take?: number,
     status?: string,
+    userId?: string,
+    userRole?: string,
+    facultyId?: number | null,
   ): Promise<{ data: any[]; total: number }> {
     const where: Prisma.ChallengeWhereInput = {};
     if (status) {
       where.status = status;
+    }
+
+    if (userRole === 'student') {
+      where.OR = [
+        {
+          isPrivate: false,
+          OR: [
+            { facultyId: null },
+            ...(facultyId ? [{ facultyId }] : []),
+          ],
+        },
+        {
+          isPrivate: true,
+          accessedByUsers: {
+            some: { id: userId },
+          },
+        },
+      ];
     }
 
     const [data, total] = await this.prisma.$transaction([
@@ -116,7 +137,75 @@ export class ChallengeRepository {
     });
   }
 
+  async linkPrivateChallenge(challengeId: string, userId: string): Promise<void> {
+    await this.prisma.challenge.update({
+      where: { id: challengeId },
+      data: {
+        accessedByUsers: {
+          connect: { id: userId },
+        },
+      },
+    });
+  }
+
   async getFacultyStats(): Promise<any[]> {
     return Promise.resolve([]);
+  }
+
+  async getChallengeImpactStats(challengeId: string) {
+    const agg = await this.prisma.idea.aggregate({
+      where: { challengeId, status: 'public' },
+      _count: true,
+      _sum: { likesCount: true, commentsCount: true },
+    });
+    
+    const ideas = await this.prisma.idea.findMany({
+       where: { challengeId, status: 'public' },
+       select: {
+          author: {
+             select: {
+                facultyId: true,
+             }
+          }
+       }
+    });
+
+    const uniqueFaculties = new Set(ideas.map(i => i.author?.facultyId).filter(f => f != null));
+    
+    const allAuthors = await this.prisma.user.findMany({
+       where: {
+          ideas: {
+             some: { challengeId, status: 'public' }
+          }
+       },
+       select: { id: true, displayName: true, role: { select: { name: true } }, email: true }
+    });
+
+    const topIdeas = await this.prisma.idea.findMany({
+       where: { challengeId, status: 'public' },
+       orderBy: [
+          { likesCount: 'desc' },
+          { commentsCount: 'desc' }
+       ],
+       take: 5,
+       select: { id: true, title: true, likesCount: true, commentsCount: true }
+    });
+
+    return {
+       totalIdeas: agg._count || 0,
+       impactoTotal: (agg._sum.likesCount || 0) + (agg._sum.commentsCount || 0),
+       facultadesUnidas: uniqueFaculties.size,
+       communityPulse: allAuthors.map(a => ({
+          id: a.id,
+          name: a.displayName || a.email.split('@')[0],
+          role: a.role?.name || 'student',
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(a.displayName || a.email.split('@')[0])}&background=random`
+       })),
+       topIdeas: topIdeas.map(i => ({
+          id: i.id,
+          title: i.title,
+          impact: (i.likesCount || 0) + (i.commentsCount || 0)
+       }))
+    };
   }
 }

@@ -48,7 +48,7 @@ const StyledWrapper = styled.div`
     position: absolute;
     border-radius: 50%;
     inset: 7px;
-    border: 3px solid ${Pista8Theme.secondary}15; /* Sutil secundario */
+    border: 3px solid ${Pista8Theme.secondary}15;
     transition:
       opacity 0.4s cubic-bezier(0.77, 0, 0.175, 1) 80ms,
       transform 0.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) 80ms;
@@ -98,7 +98,7 @@ const StyledWrapper = styled.div`
     height: 30px;
     margin: 24px 18px 0 22px;
     transform: rotate(360deg);
-    fill: ${Pista8Theme.secondary}; /* Color original de los iconos */
+    fill: ${Pista8Theme.secondary};
   }
 
   .styled-wrapper .arrow-icon path {

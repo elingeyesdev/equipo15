@@ -1,4 +1,5 @@
 import styled, { keyframes } from 'styled-components';
+import { motion } from 'framer-motion';
 import { Pista8Theme } from '../../../../config/theme';
 
 export const fadeUp = keyframes`
@@ -120,6 +121,7 @@ export const FieldInput = styled.input`
   border: 1.5px solid transparent;
   border-radius: 14px;
   padding: 15px 18px;
+  padding-right: 48px;
   font-size: 15px;
   color: ${Pista8Theme.secondary};
   outline: none;
@@ -133,6 +135,35 @@ export const FieldInput = styled.input`
   &:focus {
     border-color: ${Pista8Theme.primary};
     background: ${Pista8Theme.white};
+  }
+`;
+
+export const InputGroup = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+`;
+
+export const EyeBtn = styled.button`
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #c0c6cb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+
+  &:hover {
+    color: ${Pista8Theme.primary};
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
   }
 `;
 
@@ -281,3 +312,50 @@ export const ValidationItem = styled.div<{ isValid: boolean }>`
     transition: color 0.3s ease;
   }
 `;
+
+export const ModalOverlay = styled(motion.div)`
+  position: fixed;
+  inset: 0;
+  background: rgba(44, 52, 56, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 1000;
+`;
+
+export const ModalCard = styled(motion.div)`
+  background: ${Pista8Theme.white};
+  border-radius: 28px;
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+export const ModalTitle = styled.h3`
+  font-size: 22px;
+  font-weight: 800;
+  color: ${Pista8Theme.secondary};
+  margin-bottom: 12px;
+`;
+
+export const ModalText = styled.p`
+  font-size: 15px;
+  color: #5f6368;
+  line-height: 1.6;
+  margin-bottom: 28px;
+`;
+
+export const ModalBtnRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+`; 
+

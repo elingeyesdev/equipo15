@@ -28,6 +28,11 @@ export const challengeService = {
     return response.data;
   },
 
+  getChallengeById: async (id: string): Promise<ApiResponse<Challenge>> => {
+    const response = await axiosInstance.get<ApiResponse<Challenge>>(`/challenges/${id}`);
+    return response.data;
+  },
+
   createChallenge: async (payload: ChallengePayload): Promise<ApiResponse<Challenge>> => {
     const response = await axiosInstance.post<ApiResponse<Challenge>>('/challenges', payload);
     return response.data;

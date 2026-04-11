@@ -159,3 +159,126 @@ export const EmptyIcon = styled.div`
   align-items: center;
   justify-content: center;
 `;
+
+export const PulseListContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 8px;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.02);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+  }
+`;
+
+export const PulseItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 12px;
+  transition: background 0.2s;
+  cursor: default;
+
+  &:hover {
+    background: rgba(255,255,255,0.05);
+  }
+`;
+
+export const Avatar = styled.img`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.1);
+`;
+
+export const ParticipantInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+`;
+
+export const ParticipantName = styled.span`
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const RoleBadge = styled.span<{ $role: string }>`
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 2px;
+  ${p => p.$role === 'student' ? `
+    color: rgba(184, 232, 255, 0.8);
+    background: rgba(184, 232, 255, 0.1);
+  ` : p.$role === 'company' ? `
+    color: rgba(255, 215, 0, 0.8);
+    background: rgba(255, 215, 0, 0.1);
+  ` : `
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+  `}
+`;
+
+export const PodiumItem = styled.div<{ $isFirst: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  margin-bottom: 8px;
+  background: ${p => p.$isFirst ? 'linear-gradient(45deg, rgba(255,215,0,0.15), rgba(72,80,84,0.1))' : 'rgba(255,255,255,0.03)'};
+  border: 1px solid ${p => p.$isFirst ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.05)'};
+  box-shadow: ${p => p.$isFirst ? '0 4px 12px rgba(255,215,0,0.1)' : 'none'};
+  transition: all 0.3s ease;
+`;
+
+export const PodiumRank = styled.div<{ $isFirst?: boolean }>`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: ${p => p.$isFirst ? 'rgba(255,215,0,0.2)' : 'rgba(255,255,255,0.1)'};
+  color: ${p => p.$isFirst ? '#FFD700' : 'rgba(255,255,255,0.6)'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+`;
+
+export const PodiumTitle = styled.div`
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const PodiumImpact = styled.div`
+  font-size: 14px;
+  font-weight: 800;
+  color: ${Pista8Theme.primary};
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;

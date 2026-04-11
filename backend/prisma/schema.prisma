@@ -32,7 +32,8 @@ model User {
   isActive          Boolean      @default(true)
   ideas             Idea[]
   evaluations       Evaluation[]
-  challenges        Challenge[]
+  challenges        Challenge[]  @relation("AuthorChallenges")
+  accessedPrivateChallenges Challenge[] @relation("UserAccessedPrivateChallenges")
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 }
@@ -50,9 +51,10 @@ model Challenge {
   accessToken        String?  @unique
   facultyId          Int?
   status             String   @default("DRAFT")
-  author             User     @relation(fields: [authorId], references: [id])
+  author             User     @relation("AuthorChallenges", fields: [authorId], references: [id])
   authorId           String
   ideas              Idea[]
+  accessedByUsers    User[]   @relation("UserAccessedPrivateChallenges")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }

@@ -1,9 +1,14 @@
-import { 
-  signInWithEmailAndPassword, 
+import {
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
   signOut,
-  updateProfile
+  updateProfile,
+  sendPasswordResetEmail,
+  linkWithPopup,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  updatePassword
 } from 'firebase/auth';
 import { toast } from 'sonner';
 import axiosInstance from '../api/axiosConfig';
@@ -13,7 +18,7 @@ const validateDomain = (email: string | null) => {
   if (!email) return false;
   const allowedDomains = ['@univalle.edu', '@est.univalle.edu', '@pista8.com'];
   const allowedEmails = ['elingeyesdev@gmail.com'];
-  
+
   return allowedDomains.some(domain => email.endsWith(domain)) || allowedEmails.includes(email);
 };
 
@@ -25,8 +30,8 @@ export const authService = {
     }
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(userCredential.user, { displayName: name });
-    
-    // axiosInstance maneja el token
+
+
     return axiosInstance.post('/users/sync', {
       firebaseUid: userCredential.user.uid,
       email: email,
@@ -41,7 +46,7 @@ export const authService = {
       throw new Error('Invalid domain');
     }
     const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-    
+
     return axiosInstance.post('/users/sync', {
       firebaseUid: userCredential.user.uid,
       email: email,
@@ -59,13 +64,50 @@ export const authService = {
       throw new Error('Invalid domain');
     }
 
-    return axiosInstance.post('/users/sync', {
-      firebaseUid: result.user.uid,
-      email: result.user.email,
-      displayName: result.user.displayName,
-      role: 'student'
-    });
+    try {
+      return await axiosInstance.post('/users/sync', {
+        firebaseUid: result.user.uid,
+        email: result.user.email,
+        displayName: result.user.displayName,
+        preventCreation: true
+      });
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        await signOut(auth);
+        const customError = new Error('USER_NOT_FOUND');
+        (customError as any).code = 'auth/user-not-found-in-db';
+        throw customError;
+      }
+      throw error;
+    }
   },
 
-  logout: () => signOut(auth)
+  logout: () => signOut(auth),
+
+  sendPasswordReset: async (email: string) => {
+    return sendPasswordResetEmail(auth, email);
+  },
+
+  verifyResetCode: async (code: string) => {
+    return verifyPasswordResetCode(auth, code);
+  },
+
+  confirmReset: async (code: string, newPass: string) => {
+    return confirmPasswordReset(auth, code, newPass);
+  },
+
+  linkGoogleAccount: async () => {
+    const user = auth.currentUser;
+    if (!user) throw new Error('No identity found');
+    return linkWithPopup(user, googleProvider);
+  },
+
+  changePassword: async (oldPass: string, newPass: string) => {
+    const user = auth.currentUser;
+    if (!user || !user.email) throw new Error('No identity found');
+
+    const credential = EmailAuthProvider.credential(user.email, oldPass);
+    await reauthenticateWithCredential(user, credential);
+    return updatePassword(user, newPass);
+  }
 };

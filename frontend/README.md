@@ -155,14 +155,24 @@ frontend/
 
 ---
 
-## 🎨 Sistema de Diseño
+## 🎨 Sistema de Diseño Aeronáutico (Pista 8 UI)
 
-La interfaz sigue un lenguaje visual consistente:
+La interfaz de Pista 8 ha sido diseñada para evocar la precisión y la tecnología de una pista de aterrizaje moderna:
 
-- **Color**: Paleta oscura premium con acentos en violeta/índigo (`#6366f1`, `#8b5cf6`).
-- **Tipografía**: Inter (Google Fonts) para máxima legibilidad en pantallas de alta densidad.
-- **Elevación**: Sombras sutiles y `backdrop-filter: blur()` para glassmorphism.
-- **Micro-interacciones**: Animaciones `fadeUp` en aparición de elementos, estados `hover` reactivos, transiciones suaves (`transition: all 0.2s ease`).
+-   **Identidad Visual**: Paleta centrada en el **Pista 8 Orange** (`#FE410A`) para llamadas a la acción y el **Dark Anthracite** (`#2c3438`) para superficies de profundidad.
+-   **Tipografía**: **Inter** y **Arial Black** para encabezados de alto impacto, emulando la señalética aeroportuaria.
+-   **Componentes de Seguridad**:
+    -   **Password Visibility Toggle**: Implementación nativa de visualización de claves con iconos SVG reactivos en todos los formularios de autenticación y perfil.
+    -   **Custom Recovery Flow**: Ruta pública `/reset-password` totalmente integrada en el diseño del sitio, eliminando la dependencia de las páginas genéricas de Firebase.
+-   **Micro-interacciones**: Uso intensivo de **Framer Motion** para transiciones líquidas entre estados de login, registro y recuperación de contraseña.
+
+---
+
+## 🔒 Seguridad en el Cliente (Frontend Shield)
+
+-   **Domain Filtering**: El sistema de registro valida en tiempo real que el usuario utilice un correo institucional de **UNIVALLE** (`@est.univalle.edu`), bloqueando dominios genéricos.
+-   **Anti-Ghost Accounts**: Al intentar iniciar sesión con Google, el sistema verifica primero la existencia del usuario en la base de datos institucional. Si no existe, lanza un modal de advertencia ("¡Casi listo!") que impide la creación de cuentas no autorizadas.
+-   **Role-Based Access Control (RBAC)**: Los componentes están protegidos por el `RoleGuard`, que oculta o muestra funcionalidades (como el cambio de contraseña o la vinculación de Google) basándose estrictamente en el rol verificado por el backend.
 
 ---
 

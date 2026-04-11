@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { UserRepository } from '../Repositories/user.repository';
 import { RoleRepository } from '../Repositories/role.repository';
 import { User, Role } from '@prisma/client';
 import { extractFacultyFromEmail } from '../Utils/email-parser.util';
-import { getRoleFromEmail } from '../Utils/user-metadata.util';
+import { getRoleFromEmail, isAuthorizedEmail } from '../Utils/user-metadata.util';
 
 export type UserWithRole = User & { role?: Role | null };
 
@@ -17,7 +17,7 @@ export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly roleRepository: RoleRepository,
-  ) {}
+  ) { }
 
   async findOrCreate(
     createUserDto: {
@@ -27,16 +27,35 @@ export class UserService {
       avatarUrl?: string;
     },
     forceUpdate = false,
+    preventCreation = false,
   ): Promise<UserResponse | null> {
     const { firebaseUid, email } = createUserDto;
 
     let user = await this.userRepository.findByUid(firebaseUid);
+
+    if (!user && email) {
+      user = await this.userRepository.findByEmail(email);
+      if (user) {
+        await this.userRepository.updateByEmail(email, { firebaseUid });
+      }
+    }
+
     if (user && !forceUpdate) {
       return this.formatUserResponse(user as UserWithRole);
     }
 
+    if (!user && preventCreation) {
+      throw new NotFoundException('No existe cuenta asociada a este correo.');
+    }
+
     if (!email) {
       return null;
+    }
+
+    if (!isAuthorizedEmail(email)) {
+      throw new ForbiddenException(
+        'Acceso restringido a cuentas institucionales autorizadas.',
+      );
     }
 
     const roleName = getRoleFromEmail(email);

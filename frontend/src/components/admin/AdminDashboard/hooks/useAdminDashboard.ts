@@ -73,7 +73,7 @@ export const useAdminDashboard = () => {
   };
 
   const copyToClipboard = () => {
-    const link = `pista8.com/challenges/private/${formData.token}`;
+    const link = `${window.location.origin}/dashboard/reto/${formData.token}`;
     navigator.clipboard.writeText(link);
     setCopyStatus(true);
     setTimeout(() => setCopyStatus(false), 2000);
@@ -91,7 +91,7 @@ export const useAdminDashboard = () => {
   const handleSaveChallenge = async (status: ChallengeStatus) => {
     setSaving(true);
     try {
-      const payload: Partial<Challenge> & { authorId?: string } = {
+      const payload: Partial<Challenge> & { authorId?: string; id?: string } = {
         title: formData.title,
         problemDescription: formData.description || undefined,
         companyContext: formData.companyContext || undefined,
@@ -101,15 +101,15 @@ export const useAdminDashboard = () => {
         facultyId: formData.facultyId === 0 ? undefined : formData.facultyId,
         status: status
       };
+
+      if (formData.isPrivate && formData.token) {
+        payload.id = formData.token;
+      }
       if (formData.endDate) {
         payload.endDate = formData.endDate;
       }
       
       await challengeService.createChallenge(payload as any);
-      toast.success(status === 'Activo' ? '¡Reto publicado con éxito!' : 'Borrador guardado correctamente.');
-
-      await fetchChallenges();
-
       if (status === 'Activo') {
         setShowForm(false);
         setFormData({
@@ -124,6 +124,10 @@ export const useAdminDashboard = () => {
           facultyId: 0
         });
       }
+      
+      toast.success(status === 'Activo' ? '¡Reto publicado con éxito!' : 'Borrador guardado correctamente.');
+
+      fetchChallenges();
       return true;
     } catch (error: unknown) {
       const message = error instanceof Error ? (error as any).response?.data?.message || error.message : 'Hubo un problema al guardar el reto.';

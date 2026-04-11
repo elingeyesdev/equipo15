@@ -48,7 +48,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Force sync user profile with Firebase' })
   async syncUser(
     @Request() req: AuthenticatedRequest,
-    @Body() body: { displayName?: string; avatarUrl?: string },
+    @Body() body: { displayName?: string; avatarUrl?: string; preventCreation?: boolean },
   ) {
     const { user } = req;
     return this.userService.findOrCreate(
@@ -58,6 +58,7 @@ export class UsersController {
         displayName:
           body.displayName ||
           (user as { name?: string }).name ||
+          (user as { displayName?: string }).displayName ||
           user.email?.split('@')[0] ||
           'Usuario de Pista 8',
         avatarUrl:
@@ -66,6 +67,7 @@ export class UsersController {
           (user as { photoURL?: string }).photoURL,
       },
       true,
+      body.preventCreation,
     );
   }
 

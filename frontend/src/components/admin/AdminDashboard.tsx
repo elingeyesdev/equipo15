@@ -1,11 +1,11 @@
 import { useAuth } from '../../context/AuthContext';
 import * as S from './AdminDashboard/styles/AdminStyles';
 
-// Components
+
 import AdminSidebar from './AdminDashboard/components/AdminSidebar';
 import ChallengeBuilder from './AdminDashboard/components/ChallengeBuilder';
 
-// Hooks
+
 import { useAdminDashboard } from './AdminDashboard/hooks/useAdminDashboard';
 
 export const AdminDashboard = () => {
