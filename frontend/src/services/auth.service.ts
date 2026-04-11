@@ -8,7 +8,9 @@ import {
   linkWithPopup,
   reauthenticateWithCredential,
   EmailAuthProvider,
-  updatePassword
+  updatePassword,
+  verifyPasswordResetCode,
+  confirmPasswordReset
 } from 'firebase/auth';
 import { toast } from 'sonner';
 import axiosInstance from '../api/axiosConfig';

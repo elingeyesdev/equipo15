@@ -21,15 +21,22 @@ interface RawIdea {
   commentsCount?: number;
 }
 
-const CLOUD_CONFIG = [
-  { y: 40, scale: 1.2, duration: 38, delay: 0, rtl: false },
-  { y: 90, scale: 0.8, duration: 52, delay: 8, rtl: true },
-  { y: 180, scale: 1.0, duration: 44, delay: 3, rtl: false },
-  { y: 260, scale: 0.7, duration: 60, delay: 15, rtl: true },
-  { y: 340, scale: 1.1, duration: 41, delay: 5, rtl: false },
-  { y: 430, scale: 0.9, duration: 56, delay: 20, rtl: true },
-  { y: 520, scale: 0.75, duration: 48, delay: 10, rtl: false },
-];
+const generateClouds = (height: number) => {
+  const clouds = [];
+  const spacing = 280;
+  const count = Math.ceil(height / spacing) + 1;
+
+  for (let i = 0; i < count; i++) {
+    clouds.push({
+      y: i * spacing + (Math.random() * 80),
+      scale: 0.6 + Math.random() * 0.7,
+      duration: 35 + Math.random() * 25,
+      delay: i * -5,
+      rtl: i % 2 === 0
+    });
+  }
+  return clouds;
+};
 
 const ProgressBar = styled.div<{ $progress: number }>`
   position: absolute;
@@ -75,13 +82,10 @@ const PlaneLayer = styled.div`
   z-index: 2;
 `;
 
-
-
 interface SkyCanvasProps {
   initialIdeas?: RawIdea[];
   challengeId?: string;
 }
-
 
 interface SkyCanvasSceneProps {
   initialIdeas: RawIdea[];
@@ -102,6 +106,7 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
   }, [socketPhase]);
 
   const canvasHeight = useMemo(() => computeCanvasHeight(ideas.length), [ideas.length]);
+  const clouds = useMemo(() => generateClouds(canvasHeight), [canvasHeight]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -122,7 +127,7 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
       {isLoading && <ProgressBar $progress={progress} />}
       <Sky ref={containerRef} $height={canvasHeight}>
         <CloudLayer>
-          {CLOUD_CONFIG.map((c, i) => (
+          {clouds.map((c, i) => (
             <Cloud key={i} y={c.y} scale={c.scale} duration={c.duration} delay={c.delay} rtl={c.rtl} />
           ))}
         </CloudLayer>
@@ -173,9 +178,11 @@ const extractRawIdeas = (payload: unknown): RawIdea[] => {
       id: typeof item.id === 'string' ? item.id : undefined,
       title: typeof item.title === 'string' ? item.title : 'Idea sin titulo',
       author: typeof item.author === 'object' && item.author !== null
-        ? { displayName: typeof (item.author as { displayName?: unknown }).displayName === 'string'
-          ? (item.author as { displayName?: string }).displayName
-          : undefined }
+        ? {
+          displayName: typeof (item.author as { displayName?: unknown }).displayName === 'string'
+            ? (item.author as { displayName?: string }).displayName
+            : undefined
+        }
         : undefined,
       likesCount: typeof item.likesCount === 'number' ? item.likesCount : 0,
       commentsCount: typeof item.commentsCount === 'number' ? item.commentsCount : 0,
@@ -245,7 +252,7 @@ const SkyCanvas = memo(({ challengeId }: SkyCanvasProps) => {
             setPublicIdeas(prev => [...prev, idea]);
             loaded++;
             setProgress((loaded / total) * 100);
-            
+
             if (loaded === total) {
               const hideTimer = window.setTimeout(() => {
                 if (active) setIsLoading(false);

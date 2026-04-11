@@ -10,7 +10,6 @@ export const ResetPasswordPage = () => {
   const [oobCode] = useState(searchParams.get('oobCode') || '');
   const [email, setEmail] = useState('');
   const [passData, setPassData] = useState({ newPass: '', confirm: '' });
-  const [loading, setLoading] = useState(true);
   const [validating, setValidating] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [showPass, setShowPass] = useState(false);
@@ -31,7 +30,6 @@ export const ResetPasswordPage = () => {
         toast.error('El enlace de recuperación ha expirado o ya fue utilizado.');
         navigate('/auth');
       } finally {
-        setLoading(false);
         setValidating(false);
       }
     };

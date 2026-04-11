@@ -4,9 +4,9 @@ const MAX_SIZE = 120;
 const STEP_PX = 40;
 const CANVAS_ACTIVE_CAP = 0.82;
 const MIN_CANVAS_HEIGHT = 600;
-const LANE_HEIGHT_PER_IDEA = 110;
-const TOP_PADDING = 120;
-const BOTTOM_PADDING = 100;
+export const LANE_HEIGHT_PER_IDEA = 110;
+export const TOP_PADDING = 120;
+export const BOTTOM_PADDING = 100;
 const START_X = 80;
 
 export const computeSize = (likesCount: number): number =>

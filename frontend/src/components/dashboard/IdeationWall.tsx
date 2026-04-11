@@ -90,8 +90,6 @@ const IdeationWall = () => {
           <StatsPanel
             selectedChallenge={ds.selectedChallenge}
             challengeStats={ds.challengeStats}
-            topFacultades={ds.topFacultades}
-            topLideres={ds.topLideres}
           />
         </S.MainGrid>
       </S.Page>

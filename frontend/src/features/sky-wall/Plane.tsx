@@ -33,7 +33,7 @@ const PlaneWrapper = styled.div<{
     p.$isRacing
       ? css`${raceFly} 2.2s cubic-bezier(0.4, 0, 1, 1) forwards`
       : css`${float} 3s ease-in-out ${p.$delay}s infinite`};
-  z-index: 2;
+  z-index: ${p => Math.floor(p.$y)};
   cursor: default;
   user-select: none;
 `;
@@ -79,12 +79,10 @@ const Plane = memo(
     const size = useMemo(() => computeSize(idea.likesCount), [idea.likesCount]);
     const x = useMemo(
       () => {
-        const fromRandomRatio = idea.randomXRatio * canvasWidth;
-        const fallback = computeXPosition(idea.commentsCount, canvasWidth);
-        const base = Number.isFinite(fromRandomRatio) ? fromRandomRatio : fallback;
+        const base = computeXPosition(idea.commentsCount, canvasWidth);
         return Math.max(0, Math.min(canvasWidth - size, base));
       },
-      [idea.randomXRatio, idea.commentsCount, canvasWidth, size],
+      [idea.commentsCount, canvasWidth, size],
     );
     const isRacing = phase === 'race';
 
@@ -96,7 +94,6 @@ const Plane = memo(
     );
   },
   (prev, next) =>
-    prev.idea.randomXRatio === next.idea.randomXRatio &&
     prev.idea.laneY === next.idea.laneY &&
     prev.idea.likesCount === next.idea.likesCount &&
     prev.idea.commentsCount === next.idea.commentsCount &&
