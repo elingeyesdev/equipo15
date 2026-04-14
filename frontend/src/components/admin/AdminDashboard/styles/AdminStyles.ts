@@ -495,3 +495,10 @@ export const PreviewBadge = styled.span<{ type: 'privacy' | 'date' }>`
   background: ${p => p.type === 'privacy' ? Pista8Theme.secondary + '10' : Pista8Theme.primary + '10'};
   color: ${p => p.type === 'privacy' ? Pista8Theme.secondary : Pista8Theme.primary};
 `;
+
+export const ErrorText = styled.span`
+  color: #e53e3e;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  display: block;
+`;

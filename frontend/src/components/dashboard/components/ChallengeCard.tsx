@@ -12,7 +12,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSele
   const isExpired = challenge.endDate ? new Date() > new Date(challenge.endDate) : false;
 
   return (
-    <S.ChallengeCard active={active} onClick={onSelect}>
+    <S.ChallengeCard $active={active} onClick={onSelect}>
       {active && <S.ActiveBar />}
       <S.TopRight>
         {isExpired ? (

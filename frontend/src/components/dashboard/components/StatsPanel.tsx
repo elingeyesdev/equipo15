@@ -13,7 +13,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
   const topIdeas = challengeStats?.topIdeas || [];
 
   return (
-    <S.RightPanel hasChallenge={!!selectedChallenge}>
+    <S.RightPanel $hasChallenge={!!selectedChallenge}>
       {selectedChallenge ? (
         <>
           <S.StatsHeader>

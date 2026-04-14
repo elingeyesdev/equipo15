@@ -2,12 +2,12 @@ import styled from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 import { fillBar } from './CommonStyles';
 
-export const RightPanel = styled.div<{ hasChallenge: boolean }>`
+export const RightPanel = styled.div<{ $hasChallenge: boolean }>`
   background: ${Pista8Theme.secondary};
   border-radius: 24px;
   padding: 32px;
   border: 1px solid rgba(72,80,84,0.1);
-  opacity: ${p => p.hasChallenge ? 1 : 0.35};
+  opacity: ${p => p.$hasChallenge ? 1 : 0.35};
   transition: opacity 0.3s ease;
   display: flex;
   flex-direction: column;

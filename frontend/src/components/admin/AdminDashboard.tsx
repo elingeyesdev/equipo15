@@ -45,6 +45,7 @@ export const AdminDashboard = () => {
               copyToClipboard={ds.copyToClipboard}
               copyStatus={ds.copyStatus}
               isFormValid={ds.isFormValid}
+              formErrors={ds.formErrors}
               handleSaveChallenge={ds.handleSaveChallenge}
               saving={ds.saving}
             />

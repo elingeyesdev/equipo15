@@ -16,13 +16,14 @@ interface ChallengeBuilderProps {
   copyToClipboard: () => void;
   copyStatus: boolean;
   isFormValid: boolean;
+  formErrors: Record<string, string | null>;
   handleSaveChallenge: (status: 'Borrador' | 'Activo') => Promise<boolean>;
   saving: boolean;
 }
 
 const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
   userProfile, showForm, setShowForm, isPreview, setIsPreview, formData, setFormData,
-  togglePrivacy, handleStartDateChange, copyToClipboard, copyStatus, isFormValid,
+  togglePrivacy, handleStartDateChange, copyToClipboard, copyStatus, isFormValid, formErrors,
   handleSaveChallenge, saving
 }) => {
   if (!showForm) {
@@ -93,6 +94,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
                 />
+                {formErrors.title && <S.ErrorText>{formErrors.title}</S.ErrorText>}
               </S.FormGroup>
 
               <S.FormGroup>
@@ -117,6 +119,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
               />
+              {formErrors.description && <S.ErrorText>{formErrors.description}</S.ErrorText>}
             </S.FormGroup>
 
             <S.TwoColumnRow style={{ marginBottom: '16px' }}>
@@ -128,16 +131,18 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                   value={formData.companyContext}
                   onChange={(e) => setFormData({...formData, companyContext: e.target.value})}
                 />
+                {formErrors.companyContext && <S.ErrorText>{formErrors.companyContext}</S.ErrorText>}
               </S.FormGroup>
 
               <S.FormGroup>
-                <S.FieldLabel>Reglas de Participación (Opcional)</S.FieldLabel>
+                <S.FieldLabel>Reglas de Participación (Obligatorio)</S.FieldLabel>
                 <S.Textarea 
                   placeholder="Ej: Solo estudiantes de 5to semestre, grupos de 3 personas, etc."
                   rows={4}
                   value={formData.participationRules}
                   onChange={(e) => setFormData({...formData, participationRules: e.target.value})}
                 />
+                {formErrors.participationRules && <S.ErrorText>{formErrors.participationRules}</S.ErrorText>}
               </S.FormGroup>
             </S.TwoColumnRow>
 
@@ -173,16 +178,18 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
 
             <S.DateRow>
               <S.FormGroup style={{ marginBottom: 0 }}>
-                <S.FieldLabel>Fecha de Inicio</S.FieldLabel>
+                <S.FieldLabel>Fecha de Inicio del Reto</S.FieldLabel>
                 <S.Input type="date" value={formData.startDate} onChange={handleStartDateChange} />
+                {formErrors.startDate && <S.ErrorText>{formErrors.startDate}</S.ErrorText>}
               </S.FormGroup>
               <S.FormGroup style={{ marginBottom: 0 }}>
-                <S.FieldLabel>Fecha de Cierre (mín. +7 días desde inicio)</S.FieldLabel>
+                <S.FieldLabel>Fecha de Cierre</S.FieldLabel>
                 <S.Input 
                   type="date" 
                   value={formData.endDate} 
                   onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                 />
+                {formErrors.dates && <S.ErrorText>{formErrors.dates}</S.ErrorText>}
               </S.FormGroup>
             </S.DateRow>
 

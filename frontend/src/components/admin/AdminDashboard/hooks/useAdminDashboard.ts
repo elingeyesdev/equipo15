@@ -3,6 +3,10 @@ import { toast } from 'sonner';
 import { authService } from '../../../../services/auth.service';
 import { challengeService } from '../../../../services/challenge.service';
 import type { Challenge, ChallengeStatus } from '../../../../types/models';
+import { 
+  Validator, RequiredValidation, MaxLengthValidation, MinLengthValidation, 
+  NoRepetitiveCharactersValidation, DateRangeValidation 
+} from '../../../../components/Form/ValidationStrategies';
 
 export const useAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('challenges');
@@ -52,6 +56,52 @@ export const useAdminDashboard = () => {
     facultyId: 0
   });
 
+  const [formErrors, setFormErrors] = useState<Record<string, string | null>>({});
+
+  useEffect(() => {
+    const errors: Record<string, string | null> = {};
+
+    const textValidator = new Validator([
+      new RequiredValidation(),
+      new NoRepetitiveCharactersValidation(5)
+    ]);
+
+    const titleValidator = new Validator([
+      new RequiredValidation(),
+      new MinLengthValidation(10),
+      new MaxLengthValidation(100),
+      new NoRepetitiveCharactersValidation(5)
+    ]);
+    
+    const descValidator = new Validator([
+      new RequiredValidation(),
+      new MinLengthValidation(200),
+      new NoRepetitiveCharactersValidation(5)
+    ]);
+
+    errors.title = titleValidator.validate(formData.title);
+    errors.description = descValidator.validate(formData.description);
+    errors.companyContext = textValidator.validate(formData.companyContext);
+    errors.participationRules = textValidator.validate(formData.participationRules);
+
+    const dateValidator = new Validator([
+      new DateRangeValidation(7)
+    ]);
+    errors.dates = dateValidator.validate({ start: formData.startDate, end: formData.endDate });
+
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    const startD = new Date(formData.startDate);
+    startD.setHours(0, 0, 0, 0);
+    if (startD < todayDate) {
+      errors.startDate = 'No puede ser una fecha pasada';
+    } else {
+      errors.startDate = null;
+    }
+
+    setFormErrors(errors);
+  }, [formData]);
+
   const togglePrivacy = () => {
     const nextPrivate = !formData.isPrivate;
     setFormData({
@@ -84,19 +134,29 @@ export const useAdminDashboard = () => {
     window.location.href = '/auth';
   };
 
-  const isFormValid = formData.title.trim() !== '' && formData.description.trim() !== '' && formData.endDate !== '';
+  const isFormValid = !Object.values(formErrors).some(err => err !== null) && 
+                      formData.title.trim() !== '' && 
+                      formData.description.trim() !== '' && 
+                      formData.endDate !== '';
 
   const [saving, setSaving] = useState(false);
 
   const handleSaveChallenge = async (status: ChallengeStatus) => {
+    if (status === 'Activo' && !isFormValid) {
+        toast.error('Corrija los errores del formulario antes de publicar.');
+        return false;
+    }
+
     setSaving(true);
     try {
-      const payload: Partial<Challenge> & { authorId?: string; id?: string } = {
+      // Inyectar el publicationDate dinámico si el status pasa a "Activo"
+      const payload: Partial<Challenge> & { authorId?: string; id?: string; publicationDate?: string } = {
         title: formData.title,
         problemDescription: formData.description || undefined,
         companyContext: formData.companyContext || undefined,
         participationRules: formData.participationRules || undefined,
         startDate: formData.startDate,
+        publicationDate: status === 'Activo' ? new Date().toISOString() : undefined,
         isPrivate: formData.isPrivate,
         facultyId: formData.facultyId === 0 ? undefined : formData.facultyId,
         status: status
@@ -153,6 +213,7 @@ export const useAdminDashboard = () => {
     copyToClipboard,
     handleLogout,
     isFormValid,
+    formErrors,
     handleSaveChallenge,
     saving,
     challenges,
