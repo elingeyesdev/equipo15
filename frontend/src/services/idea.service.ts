@@ -17,7 +17,6 @@ export interface CreateIdeaPayload {
   title: string;
   problem: string;
   solution: string;
-  author: string;
   challengeId: string;
   tags?: string[];
   status?: IdeaStatus;
@@ -28,7 +27,6 @@ export interface CreateDraftIdeaPayload {
   title?: string;
   problem?: string;
   solution?: string;
-  author: string;
   challengeId?: string;
   tags?: string[];
   isAnonymous?: boolean;

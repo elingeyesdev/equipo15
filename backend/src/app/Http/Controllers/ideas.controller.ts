@@ -7,6 +7,7 @@ import {
   Param,
   UseGuards,
   Query,
+  Req,
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import {
@@ -22,6 +23,7 @@ import { CreateDraftIdeaDto } from '../../DTOs/create-draft-idea.dto';
 import { FirebaseAuthGuard } from '../../../common/guards/firebase-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/guards/roles.decorator';
+import type { AuthenticatedRequest } from '../../../common/types/authenticated-request.interface';
 
 @ApiTags('Ideas')
 @ApiBearerAuth()
@@ -32,14 +34,20 @@ export class IdeasController {
 
   @Post()
   @ApiOperation({ summary: 'Submit a new idea' })
-  create(@Body() createIdeaDto: CreateIdeaDto) {
-    return this.ideaService.create(createIdeaDto);
+  create(
+    @Body() createIdeaDto: CreateIdeaDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.ideaService.create(createIdeaDto, request.user.uid);
   }
 
   @Post('drafts')
   @ApiOperation({ summary: 'Save an idea as a draft' })
-  createDraft(@Body() createDraftIdeaDto: CreateDraftIdeaDto) {
-    return this.ideaService.createDraft(createDraftIdeaDto);
+  createDraft(
+    @Body() createDraftIdeaDto: CreateDraftIdeaDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.ideaService.createDraft(createDraftIdeaDto, request.user.uid);
   }
 
   @Get()

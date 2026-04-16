@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { IdeaRepository } from '../Repositories/idea.repository';
 import { ChallengeRepository } from '../Repositories/challenge.repository';
+import { UserRepository } from '../Repositories/user.repository';
 import { Idea } from '@prisma/client';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -9,6 +10,11 @@ import { CreateIdeaDto } from '../DTOs/create-idea.dto';
 import { CreateDraftIdeaDto } from '../DTOs/create-draft-idea.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { EventsGateway } from '../Gateways/events.gateway';
+import {
+  IDEA_WORD_RULES,
+  assertWordRange,
+  ensureActiveChallengeStatus,
+} from '../Utils/idea-validation.util';
 
 @Injectable()
 export class IdeaService {
@@ -17,10 +23,45 @@ export class IdeaService {
   constructor(
     private readonly ideaRepository: IdeaRepository,
     private readonly challengeRepository: ChallengeRepository,
+    private readonly userRepository: UserRepository,
     @InjectModel(ProjectDetails.name)
     private projectDetailsModel: Model<ProjectDetails>,
     private readonly eventsGateway: EventsGateway,
   ) { }
+
+  private async resolveAuthorId(firebaseUid: string): Promise<string> {
+    const user = await this.userRepository.findByUid(firebaseUid);
+    if (!user) {
+      throw new BadRequestException({
+        message: 'No encontramos un usuario interno asociado a la sesión actual.',
+      });
+    }
+    return user.id;
+  }
+
+  private validateIdeaWords(createIdeaDto: CreateIdeaDto): void {
+    assertWordRange(
+      'ideaName',
+      'El título',
+      createIdeaDto.title,
+      IDEA_WORD_RULES.title.min,
+      IDEA_WORD_RULES.title.max,
+    );
+    assertWordRange(
+      'ideaProblem',
+      'El problema',
+      createIdeaDto.problem,
+      IDEA_WORD_RULES.problem.min,
+      IDEA_WORD_RULES.problem.max,
+    );
+    assertWordRange(
+      'ideaSolution',
+      'La solución',
+      createIdeaDto.solution,
+      IDEA_WORD_RULES.solution.min,
+      IDEA_WORD_RULES.solution.max,
+    );
+  }
 
   private async persistProjectDetails(data: {
     projectId: string;
@@ -43,13 +84,18 @@ export class IdeaService {
     }
   }
 
-  async create(createIdeaDto: CreateIdeaDto): Promise<Idea> {
+  async create(createIdeaDto: CreateIdeaDto, firebaseUid: string): Promise<Idea> {
+    this.validateIdeaWords(createIdeaDto);
+    const authorId = await this.resolveAuthorId(firebaseUid);
+
     const challenge = await this.challengeRepository.findById(
       createIdeaDto.challengeId,
     );
     if (!challenge) {
       throw new BadRequestException('El reto vinculado no existe.');
     }
+
+    ensureActiveChallengeStatus(challenge.status);
 
     if (challenge.endDate && new Date() > new Date(challenge.endDate)) {
       this.logger.warn(
@@ -66,8 +112,8 @@ export class IdeaService {
       solution: createIdeaDto.solution,
       status: createIdeaDto.status || 'public',
       tags: createIdeaDto.tags || [],
-      isAnonymous: createIdeaDto.isAnonymous || false,
-      authorId: createIdeaDto.author,
+      isAnonymous: createIdeaDto.isAnonymous ?? false,
+      authorId,
       challengeId: createIdeaDto.challengeId,
     });
 
@@ -85,12 +131,17 @@ export class IdeaService {
     return createdIdea;
   }
 
-  async createDraft(createIdeaDraftDto: CreateDraftIdeaDto): Promise<Idea> {
+  async createDraft(
+    createIdeaDraftDto: CreateDraftIdeaDto,
+    firebaseUid: string,
+  ): Promise<Idea> {
     if (!createIdeaDraftDto.challengeId) {
       throw new BadRequestException(
         'Selecciona un reto antes de guardar el borrador.',
       );
     }
+
+    const authorId = await this.resolveAuthorId(firebaseUid);
 
     const challenge = await this.challengeRepository.findById(
       createIdeaDraftDto.challengeId,
@@ -106,8 +157,8 @@ export class IdeaService {
         createIdeaDraftDto.solution ||
         'Pendiente de descripcion de la solucion propuesta.',
       tags: createIdeaDraftDto.tags || [],
-      isAnonymous: createIdeaDraftDto.isAnonymous || false,
-      authorId: createIdeaDraftDto.author,
+      isAnonymous: createIdeaDraftDto.isAnonymous ?? false,
+      authorId,
       challengeId: createIdeaDraftDto.challengeId,
       status: 'draft',
     };

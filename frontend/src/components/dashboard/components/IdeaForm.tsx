@@ -24,9 +24,9 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
 
   const checklist = [
     { label: 'Reto asignado', done: !!challenge },
-    { label: 'Nombre de la idea', done: form.ideaName.trim().length >= 5 },
-    { label: 'Problema definido', done: form.ideaProblem.trim().length >= 50 },
-    { label: 'Solución propuesta', done: form.ideaSolution.trim().length >= 50 },
+    { label: 'Nombre de la idea (10-15 palabras)', done: form.isTitleValid },
+    { label: 'Problema definido (100-150 palabras)', done: form.isProblemValid },
+    { label: 'Solución propuesta (150-200 palabras)', done: form.isSolutionValid },
     { label: 'Consentimientos', done: Object.values(form.consents).every(Boolean) },
   ];
 
@@ -108,7 +108,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
               <S.Field>
                 <S.FieldHeader>
                   <S.Label>Nombre y/o info básica de la idea</S.Label>
-                  <S.CharCounter>{form.ideaName.length}/{maxIdeaName}</S.CharCounter>
+                  <S.CharCounter>{form.titleWords} palabras ({form.minTitleWords}-{form.maxTitleWords})</S.CharCounter>
                 </S.FieldHeader>
                 <S.Tip>Usa un titular memorable de máximo {maxIdeaName} caracteres.</S.Tip>
                 <S.TextInput
@@ -128,7 +128,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
               <S.Field>
                 <S.FieldHeader>
                   <S.Label>El Problema</S.Label>
-                  <S.CharCounter>{form.ideaProblem.length}/{maxIdeaProblem}</S.CharCounter>
+                  <S.CharCounter>{form.problemWords} palabras ({form.minProblemWords}-{form.maxProblemWords})</S.CharCounter>
                 </S.FieldHeader>
                 <S.Tip>¿Qué dolor o necesidad detectaste en el entorno?</S.Tip>
                 <S.TextArea
@@ -149,9 +149,11 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
               <S.Field>
                 <S.FieldHeader>
                   <S.Label>La Propuesta</S.Label>
-                  <S.CharCounter>{form.ideaSolution.length}/{maxIdeaSolution}</S.CharCounter>
+                  <S.CharCounter>{form.solutionWords} palabras ({form.minSolutionWords}-{form.maxSolutionWords})</S.CharCounter>
                 </S.FieldHeader>
-                <S.Tip>¿Cómo funciona tu solución y cuál es su impacto?</S.Tip>
+                <S.Tip>
+                  ¿Cómo funciona tu solución y cuál es su impacto? Necesitas mínimo {form.minSolutionWords} palabras para poder lanzar el avión.
+                </S.Tip>
                 <S.TextArea
                   value={form.ideaSolution}
                   onChange={e => {
@@ -217,8 +219,8 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 <S.GhostButton type="button" onClick={() => form.handleIdeaSubmit('draft', challenge)} disabled={form.formSaving}>
                   {form.formSaving && form.savingAction === 'draft' ? 'Guardando...' : 'Guardar como borrador'}
                 </S.GhostButton>
-                <S.CTAButton type="submit" disabled={form.formSaving || !checklist.every(c => c.done)}>
-                  {form.formSaving && form.savingAction === 'public' ? 'Enviando...' : 'Compartir idea'}
+                <S.CTAButton type="submit" disabled={form.formSaving || !checklist.every(c => c.done) || form.solutionWords < form.minSolutionWords}>
+                  {form.formSaving && form.savingAction === 'public' ? 'Enviando...' : 'Lanzar Avión'}
                 </S.CTAButton>
               </S.ButtonRow>
               <S.ButtonHint>

@@ -23,7 +23,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
       exception instanceof HttpException
         ? (exception.getResponse() as
             | string
-            | { message?: string | string[]; error?: string })
+            | {
+                message?: string | string[];
+                error?: string;
+                details?: Record<string, string>;
+              })
         : {
             message:
               exception instanceof Error
@@ -42,6 +46,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       success: false,
       statusCode: status,
       message: message,
+      details:
+        typeof exceptionResponse === 'string'
+          ? undefined
+          : exceptionResponse.details,
       timestamp: new Date().toISOString(),
       path: request.url,
     });

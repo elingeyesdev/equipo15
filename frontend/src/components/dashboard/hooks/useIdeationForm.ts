@@ -2,9 +2,20 @@ import { useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { ideaService } from '../../../services/idea.service';
 import type { Challenge, UserProfile } from '../../../types/models';
+import {
+  IDEA_WORD_RULES,
+  countWords,
+  getWordRangeError,
+  isWordCountInRange,
+} from '../helpers/ideaValidation';
 
 export type ConsentKey = 'terms' | 'usage' | 'originality';
-export type FormErrorKey = 'challenge' | 'ideaName' | 'ideaProblem' | 'ideaSolution' | 'consents';
+export type FormErrorKey =
+  | 'challenge'
+  | 'ideaName'
+  | 'ideaProblem'
+  | 'ideaSolution'
+  | 'consents';
 export type FormErrors = Partial<Record<FormErrorKey, string>>;
 export type FeedbackTone = 'success' | 'error' | 'info' | 'critical';
 
@@ -27,7 +38,8 @@ const interpretBackendError = (error: unknown): FeedbackMessage => {
     return {
       tone: 'critical',
       title: 'Sin conexión',
-      message: 'Perdimos contacto con el servidor. Revisa tu red e inténtalo nuevamente.',
+      message:
+        'Perdimos contacto con el servidor. Revisa tu red e inténtalo nuevamente.',
       persist: true,
     };
   }
@@ -56,7 +68,8 @@ const interpretBackendError = (error: unknown): FeedbackMessage => {
     return {
       tone: 'critical',
       title: 'Servicio en pausa',
-      message: 'El hub está teniendo problemas. Estamos trabajando para restablecerlo.',
+      message:
+        'El hub está teniendo problemas. Estamos trabajando para restablecerlo.',
       persist: true,
     };
   }
@@ -68,9 +81,15 @@ const interpretBackendError = (error: unknown): FeedbackMessage => {
   };
 };
 
-export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, showToast: (p: FeedbackMessage) => void) => {
+export const useIdeationForm = (
+  profile: UserProfile | null,
+  isGuest: boolean,
+  showToast: (p: FeedbackMessage) => void,
+) => {
   const [formSaving, setFormSaving] = useState(false);
-  const [savingAction, setSavingAction] = useState<'draft' | 'public' | null>(null);
+  const [savingAction, setSavingAction] = useState<'draft' | 'public' | null>(
+    null,
+  );
   const [formFeedback, setFormFeedback] = useState<FeedbackMessage | null>(null);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [consentsTouched, setConsentsTouched] = useState(false);
@@ -85,12 +104,29 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
     originality: false,
   });
 
-  const minIdeaName = 5;
-  const minIdeaProblem = 50;
-  const minIdeaSolution = 50;
+  const minTitleWords = IDEA_WORD_RULES.title.min;
+  const maxTitleWords = IDEA_WORD_RULES.title.max;
+  const minProblemWords = IDEA_WORD_RULES.problem.min;
+  const maxProblemWords = IDEA_WORD_RULES.problem.max;
+  const minSolutionWords = IDEA_WORD_RULES.solution.min;
+  const maxSolutionWords = IDEA_WORD_RULES.solution.max;
   const maxTags = 6;
 
   const allConsentsAccepted = Object.values(consents).every(Boolean);
+  const titleWords = countWords(ideaName);
+  const problemWords = countWords(ideaProblem);
+  const solutionWords = countWords(ideaSolution);
+  const isTitleValid = isWordCountInRange(ideaName, minTitleWords, maxTitleWords);
+  const isProblemValid = isWordCountInRange(
+    ideaProblem,
+    minProblemWords,
+    maxProblemWords,
+  );
+  const isSolutionValid = isWordCountInRange(
+    ideaSolution,
+    minSolutionWords,
+    maxSolutionWords,
+  );
 
   const resetForm = () => {
     setIdeaName('');
@@ -111,12 +147,35 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
     });
   };
 
-  const getFieldError = (field: FormErrorKey, formChallenge: Challenge | null): string | undefined => {
-    if (field === 'challenge' && !formChallenge) return 'Selecciona un reto para vincular tu propuesta.';
-    if (field === 'ideaName' && ideaName.trim().length < minIdeaName) return `Ingresa al menos ${minIdeaName} caracteres.`;
-    if (field === 'ideaProblem' && ideaProblem.trim().length < minIdeaProblem) return `Describe el problema con al menos ${minIdeaProblem} caracteres.`;
-    if (field === 'ideaSolution' && ideaSolution.trim().length < minIdeaSolution) return `Explica la solución con al menos ${minIdeaSolution} caracteres.`;
-    if (field === 'consents' && !allConsentsAccepted) return 'Acepta los tres consentimientos (ejemplo: si “App para Bienestar Estudiantil” llega al laboratorio, debemos poder prototiparla citándote).';
+  const getFieldError = (
+    field: FormErrorKey,
+    formChallenge: Challenge | null,
+  ): string | undefined => {
+    if (field === 'challenge' && !formChallenge) {
+      return 'Selecciona un reto para vincular tu propuesta.';
+    }
+    if (field === 'ideaName') {
+      return getWordRangeError('El título', ideaName, minTitleWords, maxTitleWords);
+    }
+    if (field === 'ideaProblem') {
+      return getWordRangeError(
+        'El problema',
+        ideaProblem,
+        minProblemWords,
+        maxProblemWords,
+      );
+    }
+    if (field === 'ideaSolution') {
+      return getWordRangeError(
+        'La solución',
+        ideaSolution,
+        minSolutionWords,
+        maxSolutionWords,
+      );
+    }
+    if (field === 'consents' && !allConsentsAccepted) {
+      return 'Acepta los tres consentimientos (ejemplo: si “App para Bienestar Estudiantil” llega al laboratorio, debemos poder prototiparla citándote).';
+    }
     return undefined;
   };
 
@@ -133,7 +192,9 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
 
   const validatePublicSubmission = (formChallenge: Challenge | null): FormErrors => {
     const errors: FormErrors = {};
-    (['challenge', 'ideaName', 'ideaProblem', 'ideaSolution', 'consents'] as FormErrorKey[]).forEach(field => {
+    (
+      ['challenge', 'ideaName', 'ideaProblem', 'ideaSolution', 'consents'] as FormErrorKey[]
+    ).forEach(field => {
       const errorMessage = getFieldError(field, formChallenge);
       if (errorMessage) errors[field] = errorMessage;
     });
@@ -170,12 +231,16 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
     setConsentsTouched(true);
   };
 
-  const handleIdeaSubmit = async (targetStatus: 'draft' | 'public', formChallenge: Challenge | null): Promise<boolean> => {
+  const handleIdeaSubmit = async (
+    targetStatus: 'draft' | 'public',
+    formChallenge: Challenge | null,
+  ): Promise<boolean> => {
     if (!profile?.id) {
       const message = {
         tone: 'critical' as FeedbackTone,
         title: 'Perfil no disponible',
-        message: 'Necesitamos sincronizar tu sesión nuevamente antes de continuar.',
+        message:
+          'Necesitamos sincronizar tu sesión nuevamente antes de continuar.',
         persist: true,
       };
       setFormFeedback(message);
@@ -192,7 +257,8 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
     }
 
     const title = ideaName.trim();
-    const normalizedTags = () => Array.from(new Set(tags.map(tag => tag.trim()).filter(Boolean)));
+    const normalizedTags = () =>
+      Array.from(new Set(tags.map(tag => tag.trim()).filter(Boolean)));
 
     if (targetStatus === 'public') {
       const publicErrors = validatePublicSubmission(formChallenge);
@@ -220,7 +286,6 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
           problem: ideaProblem.trim() || undefined,
           solution: ideaSolution.trim() || undefined,
           tags: normalizedTags(),
-          author: profile.id,
           challengeId: formChallenge?.id,
           isAnonymous: isGuest,
         };
@@ -238,14 +303,14 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
           solution: ideaSolution.trim(),
           tags: normalizedTags(),
           status: targetStatus,
-          author: profile.id,
           challengeId: formChallenge.id,
           isAnonymous: isGuest,
         });
         const successMessage: FeedbackMessage = {
           tone: 'success',
           title: 'Idea enviada',
-          message: 'Tu propuesta ya está registrada. Te avisaremos si necesitamos más información.',
+          message:
+            'Tu propuesta ya está registrada. Te avisaremos si necesitamos más información.',
         };
         setFormFeedback(successMessage);
         showToast(successMessage);
@@ -253,9 +318,17 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
         success = true;
       }
     } catch (error: unknown) {
+      const backendDetails = (error as any)?.response?.data?.details as
+        | Partial<Record<FormErrorKey, string>>
+        | undefined;
+      if (backendDetails) {
+        setFormErrors(prev => ({ ...prev, ...backendDetails }));
+      }
       const interpreted = interpretBackendError(error);
       setFormFeedback(interpreted);
-      if (interpreted.persist || interpreted.tone === 'critical') showToast(interpreted);
+      if (interpreted.persist || interpreted.tone === 'critical') {
+        showToast(interpreted);
+      }
     } finally {
       setFormSaving(false);
       setSavingAction(null);
@@ -264,14 +337,43 @@ export const useIdeationForm = (profile: UserProfile | null, isGuest: boolean, s
   };
 
   return {
-    ideaName, setIdeaName,
-    ideaProblem, setIdeaProblem,
-    ideaSolution, setIdeaSolution,
-    tags, tagInput, setTagInput,
-    handleTagAddition, handleTagKeyDown, handleTagRemoval,
-    consents, toggleConsent, consentsTouched, setConsentsTouched,
-    formErrors, clearFieldError, validateField, validatePublicSubmission,
-    formSaving, savingAction, formFeedback, setFormFeedback,
-    handleIdeaSubmit, resetForm
+    ideaName,
+    setIdeaName,
+    ideaProblem,
+    setIdeaProblem,
+    ideaSolution,
+    setIdeaSolution,
+    titleWords,
+    problemWords,
+    solutionWords,
+    minTitleWords,
+    maxTitleWords,
+    minProblemWords,
+    maxProblemWords,
+    minSolutionWords,
+    maxSolutionWords,
+    isTitleValid,
+    isProblemValid,
+    isSolutionValid,
+    tags,
+    tagInput,
+    setTagInput,
+    handleTagAddition,
+    handleTagKeyDown,
+    handleTagRemoval,
+    consents,
+    toggleConsent,
+    consentsTouched,
+    setConsentsTouched,
+    formErrors,
+    clearFieldError,
+    validateField,
+    validatePublicSubmission,
+    formSaving,
+    savingAction,
+    formFeedback,
+    setFormFeedback,
+    handleIdeaSubmit,
+    resetForm,
   };
 };

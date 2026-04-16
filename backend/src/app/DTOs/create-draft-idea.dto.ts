@@ -14,9 +14,6 @@ export class CreateDraftIdeaDto {
   solution?: string;
 
   @IsString()
-  author!: string;
-
-  @IsString()
   @IsOptional()
   challengeId?: string;
 

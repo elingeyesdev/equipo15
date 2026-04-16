@@ -124,7 +124,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
 
             <S.TwoColumnRow style={{ marginBottom: '16px' }}>
               <S.FormGroup>
-                <S.FieldLabel>Contexto de la Empresa (Opcional)</S.FieldLabel>
+                <S.FieldLabel>Contexto de la Empresa</S.FieldLabel>
                 <S.Textarea 
                   placeholder="Cuéntanos un poco sobre tu empresa o el área del reto..."
                   rows={4}
@@ -135,7 +135,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
               </S.FormGroup>
 
               <S.FormGroup>
-                <S.FieldLabel>Reglas de Participación (Obligatorio)</S.FieldLabel>
+                <S.FieldLabel>Reglas de Participación</S.FieldLabel>
                 <S.Textarea 
                   placeholder="Ej: Solo estudiantes de 5to semestre, grupos de 3 personas, etc."
                   rows={4}

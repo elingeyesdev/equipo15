@@ -1,6 +1,6 @@
 import {
   IsString,
-  MinLength,
+  IsNotEmpty,
   IsArray,
   IsOptional,
   IsBoolean,
@@ -9,27 +9,19 @@ import {
 
 export class CreateIdeaDto {
   @IsString()
-  @MinLength(5)
+  @IsNotEmpty({ message: 'El título no puede estar vacío.' })
   title: string;
 
   @IsString()
-  @MinLength(50, {
-    message:
-      'Describe el problema con al menos 50 caracteres para dar contexto.',
-  })
+  @IsNotEmpty({ message: 'El problema no puede estar vacío.' })
   problem: string;
 
   @IsString()
-  @MinLength(50, {
-    message:
-      'La solución debe tener al menos 50 caracteres para ser evaluable.',
-  })
+  @IsNotEmpty({ message: 'La solución no puede estar vacía.' })
   solution: string;
 
   @IsString()
-  author: string;
-
-  @IsString()
+  @IsNotEmpty({ message: 'El challengeId es obligatorio.' })
   challengeId: string;
 
   @IsArray()
