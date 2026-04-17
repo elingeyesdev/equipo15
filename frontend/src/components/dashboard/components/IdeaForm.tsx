@@ -24,9 +24,9 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
 
   const checklist = [
     { label: 'Reto asignado', done: !!challenge },
-    { label: 'Nombre de la idea (10-15 palabras)', done: form.isTitleValid },
-    { label: 'Problema definido (100-150 palabras)', done: form.isProblemValid },
-    { label: 'Solución propuesta (150-200 palabras)', done: form.isSolutionValid },
+    { label: 'Nombre de la idea (5-20 palabras)', done: form.isTitleValid },
+    { label: 'Problema definido (20-200 palabras)', done: form.isProblemValid },
+    { label: 'Solución propuesta (30-200 palabras)', done: form.isSolutionValid },
     { label: 'Consentimientos', done: Object.values(form.consents).every(Boolean) },
   ];
 
@@ -79,7 +79,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 <S.MetaValue>{challenge?.title || 'Selecciona un reto'}</S.MetaValue>
                 {challenge && <S.MetaBadge>{challenge.category}</S.MetaBadge>}
                 <S.MetaFoot>
-                  {challenge ? `${challenge.ideas} ideas publicadas en este reto` : 'Elige un reto para asociar tu idea.'}
+                  {challenge ? `${challenge.ideasCount ?? 0} ideas publicadas en este reto` : 'Elige un reto para asociar tu idea.'}
                 </S.MetaFoot>
                 {form.formErrors.challenge && <S.MetaError>{form.formErrors.challenge}</S.MetaError>}
               </S.MetaCard>

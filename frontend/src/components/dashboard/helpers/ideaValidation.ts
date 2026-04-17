@@ -1,7 +1,7 @@
 export const IDEA_WORD_RULES = {
-  title: { min: 10, max: 15 },
-  problem: { min: 100, max: 150 },
-  solution: { min: 150, max: 200 },
+  title: { min: 5, max: 20 },
+  problem: { min: 20, max: 200 },
+  solution: { min: 30, max: 200 },
 } as const;
 
 export const countWords = (text: string): number =>
