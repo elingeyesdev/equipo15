@@ -11,6 +11,8 @@ interface RawIdea {
   _id?: string;
   id?: string;
   title: string;
+  problem?: string;
+  solution?: string;
   author?: { displayName?: string; facultyId?: number };
   likesCount?: number;
   commentsCount?: number;
@@ -26,6 +28,8 @@ const buildPlanes = (rawIdeas: RawIdea[]): PlaneIdea[] => {
     laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),
     floatDelay: (i % 5) * 0.4,
     authorFacultyId: idea.author?.facultyId,
+    problem: idea.problem,
+    solution: idea.solution,
   }));
 };
 
@@ -97,6 +101,8 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
           laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),
           floatDelay: (i % 5) * 0.4,
           authorFacultyId: rawIdea.author?.facultyId,
+          problem: rawIdea.problem,
+          solution: rawIdea.solution,
         };
         return [...prev, newPlane];
       });

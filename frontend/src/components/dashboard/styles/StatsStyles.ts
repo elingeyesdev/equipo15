@@ -66,7 +66,7 @@ export const SummaryLabel = styled.p`
 
 export const StatsColumns = styled.div`
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 0 20px;
   flex: 1;
 `;

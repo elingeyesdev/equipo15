@@ -6,16 +6,19 @@ import Plane from './Plane';
 import RaceOverlay from './RaceOverlay';
 import PodiumScreen from './PodiumScreen';
 import IdeasLoader from './IdeasLoader';
+import IdeaDetailModal from './components/IdeaDetailModal';
 import { useAuth } from '../../context/AuthContext';
 import { useWallSocket } from './useWallSocket';
 import { computeCanvasHeight } from './flight.engine';
 import { ideaService } from '../../services/idea.service';
-import type { WallPhase } from './types';
+import type { WallPhase, PlaneIdea } from './types';
 
 interface RawIdea {
   _id?: string;
   id?: string;
   title: string;
+  problem?: string;
+  solution?: string;
   author?: { displayName?: string };
   likesCount?: number;
   commentsCount?: number;
@@ -168,6 +171,7 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState(800);
   const [showPodium, setShowPodium] = useState(false);
+  const [selectedIdea, setSelectedIdea] = useState<PlaneIdea | null>(null);
   const { ideas, phase: socketPhase } = useWallSocket(token, initialIdeas);
 
   const phase: WallPhase = useMemo(() => {
@@ -220,7 +224,7 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
               </div>
             )}
             {ideas.map(idea => (
-              <Plane key={idea.id} idea={idea} canvasWidth={canvasWidth} phase={phase} challengeFacultyId={challengeFacultyId} />
+              <Plane key={idea.id} idea={idea} canvasWidth={canvasWidth} phase={phase} challengeFacultyId={challengeFacultyId} onClick={() => setSelectedIdea(idea)} />
             ))}
           </PlaneLayer>
 
@@ -240,6 +244,10 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
           {progress <= 8 && <ProgressLabel>Cargando ideas</ProgressLabel>}
         </ProgressBarContainer>
       )}
+
+      {selectedIdea && (
+        <IdeaDetailModal idea={selectedIdea} onClose={() => setSelectedIdea(null)} />
+      )}
     </SkyCanvasWrapper>
   );
 });
@@ -256,6 +264,8 @@ const extractRawIdeas = (payload: unknown): RawIdea[] => {
       _id: typeof item._id === 'string' ? item._id : undefined,
       id: typeof item.id === 'string' ? item.id : undefined,
       title: typeof item.title === 'string' ? item.title : 'Idea sin titulo',
+      problem: typeof item.problem === 'string' ? item.problem : undefined,
+      solution: typeof item.solution === 'string' ? item.solution : undefined,
       author: typeof item.author === 'object' && item.author !== null
         ? {
           displayName: typeof (item.author as { displayName?: unknown }).displayName === 'string'

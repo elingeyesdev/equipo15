@@ -34,8 +34,12 @@ const PlaneWrapper = styled.div<{
       ? css`${raceFly} 2.2s cubic-bezier(0.4, 0, 1, 1) forwards`
       : css`${float} 3s ease-in-out ${p.$delay}s infinite`};
   z-index: ${p => Math.floor(p.$y)};
-  cursor: default;
+  cursor: ${p => p.onClick ? 'pointer' : 'default'};
   user-select: none;
+  
+  &:hover {
+    transform: ${p => p.onClick ? 'scale(1.05)' : 'none'};
+  }
 `;
 
 const AvatarLabel = styled.div<{ $size: number }>`
@@ -73,6 +77,7 @@ interface PlaneProps {
   canvasWidth: number;
   phase: WallPhase;
   challengeFacultyId?: number;
+  onClick?: () => void;
 }
 
 const FACULTY_HUE_MAP: Record<number, number> = {
@@ -85,7 +90,7 @@ const FACULTY_HUE_MAP: Record<number, number> = {
 };
 
 const Plane = memo(
-  ({ idea, canvasWidth, phase, challengeFacultyId }: PlaneProps) => {
+  ({ idea, canvasWidth, phase, challengeFacultyId, onClick }: PlaneProps) => {
     const size = useMemo(() => computeSize(idea.likesCount), [idea.likesCount]);
     const x = useMemo(
       () => {
@@ -103,7 +108,7 @@ const Plane = memo(
       : 0;
 
     return (
-      <PlaneWrapper $x={x} $y={idea.laneY} $size={size} $delay={idea.floatDelay} $isRacing={isRacing}>
+      <PlaneWrapper $x={x} $y={idea.laneY} $size={size} $delay={idea.floatDelay} $isRacing={isRacing} onClick={onClick}>
         <PlaneImage src={planeImg} alt={idea.title} $hueRotate={hueRotate} />
         <AvatarLabel $size={size}>{idea.title.slice(0, 24)}</AvatarLabel>
       </PlaneWrapper>

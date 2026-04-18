@@ -7,6 +7,8 @@ export interface PlaneIdea {
   laneY: number;
   floatDelay: number;
   authorFacultyId?: number;
+  problem?: string;
+  solution?: string;
 }
 
 export type WallPhase = 'active' | 'race' | 'podium';

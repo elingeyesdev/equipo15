@@ -72,4 +72,9 @@ export const ideaService = {
     const response = await axiosInstance.post('/ideas/drafts', payload);
     return response.data;
   },
+
+  voteIdea: async (ideaId: string) => {
+    const response = await axiosInstance.post(`/ideas/${ideaId}/like`);
+    return response.data;
+  },
 };

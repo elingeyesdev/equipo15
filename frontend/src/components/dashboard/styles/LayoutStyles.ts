@@ -59,7 +59,7 @@ export const HamburgerBtn = styled.button`
 
 export const MainGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1.5rem;
   animation: ${fadeUp} 0.4s 0.1s ease both;
   @media (max-width: 980px) {
