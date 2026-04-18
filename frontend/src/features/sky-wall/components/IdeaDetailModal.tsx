@@ -253,7 +253,7 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
           </SectionBlock>
 
           <SectionBlock>
-            <LikeButton ideaId={idea.id} initialLikes={idea.likesCount} />
+            <LikeButton ideaId={idea.id} initialLikes={idea.likesCount} hasVoted={idea.hasVoted} />
           </SectionBlock>
 
           <SectionBlock>

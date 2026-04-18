@@ -9,6 +9,7 @@ export interface PlaneIdea {
   authorFacultyId?: number;
   problem?: string;
   solution?: string;
+  hasVoted?: boolean;
 }
 
 export type WallPhase = 'active' | 'race' | 'podium';
@@ -18,6 +19,7 @@ export interface IdeaUpdatedPayload {
   likesCount: number;
   commentsCount: number;
 }
+
 export interface IdeaVotedPayload {
   ideaId: string;
   likesCount: number;

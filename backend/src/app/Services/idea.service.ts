@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException, Logger } from '@nestjs/common';
 import { IdeaRepository } from '../Repositories/idea.repository';
 import { ChallengeRepository } from '../Repositories/challenge.repository';
 import { UserRepository } from '../Repositories/user.repository';
@@ -232,8 +232,13 @@ export class IdeaService {
     return updatedIdea;
   }
 
-  async addLike(ideaId: string): Promise<Idea | null> {
-    const updated = await this.ideaRepository.incrementLikes(ideaId);
+  async addLike(ideaId: string, firebaseUid: string): Promise<Idea | null> {
+    const userId = await this.resolveAuthorId(firebaseUid);
+    const alreadyVoted = await this.ideaRepository.checkLike(ideaId, userId);
+    if (alreadyVoted) {
+      throw new ConflictException('Ya has votado por esta idea');
+    }
+    const updated = await this.ideaRepository.registerLikeAndIncrement(ideaId, userId);
     if (updated) {
       this.eventsGateway.server.emit('idea:voted', { 
         ideaId: updated.id, 

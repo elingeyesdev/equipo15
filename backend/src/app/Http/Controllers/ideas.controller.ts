@@ -76,7 +76,10 @@ export class IdeasController {
 
   @Post(':id/like')
   @ApiOperation({ summary: 'Like or unlike an idea' })
-  addLike(@Param('id') id: string) {
-    return this.ideaService.addLike(id);
+  addLike(
+    @Param('id') id: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.ideaService.addLike(id, request.user.uid);
   }
 }

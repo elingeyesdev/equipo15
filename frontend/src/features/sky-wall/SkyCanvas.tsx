@@ -27,6 +27,7 @@ interface RawIdea {
   likesCount?: number;
   commentsCount?: number;
   isAnonymous?: boolean;
+  hasVoted?: boolean;
 }
 
 const generateClouds = (height: number) => {
@@ -292,6 +293,7 @@ const extractRawIdeas = (payload: unknown): RawIdea[] => {
       likesCount: typeof item.likesCount === 'number' ? item.likesCount : 0,
       commentsCount: typeof item.commentsCount === 'number' ? item.commentsCount : 0,
       isAnonymous: typeof item.isAnonymous === 'boolean' ? item.isAnonymous : false,
+      hasVoted: typeof item.hasVoted === 'boolean' ? item.hasVoted : false,
     }));
 };
 

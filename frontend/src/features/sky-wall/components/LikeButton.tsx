@@ -51,9 +51,10 @@ const Count = styled.span<{ $hasVoted: boolean }>`
 interface LikeButtonProps {
   ideaId: string;
   initialLikes: number;
+  hasVoted?: boolean;
 }
 
-const getInitialVoted = (id: string) => {
+const getLocalVoted = (id: string) => {
   try {
     const votedIdeas = JSON.parse(localStorage.getItem('pista8_voted_ideas') || '[]');
     return votedIdeas.includes(id);
@@ -62,7 +63,7 @@ const getInitialVoted = (id: string) => {
   }
 };
 
-const saveVoted = (id: string) => {
+const saveLocalVoted = (id: string) => {
   try {
     const votedIdeas = JSON.parse(localStorage.getItem('pista8_voted_ideas') || '[]');
     if (!votedIdeas.includes(id)) {
@@ -72,29 +73,44 @@ const saveVoted = (id: string) => {
   } catch {}
 };
 
-export const LikeButton = ({ ideaId, initialLikes }: LikeButtonProps) => {
+const isConflictError = (error: unknown): boolean => {
+  const status = (error as any)?.response?.status;
+  return status === 409;
+};
+
+export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted }: LikeButtonProps) => {
   const [likes, setLikes] = useState(initialLikes);
-  const [hasVoted, setHasVoted] = useState(() => getInitialVoted(ideaId));
+  const [hasVoted, setHasVoted] = useState(() => serverVoted || getLocalVoted(ideaId));
   const [isVoting, setIsVoting] = useState(false);
 
   useEffect(() => {
     setLikes(initialLikes);
   }, [initialLikes]);
 
-  const handleVote = async () => {
-    if (hasVoted || isVoting) {
-      if (hasVoted) toast.error('Ya apoyaste este avión');
-      return;
+  useEffect(() => {
+    if (serverVoted) {
+      setHasVoted(true);
+      saveLocalVoted(ideaId);
     }
+  }, [serverVoted, ideaId]);
+
+  const handleVote = async () => {
+    if (hasVoted || isVoting) return;
     setIsVoting(true);
     try {
       await ideaService.voteIdea(ideaId);
       setHasVoted(true);
-      saveVoted(ideaId);
+      saveLocalVoted(ideaId);
       setLikes(prev => prev + 1);
       toast.success('Voto registrado');
-    } catch {
-      toast.error('Hubo un error al registrar tu voto.');
+    } catch (error: unknown) {
+      if (isConflictError(error)) {
+        setHasVoted(true);
+        saveLocalVoted(ideaId);
+        toast.info('Ya apoyaste este avion');
+      } else {
+        toast.error('Hubo un error al registrar tu voto.');
+      }
     } finally {
       setIsVoting(false);
     }

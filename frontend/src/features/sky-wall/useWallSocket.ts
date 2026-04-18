@@ -17,6 +17,7 @@ interface RawIdea {
   likesCount?: number;
   commentsCount?: number;
   isAnonymous?: boolean;
+  hasVoted?: boolean;
 }
 
 const buildPlanes = (rawIdeas: RawIdea[]): PlaneIdea[] => {
@@ -31,6 +32,7 @@ const buildPlanes = (rawIdeas: RawIdea[]): PlaneIdea[] => {
     authorFacultyId: idea.author?.facultyId,
     problem: idea.problem,
     solution: idea.solution,
+    hasVoted: idea.hasVoted ?? false,
   }));
 };
 

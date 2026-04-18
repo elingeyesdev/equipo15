@@ -75,11 +75,24 @@ export class IdeaRepository {
     });
   }
 
-  async incrementLikes(id: string): Promise<Idea> {
-    return this.prisma.idea.update({
-      where: { id },
-      data: { likesCount: { increment: 1 } },
+  async checkLike(ideaId: string, userId: string): Promise<boolean> {
+    const existing = await this.prisma.ideaLike.findUnique({
+      where: { ideaId_userId: { ideaId, userId } },
     });
+    return existing !== null;
+  }
+
+  async registerLikeAndIncrement(ideaId: string, userId: string): Promise<Idea> {
+    const [, updated] = await this.prisma.$transaction([
+      this.prisma.ideaLike.create({
+        data: { ideaId, userId },
+      }),
+      this.prisma.idea.update({
+        where: { id: ideaId },
+        data: { likesCount: { increment: 1 } },
+      }),
+    ]);
+    return updated;
   }
 
   async incrementComments(id: string): Promise<Idea> {
