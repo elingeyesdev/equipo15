@@ -3,6 +3,7 @@ import styled, { keyframes, css } from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 import { ideaService } from '../../../services/idea.service';
 import { toast } from 'sonner';
+import type { AxiosLikeError } from '../types';
 
 const pop = keyframes`
   0%   { transform: scale(1); }
@@ -74,8 +75,8 @@ const saveLocalVoted = (id: string) => {
 };
 
 const isConflictError = (error: unknown): boolean => {
-  const status = (error as any)?.response?.status;
-  return status === 409;
+  const axiosError = error as AxiosLikeError;
+  return axiosError?.response?.status === 409;
 };
 
 export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted }: LikeButtonProps) => {

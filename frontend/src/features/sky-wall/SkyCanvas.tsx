@@ -11,24 +11,9 @@ import { useAuth } from '../../context/AuthContext';
 import { useWallSocket } from './useWallSocket';
 import { computeCanvasHeight } from './flight.engine';
 import { ideaService } from '../../services/idea.service';
-import type { WallPhase, PlaneIdea } from './types';
+import { extractRawIdeas } from './raw-idea.parser';
+import type { WallPhase, PlaneIdea, RawIdea } from './types';
 
-interface RawIdea {
-  _id?: string;
-  id?: string;
-  title: string;
-  problem?: string;
-  solution?: string;
-  author?: {
-    displayName?: string;
-    email?: string;
-    facultyId?: number;
-  };
-  likesCount?: number;
-  commentsCount?: number;
-  isAnonymous?: boolean;
-  hasVoted?: boolean;
-}
 
 const generateClouds = (height: number) => {
   const clouds = [];
@@ -265,37 +250,7 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
 
 SkyCanvasScene.displayName = 'SkyCanvasScene';
 
-const extractRawIdeas = (payload: unknown): RawIdea[] => {
-  const candidate = (payload as { data?: unknown } | null)?.data ?? payload;
-  if (!candidate || !Array.isArray(candidate)) return [];
 
-  return candidate
-    .filter((item): item is RawIdea => typeof item === 'object' && item !== null)
-    .map((item) => ({
-      _id: typeof item._id === 'string' ? item._id : undefined,
-      id: typeof item.id === 'string' ? item.id : undefined,
-      title: typeof item.title === 'string' ? item.title : 'Idea sin titulo',
-      problem: typeof item.problem === 'string' ? item.problem : undefined,
-      solution: typeof item.solution === 'string' ? item.solution : undefined,
-      author: typeof item.author === 'object' && item.author !== null
-        ? {
-          displayName: typeof (item.author as any).displayName === 'string'
-            ? (item.author as any).displayName
-            : undefined,
-          email: typeof (item.author as any).email === 'string'
-            ? (item.author as any).email
-            : undefined,
-          facultyId: typeof (item.author as any).facultyId === 'number'
-            ? (item.author as any).facultyId
-            : undefined
-        }
-        : undefined,
-      likesCount: typeof item.likesCount === 'number' ? item.likesCount : 0,
-      commentsCount: typeof item.commentsCount === 'number' ? item.commentsCount : 0,
-      isAnonymous: typeof item.isAnonymous === 'boolean' ? item.isAnonymous : false,
-      hasVoted: typeof item.hasVoted === 'boolean' ? item.hasVoted : false,
-    }));
-};
 
 const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading }: SkyCanvasProps) => {
   const [token, setToken] = useState<string>();

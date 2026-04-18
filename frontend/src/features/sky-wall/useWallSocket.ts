@@ -1,24 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
-import type { PlaneIdea, WallPhase, IdeaUpdatedPayload, IdeaVotedPayload } from './types';
+import type { PlaneIdea, WallPhase, IdeaUpdatedPayload, IdeaVotedPayload, RawIdea } from './types';
 import { LANE_HEIGHT_PER_IDEA, TOP_PADDING } from './flight.engine';
 
 const DEFAULT_SOCKET_URL = 'http://localhost:3000';
 const DEBOUNCE_MS = 200;
-
-interface RawIdea {
-  _id?: string;
-  id?: string;
-  title: string;
-  problem?: string;
-  solution?: string;
-  author?: { displayName?: string; email?: string; facultyId?: number };
-  likesCount?: number;
-  commentsCount?: number;
-  isAnonymous?: boolean;
-  hasVoted?: boolean;
-}
 
 const buildPlanes = (rawIdeas: RawIdea[]): PlaneIdea[] => {
   return rawIdeas.map((idea, i) => ({
@@ -74,7 +61,6 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
   useEffect(() => {
     if (!token) return;
 
-
     let socketURL = import.meta.env.VITE_API_URL
       ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
       : DEFAULT_SOCKET_URL;
@@ -126,7 +112,6 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
     socket.on('timer:sync', ({ serverTime }: { serverTime: number }) => {
       const offset = serverTime - Date.now();
       setServerTimeOffset(offset);
-      console.debug('[Pista8] Timer Sincronizado. Offset:', offset, 'ms');
     });
 
     return () => {
@@ -137,3 +122,4 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
 
   return { ideas, phase, serverTimeOffset };
 };
+

@@ -59,9 +59,10 @@ export class IdeasController {
   findAll(
     @Query('public') isPublic?: string,
     @Query() paginationDto?: PaginationDto,
+    @Req() request?: AuthenticatedRequest,
   ) {
     if (isPublic === 'true') {
-      return this.ideaService.findAllPublic(paginationDto);
+      return this.ideaService.findAllPublic(paginationDto, request?.user?.uid);
     }
     return this.ideaService.findAll(paginationDto);
   }

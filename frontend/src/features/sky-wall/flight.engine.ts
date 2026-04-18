@@ -36,7 +36,7 @@ export const computeCanvasHeight = (ideaCount: number): number => {
   return Math.max(MIN_CANVAS_HEIGHT, total);
 };
 
-export const assignLanes = (count: number, _canvasHeight: number): number[] => {
+export const assignLanes = (count: number): number[] => {
   if (count === 0) return [];
   return Array.from({ length: count }, (_, i) => TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA));
 };

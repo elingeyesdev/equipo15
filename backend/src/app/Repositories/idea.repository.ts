@@ -1,6 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../Providers/database.service';
-import { Idea } from '@prisma/client';
+import { Idea, Prisma } from '@prisma/client';
+
+interface IdeaWhereInput {
+  challengeId?: string;
+  status?: string;
+}
+
+export interface IdeaWithVoteStatus extends Idea {
+  hasVoted: boolean;
+}
 
 @Injectable()
 export class IdeaRepository {
@@ -11,7 +20,7 @@ export class IdeaRepository {
     take?: number,
     challengeId?: string,
   ): Promise<{ data: Idea[]; total: number }> {
-    const where: any = {};
+    const where: IdeaWhereInput = {};
     if (challengeId) where.challengeId = challengeId;
     
     const [data, total] = await this.prisma.$transaction([
@@ -33,8 +42,9 @@ export class IdeaRepository {
     skip?: number,
     take?: number,
     challengeId?: string,
-  ): Promise<{ data: Idea[]; total: number }> {
-    const where: any = { status: 'public' };
+    userId?: string,
+  ): Promise<{ data: IdeaWithVoteStatus[]; total: number }> {
+    const where: IdeaWhereInput = { status: 'public' };
     if (challengeId) where.challengeId = challengeId;
     
     const [data, total] = await this.prisma.$transaction([
@@ -45,11 +55,23 @@ export class IdeaRepository {
         include: {
           author: { select: { displayName: true, role: true, facultyId: true } },
           challenge: true,
+          ideaLikes: userId
+            ? { where: { userId }, select: { id: true } }
+            : false,
         },
       }),
       this.prisma.idea.count({ where }),
     ]);
-    return { data, total };
+
+    const enriched: IdeaWithVoteStatus[] = data.map((idea) => {
+      const { ideaLikes, ...rest } = idea as Idea & { ideaLikes?: { id: string }[] };
+      return {
+        ...rest,
+        hasVoted: Array.isArray(ideaLikes) && ideaLikes.length > 0,
+      };
+    });
+
+    return { data: enriched, total };
   }
 
   async findById(id: string): Promise<Idea | null> {
@@ -62,24 +84,17 @@ export class IdeaRepository {
     });
   }
 
-  async create(data: any): Promise<Idea> {
+  async create(data: Prisma.IdeaCreateInput | Prisma.IdeaUncheckedCreateInput): Promise<Idea> {
     return this.prisma.idea.create({
-      data,
+      data: data as Prisma.IdeaUncheckedCreateInput,
     });
   }
 
-  async update(id: string, data: any): Promise<Idea> {
+  async update(id: string, data: Prisma.IdeaUpdateInput): Promise<Idea> {
     return this.prisma.idea.update({
       where: { id },
       data,
     });
-  }
-
-  async checkLike(ideaId: string, userId: string): Promise<boolean> {
-    const existing = await this.prisma.ideaLike.findUnique({
-      where: { ideaId_userId: { ideaId, userId } },
-    });
-    return existing !== null;
   }
 
   async registerLikeAndIncrement(ideaId: string, userId: string): Promise<Idea> {

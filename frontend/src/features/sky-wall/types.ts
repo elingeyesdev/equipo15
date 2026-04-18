@@ -25,3 +25,28 @@ export interface IdeaVotedPayload {
   likesCount: number;
   challengeId: string;
 }
+
+export interface RawAuthor {
+  displayName?: string;
+  email?: string;
+  facultyId?: number;
+}
+
+export interface RawIdea {
+  _id?: string;
+  id?: string;
+  title: string;
+  problem?: string;
+  solution?: string;
+  author?: RawAuthor;
+  likesCount?: number;
+  commentsCount?: number;
+  isAnonymous?: boolean;
+  hasVoted?: boolean;
+}
+
+export interface AxiosLikeError {
+  response?: {
+    status: number;
+  };
+}

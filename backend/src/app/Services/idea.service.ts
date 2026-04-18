@@ -128,8 +128,6 @@ export class IdeaService {
     this.logger.log(
       `Nueva idea creada (Híbrida): "${createdIdea.title}" para el reto: ${challenge.title}`,
     );
-    
-    // Emitir evento para carga en tiempo real (mural)
     if (createdIdea.status === 'public') {
       const ideaWithRelations = await this.ideaRepository.findById(createdIdea.id);
       if (ideaWithRelations) {
@@ -206,7 +204,7 @@ export class IdeaService {
     };
   }
 
-  async findAllPublic(paginationDto?: PaginationDto) {
+  async findAllPublic(paginationDto?: PaginationDto, firebaseUid?: string) {
     const limit = paginationDto?.limit
       ? Number(paginationDto.limit)
       : undefined;
@@ -215,7 +213,13 @@ export class IdeaService {
         ? (Number(paginationDto.page) - 1) * limit
         : undefined;
 
-    const { data, total } = await this.ideaRepository.findPublic(skip, limit, paginationDto?.challengeId);
+    let userId: string | undefined;
+    if (firebaseUid) {
+      const user = await this.userRepository.findByUid(firebaseUid);
+      userId = user?.id;
+    }
+
+    const { data, total } = await this.ideaRepository.findPublic(skip, limit, paginationDto?.challengeId, userId);
     return {
       data,
       meta: {
@@ -234,19 +238,22 @@ export class IdeaService {
 
   async addLike(ideaId: string, firebaseUid: string): Promise<Idea | null> {
     const userId = await this.resolveAuthorId(firebaseUid);
-    const alreadyVoted = await this.ideaRepository.checkLike(ideaId, userId);
-    if (alreadyVoted) {
-      throw new ConflictException('Ya has votado por esta idea');
-    }
-    const updated = await this.ideaRepository.registerLikeAndIncrement(ideaId, userId);
-    if (updated) {
-      this.eventsGateway.server.emit('idea:voted', { 
-        ideaId: updated.id, 
+    try {
+      const updated = await this.ideaRepository.registerLikeAndIncrement(ideaId, userId);
+      this.eventsGateway.server.emit('idea:voted', {
+        ideaId: updated.id,
         likesCount: updated.likesCount,
-        challengeId: updated.challengeId
+        challengeId: updated.challengeId,
       });
+      return updated;
+    } catch (error: unknown) {
+      const isPrismaUniqueViolation =
+        error instanceof Error && 'code' in error && (error as { code: string }).code === 'P2002';
+      if (isPrismaUniqueViolation) {
+        throw new ConflictException('Ya has votado por esta idea');
+      }
+      throw error;
     }
-    return updated;
   }
 
   async addComment(ideaId: string): Promise<Idea | null> {
