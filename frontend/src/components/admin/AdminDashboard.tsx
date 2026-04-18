@@ -44,7 +44,6 @@ export const AdminDashboard = () => {
               handleStartDateChange={ds.handleStartDateChange}
               copyToClipboard={ds.copyToClipboard}
               copyStatus={ds.copyStatus}
-              isFormValid={ds.isFormValid}
               formErrors={ds.formErrors}
               submitted={ds.submitted}
               setSubmitted={ds.setSubmitted}

@@ -63,10 +63,7 @@ export const useAdminDashboard = () => {
   useEffect(() => {
     const errors: Record<string, string | null> = {};
 
-    const textValidator = new Validator([
-      new RequiredValidation(),
-      new NoRepetitiveCharactersValidation(5)
-    ]);
+
 
     const titleValidator = new Validator([
       new RequiredValidation(),

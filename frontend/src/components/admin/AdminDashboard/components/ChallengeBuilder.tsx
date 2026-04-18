@@ -15,7 +15,6 @@ interface ChallengeBuilderProps {
   handleStartDateChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   copyToClipboard: () => void;
   copyStatus: boolean;
-  isFormValid: boolean;
   formErrors: Record<string, string | null>;
   submitted: boolean;
   setSubmitted: (b: boolean) => void;
@@ -25,7 +24,7 @@ interface ChallengeBuilderProps {
 
 const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
   userProfile, showForm, setShowForm, isPreview, setIsPreview, formData, setFormData,
-  togglePrivacy, handleStartDateChange, copyToClipboard, copyStatus, isFormValid, formErrors,
+  togglePrivacy, handleStartDateChange, copyToClipboard, copyStatus, formErrors,
   submitted, setSubmitted, handleSaveChallenge, saving
 }) => {
   const today = new Date().toISOString().split('T')[0];
