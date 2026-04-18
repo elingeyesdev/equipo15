@@ -119,6 +119,32 @@ export class DateRangeValidation implements ValidationStrategy {
   }
 }
 
+export class NoNumbersValidation implements ValidationStrategy {
+  validate(value: unknown): string | null {
+    if (typeof value !== 'string' || value.length === 0) return null;
+    if (/\d/.test(value)) {
+      return 'Este campo no permite números. Utiliza únicamente texto descriptivo.';
+    }
+    return null;
+  }
+}
+
+export class NoExcessiveSymbolsValidation implements ValidationStrategy {
+  private maxRatio: number;
+  constructor(maxRatio = 0.3) {
+    this.maxRatio = maxRatio;
+  }
+  validate(value: unknown): string | null {
+    if (typeof value !== 'string' || value.length === 0) return null;
+    const cleanChars = value.match(/[a-záéíóúüñA-ZÁÉÍÓÚÜÑ\s.,;:¿?¡!()\-"']/g) || [];
+    const ratio = cleanChars.length / value.length;
+    if (ratio < (1 - this.maxRatio)) {
+      return 'El texto contiene demasiados símbolos o caracteres especiales.';
+    }
+    return null;
+  }
+}
+
 export class Validator {
   private strategies: ValidationStrategy[];
   constructor(strategies: ValidationStrategy[]) {

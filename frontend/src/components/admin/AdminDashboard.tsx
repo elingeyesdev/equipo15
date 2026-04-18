@@ -46,6 +46,8 @@ export const AdminDashboard = () => {
               copyStatus={ds.copyStatus}
               isFormValid={ds.isFormValid}
               formErrors={ds.formErrors}
+              submitted={ds.submitted}
+              setSubmitted={ds.setSubmitted}
               handleSaveChallenge={ds.handleSaveChallenge}
               saving={ds.saving}
             />

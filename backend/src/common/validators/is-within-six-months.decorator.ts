@@ -24,6 +24,9 @@ export function IsWithinSixMonths(property: string, validationOptions?: Validati
           const startDate = new Date(relatedValue);
           const endDate = new Date(value);
 
+          // Rechazar si endDate es anterior a startDate
+          if (endDate < startDate) return false;
+
           const timeDiff = endDate.getTime() - startDate.getTime();
           const daysDiff = timeDiff / (1000 * 3600 * 24);
 
@@ -31,7 +34,7 @@ export function IsWithinSixMonths(property: string, validationOptions?: Validati
           return daysDiff <= 180;
         },
         defaultMessage(args: ValidationArguments) {
-          return 'El Reto no puede tener una duración mayor a 6 meses (180 días) desde su fecha de inicio.';
+          return 'La fecha de cierre debe ser posterior a la de inicio y no exceder 6 meses (180 días).';
         }
       },
     });

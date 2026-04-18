@@ -17,6 +17,8 @@ interface ChallengeBuilderProps {
   copyStatus: boolean;
   isFormValid: boolean;
   formErrors: Record<string, string | null>;
+  submitted: boolean;
+  setSubmitted: (b: boolean) => void;
   handleSaveChallenge: (status: 'Borrador' | 'Activo') => Promise<boolean>;
   saving: boolean;
 }
@@ -24,8 +26,9 @@ interface ChallengeBuilderProps {
 const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
   userProfile, showForm, setShowForm, isPreview, setIsPreview, formData, setFormData,
   togglePrivacy, handleStartDateChange, copyToClipboard, copyStatus, isFormValid, formErrors,
-  handleSaveChallenge, saving
+  submitted, setSubmitted, handleSaveChallenge, saving
 }) => {
+  const today = new Date().toISOString().split('T')[0];
   if (!showForm) {
     return (
       <S.EmptyState>
@@ -94,7 +97,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
                 />
-                {formErrors.title && <S.ErrorText>{formErrors.title}</S.ErrorText>}
+                {submitted && formErrors.title && <S.ErrorText>{formErrors.title}</S.ErrorText>}
               </S.FormGroup>
 
               <S.FormGroup>
@@ -119,7 +122,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
               />
-              {formErrors.description && <S.ErrorText>{formErrors.description}</S.ErrorText>}
+              {submitted && formErrors.description && <S.ErrorText>{formErrors.description}</S.ErrorText>}
             </S.FormGroup>
 
             <S.TwoColumnRow style={{ marginBottom: '16px' }}>
@@ -131,7 +134,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                   value={formData.companyContext}
                   onChange={(e) => setFormData({...formData, companyContext: e.target.value})}
                 />
-                {formErrors.companyContext && <S.ErrorText>{formErrors.companyContext}</S.ErrorText>}
+                {submitted && formErrors.companyContext && <S.ErrorText>{formErrors.companyContext}</S.ErrorText>}
               </S.FormGroup>
 
               <S.FormGroup>
@@ -142,7 +145,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                   value={formData.participationRules}
                   onChange={(e) => setFormData({...formData, participationRules: e.target.value})}
                 />
-                {formErrors.participationRules && <S.ErrorText>{formErrors.participationRules}</S.ErrorText>}
+                {submitted && formErrors.participationRules && <S.ErrorText>{formErrors.participationRules}</S.ErrorText>}
               </S.FormGroup>
             </S.TwoColumnRow>
 
@@ -179,8 +182,8 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
             <S.DateRow>
               <S.FormGroup style={{ marginBottom: 0 }}>
                 <S.FieldLabel>Fecha de Inicio del Reto</S.FieldLabel>
-                <S.Input type="date" value={formData.startDate} onChange={handleStartDateChange} />
-                {formErrors.startDate && <S.ErrorText>{formErrors.startDate}</S.ErrorText>}
+                <S.Input type="date" value={formData.startDate} min={today} onChange={handleStartDateChange} />
+                {submitted && formErrors.startDate && <S.ErrorText>{formErrors.startDate}</S.ErrorText>}
               </S.FormGroup>
               <S.FormGroup style={{ marginBottom: 0 }}>
                 <S.FieldLabel>Fecha de Cierre</S.FieldLabel>
@@ -189,12 +192,12 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                   value={formData.endDate} 
                   onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                 />
-                {formErrors.dates && <S.ErrorText>{formErrors.dates}</S.ErrorText>}
+                {submitted && formErrors.dates && <S.ErrorText>{formErrors.dates}</S.ErrorText>}
               </S.FormGroup>
             </S.DateRow>
 
             <S.FormActions>
-              <S.GhostBtn type="button" onClick={() => setShowForm(false)} disabled={saving}>
+              <S.GhostBtn type="button" onClick={() => { setSubmitted(false); setShowForm(false); }} disabled={saving}>
                 Cancelar
               </S.GhostBtn>
               <S.DraftBtn 
@@ -207,7 +210,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
               <S.PrimaryBtn 
                 type="button" 
                 onClick={() => handleSaveChallenge('Activo')} 
-                disabled={saving || !isFormValid}
+                disabled={saving}
               >
                 {saving ? 'Publicando...' : 'Publicar Reto'}
               </S.PrimaryBtn>

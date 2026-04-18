@@ -5,7 +5,8 @@ import { challengeService } from '../../../../services/challenge.service';
 import type { Challenge, ChallengeStatus } from '../../../../types/models';
 import { 
   Validator, RequiredValidation, MaxLengthValidation, MinLengthValidation, 
-  NoRepetitiveCharactersValidation, DateRangeValidation 
+  NoRepetitiveCharactersValidation, DateRangeValidation,
+  NoNumbersValidation, NoExcessiveSymbolsValidation
 } from '../../../../components/Form/ValidationStrategies';
 
 export const useAdminDashboard = () => {
@@ -13,6 +14,7 @@ export const useAdminDashboard = () => {
   const [showForm, setShowForm] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
   const [copyStatus, setCopyStatus] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loadingChallenges, setLoadingChallenges] = useState(false);
 
@@ -70,19 +72,36 @@ export const useAdminDashboard = () => {
       new RequiredValidation(),
       new MinLengthValidation(10),
       new MaxLengthValidation(100),
-      new NoRepetitiveCharactersValidation(5)
+      new NoRepetitiveCharactersValidation(5),
+      new NoNumbersValidation(),
+      new NoExcessiveSymbolsValidation(0.3)
     ]);
     
     const descValidator = new Validator([
       new RequiredValidation(),
       new MinLengthValidation(200),
-      new NoRepetitiveCharactersValidation(5)
+      new NoRepetitiveCharactersValidation(5),
+      new NoNumbersValidation(),
+      new NoExcessiveSymbolsValidation(0.3)
+    ]);
+
+    const textValidatorNoNumbers = new Validator([
+      new RequiredValidation(),
+      new NoRepetitiveCharactersValidation(5),
+      new NoNumbersValidation(),
+      new NoExcessiveSymbolsValidation(0.3)
+    ]);
+
+    const rulesValidator = new Validator([
+      new RequiredValidation(),
+      new NoRepetitiveCharactersValidation(5),
+      new NoExcessiveSymbolsValidation(0.3)
     ]);
 
     errors.title = titleValidator.validate(formData.title);
     errors.description = descValidator.validate(formData.description);
-    errors.companyContext = textValidator.validate(formData.companyContext);
-    errors.participationRules = textValidator.validate(formData.participationRules);
+    errors.companyContext = textValidatorNoNumbers.validate(formData.companyContext);
+    errors.participationRules = rulesValidator.validate(formData.participationRules);
 
     const dateValidator = new Validator([
       new DateRangeValidation(7)
@@ -142,9 +161,12 @@ export const useAdminDashboard = () => {
   const [saving, setSaving] = useState(false);
 
   const handleSaveChallenge = async (status: ChallengeStatus) => {
-    if (status === 'Activo' && !isFormValid) {
+    if (status === 'Activo') {
+      setSubmitted(true);
+      if (!isFormValid) {
         toast.error('Corrija los errores del formulario antes de publicar.');
         return false;
+      }
     }
 
     setSaving(true);
@@ -172,6 +194,7 @@ export const useAdminDashboard = () => {
       await challengeService.createChallenge(payload as any);
       if (status === 'Activo') {
         setShowForm(false);
+        setSubmitted(false);
         setFormData({
           title: '',
           description: '',
@@ -214,6 +237,8 @@ export const useAdminDashboard = () => {
     handleLogout,
     isFormValid,
     formErrors,
+    submitted,
+    setSubmitted,
     handleSaveChallenge,
     saving,
     challenges,
