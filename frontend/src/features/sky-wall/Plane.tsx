@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-import { computeSize, computeXPosition } from './flight.engine';
+import { computeSize, computeXPosition, computeScale, computeFloatDuration } from './flight.engine';
 import type { PlaneIdea, WallPhase } from './types';
 import planeImg from '../../assets/logo_avion.png';
 
@@ -19,7 +19,10 @@ const PlaneWrapper = styled.div<{
   $x: number;
   $y: number;
   $size: number;
+  $floatDuration: number;
   $delay: number;
+  $scale: number;
+  $zIndex: number;
   $isRacing: boolean;
 }>`
   position: absolute;
@@ -28,17 +31,22 @@ const PlaneWrapper = styled.div<{
   width: ${p => p.$size}px;
   height: ${p => p.$size}px;
   --plane-x: ${p => p.$x + 20}px;
-  transition: all 0.4s ease-out;
+  transform: scale(${p => p.$scale});
+  transform-origin: center center;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+              width 0.6s ease-out,
+              height 0.6s ease-out;
   animation: ${p =>
     p.$isRacing
       ? css`${raceFly} 2.2s cubic-bezier(0.4, 0, 1, 1) forwards`
-      : css`${float} 3s ease-in-out ${p.$delay}s infinite`};
-  z-index: ${p => Math.floor(p.$y)};
+      : css`${float} ${p.$floatDuration}s ease-in-out ${p.$delay}s infinite`};
+  z-index: ${p => p.$zIndex};
   cursor: ${p => p.onClick ? 'pointer' : 'default'};
   user-select: none;
+  will-change: transform;
   
   &:hover {
-    transform: ${p => p.onClick ? 'scale(1.05)' : 'none'};
+    transform: scale(${p => p.$scale * 1.05});
   }
 `;
 
@@ -81,17 +89,21 @@ interface PlaneProps {
 }
 
 const FACULTY_HUE_MAP: Record<number, number> = {
-  1: 180, // Ingeniería (Azul)
-  2: 300, // Ciencias y Tecnología (Rosa/Morado)
-  3: 150, // Humanidades (Cian/Verde azulado)
-  4: 90,  // Medicina (Verde)
-  5: 240, // Derecho (Púrpura/Azul oscuro)
-  6: 45,  // Arquitectura (Amarillo)
+  1: 180,
+  2: 300,
+  3: 150,
+  4: 90,
+  5: 240,
+  6: 45,
 };
+
+const BASE_Z_INDEX = 10;
 
 const Plane = memo(
   ({ idea, canvasWidth, phase, challengeFacultyId, onClick }: PlaneProps) => {
     const size = useMemo(() => computeSize(idea.likesCount), [idea.likesCount]);
+    const scale = useMemo(() => computeScale(idea.likesCount), [idea.likesCount]);
+    const floatDuration = useMemo(() => computeFloatDuration(idea.likesCount), [idea.likesCount]);
     const x = useMemo(
       () => {
         const base = computeXPosition(idea.commentsCount, canvasWidth);
@@ -100,15 +112,24 @@ const Plane = memo(
       [idea.commentsCount, canvasWidth, size],
     );
     const isRacing = phase === 'race';
-    
-    // Si el reto es para todos (no tiene una facultad definida específica)
-    // cada avión toma el color de la facultad de su autor.
+    const zIndex = BASE_Z_INDEX + idea.likesCount;
+
     const hueRotate = (!challengeFacultyId && idea.authorFacultyId) 
       ? (FACULTY_HUE_MAP[idea.authorFacultyId] || 0) 
       : 0;
 
     return (
-      <PlaneWrapper $x={x} $y={idea.laneY} $size={size} $delay={idea.floatDelay} $isRacing={isRacing} onClick={onClick}>
+      <PlaneWrapper
+        $x={x}
+        $y={idea.laneY}
+        $size={size}
+        $floatDuration={floatDuration}
+        $delay={idea.floatDelay}
+        $scale={scale}
+        $zIndex={zIndex}
+        $isRacing={isRacing}
+        onClick={onClick}
+      >
         <PlaneImage src={planeImg} alt={idea.title} $hueRotate={hueRotate} />
         <AvatarLabel $size={size}>{idea.title.slice(0, 24)}</AvatarLabel>
       </PlaneWrapper>
