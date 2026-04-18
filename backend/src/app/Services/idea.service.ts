@@ -128,6 +128,15 @@ export class IdeaService {
     this.logger.log(
       `Nueva idea creada (Híbrida): "${createdIdea.title}" para el reto: ${challenge.title}`,
     );
+    
+    // Emitir evento para carga en tiempo real (mural)
+    if (createdIdea.status === 'public') {
+      const ideaWithRelations = await this.ideaRepository.findById(createdIdea.id);
+      if (ideaWithRelations) {
+        this.eventsGateway.server.emit('idea_created', ideaWithRelations);
+      }
+    }
+
     return createdIdea;
   }
 

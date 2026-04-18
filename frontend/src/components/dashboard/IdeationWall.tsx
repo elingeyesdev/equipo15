@@ -43,25 +43,35 @@ const IdeationWall = () => {
 
       <S.Page>
         <S.Header>
-          <S.WelcomeZone>
-            <S.Greeting>Hola, {userRole} <span>{firstName}</span></S.Greeting>
-            <S.Sub>¿Listo para despegar tu próxima gran idea?</S.Sub>
-            
-            {ds.profileError && (
-              <div style={{ 
-                margin: '12px 0 0', 
-                padding: '8px 16px', 
-                background: '#fff5f5', 
-                color: '#e53e3e', 
-                borderRadius: '8px', 
-                fontSize: '12px',
-                border: '1px solid #feb2b2',
-                fontWeight: '600'
-              }}>
-                {ds.profileError}
-              </div>
-            )}
-          </S.WelcomeZone>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <svg viewBox="0 0 280 72" xmlns="http://www.w3.org/2000/svg" width="110" height="28">
+              <text x="0" y="60" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="64" fill="#1a1f22" letterSpacing="-2">PIST</text>
+              <polygon points="186,7 202,40 195,40 195,62 179,62 179,40 172,40" fill="#FE410A" />
+              <rect x="181" y="65" width="5" height="8" rx="2" fill="#FE410A" />
+              <rect x="189" y="65" width="5" height="8" rx="2" fill="#FE410A" />
+              <rect x="197" y="65" width="5" height="8" rx="2" fill="#FE410A" />
+              <text x="209" y="60" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="64" fill="#1a1f22">8</text>
+            </svg>
+            <S.WelcomeZone>
+              <S.Greeting>Hola, {userRole} <span>{firstName}</span></S.Greeting>
+              <S.Sub>¿Listo para despegar tu próxima gran idea?</S.Sub>
+              
+              {ds.profileError && (
+                <div style={{ 
+                  margin: '12px 0 0', 
+                  padding: '8px 16px', 
+                  background: '#fff5f5', 
+                  color: '#e53e3e', 
+                  borderRadius: '8px', 
+                  fontSize: '12px',
+                  border: '1px solid #feb2b2',
+                  fontWeight: '600'
+                }}>
+                  {ds.profileError}
+                </div>
+              )}
+            </S.WelcomeZone>
+          </div>
 
           <S.HamburgerBtn onClick={() => ds.setSidebarOpen(true)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -72,7 +82,11 @@ const IdeationWall = () => {
           </S.HamburgerBtn>
         </S.Header>
 
-        <SkyCanvas challengeId={ds.selectedChallenge?.id} />
+        <SkyCanvas 
+          challengeId={ds.selectedChallenge?.id} 
+          challengeFacultyId={ds.selectedChallenge?.facultyId ?? undefined}
+          isDashboardLoading={ds.loading}
+        />
 
         <S.MainGrid>
           <ChallengeList

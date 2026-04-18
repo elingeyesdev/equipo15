@@ -59,12 +59,12 @@ const flyIn = keyframes`
   100% { opacity: 1; transform: translateX(0) scale(1); }
 `;
 
-const PlaneImage = styled.img`
+const PlaneImage = styled.img<{ $hueRotate: number }>`
   width: 100%;
   height: 100%;
   display: block;
   object-fit: contain;
-  filter: drop-shadow(0 6px 10px rgba(255, 64, 0, 0.24));
+  filter: drop-shadow(0 6px 10px rgba(255, 64, 0, 0.24)) ${p => p.$hueRotate ? `hue-rotate(${p.$hueRotate}deg)` : ''};
   animation: ${flyIn} 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 `;
 
@@ -72,10 +72,20 @@ interface PlaneProps {
   idea: PlaneIdea;
   canvasWidth: number;
   phase: WallPhase;
+  challengeFacultyId?: number;
 }
 
+const FACULTY_HUE_MAP: Record<number, number> = {
+  1: 180, // Ingeniería (Azul)
+  2: 300, // Ciencias y Tecnología (Rosa/Morado)
+  3: 150, // Humanidades (Cian/Verde azulado)
+  4: 90,  // Medicina (Verde)
+  5: 240, // Derecho (Púrpura/Azul oscuro)
+  6: 45,  // Arquitectura (Amarillo)
+};
+
 const Plane = memo(
-  ({ idea, canvasWidth, phase }: PlaneProps) => {
+  ({ idea, canvasWidth, phase, challengeFacultyId }: PlaneProps) => {
     const size = useMemo(() => computeSize(idea.likesCount), [idea.likesCount]);
     const x = useMemo(
       () => {
@@ -85,10 +95,16 @@ const Plane = memo(
       [idea.commentsCount, canvasWidth, size],
     );
     const isRacing = phase === 'race';
+    
+    // Si el reto es para todos (no tiene una facultad definida específica)
+    // cada avión toma el color de la facultad de su autor.
+    const hueRotate = (!challengeFacultyId && idea.authorFacultyId) 
+      ? (FACULTY_HUE_MAP[idea.authorFacultyId] || 0) 
+      : 0;
 
     return (
       <PlaneWrapper $x={x} $y={idea.laneY} $size={size} $delay={idea.floatDelay} $isRacing={isRacing}>
-        <PlaneImage src={planeImg} alt={idea.title} />
+        <PlaneImage src={planeImg} alt={idea.title} $hueRotate={hueRotate} />
         <AvatarLabel $size={size}>{idea.title.slice(0, 24)}</AvatarLabel>
       </PlaneWrapper>
     );

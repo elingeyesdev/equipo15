@@ -153,43 +153,33 @@ export class ChallengeRepository {
   }
 
   async getChallengeImpactStats(challengeId: string) {
-    const agg = await this.prisma.idea.aggregate({
-      where: { challengeId, status: 'public' },
-      _count: true,
-      _sum: { likesCount: true, commentsCount: true },
-    });
-    
-    const ideas = await this.prisma.idea.findMany({
-       where: { challengeId, status: 'public' },
-       select: {
-          author: {
-             select: {
-                facultyId: true,
-             }
-          }
-       }
-    });
+    const [agg, ideas, allAuthors, topIdeas] = await Promise.all([
+      this.prisma.idea.aggregate({
+        where: { challengeId, status: 'public' },
+        _count: true,
+        _sum: { likesCount: true, commentsCount: true },
+      }),
+      this.prisma.idea.findMany({
+         where: { challengeId, status: 'public' },
+         select: {
+            author: { select: { facultyId: true } }
+         }
+      }),
+      this.prisma.user.findMany({
+         where: {
+            ideas: { some: { challengeId, status: 'public' } }
+         },
+         select: { id: true, displayName: true, role: { select: { name: true } }, email: true }
+      }),
+      this.prisma.idea.findMany({
+         where: { challengeId, status: 'public' },
+         orderBy: [ { likesCount: 'desc' }, { commentsCount: 'desc' } ],
+         take: 5,
+         select: { id: true, title: true, likesCount: true, commentsCount: true }
+      })
+    ]);
 
     const uniqueFaculties = new Set(ideas.map(i => i.author?.facultyId).filter(f => f != null));
-    
-    const allAuthors = await this.prisma.user.findMany({
-       where: {
-          ideas: {
-             some: { challengeId, status: 'public' }
-          }
-       },
-       select: { id: true, displayName: true, role: { select: { name: true } }, email: true }
-    });
-
-    const topIdeas = await this.prisma.idea.findMany({
-       where: { challengeId, status: 'public' },
-       orderBy: [
-          { likesCount: 'desc' },
-          { commentsCount: 'desc' }
-       ],
-       take: 5,
-       select: { id: true, title: true, likesCount: true, commentsCount: true }
-    });
 
     return {
        totalIdeas: agg._count || 0,

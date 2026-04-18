@@ -1,7 +1,7 @@
 import React from 'react';
 import * as S from '../styles/StatsStyles';
 
-import { Reorder, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface StatsPanelProps {
   selectedChallenge: any;
@@ -57,13 +57,11 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
 
             <S.StatsCol>
               <S.ColLabel>Líderes de la Pista</S.ColLabel>
-              <Reorder.Group axis="y" values={topIdeas} onReorder={() => { }} style={{ padding: 0, margin: 0 }}>
+              <ul style={{ padding: 0, margin: 0 }}>
                 <AnimatePresence>
                   {topIdeas.map((idea: any, i: number) => (
-                    <Reorder.Item
+                    <motion.li
                       key={idea.id}
-                      value={idea}
-                      id={idea.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0 }}
@@ -75,10 +73,10 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
                         <S.PodiumTitle>{idea.title}</S.PodiumTitle>
                         <S.PodiumImpact>♥ {idea.impact}</S.PodiumImpact>
                       </S.PodiumItem>
-                    </Reorder.Item>
+                    </motion.li>
                   ))}
                 </AnimatePresence>
-              </Reorder.Group>
+              </ul>
               {topIdeas.length === 0 && <S.StatsSub style={{ textAlign: 'center', marginTop: '20px' }}>No hay ideas en vuelo.</S.StatsSub>}
             </S.StatsCol>
           </S.StatsColumns>

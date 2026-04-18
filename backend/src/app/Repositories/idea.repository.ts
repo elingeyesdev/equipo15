@@ -20,7 +20,7 @@ export class IdeaRepository {
         skip,
         take,
         include: {
-          author: { select: { displayName: true, role: true } },
+          author: { select: { displayName: true, role: true, facultyId: true } },
           challenge: true,
         },
       }),
@@ -43,7 +43,7 @@ export class IdeaRepository {
         skip,
         take,
         include: {
-          author: { select: { displayName: true, role: true } },
+          author: { select: { displayName: true, role: true, facultyId: true } },
           challenge: true,
         },
       }),

@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../config/theme';
 import Cloud from './Cloud';
 import Plane from './Plane';
@@ -38,26 +38,91 @@ const generateClouds = (height: number) => {
   return clouds;
 };
 
-const ProgressBar = styled.div<{ $progress: number }>`
+const ProgressBarContainer = styled.div`
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
-  height: 4px;
-  background: linear-gradient(90deg, ${Pista8Theme.primary}, #fff);
-  width: ${p => p.$progress}%;
-  transition: width 0.3s ease;
+  width: 100%;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(6px);
   z-index: 100;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.5);
+`;
+
+const ProgressBar = styled.div<{ $progress: number }>`
+  height: 100%;
+  width: ${p => p.$progress}%;
+  background: linear-gradient(
+    90deg,
+    ${Pista8Theme.primary}90,
+    ${Pista8Theme.primary},
+    #ff7b00,
+    ${Pista8Theme.primary}
+  );
+  background-size: 300% 100%;
+  animation: ${keyframes`
+    0%   { background-position: 100% center; }
+    100% { background-position: -100% center; }
+  `} 1.8s linear infinite;
+  transition: width 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 40px;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.25));
+    border-radius: 0 2px 2px 0;
+  }
+`;
+
+const ProgressText = styled.span`
+  color: white;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+  position: relative;
+  z-index: 1;
+`;
+
+const ProgressLabel = styled.span`
+  position: absolute;
+  right: 12px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(72, 80, 84, 0.45);
+  white-space: nowrap;
+  pointer-events: none;
+`;
+
+const SkyCanvasWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  margin-bottom: 3.5rem;
+  border-radius: 24px;
+  overflow: hidden;
 `;
 
 const ScrollableSkyContainer = styled.div`
   max-height: 500px;
   overflow-y: auto;
   overflow-x: hidden;
-  border-radius: 24px;
-  margin-bottom: 3.5rem;
   width: 100%;
-  position: relative;
 `;
 
 const Sky = styled.div<{ $height: number }>`
@@ -85,6 +150,8 @@ const PlaneLayer = styled.div`
 interface SkyCanvasProps {
   initialIdeas?: RawIdea[];
   challengeId?: string;
+  challengeFacultyId?: number;
+  isDashboardLoading?: boolean;
 }
 
 interface SkyCanvasSceneProps {
@@ -93,9 +160,11 @@ interface SkyCanvasSceneProps {
   isLoading?: boolean;
   progress?: number;
   challengeId?: string;
+  challengeFacultyId?: number;
+  isDashboardLoading?: boolean;
 }
 
-const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress = 0, challengeId }: SkyCanvasSceneProps) => {
+const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress = 0, challengeId, challengeFacultyId, isDashboardLoading = false }: SkyCanvasSceneProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState(800);
   const [showPodium, setShowPodium] = useState(false);
@@ -123,45 +192,55 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
   const handleShowPodium = useCallback(() => setShowPodium(true), []);
 
   return (
-    <ScrollableSkyContainer>
-      {isLoading && <ProgressBar $progress={progress} />}
-      <Sky ref={containerRef} $height={canvasHeight}>
-        <CloudLayer>
-          {clouds.map((c, i) => (
-            <Cloud key={i} y={c.y} scale={c.scale} duration={c.duration} delay={c.delay} rtl={c.rtl} />
-          ))}
-        </CloudLayer>
+    <SkyCanvasWrapper>
+      <ScrollableSkyContainer>
+        <Sky ref={containerRef} $height={canvasHeight}>
+          <CloudLayer>
+            {clouds.map((c, i) => (
+              <Cloud key={i} y={c.y} scale={c.scale} duration={c.duration} delay={c.delay} rtl={c.rtl} />
+            ))}
+          </CloudLayer>
 
-        <PlaneLayer>
-          {isLoading && <IdeasLoader />}
-          {!isLoading && ideas.length === 0 && (
-            <div style={{
-              width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexDirection: 'column', color: 'rgba(72, 80, 84, 0.6)', fontWeight: 600, fontSize: '15px'
-            }}>
-              {!challengeId ? (
-                <>
-                  Selecciona un reto del panel izquierdo para ver las ideas
-                </>
-              ) : (
-                <>
-                  Aún no hay ideas en este reto. ¡Sé el primero en volar!
-                </>
-              )}
-            </div>
+          <PlaneLayer>
+            {(isLoading || isDashboardLoading) && <IdeasLoader />}
+            {!(isLoading || isDashboardLoading) && ideas.length === 0 && (
+              <div style={{
+                width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexDirection: 'column', color: 'rgba(72, 80, 84, 0.6)', fontWeight: 600, fontSize: '15px'
+              }}>
+                {!challengeId ? (
+                  <>
+                    No hay retos activos en tu tripulación. ¡Regresa más tarde!
+                  </>
+                ) : (
+                  <>
+                    Aún no hay ideas en este reto. ¡Sé el primero en volar!
+                  </>
+                )}
+              </div>
+            )}
+            {ideas.map(idea => (
+              <Plane key={idea.id} idea={idea} canvasWidth={canvasWidth} phase={phase} challengeFacultyId={challengeFacultyId} />
+            ))}
+          </PlaneLayer>
+
+          {phase === 'race' && !showPodium && (
+            <RaceOverlay onShowPodium={handleShowPodium} />
           )}
-          {ideas.map(idea => (
-            <Plane key={idea.id} idea={idea} canvasWidth={canvasWidth} phase={phase} />
-          ))}
-        </PlaneLayer>
 
-        {phase === 'race' && !showPodium && (
-          <RaceOverlay onShowPodium={handleShowPodium} />
-        )}
+          {showPodium && <PodiumScreen ideas={ideas} />}
+        </Sky>
+      </ScrollableSkyContainer>
 
-        {showPodium && <PodiumScreen ideas={ideas} />}
-      </Sky>
-    </ScrollableSkyContainer>
+      {isLoading && (
+        <ProgressBarContainer>
+          <ProgressBar $progress={progress}>
+            {progress > 8 && <ProgressText>{Math.round(progress)}%</ProgressText>}
+          </ProgressBar>
+          {progress <= 8 && <ProgressLabel>Cargando ideas</ProgressLabel>}
+        </ProgressBarContainer>
+      )}
+    </SkyCanvasWrapper>
   );
 });
 
@@ -189,7 +268,7 @@ const extractRawIdeas = (payload: unknown): RawIdea[] => {
     }));
 };
 
-const SkyCanvas = memo(({ challengeId }: SkyCanvasProps) => {
+const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading }: SkyCanvasProps) => {
   const [token, setToken] = useState<string>();
   const [publicIdeas, setPublicIdeas] = useState<RawIdea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -220,8 +299,10 @@ const SkyCanvas = memo(({ challengeId }: SkyCanvasProps) => {
 
 
     if (!challengeId) {
-      setIsLoading(false);
-      setProgress(100);
+      if (!isDashboardLoading) {
+        setIsLoading(false);
+        setProgress(100);
+      }
       return;
     }
 
@@ -256,10 +337,10 @@ const SkyCanvas = memo(({ challengeId }: SkyCanvasProps) => {
             if (loaded === total) {
               const hideTimer = window.setTimeout(() => {
                 if (active) setIsLoading(false);
-              }, 500);
+              }, 400);
               timeouts.push(hideTimer);
             }
-          }, index * 300);
+          }, index * 120);
           timeouts.push(t);
         });
       } catch (loadError: unknown) {
@@ -277,7 +358,7 @@ const SkyCanvas = memo(({ challengeId }: SkyCanvasProps) => {
     };
   }, [challengeId]);
 
-  return <SkyCanvasScene initialIdeas={publicIdeas} token={token} isLoading={isLoading} progress={progress} challengeId={challengeId} />;
+  return <SkyCanvasScene initialIdeas={publicIdeas} token={token} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} />;
 });
 
 SkyCanvas.displayName = 'SkyCanvas';

@@ -11,7 +11,7 @@ interface RawIdea {
   _id?: string;
   id?: string;
   title: string;
-  author?: { displayName?: string };
+  author?: { displayName?: string; facultyId?: number };
   likesCount?: number;
   commentsCount?: number;
 }
@@ -25,6 +25,7 @@ const buildPlanes = (rawIdeas: RawIdea[]): PlaneIdea[] => {
     commentsCount: idea.commentsCount ?? 0,
     laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),
     floatDelay: (i % 5) * 0.4,
+    authorFacultyId: idea.author?.facultyId,
   }));
 };
 
@@ -81,6 +82,24 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
     socket.on('idea:updated', (payload: IdeaUpdatedPayload) => {
       pendingUpdates.current.set(payload.id, payload);
       scheduleFlush();
+    });
+
+    socket.on('idea_created', (rawIdea: RawIdea) => {
+      setIdeas(prev => {
+        if (prev.some(p => p.id === rawIdea.id || p.id === rawIdea._id)) return prev;
+        const i = prev.length;
+        const newPlane: PlaneIdea = {
+          id: rawIdea.id ?? rawIdea._id ?? String(i),
+          title: rawIdea.title,
+          authorName: rawIdea.author?.displayName ?? 'Anónimo',
+          likesCount: rawIdea.likesCount ?? 0,
+          commentsCount: rawIdea.commentsCount ?? 0,
+          laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),
+          floatDelay: (i % 5) * 0.4,
+          authorFacultyId: rawIdea.author?.facultyId,
+        };
+        return [...prev, newPlane];
+      });
     });
 
     socket.on('challenge:close', () => {

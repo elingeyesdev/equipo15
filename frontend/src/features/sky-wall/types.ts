@@ -6,6 +6,7 @@ export interface PlaneIdea {
   commentsCount: number;
   laneY: number;
   floatDelay: number;
+  authorFacultyId?: number;
 }
 
 export type WallPhase = 'active' | 'race' | 'podium';
