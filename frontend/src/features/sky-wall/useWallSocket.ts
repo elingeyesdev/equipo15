@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
-import type { PlaneIdea, WallPhase, IdeaUpdatedPayload } from './types';
+import type { PlaneIdea, WallPhase, IdeaUpdatedPayload, IdeaVotedPayload } from './types';
 import { LANE_HEIGHT_PER_IDEA, TOP_PADDING } from './flight.engine';
 
 const DEFAULT_SOCKET_URL = 'http://localhost:3000';
@@ -86,6 +86,14 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
     socket.on('idea:updated', (payload: IdeaUpdatedPayload) => {
       pendingUpdates.current.set(payload.id, payload);
       scheduleFlush();
+    });
+
+    socket.on('idea:voted', (payload: IdeaVotedPayload) => {
+      setIdeas(prev => prev.map(idea => 
+        idea.id === payload.ideaId 
+          ? { ...idea, likesCount: payload.likesCount } 
+          : idea
+      ));
     });
 
     socket.on('idea_created', (rawIdea: RawIdea) => {

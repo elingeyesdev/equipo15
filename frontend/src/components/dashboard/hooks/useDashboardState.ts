@@ -47,7 +47,7 @@ export const useDashboardState = () => {
         let mapped: Challenge[] = rawData.map((c: any) => ({
           ...c,
           ideasCount: c._count?.ideas || 0,
-          likesCount: (c._count?.ideas || 0) * 4,
+          likesCount: c.ideas?.reduce((sum: number, idea: any) => sum + (idea.likesCount || 0), 0) || 0,
           category: getFacultySlug(c.facultyId || null),
           badge: c.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
         }));
@@ -61,6 +61,8 @@ export const useDashboardState = () => {
               if (!exists) {
                 const mappedPrivate = {
                   ...privateChallengeRaw,
+                  ideasCount: privateChallengeRaw._count?.ideas || privateChallengeRaw.ideas?.length || 0,
+                  likesCount: privateChallengeRaw.ideas?.reduce((sum: number, idea: any) => sum + (idea.likesCount || 0), 0) || 0,
                   category: getFacultySlug(privateChallengeRaw.facultyId || null),
                   badge: privateChallengeRaw.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
                 };

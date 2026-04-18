@@ -235,7 +235,10 @@ export class IdeaService {
   async addLike(ideaId: string): Promise<Idea | null> {
     const updated = await this.ideaRepository.incrementLikes(ideaId);
     if (updated) {
-      this.eventsGateway.server.emit('idea_liked', { challengeId: updated.challengeId, ideaId: updated.id });
+      this.eventsGateway.server.emit('idea:voted', { 
+        ideaId: updated.id, 
+        likesCount: updated.likesCount 
+      });
     }
     return updated;
   }

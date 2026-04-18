@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 import { ideaService } from '../../../services/idea.service';
@@ -76,6 +76,10 @@ export const LikeButton = ({ ideaId, initialLikes }: LikeButtonProps) => {
   const [likes, setLikes] = useState(initialLikes);
   const [hasVoted, setHasVoted] = useState(() => getInitialVoted(ideaId));
   const [isVoting, setIsVoting] = useState(false);
+
+  useEffect(() => {
+    setLikes(initialLikes);
+  }, [initialLikes]);
 
   const handleVote = async () => {
     if (hasVoted || isVoting) {

@@ -28,7 +28,7 @@ const PlaneWrapper = styled.div<{
   width: ${p => p.$size}px;
   height: ${p => p.$size}px;
   --plane-x: ${p => p.$x + 20}px;
-  transition: left 0.9s cubic-bezier(0.4, 0, 0.2, 1), width 0.8s ease, top 0.4s ease;
+  transition: all 0.4s ease-out;
   animation: ${p =>
     p.$isRacing
       ? css`${raceFly} 2.2s cubic-bezier(0.4, 0, 1, 1) forwards`

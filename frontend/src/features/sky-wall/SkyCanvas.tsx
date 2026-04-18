@@ -178,6 +178,11 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
     return socketPhase === 'race' ? 'race' : 'active';
   }, [socketPhase]);
 
+  const currentSelectedIdea = useMemo(() => {
+    if (!selectedIdea) return null;
+    return ideas.find(i => i.id === selectedIdea.id) || selectedIdea;
+  }, [selectedIdea, ideas]);
+
   const canvasHeight = useMemo(() => computeCanvasHeight(ideas.length), [ideas.length]);
   const clouds = useMemo(() => generateClouds(canvasHeight), [canvasHeight]);
 
@@ -245,8 +250,8 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
         </ProgressBarContainer>
       )}
 
-      {selectedIdea && (
-        <IdeaDetailModal idea={selectedIdea} onClose={() => setSelectedIdea(null)} />
+      {currentSelectedIdea && (
+        <IdeaDetailModal idea={currentSelectedIdea} onClose={() => setSelectedIdea(null)} />
       )}
     </SkyCanvasWrapper>
   );

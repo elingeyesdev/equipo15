@@ -18,3 +18,7 @@ export interface IdeaUpdatedPayload {
   likesCount: number;
   commentsCount: number;
 }
+export interface IdeaVotedPayload {
+  ideaId: string;
+  likesCount: number;
+}

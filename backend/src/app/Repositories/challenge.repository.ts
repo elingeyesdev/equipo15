@@ -46,6 +46,9 @@ export class ChallengeRepository {
           _count: {
             select: { ideas: true },
           },
+          ideas: {
+            select: { likesCount: true },
+          },
         },
       }),
       this.prisma.challenge.count({ where }),
