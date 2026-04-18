@@ -21,4 +21,5 @@ export interface IdeaUpdatedPayload {
 export interface IdeaVotedPayload {
   ideaId: string;
   likesCount: number;
+  challengeId: string;
 }

@@ -51,6 +51,7 @@ const ModalBanner = styled.div`
   flex-direction: column;
   align-items: center;
   text-align: center;
+  flex-shrink: 0;
 `;
 
 const BannerDots = styled.div`
@@ -134,6 +135,7 @@ const Body = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 0;
+  flex-shrink: 0;
 `;
 
 const SectionBlock = styled.div`

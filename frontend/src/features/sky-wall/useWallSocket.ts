@@ -13,16 +13,17 @@ interface RawIdea {
   title: string;
   problem?: string;
   solution?: string;
-  author?: { displayName?: string; facultyId?: number };
+  author?: { displayName?: string; email?: string; facultyId?: number };
   likesCount?: number;
   commentsCount?: number;
+  isAnonymous?: boolean;
 }
 
 const buildPlanes = (rawIdeas: RawIdea[]): PlaneIdea[] => {
   return rawIdeas.map((idea, i) => ({
     id: idea.id ?? idea._id ?? String(i),
     title: idea.title,
-    authorName: idea.author?.displayName ?? 'Anónimo',
+    authorName: idea.isAnonymous ? 'Anónimo' : (idea.author?.displayName || idea.author?.email || 'Anónimo'),
     likesCount: idea.likesCount ?? 0,
     commentsCount: idea.commentsCount ?? 0,
     laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),
@@ -102,8 +103,8 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
         const i = prev.length;
         const newPlane: PlaneIdea = {
           id: rawIdea.id ?? rawIdea._id ?? String(i),
-          title: rawIdea.title,
-          authorName: rawIdea.author?.displayName ?? 'Anónimo',
+          title: rawIdea.title || 'Idea sin título',
+          authorName: rawIdea.isAnonymous ? 'Anónimo' : (rawIdea.author?.displayName || rawIdea.author?.email || 'Anónimo'),
           likesCount: rawIdea.likesCount ?? 0,
           commentsCount: rawIdea.commentsCount ?? 0,
           laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),

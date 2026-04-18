@@ -37,6 +37,7 @@ export interface Challenge {
   category?: string;
   badge?: string;
   ideasCount?: number;
+  likesCount?: number;
 }
 
 export interface PaginatedResponse<T> {

@@ -19,9 +19,14 @@ interface RawIdea {
   title: string;
   problem?: string;
   solution?: string;
-  author?: { displayName?: string };
+  author?: {
+    displayName?: string;
+    email?: string;
+    facultyId?: number;
+  };
   likesCount?: number;
   commentsCount?: number;
+  isAnonymous?: boolean;
 }
 
 const generateClouds = (height: number) => {
@@ -273,13 +278,20 @@ const extractRawIdeas = (payload: unknown): RawIdea[] => {
       solution: typeof item.solution === 'string' ? item.solution : undefined,
       author: typeof item.author === 'object' && item.author !== null
         ? {
-          displayName: typeof (item.author as { displayName?: unknown }).displayName === 'string'
-            ? (item.author as { displayName?: string }).displayName
+          displayName: typeof (item.author as any).displayName === 'string'
+            ? (item.author as any).displayName
+            : undefined,
+          email: typeof (item.author as any).email === 'string'
+            ? (item.author as any).email
+            : undefined,
+          facultyId: typeof (item.author as any).facultyId === 'number'
+            ? (item.author as any).facultyId
             : undefined
         }
         : undefined,
       likesCount: typeof item.likesCount === 'number' ? item.likesCount : 0,
       commentsCount: typeof item.commentsCount === 'number' ? item.commentsCount : 0,
+      isAnonymous: typeof item.isAnonymous === 'boolean' ? item.isAnonymous : false,
     }));
 };
 

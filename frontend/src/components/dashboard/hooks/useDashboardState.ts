@@ -129,7 +129,12 @@ export const useDashboardState = () => {
         auth: { token }
       });
 
-      socket.on('idea_liked', (payload: any) => {
+      socket.on('idea:voted', (payload: any) => {
+        setChallenges(prev => prev.map(c => 
+          c.id === payload.challengeId 
+            ? { ...c, likesCount: (c.likesCount || 0) + 1 } 
+            : c
+        ));
         if (payload.challengeId === selectedChallenge.id) {
           fetchStats();
         }

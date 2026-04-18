@@ -237,7 +237,8 @@ export class IdeaService {
     if (updated) {
       this.eventsGateway.server.emit('idea:voted', { 
         ideaId: updated.id, 
-        likesCount: updated.likesCount 
+        likesCount: updated.likesCount,
+        challengeId: updated.challengeId
       });
     }
     return updated;
