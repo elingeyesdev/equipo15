@@ -45,4 +45,11 @@ export class PaginationDto {
   @IsOptional()
   @IsString()
   public?: string;
+
+  @ApiPropertyOptional({
+    description: 'Buscar por palabra clave en título, problema o solución',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
 }

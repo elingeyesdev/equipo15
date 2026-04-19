@@ -15,18 +15,53 @@ interface ChallengeListProps {
   selectedChallengeId: string | number;
   onSelectChallenge: (c: Challenge) => void;
   onRespond: (c: Challenge) => void;
+  onClearSelection?: () => void;
+  searchQuery?: string;
 }
 
 const ChallengeList: React.FC<ChallengeListProps> = ({
   loading, challenges, activeFilter, onFilterChange, filterOpen, setFilterOpen,
-  selectedChallengeId, onSelectChallenge, onRespond
+  selectedChallengeId, onSelectChallenge, onRespond, onClearSelection, searchQuery = ''
 }) => {
   const filters = ['Todos', ...FACULTIES.map(f => f.slug)];
+
+  const filtered = challenges
+    .filter(c => activeFilter === 'Todos' || c.category === activeFilter)
+    .filter(c => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        c.title?.toLowerCase().includes(q) ||
+        (c as any).problemDescription?.toLowerCase().includes(q)
+      );
+    });
 
   return (
     <S.LeftPanel>
       <S.PanelHeader>
-        <S.PanelTitle>Retos activos</S.PanelTitle>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <S.PanelTitle>Retos activos</S.PanelTitle>
+          {selectedChallengeId && onClearSelection && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onClearSelection(); }}
+              style={{
+                background: '#f1f3f5',
+                border: '1px solid #e9ecef',
+                borderRadius: '6px',
+                padding: '2px 8px',
+                fontSize: '10px',
+                fontWeight: 700,
+                color: '#495057',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = '#e9ecef'; e.currentTarget.style.color = '#FE410A'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = '#f1f3f5'; e.currentTarget.style.color = '#495057'; }}
+            >
+              LIMPIAR
+            </button>
+          )}
+        </div>
         <S.FilterWrap>
           <S.FilterBtn onClick={() => setFilterOpen(!filterOpen)} active={filterOpen}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -58,10 +93,8 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
             <ChallengeCardSkeleton />
             <ChallengeCardSkeleton />
           </>
-        ) : challenges.filter(c => activeFilter === 'Todos' || c.category === activeFilter).length > 0 ? (
-          challenges
-            .filter(c => activeFilter === 'Todos' || c.category === activeFilter)
-            .map(c => (
+        ) : filtered.length > 0 ? (
+          filtered.map(c => (
               <ChallengeCard
                 key={c.id}
                 challenge={c}
@@ -80,7 +113,9 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
             borderRadius: '16px',
             border: '1px dashed #cbd5e0'
           }}>
-            No hay retos activos disponibles para tu facultad por ahora.
+            {searchQuery.trim()
+              ? `No se encontraron retos para: "${searchQuery}"`
+              : 'No hay retos activos disponibles para tu facultad por ahora.'}
           </div>
         )}
       </S.ChallengeList>

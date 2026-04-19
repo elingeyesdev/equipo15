@@ -219,7 +219,13 @@ export class IdeaService {
       userId = user?.id;
     }
 
-    const { data, total } = await this.ideaRepository.findPublic(skip, limit, paginationDto?.challengeId, userId);
+    const { data, total } = await this.ideaRepository.findPublic(
+      skip,
+      limit,
+      paginationDto?.challengeId,
+      userId,
+      paginationDto?.search,
+    );
     return {
       data,
       meta: {

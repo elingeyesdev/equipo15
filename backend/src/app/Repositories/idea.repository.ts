@@ -43,9 +43,19 @@ export class IdeaRepository {
     take?: number,
     challengeId?: string,
     userId?: string,
+    search?: string,
   ): Promise<{ data: IdeaWithVoteStatus[]; total: number }> {
-    const where: IdeaWhereInput = { status: 'public' };
+    const where: any = { status: 'public' };
     if (challengeId) where.challengeId = challengeId;
+
+    if (search && search.trim().length > 0) {
+      const keyword = search.trim();
+      where.OR = [
+        { title: { contains: keyword, mode: 'insensitive' } },
+        { problem: { contains: keyword, mode: 'insensitive' } },
+        { solution: { contains: keyword, mode: 'insensitive' } },
+      ];
+    }
     
     const [data, total] = await this.prisma.$transaction([
       this.prisma.idea.findMany({

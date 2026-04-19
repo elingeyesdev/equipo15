@@ -8,6 +8,8 @@ import ChallengeList from './components/ChallengeList';
 import StatsPanel from './components/StatsPanel';
 import IdeaForm from './components/IdeaForm';
 import FeedbackToast from './components/FeedbackToast';
+import OmniSearchBar from './components/OmniSearchBar';
+import SearchContextBanner from './components/SearchContextBanner';
 import type { Challenge } from '../../types/models';
 
 import { useDashboardState } from './hooks/useDashboardState';
@@ -55,14 +57,14 @@ const IdeationWall = () => {
             <S.WelcomeZone>
               <S.Greeting>Hola, {userRole} <span>{firstName}</span></S.Greeting>
               <S.Sub>¿Listo para despegar tu próxima gran idea?</S.Sub>
-              
+
               {ds.profileError && (
-                <div style={{ 
-                  margin: '12px 0 0', 
-                  padding: '8px 16px', 
-                  background: '#fff5f5', 
-                  color: '#e53e3e', 
-                  borderRadius: '8px', 
+                <div style={{
+                  margin: '12px 0 0',
+                  padding: '8px 16px',
+                  background: '#fff5f5',
+                  color: '#e53e3e',
+                  borderRadius: '8px',
                   fontSize: '12px',
                   border: '1px solid #feb2b2',
                   fontWeight: '600'
@@ -73,19 +75,34 @@ const IdeationWall = () => {
             </S.WelcomeZone>
           </div>
 
-          <S.HamburgerBtn onClick={() => ds.setSidebarOpen(true)}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" />
-              <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" />
-              <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" />
-            </svg>
-          </S.HamburgerBtn>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <OmniSearchBar
+              value={ds.searchQuery}
+              onChange={ds.setSearchQuery}
+            />
+            <S.HamburgerBtn onClick={() => ds.setSidebarOpen(true)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" />
+                <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" />
+                <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" />
+              </svg>
+            </S.HamburgerBtn>
+          </div>
         </S.Header>
 
-        <SkyCanvas 
-          challengeId={ds.selectedChallenge?.id} 
+        <SearchContextBanner
+          searchQuery={ds.debouncedSearch}
+          challengeId={ds.selectedChallenge?.id}
+          challengeTitle={ds.selectedChallenge?.title}
+          onClearSearch={() => ds.setSearchQuery('')}
+          onClearChallenge={ds.clearSelectedChallenge}
+        />
+
+        <SkyCanvas
+          challengeId={ds.selectedChallenge?.id}
           challengeFacultyId={ds.selectedChallenge?.facultyId ?? undefined}
           isDashboardLoading={ds.loading}
+          search={ds.debouncedSearch}
         />
 
         <S.MainGrid>
@@ -99,6 +116,8 @@ const IdeationWall = () => {
             selectedChallengeId={ds.selectedChallenge?.id || ''}
             onSelectChallenge={ds.setSelectedChallenge}
             onRespond={(c: Challenge) => ds.handleOpenForm(c, form.resetForm)}
+            onClearSelection={ds.clearSelectedChallenge}
+            searchQuery={ds.debouncedSearch}
           />
 
           <StatsPanel

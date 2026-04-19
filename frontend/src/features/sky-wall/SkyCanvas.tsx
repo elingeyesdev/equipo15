@@ -146,6 +146,7 @@ interface SkyCanvasProps {
   challengeId?: string;
   challengeFacultyId?: number;
   isDashboardLoading?: boolean;
+  search?: string;
 }
 
 interface SkyCanvasSceneProps {
@@ -156,9 +157,10 @@ interface SkyCanvasSceneProps {
   challengeId?: string;
   challengeFacultyId?: number;
   isDashboardLoading?: boolean;
+  search?: string;
 }
 
-const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress = 0, challengeId, challengeFacultyId, isDashboardLoading = false }: SkyCanvasSceneProps) => {
+const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress = 0, challengeId, challengeFacultyId, isDashboardLoading = false, search }: SkyCanvasSceneProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState(800);
   const [showPodium, setShowPodium] = useState(false);
@@ -208,7 +210,9 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
                 width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexDirection: 'column', color: 'rgba(72, 80, 84, 0.6)', fontWeight: 600, fontSize: '15px'
               }}>
-                {!challengeId ? (
+                {search && search.trim().length > 0 ? (
+                  <>Sin resultados para: "{search}"</>
+                ) : !challengeId ? (
                   <>
                     No hay retos activos en tu tripulación. ¡Regresa más tarde!
                   </>
@@ -252,7 +256,7 @@ SkyCanvasScene.displayName = 'SkyCanvasScene';
 
 
 
-const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading }: SkyCanvasProps) => {
+const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading, search }: SkyCanvasProps) => {
   const [token, setToken] = useState<string>();
   const [publicIdeas, setPublicIdeas] = useState<RawIdea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -282,17 +286,13 @@ const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading }:
 
 
 
-    if (!challengeId) {
-      if (!isDashboardLoading) {
-        setIsLoading(false);
-        setProgress(100);
-      }
+    if (isDashboardLoading) {
       return;
     }
 
     (async () => {
       try {
-        const response = await ideaService.getIdeasByChallenge(challengeId);
+        const response = await ideaService.getIdeasByChallenge(challengeId, search);
         if (!active) return;
         const payload = (response as { success?: boolean; data?: unknown })?.success
           ? (response as { data?: unknown }).data
@@ -340,9 +340,9 @@ const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading }:
       active = false;
       timeouts.forEach(clearTimeout);
     };
-  }, [challengeId]);
+  }, [challengeId, search]);
 
-  return <SkyCanvasScene initialIdeas={publicIdeas} token={token} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} />;
+  return <SkyCanvasScene initialIdeas={publicIdeas} token={token} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} search={search} />;
 });
 
 SkyCanvas.displayName = 'SkyCanvas';

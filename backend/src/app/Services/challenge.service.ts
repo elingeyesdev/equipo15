@@ -76,6 +76,7 @@ export class ChallengeService {
       userId,
       userRole,
       facultyId,
+      paginationDto?.search,
     );
 
     return {

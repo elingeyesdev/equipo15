@@ -27,6 +27,8 @@ export const useDashboardState = () => {
   const [formChallenge, setFormChallenge] = useState<Challenge | null>(null);
   const [toastMessage, setToastMessage] = useState<FeedbackMessage | null>(null);
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -98,6 +100,12 @@ export const useDashboardState = () => {
     })();
     return () => { active = false; };
   }, []);
+
+  // Debounce de búsqueda (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (!selectedChallenge?.id || !user) return;
@@ -193,6 +201,11 @@ export const useDashboardState = () => {
     formChallenge, setFormChallenge,
     toastMessage, setToastMessage, showToast, dismissToast,
     confirmSubmitOpen, setConfirmSubmitOpen,
-    handleOpenForm, handleCloseForm
+    handleOpenForm, handleCloseForm,
+    searchQuery, setSearchQuery, debouncedSearch,
+    clearSelectedChallenge: () => {
+      setSelectedChallenge(null);
+      setChallengeStats(null);
+    }
   };
 };

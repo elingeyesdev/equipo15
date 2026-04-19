@@ -13,10 +13,25 @@ export class ChallengeRepository {
     userId?: string,
     userRole?: string,
     facultyId?: number | null,
+    search?: string,
   ): Promise<{ data: any[]; total: number }> {
     const where: Prisma.ChallengeWhereInput = {};
     if (status) {
       where.status = status;
+    }
+
+    if (search && search.trim().length > 0) {
+      const keyword = search.trim();
+      where.AND = [
+        ...(where.AND ? (Array.isArray(where.AND) ? where.AND : [where.AND]) : []),
+        {
+          OR: [
+            { title: { contains: keyword, mode: 'insensitive' as const } },
+            { problemDescription: { contains: keyword, mode: 'insensitive' as const } },
+            { companyContext: { contains: keyword, mode: 'insensitive' as const } },
+          ],
+        },
+      ];
     }
 
     if (userRole === 'student') {

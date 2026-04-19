@@ -59,6 +59,7 @@ export class ChallengesController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'search', required: false, type: String })
   findAll(@Query() paginationDto: PaginationDto, @Request() req: AuthenticatedRequest) {
     return this.challengeService.findAll(paginationDto, paginationDto.status, req.user.uid);
   }
