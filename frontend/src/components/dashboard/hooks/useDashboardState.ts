@@ -35,11 +35,17 @@ export const useDashboardState = () => {
     (async () => {
       try {
         setLoading(true);
-        const [profile, cloudChallenges, stats] = await Promise.all([
+        const [profile, cloudChallenges, globalStats] = await Promise.all([
           userService.getProfile(),
           challengeService.getPublicChallenges(1, 40, 'Activo'),
-          challengeService.getGlobalStats()
+          challengeService.getGlobalStats().catch(() => null)
         ]);
+
+        if (globalStats) {
+          const finalStats = (globalStats as any)?.success ? (globalStats as any).data : globalStats;
+          setTopFacultades(finalStats?.topFacultades || []);
+          setTopLideres(finalStats?.topLeaders || []);
+        }
 
         if (!active) return;
 
@@ -80,14 +86,8 @@ export const useDashboardState = () => {
         setProfile(profileData as UserProfile);
         setChallenges(mapped);
 
-        const finalStats = (stats as any)?.success ? (stats as any).data : stats;
-        setTopFacultades(finalStats?.topFacultades || []);
-        setTopLideres(finalStats?.topLeaders || []);
-
         if (challengeId && mapped.some(c => c.id === challengeId)) {
           setSelectedChallenge(mapped.find(c => c.id === challengeId) || mapped[0]);
-        } else if (mapped.length > 0) {
-          setSelectedChallenge(mapped[0]);
         }
       } catch (error: unknown) {
         if (active) {
@@ -101,7 +101,6 @@ export const useDashboardState = () => {
     return () => { active = false; };
   }, []);
 
-  // Debounce de búsqueda (300ms)
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
     return () => clearTimeout(timer);

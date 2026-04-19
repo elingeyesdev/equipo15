@@ -281,14 +281,18 @@ const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading, s
     let timeouts: number[] = [];
 
     setPublicIdeas([]);
-    setIsLoading(true);
     setProgress(0);
-
-
 
     if (isDashboardLoading) {
       return;
     }
+
+    if (!challengeId) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
 
     (async () => {
       try {
@@ -324,7 +328,7 @@ const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading, s
               }, 400);
               timeouts.push(hideTimer);
             }
-          }, index * 120);
+          }, index * 30);
           timeouts.push(t);
         });
       } catch (loadError: unknown) {

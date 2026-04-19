@@ -71,7 +71,7 @@ const saveLocalVoted = (id: string) => {
       votedIdeas.push(id);
       localStorage.setItem('pista8_voted_ideas', JSON.stringify(votedIdeas));
     }
-  } catch {}
+  } catch { }
 };
 
 const isConflictError = (error: unknown): boolean => {
@@ -97,19 +97,22 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted }: Like
 
   const handleVote = async () => {
     if (hasVoted || isVoting) return;
+
     setIsVoting(true);
+    setHasVoted(true);
+    setLikes(prev => prev + 1);
+
     try {
       await ideaService.voteIdea(ideaId);
-      setHasVoted(true);
       saveLocalVoted(ideaId);
-      setLikes(prev => prev + 1);
       toast.success('Voto registrado');
     } catch (error: unknown) {
       if (isConflictError(error)) {
-        setHasVoted(true);
         saveLocalVoted(ideaId);
         toast.info('Ya apoyaste este avion');
       } else {
+        setHasVoted(false);
+        setLikes(prev => Math.max(0, prev - 1));
         toast.error('Hubo un error al registrar tu voto.');
       }
     } finally {
