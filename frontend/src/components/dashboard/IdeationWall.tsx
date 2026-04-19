@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import SkyCanvas from '../../features/sky-wall';
 
@@ -9,8 +10,11 @@ import StatsPanel from './components/StatsPanel';
 import IdeaForm from './components/IdeaForm';
 import FeedbackToast from './components/FeedbackToast';
 import OmniSearchBar from './components/OmniSearchBar';
-import SearchContextBanner from './components/SearchContextBanner';
+import SortToggle from './components/SortToggle';
+import IdeasChronologicalList from './components/IdeasChronologicalList';
+import IdeaDetailModal from '../../features/sky-wall/components/IdeaDetailModal';
 import type { Challenge } from '../../types/models';
+import type { RawIdea, PlaneIdea } from '../../features/sky-wall/types';
 
 import { useDashboardState } from './hooks/useDashboardState';
 import { useIdeationForm } from './hooks/useIdeationForm';
@@ -19,6 +23,17 @@ const IdeationWall = () => {
   const { user, userProfile } = useAuth();
   const ds = useDashboardState();
   const form = useIdeationForm(userProfile, !user, ds.showToast);
+
+  // Ideas cargadas por SkyCanvas — para la lista cronológica
+  const [wallIdeas, setWallIdeas] = useState<RawIdea[]>([]);
+  const [listLoading, setListLoading] = useState(false);
+  // Idea seleccionada desde la lista (abre el mismo modal que los aviones)
+  const [selectedListIdea, setSelectedListIdea] = useState<PlaneIdea | null>(null);
+
+  const handleIdeasLoaded = (ideas: RawIdea[]) => {
+    setWallIdeas(ideas);
+    setListLoading(false);
+  };
 
   const firstName = userProfile?.displayName?.split(' ')[0] || user?.displayName?.split(' ')[0] || '';
   const fullName = userProfile?.displayName || user?.displayName || user?.email || '';
@@ -90,20 +105,27 @@ const IdeationWall = () => {
           </div>
         </S.Header>
 
-        <SearchContextBanner
-          searchQuery={ds.debouncedSearch}
-          challengeId={ds.selectedChallenge?.id}
-          challengeTitle={ds.selectedChallenge?.title}
-          onClearSearch={() => ds.setSearchQuery('')}
-          onClearChallenge={ds.clearSelectedChallenge}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 10px', flexWrap: 'wrap', gap: '8px' }}>
+          <SortToggle value={ds.sortOrder} onChange={(v) => { ds.setSortOrder(v); setListLoading(true); }} />
+        </div>
 
         <SkyCanvas
           challengeId={ds.selectedChallenge?.id}
           challengeFacultyId={ds.selectedChallenge?.facultyId ?? undefined}
           isDashboardLoading={ds.loading}
           search={ds.debouncedSearch}
+          sort={ds.sortOrder ?? undefined}
+          onIdeasLoaded={handleIdeasLoaded}
         />
+
+        {ds.sortOrder && (
+          <IdeasChronologicalList
+            ideas={wallIdeas}
+            sortOrder={ds.sortOrder}
+            isLoading={listLoading}
+            onSelectIdea={setSelectedListIdea}
+          />
+        )}
 
         <S.MainGrid>
           <ChallengeList
@@ -128,6 +150,13 @@ const IdeationWall = () => {
       </S.Page>
 
       <FeedbackToast message={ds.toastMessage} onDismiss={ds.dismissToast} />
+
+      {selectedListIdea && (
+        <IdeaDetailModal
+          idea={selectedListIdea}
+          onClose={() => setSelectedListIdea(null)}
+        />
+      )}
 
       <IdeaForm
         open={ds.formOpen}

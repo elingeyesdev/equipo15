@@ -58,12 +58,13 @@ export const ideaService = {
     return request;
   },
 
-  getIdeasByChallenge: async (challengeId?: string, search?: string) => {
+  getIdeasByChallenge: async (challengeId?: string, search?: string, sort?: string) => {
     let url = `/ideas?public=true`;
     if (challengeId) url += `&challengeId=${challengeId}`;
     if (search && search.trim().length > 0) {
       url += `&search=${encodeURIComponent(search.trim())}`;
     }
+    if (sort) url += `&sort=${sort}`;
     const response = await axiosInstance.get(url);
     return response.data;
   },

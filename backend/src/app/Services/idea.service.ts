@@ -225,6 +225,7 @@ export class IdeaService {
       paginationDto?.challengeId,
       userId,
       paginationDto?.search,
+      paginationDto?.sort,
     );
     return {
       data,

@@ -64,6 +64,23 @@ const AvatarLabel = styled.div<{ $size: number }>`
   border-radius: 6px;
   backdrop-filter: blur(4px);
   pointer-events: none;
+  text-align: center;
+`;
+
+const DateLabel = styled.div<{ $size: number }>`
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: ${p => Math.max(8, p.$size * 0.13)}px;
+  font-weight: 600;
+  color: rgba(26, 74, 107, 0.65);
+  white-space: nowrap;
+  background: rgba(255,255,255,0.65);
+  padding: 1px 5px;
+  border-radius: 5px;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
 `;
 
 const flyIn = keyframes`
@@ -87,6 +104,22 @@ interface PlaneProps {
   challengeFacultyId?: number;
   onClick?: () => void;
 }
+
+const formatRelativeDate = (dateStr?: string): string => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  const now = Date.now();
+  const diff = now - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (minutes < 1) return 'Ahora mismo';
+  if (minutes < 60) return `Hace ${minutes}m`;
+  if (hours < 24) return `Hace ${hours}h`;
+  if (days < 7) return `Hace ${days}d`;
+  return date.toLocaleDateString('es', { day: 'numeric', month: 'short' });
+};
 
 const FACULTY_HUE_MAP: Record<number, number> = {
   1: 180,
@@ -132,6 +165,9 @@ const Plane = memo(
       >
         <PlaneImage src={planeImg} alt={idea.title} $hueRotate={hueRotate} />
         <AvatarLabel $size={size}>{idea.title.slice(0, 24)}</AvatarLabel>
+        {idea.createdAt && (
+          <DateLabel $size={size}>{formatRelativeDate(idea.createdAt)}</DateLabel>
+        )}
       </PlaneWrapper>
     );
   },

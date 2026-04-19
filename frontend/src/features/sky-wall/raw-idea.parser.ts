@@ -22,6 +22,7 @@ const parseRawIdea = (item: Record<string, unknown>): RawIdea => ({
   commentsCount: typeof item.commentsCount === 'number' ? item.commentsCount : 0,
   isAnonymous: typeof item.isAnonymous === 'boolean' ? item.isAnonymous : false,
   hasVoted: typeof item.hasVoted === 'boolean' ? item.hasVoted : false,
+  createdAt: typeof item.createdAt === 'string' ? item.createdAt : undefined,
 });
 
 export const extractRawIdeas = (payload: unknown): RawIdea[] => {

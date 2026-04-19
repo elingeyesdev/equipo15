@@ -20,6 +20,7 @@ const buildPlanes = (rawIdeas: RawIdea[]): PlaneIdea[] => {
     problem: idea.problem,
     solution: idea.solution,
     hasVoted: idea.hasVoted ?? false,
+    createdAt: idea.createdAt,
   }));
 };
 
@@ -100,6 +101,7 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
           authorFacultyId: rawIdea.author?.facultyId,
           problem: rawIdea.problem,
           solution: rawIdea.solution,
+          createdAt: rawIdea.createdAt,
         };
         return [...prev, newPlane];
       });

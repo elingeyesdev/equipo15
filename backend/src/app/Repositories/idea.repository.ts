@@ -44,6 +44,7 @@ export class IdeaRepository {
     challengeId?: string,
     userId?: string,
     search?: string,
+    sort?: 'newest' | 'oldest',
   ): Promise<{ data: IdeaWithVoteStatus[]; total: number }> {
     const where: any = { status: 'public' };
     if (challengeId) where.challengeId = challengeId;
@@ -56,12 +57,15 @@ export class IdeaRepository {
         { solution: { contains: keyword, mode: 'insensitive' } },
       ];
     }
+
+    const orderDirection = sort === 'oldest' ? 'asc' : 'desc';
     
     const [data, total] = await this.prisma.$transaction([
       this.prisma.idea.findMany({
         where,
         skip,
         take,
+        orderBy: { createdAt: orderDirection },
         include: {
           author: { select: { displayName: true, role: true, facultyId: true } },
           challenge: true,

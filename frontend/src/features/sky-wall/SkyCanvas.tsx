@@ -147,6 +147,8 @@ interface SkyCanvasProps {
   challengeFacultyId?: number;
   isDashboardLoading?: boolean;
   search?: string;
+  sort?: 'newest' | 'oldest';
+  onIdeasLoaded?: (ideas: RawIdea[]) => void;
 }
 
 interface SkyCanvasSceneProps {
@@ -256,7 +258,7 @@ SkyCanvasScene.displayName = 'SkyCanvasScene';
 
 
 
-const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading, search }: SkyCanvasProps) => {
+const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading, search, sort, onIdeasLoaded }: SkyCanvasProps) => {
   const [token, setToken] = useState<string>();
   const [publicIdeas, setPublicIdeas] = useState<RawIdea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -296,12 +298,13 @@ const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading, s
 
     (async () => {
       try {
-        const response = await ideaService.getIdeasByChallenge(challengeId, search);
+        const response = await ideaService.getIdeasByChallenge(challengeId, search, sort);
         if (!active) return;
         const payload = (response as { success?: boolean; data?: unknown })?.success
           ? (response as { data?: unknown }).data
           : response;
         const ideas = extractRawIdeas(payload);
+        if (active) onIdeasLoaded?.(ideas);
 
         if (ideas.length === 0) {
           setProgress(100);
@@ -344,7 +347,7 @@ const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading, s
       active = false;
       timeouts.forEach(clearTimeout);
     };
-  }, [challengeId, search]);
+  }, [challengeId, search, sort]);
 
   return <SkyCanvasScene initialIdeas={publicIdeas} token={token} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} search={search} />;
 });

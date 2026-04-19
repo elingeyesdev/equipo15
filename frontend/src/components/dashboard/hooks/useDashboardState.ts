@@ -29,6 +29,7 @@ export const useDashboardState = () => {
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -202,9 +203,11 @@ export const useDashboardState = () => {
     confirmSubmitOpen, setConfirmSubmitOpen,
     handleOpenForm, handleCloseForm,
     searchQuery, setSearchQuery, debouncedSearch,
+    sortOrder, setSortOrder,
     clearSelectedChallenge: () => {
       setSelectedChallenge(null);
       setChallengeStats(null);
+      setSortOrder(null);
     }
   };
 };

@@ -10,6 +10,7 @@ export interface PlaneIdea {
   problem?: string;
   solution?: string;
   hasVoted?: boolean;
+  createdAt?: string;
 }
 
 export type WallPhase = 'active' | 'race' | 'podium';
@@ -43,6 +44,7 @@ export interface RawIdea {
   commentsCount?: number;
   isAnonymous?: boolean;
   hasVoted?: boolean;
+  createdAt?: string;
 }
 
 export interface AxiosLikeError {

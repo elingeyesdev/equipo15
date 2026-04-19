@@ -129,6 +129,18 @@ const AuthorName = styled.span`
   letter-spacing: 0.02em;
 `;
 
+const DateChip = styled.span`
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.28);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 2px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+  margin-left: 4px;
+`;
+
 const Body = styled.div`
   padding: 36px;
   display: flex;
@@ -232,6 +244,14 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
           <AuthorRow>
             <AuthorDot />
             <AuthorName>{idea.authorName}</AuthorName>
+            {idea.createdAt && (
+              <DateChip>
+                {new Date(idea.createdAt).toLocaleDateString('es', {
+                  day: 'numeric', month: 'short', year: 'numeric',
+                  hour: '2-digit', minute: '2-digit'
+                })}
+              </DateChip>
+            )}
           </AuthorRow>
         </ModalBanner>
 
