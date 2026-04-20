@@ -32,6 +32,7 @@ model User {
   isActive          Boolean      @default(true)
   ideas             Idea[]
   ideaLikes         IdeaLike[]
+  comments          Comment[]
   evaluations       Evaluation[]
   challenges        Challenge[]  @relation("AuthorChallenges")
   accessedPrivateChallenges Challenge[] @relation("UserAccessedPrivateChallenges")
@@ -76,12 +77,35 @@ model Idea {
   challenge     Challenge    @relation(fields: [challengeId], references: [id])
   challengeId   String
   evaluations   Evaluation[]
+  comments      Comment[]
   ideaLikes     IdeaLike[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
   @@index([challengeId])
   @@index([authorId])
+  @@index([status])
+}
+
+model Comment {
+  id               String    @id @default(uuid())
+  content          String    @db.Text
+  author           User      @relation(fields: [authorId], references: [id])
+  authorId         String
+  idea             Idea      @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  ideaId           String
+  parentComment    Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: SetNull)
+  parentCommentId  String?
+  replies          Comment[] @relation("CommentReplies")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  editedAt         DateTime?
+  deletedAt        DateTime?
+  status           String    @default("visible")
+
+  @@index([ideaId])
+  @@index([authorId])
+  @@index([parentCommentId])
   @@index([status])
 }
 

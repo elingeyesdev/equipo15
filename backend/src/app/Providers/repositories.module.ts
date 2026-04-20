@@ -4,6 +4,7 @@ import { IdeaRepository } from '../Repositories/idea.repository';
 import { ChallengeRepository } from '../Repositories/challenge.repository';
 import { RoleRepository } from '../Repositories/role.repository';
 import { EvaluationRepository } from '../Repositories/evaluation.repository';
+import { CommentRepository } from '../Repositories/comment.repository';
 
 @Module({
   providers: [
@@ -12,6 +13,7 @@ import { EvaluationRepository } from '../Repositories/evaluation.repository';
     ChallengeRepository,
     RoleRepository,
     EvaluationRepository,
+    CommentRepository,
   ],
   exports: [
     UserRepository,
@@ -19,6 +21,7 @@ import { EvaluationRepository } from '../Repositories/evaluation.repository';
     ChallengeRepository,
     RoleRepository,
     EvaluationRepository,
+    CommentRepository,
   ],
 })
 export class RepositoriesModule {}

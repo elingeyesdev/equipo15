@@ -51,6 +51,31 @@ export interface PaginatedResponse<T> {
 
 export type IdeaStatus = 'draft' | 'public' | 'top5' | 'archived';
 
+export type CommentStatus = 'visible' | 'hidden' | 'deleted';
+
+export interface CommentAuthor {
+  id: string;
+  displayName: string;
+  avatarUrl?: string;
+  role?: string;
+  facultyId?: number;
+}
+
+export interface Comment {
+  id: string;
+  ideaId: string;
+  authorId: string;
+  parentCommentId?: string | null;
+  content: string;
+  status: CommentStatus;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  editedAt?: string | Date | null;
+  deletedAt?: string | Date | null;
+  author?: CommentAuthor;
+  replies?: Comment[];
+}
+
 export interface Idea {
   id: string;
   title: string;

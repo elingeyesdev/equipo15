@@ -4,6 +4,7 @@ import { UsersController } from '../Http/Controllers/users.controller';
 import { IdeasController } from '../Http/Controllers/ideas.controller';
 import { ChallengesController } from '../Http/Controllers/challenges.controller';
 import { EvaluationsController } from '../Http/Controllers/evaluations.controller';
+import { CommentsController } from '../Http/Controllers/comments.controller';
 
 @Module({
   imports: [ServicesModule],
@@ -12,6 +13,7 @@ import { EvaluationsController } from '../Http/Controllers/evaluations.controlle
     IdeasController,
     ChallengesController,
     EvaluationsController,
+    CommentsController,
   ],
 })
 export class HttpModule {}
