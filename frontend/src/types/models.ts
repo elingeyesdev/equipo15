@@ -76,6 +76,19 @@ export interface Comment {
   replies?: Comment[];
 }
 
+export interface CommentListResponse {
+  data: Comment[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface CreateCommentPayload {
+  content: string;
+  ideaId: string;
+  parentCommentId?: string;
+}
+
 export interface Idea {
   id: string;
   title: string;

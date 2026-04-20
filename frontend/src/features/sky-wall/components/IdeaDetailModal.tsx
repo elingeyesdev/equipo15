@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import type { PlaneIdea } from '../types';
 import LikeButton from './LikeButton';
 import { Pista8Theme } from '../../../config/theme';
+import CommentsSection from '../../../components/comments/CommentsSection';
 
 const overlayIn = keyframes`
   from { opacity: 0; }
@@ -193,22 +194,6 @@ const EmptyContent = styled.p`
   font-style: italic;
 `;
 
-const CommentsLabel = styled.p`
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #c0c8d0;
-  margin: 0;
-`;
-
-const CommentsPlaceholder = styled.p`
-  font-size: 13px;
-  color: #d0d8e0;
-  font-weight: 500;
-  margin: 0;
-`;
-
 interface IdeaDetailModalProps {
   idea: PlaneIdea;
   onClose: () => void;
@@ -277,8 +262,7 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
           </SectionBlock>
 
           <SectionBlock>
-            <CommentsLabel>Debate y Feedback</CommentsLabel>
-            <CommentsPlaceholder>Cargando comentarios...</CommentsPlaceholder>
+            <CommentsSection ideaId={idea.id} title="Debate y feedback" />
           </SectionBlock>
         </Body>
       </ModalContainer>
