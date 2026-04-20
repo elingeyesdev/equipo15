@@ -85,6 +85,8 @@ model Idea {
   @@index([challengeId])
   @@index([authorId])
   @@index([status])
+  @@index([challengeId, status, createdAt])  // filtro cronológico compuesto
+  @@index([challengeId, likesCount])          // filtro por popularidad
 }
 
 model Comment {

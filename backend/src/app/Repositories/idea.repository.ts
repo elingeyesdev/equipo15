@@ -23,7 +23,7 @@ export class IdeaRepository {
     const where: IdeaWhereInput = {};
     if (challengeId) where.challengeId = challengeId;
     
-    const [data, total] = await this.prisma.$transaction([
+    const [data, total] = await Promise.all([
       this.prisma.idea.findMany({
         where,
         skip,
@@ -59,33 +59,44 @@ export class IdeaRepository {
     }
 
     const orderDirection = sort === 'oldest' ? 'asc' : 'desc';
-    
-    const [data, total] = await this.prisma.$transaction([
-      this.prisma.idea.findMany({
-        where,
-        skip,
-        take,
-        orderBy: { createdAt: orderDirection },
-        include: {
-          author: { select: { displayName: true, role: true, facultyId: true } },
-          challenge: true,
-          ideaLikes: userId
-            ? { where: { userId }, select: { id: true } }
-            : false,
-        },
-      }),
-      this.prisma.idea.count({ where }),
-    ]);
+
+    // Optimización: select solo los campos necesarios en vez del include pesado
+    const data = await this.prisma.idea.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { createdAt: orderDirection },
+      select: {
+        id: true,
+        title: true,
+        problem: true,
+        solution: true,
+        status: true,
+        likesCount: true,
+        commentsCount: true,
+        isAnonymous: true,
+        tags: true,
+        createdAt: true,
+        updatedAt: true,
+        authorId: true,
+        challengeId: true,
+        votesCount: true,
+        author: { select: { displayName: true, email: true, facultyId: true } },
+        ...(userId
+          ? { ideaLikes: { where: { userId }, select: { id: true } } }
+          : {}),
+      },
+    });
 
     const enriched: IdeaWithVoteStatus[] = data.map((idea) => {
-      const { ideaLikes, ...rest } = idea as Idea & { ideaLikes?: { id: string }[] };
+      const { ideaLikes, ...rest } = idea as any;
       return {
         ...rest,
         hasVoted: Array.isArray(ideaLikes) && ideaLikes.length > 0,
-      };
+      } as IdeaWithVoteStatus;
     });
 
-    return { data: enriched, total };
+    return { data: enriched, total: enriched.length };
   }
 
   async findById(id: string): Promise<Idea | null> {
