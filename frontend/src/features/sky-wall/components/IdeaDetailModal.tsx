@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import type { PlaneIdea } from '../types';
 import LikeButton from './LikeButton';
@@ -194,12 +194,58 @@ const EmptyContent = styled.p`
   font-style: italic;
 `;
 
+const ActionsRow = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+`;
+
+const CommentToggleButton = styled.button<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: ${(p) => (p.$active ? `${Pista8Theme.primary}12` : 'rgba(248,249,250,0.9)')};
+  color: ${(p) => (p.$active ? Pista8Theme.primary : '#94a3b8')};
+  border: 1.5px solid ${(p) => (p.$active ? `${Pista8Theme.primary}50` : 'rgba(72,80,84,0.1)')};
+  border-radius: 99px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+  box-shadow: ${(p) => (p.$active ? `0 0 0 3px ${Pista8Theme.primary}18` : 'none')};
+
+  &:hover {
+    background: ${(p) => (p.$active ? `${Pista8Theme.primary}16` : `${Pista8Theme.primary}08`)};
+    border-color: ${(p) => (p.$active ? `${Pista8Theme.primary}66` : `${Pista8Theme.primary}40`)};
+    color: ${Pista8Theme.primary};
+  }
+`;
+
+const Counter = styled.span`
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+`;
+
 interface IdeaDetailModalProps {
   idea: PlaneIdea;
   onClose: () => void;
 }
 
 export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [commentsCount, setCommentsCount] = useState(idea.commentsCount);
+
+  useEffect(() => {
+    setCommentsCount(idea.commentsCount);
+    setIsCommentsOpen(false);
+  }, [idea.id, idea.commentsCount]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -258,12 +304,32 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
           </SectionBlock>
 
           <SectionBlock>
-            <LikeButton ideaId={idea.id} initialLikes={idea.likesCount} hasVoted={idea.hasVoted} />
+            <ActionsRow>
+              <LikeButton ideaId={idea.id} initialLikes={idea.likesCount} hasVoted={idea.hasVoted} />
+
+              <CommentToggleButton
+                type="button"
+                $active={isCommentsOpen}
+                onClick={() => setIsCommentsOpen((current) => !current)}
+                aria-label={isCommentsOpen ? 'Ocultar comentarios' : 'Mostrar comentarios'}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                </svg>
+                <Counter>{commentsCount}</Counter>
+              </CommentToggleButton>
+            </ActionsRow>
           </SectionBlock>
 
-          <SectionBlock>
-            <CommentsSection ideaId={idea.id} title="Debate y feedback" />
-          </SectionBlock>
+          {isCommentsOpen && (
+            <SectionBlock>
+              <CommentsSection
+                ideaId={idea.id}
+                title="Debate y feedback"
+                onCountChange={setCommentsCount}
+              />
+            </SectionBlock>
+          )}
         </Body>
       </ModalContainer>
     </ModalOverlay>

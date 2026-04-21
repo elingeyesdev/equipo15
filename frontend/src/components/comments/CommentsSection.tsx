@@ -9,6 +9,7 @@ import CommentItem from './CommentItem';
 interface CommentsSectionProps {
   ideaId: string;
   title?: string;
+  onCountChange?: (count: number) => void;
 }
 
 interface CommentTreeNode extends Comment {
@@ -167,7 +168,11 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
 const countAllComments = (nodes: CommentTreeNode[]): number =>
   nodes.reduce((acc, node) => acc + 1 + countAllComments(node.replies ?? []), 0);
 
-export const CommentsSection = ({ ideaId, title = 'Comentarios' }: CommentsSectionProps) => {
+export const CommentsSection = ({
+  ideaId,
+  title = 'Comentarios',
+  onCountChange,
+}: CommentsSectionProps) => {
   const [comments, setComments] = useState<CommentTreeNode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -243,6 +248,10 @@ export const CommentsSection = ({ ideaId, title = 'Comentarios' }: CommentsSecti
   };
 
   const totalVisibleComments = useMemo(() => countAllComments(comments), [comments]);
+
+  useEffect(() => {
+    onCountChange?.(totalVisibleComments);
+  }, [totalVisibleComments, onCountChange]);
 
   return (
     <Wrapper>
