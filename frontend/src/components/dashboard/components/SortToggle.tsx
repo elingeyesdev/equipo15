@@ -39,9 +39,11 @@ const Label = styled.span`
   white-space: nowrap;
 `;
 
+export type SortValue = 'newest' | 'oldest' | 'likes' | 'comments';
+
 interface SortToggleProps {
-  value: 'newest' | 'oldest' | null;
-  onChange: (value: 'newest' | 'oldest') => void;
+  value: SortValue | null;
+  onChange: (value: SortValue) => void;
 }
 
 const SortToggle: React.FC<SortToggleProps> = ({ value, onChange }) => {
@@ -54,6 +56,12 @@ const SortToggle: React.FC<SortToggleProps> = ({ value, onChange }) => {
         </Option>
         <Option $active={value === 'oldest'} onClick={() => onChange('oldest')}>
           Más antiguas
+        </Option>
+        <Option $active={value === 'likes'} onClick={() => onChange('likes')}>
+          Más populares
+        </Option>
+        <Option $active={value === 'comments'} onClick={() => onChange('comments')}>
+          Más comentadas
         </Option>
       </Wrapper>
     </div>

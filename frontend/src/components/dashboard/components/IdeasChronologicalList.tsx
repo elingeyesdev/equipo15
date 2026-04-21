@@ -202,7 +202,7 @@ const rawToPlane = (idea: RawIdea, index: number): PlaneIdea => ({
 /* ─── Component ─── */
 interface IdeasChronologicalListProps {
   ideas: RawIdea[];
-  sortOrder: 'newest' | 'oldest';
+  sortOrder: 'newest' | 'oldest' | 'likes' | 'comments';
   isLoading?: boolean;
   onSelectIdea?: (idea: PlaneIdea) => void;
 }
@@ -219,7 +219,10 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
     <Wrapper>
       <Header>
         <Title>
-          {sortOrder === 'newest' ? 'Más recientes' : 'Más antiguas'}
+          {sortOrder === 'newest' ? 'Más recientes' :
+           sortOrder === 'oldest' ? 'Más antiguas' :
+           sortOrder === 'likes' ? 'Más populares' :
+           'Más comentadas'}
         </Title>
         <Counter>{ideas.length} idea{ideas.length !== 1 ? 's' : ''}</Counter>
       </Header>

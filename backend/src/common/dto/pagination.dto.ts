@@ -54,10 +54,10 @@ export class PaginationDto {
   search?: string;
 
   @ApiPropertyOptional({
-    description: 'Ordenar por fecha: newest (más recientes) u oldest (más antiguas)',
-    enum: ['newest', 'oldest'],
+    description: 'Ordenar: newest, oldest, likes (más populares) o comments (más comentadas)',
+    enum: ['newest', 'oldest', 'likes', 'comments'],
   })
   @IsOptional()
-  @IsIn(['newest', 'oldest'])
-  sort?: 'newest' | 'oldest';
+  @IsIn(['newest', 'oldest', 'likes', 'comments'])
+  sort?: 'newest' | 'oldest' | 'likes' | 'comments';
 }

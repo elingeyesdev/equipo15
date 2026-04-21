@@ -57,7 +57,7 @@ export class IdeasController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'sort', required: false, enum: ['newest', 'oldest'] })
+  @ApiQuery({ name: 'sort', required: false, enum: ['newest', 'oldest', 'likes', 'comments'] })
   findAll(
     @Query('public') isPublic?: string,
     @Query() paginationDto?: PaginationDto,

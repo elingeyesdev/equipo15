@@ -147,7 +147,7 @@ interface SkyCanvasProps {
   challengeFacultyId?: number;
   isDashboardLoading?: boolean;
   search?: string;
-  sort?: 'newest' | 'oldest';
+  sort?: 'newest' | 'oldest' | 'likes' | 'comments';
   onIdeasLoaded?: (ideas: RawIdea[]) => void;
 }
 

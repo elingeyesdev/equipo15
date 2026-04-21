@@ -132,7 +132,7 @@ export class CommentService {
       parentCommentId: query.parentCommentId,
       skip,
       take: limit,
-      sort: query.sort,
+      sort: (query.sort === 'newest' || query.sort === 'oldest') ? query.sort : 'newest',
     });
 
     return {

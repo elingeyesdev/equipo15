@@ -29,7 +29,7 @@ export const useDashboardState = () => {
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | null>(null);
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'likes' | 'comments' | null>(null);
 
   useEffect(() => {
     let active = true;

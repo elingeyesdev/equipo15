@@ -44,7 +44,7 @@ export class IdeaRepository {
     challengeId?: string,
     userId?: string,
     search?: string,
-    sort?: 'newest' | 'oldest',
+    sort?: 'newest' | 'oldest' | 'likes' | 'comments',
   ): Promise<{ data: IdeaWithVoteStatus[]; total: number }> {
     const where: any = { status: 'public' };
     if (challengeId) where.challengeId = challengeId;
@@ -58,14 +58,30 @@ export class IdeaRepository {
       ];
     }
 
-    const orderDirection = sort === 'oldest' ? 'asc' : 'desc';
+    // Determinar el campo y dirección de ordenamiento
+    let orderBy: Record<string, 'asc' | 'desc'>;
+    switch (sort) {
+      case 'oldest':
+        orderBy = { createdAt: 'asc' };
+        break;
+      case 'likes':
+        orderBy = { likesCount: 'desc' };
+        break;
+      case 'comments':
+        orderBy = { commentsCount: 'desc' };
+        break;
+      case 'newest':
+      default:
+        orderBy = { createdAt: 'desc' };
+        break;
+    }
 
-    // Optimización: select solo los campos necesarios en vez del include pesado
+    // Optimización: select solo los campos necesarios
     const data = await this.prisma.idea.findMany({
       where,
       skip,
       take,
-      orderBy: { createdAt: orderDirection },
+      orderBy,
       select: {
         id: true,
         title: true,
