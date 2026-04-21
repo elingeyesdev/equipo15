@@ -250,8 +250,12 @@ export const CommentsSection = ({
   const totalVisibleComments = useMemo(() => countAllComments(comments), [comments]);
 
   useEffect(() => {
+    if (isLoading || error) {
+      return;
+    }
+
     onCountChange?.(totalVisibleComments);
-  }, [totalVisibleComments, onCountChange]);
+  }, [totalVisibleComments, onCountChange, isLoading, error]);
 
   return (
     <Wrapper>
