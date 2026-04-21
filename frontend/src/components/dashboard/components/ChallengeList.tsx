@@ -2,7 +2,7 @@ import React from 'react';
 import * as S from '../styles/ChallengeStyles';
 import ChallengeCard from './ChallengeCard';
 import ChallengeCardSkeleton from './ChallengeCardSkeleton';
-import { FACULTIES } from '../../../config/faculties';
+import { FACULTIES, getFacultySlug } from '../../../config/faculties';
 import type { Challenge } from '../../../types/models';
 
 interface ChallengeListProps {
@@ -17,15 +17,21 @@ interface ChallengeListProps {
   onRespond: (c: Challenge) => void;
   onClearSelection?: () => void;
   searchQuery?: string;
+  userFacultyId?: number | null;
 }
 
 const ChallengeList: React.FC<ChallengeListProps> = ({
   loading, challenges, activeFilter, onFilterChange, filterOpen, setFilterOpen,
-  selectedChallengeId, onSelectChallenge, onRespond, onClearSelection, searchQuery = ''
+  selectedChallengeId, onSelectChallenge, onRespond, onClearSelection, searchQuery = '', userFacultyId
 }) => {
-  const filters = ['Todos', ...FACULTIES.map(f => f.slug)];
+  const userSlug = getFacultySlug(userFacultyId || null);
+  const filters = ['Todos'];
+  if (userFacultyId && userSlug && userSlug !== 'Todas' && userSlug !== 'General') {
+    filters.push(userSlug);
+  }
 
   const filtered = challenges
+    .filter(c => c.status === 'Activo' && (!c.endDate || new Date(c.endDate) >= new Date()))
     .filter(c => activeFilter === 'Todos' || c.category === activeFilter)
     .filter(c => {
       if (!searchQuery.trim()) return true;

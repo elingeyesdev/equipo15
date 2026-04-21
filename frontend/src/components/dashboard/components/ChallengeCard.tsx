@@ -8,6 +8,23 @@ interface ChallengeCardProps {
   onRespond: (e: React.MouseEvent) => void;
 }
 
+const getRemainingText = (endDateStr?: string) => {
+  if (!endDateStr) return null;
+  const end = new Date(endDateStr).getTime();
+  const now = new Date().getTime();
+  const diff = end - now;
+  if (diff <= 0) return 'Cerrado';
+  
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  if (days > 0) return `Cierra en ${days} día${days > 1 ? 's' : ''}`;
+  
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  if (hours > 0) return `Cierra en ${hours} hora${hours > 1 ? 's' : ''}`;
+  
+  const minutes = Math.floor(diff / (1000 * 60));
+  return `Cierra en ${minutes} min`;
+};
+
 const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSelect, onRespond }) => {
   const isExpired = challenge.endDate ? new Date() > new Date(challenge.endDate) : false;
 
@@ -31,7 +48,10 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSele
         <S.CategoryTag>{challenge.category}</S.CategoryTag>
       </S.CardTop>
       <S.CardTitle>{challenge.title}</S.CardTitle>
-      <S.CardMeta>{challenge.ideasCount || 0} ideas enviadas</S.CardMeta>
+      <S.CardMeta>
+        {challenge.ideasCount || 0} ideas enviadas
+        {challenge.endDate && !isExpired && ` • ${getRemainingText(challenge.endDate)}`}
+      </S.CardMeta>
       <S.CardActionRow>
         <S.RespondButton 
           type="button" 

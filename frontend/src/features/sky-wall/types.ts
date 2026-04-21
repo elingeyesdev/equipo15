@@ -1,3 +1,5 @@
+export type SortMode = 'newest' | 'oldest' | 'likes' | 'comments';
+
 export interface PlaneIdea {
   id: string;
   title: string;

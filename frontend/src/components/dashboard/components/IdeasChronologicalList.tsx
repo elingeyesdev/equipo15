@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
-import type { RawIdea, PlaneIdea } from '../../../features/sky-wall/types';
+import type { RawIdea, PlaneIdea, SortMode } from '../../../features/sky-wall/types';
 
 /* ─── Animations ─── */
 const fadeUp = keyframes`
@@ -202,7 +202,7 @@ const rawToPlane = (idea: RawIdea, index: number): PlaneIdea => ({
 /* ─── Component ─── */
 interface IdeasChronologicalListProps {
   ideas: RawIdea[];
-  sortOrder: 'newest' | 'oldest' | 'likes' | 'comments';
+  sortOrder: SortMode;
   isLoading?: boolean;
   onSelectIdea?: (idea: PlaneIdea) => void;
 }

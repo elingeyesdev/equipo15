@@ -106,7 +106,7 @@ const IdeationWall = () => {
         </S.Header>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 10px', flexWrap: 'wrap', gap: '8px' }}>
-          <SortToggle value={ds.sortOrder} onChange={(v) => { ds.setSortOrder(v); setListLoading(true); }} />
+          <SortToggle value={ds.sortOrder} onChange={ds.setSortOrder} />
         </div>
 
         <SkyCanvas
@@ -140,6 +140,7 @@ const IdeationWall = () => {
             onRespond={(c: Challenge) => ds.handleOpenForm(c, form.resetForm)}
             onClearSelection={ds.clearSelectedChallenge}
             searchQuery={ds.debouncedSearch}
+            userFacultyId={userProfile?.facultyId}
           />
 
           <StatsPanel

@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
+import type { SortMode } from '../../../features/sky-wall/types';
 
 const Wrapper = styled.div`
   display: inline-flex;
@@ -39,11 +40,9 @@ const Label = styled.span`
   white-space: nowrap;
 `;
 
-export type SortValue = 'newest' | 'oldest' | 'likes' | 'comments';
-
 interface SortToggleProps {
-  value: SortValue | null;
-  onChange: (value: SortValue) => void;
+  value: SortMode | null;
+  onChange: (value: SortMode) => void;
 }
 
 const SortToggle: React.FC<SortToggleProps> = ({ value, onChange }) => {

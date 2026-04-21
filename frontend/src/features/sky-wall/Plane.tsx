@@ -15,6 +15,12 @@ const raceFly = keyframes`
   to   { left: calc(100% + 200px); }
 `;
 
+const glowPulse = keyframes`
+  0%   { box-shadow: 0 0 8px 2px rgba(255, 200, 60, 0.5); }
+  50%  { box-shadow: 0 0 18px 6px rgba(255, 200, 60, 0.8); }
+  100% { box-shadow: 0 0 8px 2px rgba(255, 200, 60, 0.5); }
+`;
+
 const PlaneWrapper = styled.div<{
   $x: number;
   $y: number;
@@ -24,6 +30,8 @@ const PlaneWrapper = styled.div<{
   $scale: number;
   $zIndex: number;
   $isRacing: boolean;
+  $glowIntensity: number;
+  $dimmed: boolean;
 }>`
   position: absolute;
   top: ${p => p.$y - p.$size / 2 + 16}px;
@@ -33,7 +41,10 @@ const PlaneWrapper = styled.div<{
   --plane-x: ${p => p.$x + 20}px;
   transform: scale(${p => p.$scale});
   transform-origin: center center;
-  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+  transition: top 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.6s ease-out,
+              filter 0.6s ease-out,
+              transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
               width 0.6s ease-out,
               height 0.6s ease-out;
   animation: ${p =>
@@ -43,8 +54,22 @@ const PlaneWrapper = styled.div<{
   z-index: ${p => p.$zIndex};
   cursor: ${p => p.onClick ? 'pointer' : 'default'};
   user-select: none;
-  will-change: transform;
-  
+  will-change: top, transform, opacity;
+  opacity: ${p => p.$dimmed ? 0.4 : 1};
+  filter: ${p => p.$dimmed ? 'grayscale(0.4)' : 'none'};
+
+  ${p => p.$glowIntensity > 0 && css`
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      opacity: ${p.$glowIntensity};
+      animation: ${glowPulse} 2s ease-in-out infinite;
+      pointer-events: none;
+    }
+  `}
+
   &:hover {
     transform: scale(${p => p.$scale * 1.05});
   }
@@ -102,6 +127,8 @@ interface PlaneProps {
   canvasWidth: number;
   phase: WallPhase;
   challengeFacultyId?: number;
+  glowIntensity?: number;
+  dimmed?: boolean;
   onClick?: () => void;
 }
 
@@ -133,7 +160,7 @@ const FACULTY_HUE_MAP: Record<number, number> = {
 const BASE_Z_INDEX = 10;
 
 const Plane = memo(
-  ({ idea, canvasWidth, phase, challengeFacultyId, onClick }: PlaneProps) => {
+  ({ idea, canvasWidth, phase, challengeFacultyId, glowIntensity = 0, dimmed = false, onClick }: PlaneProps) => {
     const size = useMemo(() => computeSize(idea.likesCount), [idea.likesCount]);
     const scale = useMemo(() => computeScale(idea.likesCount), [idea.likesCount]);
     const floatDuration = useMemo(() => computeFloatDuration(idea.likesCount), [idea.likesCount]);
@@ -161,6 +188,8 @@ const Plane = memo(
         $scale={scale}
         $zIndex={zIndex}
         $isRacing={isRacing}
+        $glowIntensity={glowIntensity}
+        $dimmed={dimmed}
         onClick={onClick}
       >
         <PlaneImage src={planeImg} alt={idea.title} $hueRotate={hueRotate} />
@@ -176,7 +205,9 @@ const Plane = memo(
     prev.idea.likesCount === next.idea.likesCount &&
     prev.idea.commentsCount === next.idea.commentsCount &&
     prev.phase === next.phase &&
-    prev.canvasWidth === next.canvasWidth,
+    prev.canvasWidth === next.canvasWidth &&
+    prev.glowIntensity === next.glowIntensity &&
+    prev.dimmed === next.dimmed,
 );
 
 Plane.displayName = 'Plane';

@@ -9,10 +9,10 @@ import IdeasLoader from './IdeasLoader';
 import IdeaDetailModal from './components/IdeaDetailModal';
 import { useAuth } from '../../context/AuthContext';
 import { useWallSocket } from './useWallSocket';
-import { computeCanvasHeight } from './flight.engine';
+import { computeCanvasHeight, sortIdeas, computeGlowIntensity } from './flight.engine';
 import { ideaService } from '../../services/idea.service';
 import { extractRawIdeas } from './raw-idea.parser';
-import type { WallPhase, PlaneIdea, RawIdea } from './types';
+import type { WallPhase, PlaneIdea, RawIdea, SortMode } from './types';
 
 
 const generateClouds = (height: number) => {
@@ -147,7 +147,7 @@ interface SkyCanvasProps {
   challengeFacultyId?: number;
   isDashboardLoading?: boolean;
   search?: string;
-  sort?: 'newest' | 'oldest' | 'likes' | 'comments';
+  sort?: SortMode;
   onIdeasLoaded?: (ideas: RawIdea[]) => void;
 }
 
@@ -160,9 +160,10 @@ interface SkyCanvasSceneProps {
   challengeFacultyId?: number;
   isDashboardLoading?: boolean;
   search?: string;
+  sort?: SortMode;
 }
 
-const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress = 0, challengeId, challengeFacultyId, isDashboardLoading = false, search }: SkyCanvasSceneProps) => {
+const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress = 0, challengeId, challengeFacultyId, isDashboardLoading = false, search, sort }: SkyCanvasSceneProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState(800);
   const [showPodium, setShowPodium] = useState(false);
@@ -173,12 +174,17 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
     return socketPhase === 'race' ? 'race' : 'active';
   }, [socketPhase]);
 
+  const displayIdeas = useMemo(() => {
+    if (!sort) return ideas;
+    return sortIdeas(ideas, sort);
+  }, [ideas, sort]);
+
   const currentSelectedIdea = useMemo(() => {
     if (!selectedIdea) return null;
-    return ideas.find(i => i.id === selectedIdea.id) || selectedIdea;
-  }, [selectedIdea, ideas]);
+    return displayIdeas.find(i => i.id === selectedIdea.id) || selectedIdea;
+  }, [selectedIdea, displayIdeas]);
 
-  const canvasHeight = useMemo(() => computeCanvasHeight(ideas.length), [ideas.length]);
+  const canvasHeight = useMemo(() => computeCanvasHeight(displayIdeas.length), [displayIdeas.length]);
   const clouds = useMemo(() => generateClouds(canvasHeight), [canvasHeight]);
 
   useEffect(() => {
@@ -195,6 +201,9 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
 
   const handleShowPodium = useCallback(() => setShowPodium(true), []);
 
+  const isNewestMode = sort === 'newest';
+  const hasAnyGlow = isNewestMode && displayIdeas.some(i => computeGlowIntensity(i.createdAt) > 0);
+
   return (
     <SkyCanvasWrapper>
       <ScrollableSkyContainer>
@@ -207,7 +216,7 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
 
           <PlaneLayer>
             {(isLoading || isDashboardLoading) && <IdeasLoader />}
-            {!(isLoading || isDashboardLoading) && ideas.length === 0 && (
+            {!(isLoading || isDashboardLoading) && displayIdeas.length === 0 && (
               <div style={{
                 width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexDirection: 'column', color: 'rgba(72, 80, 84, 0.6)', fontWeight: 600, fontSize: '15px'
@@ -225,8 +234,17 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
                 )}
               </div>
             )}
-            {ideas.map(idea => (
-              <Plane key={idea.id} idea={idea} canvasWidth={canvasWidth} phase={phase} challengeFacultyId={challengeFacultyId} onClick={() => setSelectedIdea(idea)} />
+            {displayIdeas.map(idea => (
+              <Plane
+                key={idea.id}
+                idea={idea}
+                canvasWidth={canvasWidth}
+                phase={phase}
+                challengeFacultyId={challengeFacultyId}
+                glowIntensity={isNewestMode ? computeGlowIntensity(idea.createdAt) : 0}
+                dimmed={hasAnyGlow && computeGlowIntensity(idea.createdAt) === 0}
+                onClick={() => setSelectedIdea(idea)}
+              />
             ))}
           </PlaneLayer>
 
@@ -234,7 +252,7 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
             <RaceOverlay onShowPodium={handleShowPodium} />
           )}
 
-          {showPodium && <PodiumScreen ideas={ideas} />}
+          {showPodium && <PodiumScreen ideas={displayIdeas} />}
         </Sky>
       </ScrollableSkyContainer>
 
@@ -298,7 +316,7 @@ const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading, s
 
     (async () => {
       try {
-        const response = await ideaService.getIdeasByChallenge(challengeId, search, sort);
+        const response = await ideaService.getIdeasByChallenge(challengeId, search);
         if (!active) return;
         const payload = (response as { success?: boolean; data?: unknown })?.success
           ? (response as { data?: unknown }).data
@@ -347,9 +365,9 @@ const SkyCanvas = memo(({ challengeId, challengeFacultyId, isDashboardLoading, s
       active = false;
       timeouts.forEach(clearTimeout);
     };
-  }, [challengeId, search, sort]);
+  }, [challengeId, search]);
 
-  return <SkyCanvasScene initialIdeas={publicIdeas} token={token} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} search={search} />;
+  return <SkyCanvasScene initialIdeas={publicIdeas} token={token} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} search={search} sort={sort} />;
 });
 
 SkyCanvas.displayName = 'SkyCanvas';

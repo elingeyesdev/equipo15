@@ -7,6 +7,7 @@ import { getFacultySlug } from '../../../config/faculties';
 import type { FeedbackMessage } from './useIdeationForm';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import type { SortMode } from '../../../features/sky-wall/types';
 import { io } from 'socket.io-client';
 
 export const useDashboardState = () => {
@@ -29,7 +30,7 @@ export const useDashboardState = () => {
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'likes' | 'comments' | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortMode | null>(null);
 
   useEffect(() => {
     let active = true;
