@@ -1,12 +1,12 @@
 import type { PlaneIdea, SortMode } from './types';
 
 const BASE_SIZE = 56;
-const SCALE_FACTOR = 0.05;
+const SCALE_FACTOR = 0.03;
 const MAX_SCALE = 2.0;
 const BASE_FLOAT_DURATION = 3.0;
 const MIN_FLOAT_DURATION = 1.2;
 const FLOAT_SPEED_FACTOR = 0.12;
-const STEP_PX = 40;
+const STEP_PX = 20;
 const CANVAS_ACTIVE_CAP = 0.82;
 const MIN_CANVAS_HEIGHT = 600;
 const ONE_HOUR_MS = 3_600_000;

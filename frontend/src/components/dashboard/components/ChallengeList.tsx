@@ -2,7 +2,7 @@ import React from 'react';
 import * as S from '../styles/ChallengeStyles';
 import ChallengeCard from './ChallengeCard';
 import ChallengeCardSkeleton from './ChallengeCardSkeleton';
-import { FACULTIES, getFacultySlug } from '../../../config/faculties';
+import { getFacultySlug } from '../../../config/faculties';
 import type { Challenge } from '../../../types/models';
 
 interface ChallengeListProps {
