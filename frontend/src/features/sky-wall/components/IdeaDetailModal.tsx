@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
 import type { PlaneIdea } from '../types';
 import LikeButton from './LikeButton';
@@ -258,7 +259,7 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
     if (e.target === e.currentTarget) onClose();
   };
 
-  return (
+  const modalContent = (
     <ModalOverlay onClick={handleOverlayClick}>
       <ModalContainer>
         <ModalBanner>
@@ -334,6 +335,8 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
       </ModalContainer>
     </ModalOverlay>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default IdeaDetailModal;

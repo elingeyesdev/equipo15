@@ -13,8 +13,8 @@ import OmniSearchBar from './components/OmniSearchBar';
 import SortToggle from './components/SortToggle';
 import IdeasChronologicalList from './components/IdeasChronologicalList';
 import IdeaDetailModal from '../../features/sky-wall/components/IdeaDetailModal';
-import type { Challenge } from '../../types/models';
 import type { RawIdea, PlaneIdea } from '../../features/sky-wall/types';
+import { resolveDisplayName } from '../../utils/user.utils';
 
 import { useDashboardState } from './hooks/useDashboardState';
 import { useIdeationForm } from './hooks/useIdeationForm';
@@ -24,10 +24,8 @@ const IdeationWall = () => {
   const ds = useDashboardState();
   const form = useIdeationForm(userProfile, !user, ds.showToast);
 
-  // Ideas cargadas por SkyCanvas — para la lista cronológica
   const [wallIdeas, setWallIdeas] = useState<RawIdea[]>([]);
   const [listLoading, setListLoading] = useState(false);
-  // Idea seleccionada desde la lista (abre el mismo modal que los aviones)
   const [selectedListIdea, setSelectedListIdea] = useState<PlaneIdea | null>(null);
 
   const handleIdeasLoaded = (ideas: RawIdea[]) => {
@@ -35,8 +33,9 @@ const IdeationWall = () => {
     setListLoading(false);
   };
 
-  const firstName = userProfile?.displayName?.split(' ')[0] || user?.displayName?.split(' ')[0] || '';
-  const fullName = userProfile?.displayName || user?.displayName || user?.email || '';
+  const resolvedName = resolveDisplayName(userProfile as any);
+  const firstName = resolvedName.split(' ')[0] || '';
+  const fullName = resolvedName || user?.email || '';
 
   const roleName: string = (userProfile?.roleInfo?.name || userProfile?.role || '').toLowerCase();
   const roleLabels: Record<string, string> = {

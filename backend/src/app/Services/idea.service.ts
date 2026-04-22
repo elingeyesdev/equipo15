@@ -19,7 +19,7 @@ import {
 @Injectable()
 export class IdeaService {
   private readonly logger = new Logger(IdeaService.name);
-  // Caché en memoria para consultas públicas (TTL 30 segundos)
+  
   private readonly publicCache = new Map<string, { data: any; expiry: number }>();
   private readonly CACHE_TTL_MS = 30_000;
 
@@ -208,10 +208,10 @@ export class IdeaService {
   }
 
   async findAllPublic(paginationDto?: PaginationDto, firebaseUid?: string) {
-    // Generar clave de caché basada en los parámetros de consulta
+    
     const cacheKey = `public:${paginationDto?.challengeId || 'all'}:${paginationDto?.page || 1}:${paginationDto?.limit || 20}:${paginationDto?.search || ''}:${paginationDto?.sort || 'newest'}`;
 
-    // Verificar si hay datos en caché válidos (TTL 5 segundos)
+    
     const cached = this.publicCache.get(cacheKey);
     if (cached && Date.now() < cached.expiry) {
       this.logger.log(`⚡ Cache HIT: ${cacheKey}`);
@@ -244,7 +244,7 @@ export class IdeaService {
       },
     };
 
-    // Guardar en caché
+    
     this.publicCache.set(cacheKey, { data: result, expiry: Date.now() + this.CACHE_TTL_MS });
     this.logger.log(`🔄 Cache MISS → stored: ${cacheKey}`);
 

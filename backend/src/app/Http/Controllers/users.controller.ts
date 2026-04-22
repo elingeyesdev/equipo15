@@ -71,13 +71,18 @@ export class UsersController {
     );
   }
 
-  @Patch('bio')
-  @ApiOperation({ summary: 'Update user biography' })
-  async updateBio(
+  @Patch('profile')
+  @ApiOperation({ summary: 'Update user profile (bio, nickname, phone, studentCode)' })
+  async updateProfile(
     @Request() req: AuthenticatedRequest,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.updateBio(req.user.uid, updateUserDto.bio || '');
+    return this.userService.updateProfile(req.user.uid, {
+      bio: updateUserDto.bio,
+      nickname: updateUserDto.nickname,
+      phone: updateUserDto.phone,
+      studentCode: updateUserDto.studentCode,
+    });
   }
 
   @Patch('faculty')

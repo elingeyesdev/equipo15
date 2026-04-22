@@ -103,13 +103,11 @@ export class UserService {
     return this.formatUserResponse(user as UserWithRole);
   }
 
-  async updateBio(
+  async updateProfile(
     firebaseUid: string,
-    bio: string,
+    data: { bio?: string; nickname?: string; phone?: string; studentCode?: string },
   ): Promise<UserResponse | null> {
-    const updatedUser = await this.userRepository.updateByUid(firebaseUid, {
-      bio,
-    });
+    const updatedUser = await this.userRepository.updateByUid(firebaseUid, data);
     if (!updatedUser) {
       throw new NotFoundException('Usuario no encontrado');
     }

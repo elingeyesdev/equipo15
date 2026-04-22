@@ -168,7 +168,6 @@ export const useAdminDashboard = () => {
 
     setSaving(true);
     try {
-      // Inyectar el publicationDate dinámico si el status pasa a "Activo"
       const payload: Partial<Challenge> & { authorId?: string; id?: string; publicationDate?: string } = {
         title: formData.title,
         problemDescription: formData.description || undefined,

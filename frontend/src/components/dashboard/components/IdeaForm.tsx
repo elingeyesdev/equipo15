@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import * as S from '../styles/FormStyles';
 import * as FM from '../styles/FeedbackAndMiscStyles';
 import { FEEDBACK_GLYPH } from '../styles/CommonStyles';
@@ -43,13 +44,32 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const profileStatus = form.isProfileComplete();
+    if (!profileStatus.complete) {
+      let msg = "";
+      if (!profileStatus.hasCode && !profileStatus.hasPhone) msg = "¡Casi listo! Necesitamos tu código de estudiante y teléfono para que la universidad pueda contactarte si tu idea es seleccionada.";
+      else if (!profileStatus.hasCode) msg = "¡Ya casi! Solo nos falta tu código de estudiante para validar tu participación.";
+      else if (!profileStatus.hasPhone) msg = "¡Solo un paso más! Ingresa tu teléfono para que podamos contactarte.";
+
+      form.setFormFeedback({
+        tone: 'info',
+        title: 'Perfil incompleto',
+        message: msg
+      });
+
+      const scrollContainer = document.querySelector('[role="dialog"]');
+      if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     const errors = form.validatePublicSubmission(challenge);
     if (Object.keys(errors).length === 0) {
       setConfirmOpen(true);
     }
   };
 
-  return (
+  const modalContent = (
     <>
       <S.ModalBackdrop onClick={onClose} />
       <S.ModalWrapper role="dialog" aria-modal="true" aria-labelledby="idea-form-title">
@@ -259,6 +279,8 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
       )}
     </>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default IdeaForm;

@@ -23,16 +23,20 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
 
           <S.StatsSummary>
             <S.SummaryCard>
-              <S.SummaryVal>{challengeStats?.impactoTotal || 0}</S.SummaryVal>
-              <S.SummaryLabel>Impacto Total</S.SummaryLabel>
-            </S.SummaryCard>
-            <S.SummaryCard>
               <S.SummaryVal>{challengeStats?.totalIdeas || 0}</S.SummaryVal>
               <S.SummaryLabel>Ideas en Vuelo</S.SummaryLabel>
             </S.SummaryCard>
             <S.SummaryCard>
-              <S.SummaryVal>{challengeStats?.facultadesUnidas || 0}</S.SummaryVal>
-              <S.SummaryLabel>Facultades Unidas</S.SummaryLabel>
+              <S.SummaryVal>{challengeStats?.totalLikes || 0}</S.SummaryVal>
+              <S.SummaryLabel>Likes Totales</S.SummaryLabel>
+            </S.SummaryCard>
+            <S.SummaryCard>
+              <S.SummaryVal>{challengeStats?.totalComments || 0}</S.SummaryVal>
+              <S.SummaryLabel>Comentarios</S.SummaryLabel>
+            </S.SummaryCard>
+            <S.SummaryCard>
+              <S.SummaryVal>{challengeStats?.totalParticipants || 0}</S.SummaryVal>
+              <S.SummaryLabel>Participantes</S.SummaryLabel>
             </S.SummaryCard>
           </S.StatsSummary>
 

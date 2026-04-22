@@ -62,7 +62,7 @@ export class ChallengeRepository {
             select: { ideas: true },
           },
           ideas: {
-            select: { likesCount: true },
+            select: { likesCount: true, commentsCount: true },
           },
         },
       }),
@@ -187,7 +187,7 @@ export class ChallengeRepository {
          where: {
             ideas: { some: { challengeId, status: 'public' } }
          },
-         select: { id: true, displayName: true, role: { select: { name: true } }, email: true }
+         select: { id: true, displayName: true, nickname: true, role: { select: { name: true } }, email: true }
       }),
       this.prisma.idea.findMany({
          where: { challengeId, status: 'public' },
@@ -201,17 +201,23 @@ export class ChallengeRepository {
 
     return {
        totalIdeas: agg._count || 0,
-       impactoTotal: (agg._sum.likesCount || 0) + (agg._sum.commentsCount || 0),
-       facultadesUnidas: uniqueFaculties.size,
-       communityPulse: allAuthors.map(a => ({
-          id: a.id,
-          name: a.displayName || a.email.split('@')[0],
-          role: a.role?.name || 'student',
-          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(a.displayName || a.email.split('@')[0])}&background=random`
-       })),
+       totalLikes: agg._sum.likesCount || 0,
+       totalComments: agg._sum.commentsCount || 0,
+       totalParticipants: allAuthors.length,
+       communityPulse: allAuthors.map(a => {
+          const resolvedName = a.nickname || a.displayName || a.email.split('@')[0] || 'Anónimo';
+          return {
+            id: a.id,
+            name: resolvedName,
+            role: a.role?.name || 'student',
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(resolvedName)}&background=random`
+          };
+       }),
        topIdeas: topIdeas.map(i => ({
           id: i.id,
           title: i.title,
+          likesCount: i.likesCount || 0,
+          commentsCount: i.commentsCount || 0,
           impact: (i.likesCount || 0) + (i.commentsCount || 0)
        }))
     };

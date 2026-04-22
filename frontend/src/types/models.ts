@@ -12,8 +12,10 @@ export interface UserProfile {
   roleId: string;
   roleInfo?: Role;
   role?: string;
-  bio?: string;
   avatarUrl?: string;
+  nickname?: string;
+  phone?: string;
+  studentCode?: string;
   facultyId?: number;
   career?: string;
   specialty?: string;
@@ -56,6 +58,7 @@ export type CommentStatus = 'visible' | 'hidden' | 'deleted';
 export interface CommentAuthor {
   id: string;
   displayName: string;
+  nickname?: string;
   avatarUrl?: string;
   role?: string;
   facultyId?: number;

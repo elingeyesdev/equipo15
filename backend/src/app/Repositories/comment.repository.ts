@@ -14,6 +14,7 @@ const commentInclude = {
     select: {
       id: true,
       displayName: true,
+      nickname: true,
       avatarUrl: true,
       facultyId: true,
     },
@@ -35,6 +36,7 @@ const commentListSelect = Prisma.validator<Prisma.CommentSelect>()({
     select: {
       id: true,
       displayName: true,
+      nickname: true,
       avatarUrl: true,
       facultyId: true,
     },

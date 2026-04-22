@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import type { PlaneIdea, WallPhase, IdeaUpdatedPayload, IdeaVotedPayload, RawIdea } from './types';
 import { LANE_HEIGHT_PER_IDEA, TOP_PADDING } from './flight.engine';
+import { resolveDisplayName } from '../../utils/user.utils';
 
 const DEFAULT_SOCKET_URL = 'http://localhost:3000';
 const DEBOUNCE_MS = 200;
@@ -11,7 +12,7 @@ const buildPlanes = (rawIdeas: RawIdea[]): PlaneIdea[] => {
   return rawIdeas.map((idea, i) => ({
     id: idea.id ?? idea._id ?? String(i),
     title: idea.title,
-    authorName: idea.isAnonymous ? 'Anónimo' : (idea.author?.displayName || idea.author?.email || 'Anónimo'),
+    authorName: idea.isAnonymous ? 'Anónimo' : resolveDisplayName(idea.author),
     likesCount: idea.likesCount ?? 0,
     commentsCount: idea.commentsCount ?? 0,
     laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),
@@ -93,7 +94,7 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
         const newPlane: PlaneIdea = {
           id: rawIdea.id ?? rawIdea._id ?? String(i),
           title: rawIdea.title || 'Idea sin título',
-          authorName: rawIdea.isAnonymous ? 'Anónimo' : (rawIdea.author?.displayName || rawIdea.author?.email || 'Anónimo'),
+          authorName: rawIdea.isAnonymous ? 'Anónimo' : resolveDisplayName(rawIdea.author),
           likesCount: rawIdea.likesCount ?? 0,
           commentsCount: rawIdea.commentsCount ?? 0,
           laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),

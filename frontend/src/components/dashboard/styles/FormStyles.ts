@@ -7,7 +7,7 @@ export const ModalBackdrop = styled.div`
   inset: 0;
   background: rgba(17, 22, 26, 0.65);
   backdrop-filter: blur(3px);
-  z-index: 80;
+  z-index: 9999;
 `;
 
 export const ModalWrapper = styled.div`
@@ -17,7 +17,7 @@ export const ModalWrapper = styled.div`
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  z-index: 90;
+  z-index: 10000;
   overflow-y: auto;
   overscroll-behavior: contain;
 `;

@@ -190,6 +190,12 @@ export const useIdeationForm = (
     return !errorMessage;
   };
 
+  const isProfileComplete = () => {
+    const hasCode = !!profile?.studentCode?.trim();
+    const hasPhone = !!profile?.phone?.trim();
+    return { hasCode, hasPhone, complete: hasCode && hasPhone };
+  };
+
   const validatePublicSubmission = (formChallenge: Challenge | null): FormErrors => {
     const errors: FormErrors = {};
     (
@@ -261,6 +267,24 @@ export const useIdeationForm = (
       Array.from(new Set(tags.map(tag => tag.trim()).filter(Boolean)));
 
     if (targetStatus === 'public') {
+      const hasCode = !!profile?.studentCode?.trim();
+      const hasPhone = !!profile?.phone?.trim();
+
+      if (!hasCode || !hasPhone) {
+        let msg = "";
+        if (!hasCode && !hasPhone) msg = "¡Casi listo! Necesitamos tu código de estudiante y teléfono para que la universidad pueda contactarte si tu idea es seleccionada.";
+        else if (!hasCode) msg = "¡Ya casi! Solo nos falta tu código de estudiante para validar tu participación.";
+        else if (!hasPhone) msg = "¡Solo un paso más! Ingresa tu teléfono para que podamos contactarte.";
+
+        const warning: FeedbackMessage = {
+          tone: 'info',
+          title: 'Perfil incompleto',
+          message: msg
+        };
+        setFormFeedback(warning);
+        return false;
+      }
+
       const publicErrors = validatePublicSubmission(formChallenge);
       setFormErrors(publicErrors);
       setConsentsTouched(true);
@@ -373,6 +397,7 @@ export const useIdeationForm = (
     savingAction,
     formFeedback,
     setFormFeedback,
+    isProfileComplete,
     handleIdeaSubmit,
     resetForm,
   };

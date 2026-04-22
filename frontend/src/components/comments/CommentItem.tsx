@@ -2,6 +2,7 @@ import { useState } from 'react';
 import styled from 'styled-components';
 import type { Comment } from '../../types/models';
 import CommentForm from './CommentForm';
+import { resolveDisplayName } from '../../utils/user.utils';
 
 interface CommentItemProps {
   comment: Comment;
@@ -94,7 +95,7 @@ export const CommentItem = ({ comment, onReply, depth = 0 }: CommentItemProps) =
   };
 
   const isDeleted = comment.status === 'deleted';
-  const authorName = comment.author?.displayName || 'Usuario';
+  const authorName = resolveDisplayName(comment.author);
   const createdAt = new Date(comment.createdAt);
 
   return (

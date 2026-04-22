@@ -13,8 +13,8 @@ export const userService = {
     return response.data;
   },
   
-  updateBio: async (bio: string): Promise<ApiResponse<UserProfile>> => {
-    const response = await axiosInstance.patch<ApiResponse<UserProfile>>('/users/bio', { bio });
+  updateProfile: async (data: { bio?: string; nickname?: string; phone?: string; studentCode?: string }): Promise<ApiResponse<UserProfile>> => {
+    const response = await axiosInstance.patch<ApiResponse<UserProfile>>('/users/profile', data);
     return response.data;
   },
 

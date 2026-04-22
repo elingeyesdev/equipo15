@@ -31,6 +31,7 @@ export interface IdeaVotedPayload {
 
 export interface RawAuthor {
   displayName?: string;
+  nickname?: string;
   email?: string;
   facultyId?: number;
 }

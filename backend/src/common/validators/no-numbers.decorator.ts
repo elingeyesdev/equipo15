@@ -4,10 +4,7 @@ import {
   ValidationArguments,
 } from 'class-validator';
 
-/**
- * Rechaza el texto si contiene dígitos (0-9).
- * Uso: Título, Descripción del Problema, Contexto de la Empresa.
- */
+
 export function NoNumbers(validationOptions?: ValidationOptions) {
   return function (object: Object, propertyName: string) {
     registerDecorator({

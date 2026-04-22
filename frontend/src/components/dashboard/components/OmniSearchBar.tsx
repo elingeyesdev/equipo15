@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 
-/* ─── Animations ─── */
 const expandIn = keyframes`
   from { width: 44px; opacity: 0.8; }
   to   { width: 100%; opacity: 1; }
@@ -13,7 +12,6 @@ const pulseGlow = keyframes`
   50%      { box-shadow: 0 0 0 6px rgba(254, 65, 10, 0.07); }
 `;
 
-/* ─── Styled Components ─── */
 const Wrapper = styled.div<{ $expanded: boolean }>`
   position: relative;
   display: flex;
@@ -147,7 +145,6 @@ const SearchIcon = () => (
   </svg>
 );
 
-/* ─── Component ─── */
 interface OmniSearchBarProps {
   value: string;
   onChange: (value: string) => void;
@@ -161,7 +158,6 @@ const OmniSearchBar: React.FC<OmniSearchBarProps> = ({ value, onChange }) => {
   const handleToggle = useCallback(() => {
     if (!expanded) {
       setExpanded(true);
-      // Small delay so the input appears after the animation starts
       setTimeout(() => inputRef.current?.focus(), 180);
     } else if (!value) {
       setExpanded(false);
@@ -173,7 +169,6 @@ const OmniSearchBar: React.FC<OmniSearchBarProps> = ({ value, onChange }) => {
     inputRef.current?.focus();
   }, [onChange]);
 
-  // Close on click outside (only if empty)
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -188,7 +183,6 @@ const OmniSearchBar: React.FC<OmniSearchBarProps> = ({ value, onChange }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [value]);
 
-  // Close on Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && expanded) {

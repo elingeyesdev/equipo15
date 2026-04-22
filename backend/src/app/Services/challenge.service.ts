@@ -158,7 +158,7 @@ export class ChallengeService {
     const [totalChallenges, totalIdeas, totalParticipants] = await Promise.all([
       this.challengeRepository.countChallengesByStatus('Activo'),
       this.challengeRepository.countTotalIdeas(),
-      ...(['mock']).map(() => 150) // Mock fast countStudentUsers to avoid slow queries
+      ...(['mock']).map(() => 150) 
     ]);
 
     const topFacultades = [

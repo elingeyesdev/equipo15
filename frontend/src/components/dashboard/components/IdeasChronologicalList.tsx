@@ -2,14 +2,13 @@ import React from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 import type { RawIdea, PlaneIdea, SortMode } from '../../../features/sky-wall/types';
+import { resolveDisplayName } from '../../../utils/user.utils';
 
-/* ─── Animations ─── */
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
 
-/* ─── Styled Components ─── */
 const Wrapper = styled.div`
   margin-top: 1.5rem;
   margin-bottom: 2.5rem;        /* ← separa del MainGrid */
@@ -156,7 +155,6 @@ const ViewHint = styled.span`
   }
 `;
 
-/* ─── Helpers ─── */
 const formatRelative = (dateStr?: string): string => {
   if (!dateStr) return 'Fecha desconocida';
   const date = new Date(dateStr);
@@ -187,7 +185,7 @@ const rawToPlane = (idea: RawIdea, index: number): PlaneIdea => ({
   title: idea.title,
   authorName: idea.isAnonymous
     ? 'Anónimo'
-    : idea.author?.displayName || idea.author?.email?.split('@')[0] || 'Anónimo',
+    : resolveDisplayName(idea.author),
   likesCount: idea.likesCount ?? 0,
   commentsCount: idea.commentsCount ?? 0,
   laneY: 0,
@@ -199,7 +197,6 @@ const rawToPlane = (idea: RawIdea, index: number): PlaneIdea => ({
   createdAt: idea.createdAt,
 });
 
-/* ─── Component ─── */
 interface IdeasChronologicalListProps {
   ideas: RawIdea[];
   sortOrder: SortMode;
@@ -231,7 +228,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
         {ideas.map((idea, i) => {
           const authorName = idea.isAnonymous
             ? 'Anónimo'
-            : idea.author?.displayName || idea.author?.email?.split('@')[0] || 'Anónimo';
+            : resolveDisplayName(idea.author);
 
           return (
             <IdeaCard

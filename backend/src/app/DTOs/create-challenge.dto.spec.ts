@@ -1,10 +1,7 @@
 import { validate } from 'class-validator';
 import { CreateChallengeDto } from './create-challenge.dto';
 
-/**
- * Helper para construir un DTO con valores válidos por defecto.
- * Se puede sobreescribir cualquier propiedad pasándola como argumento.
- */
+
 function buildValidDto(overrides: Partial<CreateChallengeDto> = {}): CreateChallengeDto {
   const dto = new CreateChallengeDto();
   dto.title = 'Rediseñar el sistema de becas universitarias';
@@ -23,28 +20,28 @@ function buildValidDto(overrides: Partial<CreateChallengeDto> = {}): CreateChall
   return dto;
 }
 
-/** Retorna una fecha ISO string N días en el futuro */
+
 function getFutureDate(daysFromNow: number): string {
   const d = new Date();
   d.setDate(d.getDate() + daysFromNow);
   return d.toISOString().split('T')[0];
 }
 
-/** Retorna una fecha ISO string N días en el pasado */
+
 function getPastDate(daysAgo: number): string {
   const d = new Date();
   d.setDate(d.getDate() - daysAgo);
   return d.toISOString().split('T')[0];
 }
 
-// ──────────────────────────────────────────────────────────────
-// 1. PRUEBAS DE LÓGICA DE FECHAS
-// ──────────────────────────────────────────────────────────────
+
+
+
 describe('CreateChallengeDto — Lógica de Fechas', () => {
   it('debe fallar si endDate es anterior a startDate (orden cronológico)', async () => {
     const dto = buildValidDto({
       startDate: getFutureDate(10),
-      endDate: getFutureDate(5), // ¡Antes del inicio!
+      endDate: getFutureDate(5), 
     });
     const errors = await validate(dto);
     const sixMonthsError = errors.find(e => e.property === 'endDate');
@@ -54,7 +51,7 @@ describe('CreateChallengeDto — Lógica de Fechas', () => {
   it('debe fallar si endDate excede 6 meses (180 días) desde startDate', async () => {
     const dto = buildValidDto({
       startDate: getFutureDate(1),
-      endDate: getFutureDate(200), // 200 días > 180
+      endDate: getFutureDate(200), 
     });
     const errors = await validate(dto);
     const sixMonthsError = errors.find(e => e.property === 'endDate');
@@ -64,7 +61,7 @@ describe('CreateChallengeDto — Lógica de Fechas', () => {
   it('debe pasar si endDate está exactamente a 180 días de startDate', async () => {
     const dto = buildValidDto({
       startDate: getFutureDate(1),
-      endDate: getFutureDate(181), // 180 días de diferencia
+      endDate: getFutureDate(181), 
     });
     const errors = await validate(dto);
     const sixMonthsError = errors.find(e => e.property === 'endDate');
@@ -89,9 +86,9 @@ describe('CreateChallengeDto — Lógica de Fechas', () => {
   });
 });
 
-// ──────────────────────────────────────────────────────────────
-// 2. PRUEBAS DE PRIVACIDAD Y TOKENS (Seguridad)
-// ──────────────────────────────────────────────────────────────
+
+
+
 describe('CreateChallengeDto — Privacidad y Tokens', () => {
   it('debe aceptar isPrivate: true con un UUID válido como id', async () => {
     const dto = buildValidDto({
@@ -124,9 +121,9 @@ describe('CreateChallengeDto — Privacidad y Tokens', () => {
   });
 });
 
-// ──────────────────────────────────────────────────────────────
-// 3. PRUEBAS DE CONTENIDO Y LONGITUD (Calidad)
-// ──────────────────────────────────────────────────────────────
+
+
+
 describe('CreateChallengeDto — Contenido y Calidad', () => {
   it('debe fallar si el título está vacío', async () => {
     const dto = buildValidDto({ title: '' });
@@ -143,7 +140,7 @@ describe('CreateChallengeDto — Contenido y Calidad', () => {
   });
 
   it('debe fallar si la descripción contiene texto spam repetitivo', async () => {
-    // Generar descripción spam de >200 chars con solo 2 palabras únicas
+    
     const spam = 'empresa dolor '.repeat(30);
     const dto = buildValidDto({ problemDescription: spam });
     const errors = await validate(dto);
@@ -152,7 +149,7 @@ describe('CreateChallengeDto — Contenido y Calidad', () => {
   });
 
   it('debe pasar con una descripción larga y diversa', async () => {
-    const dto = buildValidDto(); // ya tiene una descripción válida por defecto
+    const dto = buildValidDto(); 
     const errors = await validate(dto);
     const descError = errors.find(e => e.property === 'problemDescription');
     expect(descError).toBeUndefined();
@@ -189,9 +186,9 @@ describe('CreateChallengeDto — Contenido y Calidad', () => {
   });
 });
 
-// ──────────────────────────────────────────────────────────────
-// 4. PRUEBAS DE INTEGRACIÓN CON DTOs 
-// ──────────────────────────────────────────────────────────────
+
+
+
 describe('CreateChallengeDto — Validación de Campos Opcionales y Tipos', () => {
   it('debe fallar si facultyId no es un número', async () => {
     const dto = buildValidDto({ facultyId: 'texto' as any });
@@ -235,13 +232,13 @@ describe('CreateChallengeDto — Validación de Campos Opcionales y Tipos', () =
   });
 });
 
-// ──────────────────────────────────────────────────────────────
-// 5. PRUEBAS DE NÚMEROS Y SÍMBOLOS
-// ──────────────────────────────────────────────────────────────
+
+
+
 describe('CreateChallengeDto — Números y Símbolos', () => {
   it('debe fallar si el título contiene números', async () => {
     const dto = buildValidDto({ title: 'Reto número ciento veintitrés para estudiantes' });
-    // Override: forzar un número
+    
     dto.title = 'Reto número 123 para estudiantes';
     const errors = await validate(dto);
     const titleError = errors.find(
@@ -257,7 +254,7 @@ describe('CreateChallengeDto — Números y Símbolos', () => {
         'Necesitamos rediseñar el flujo completo de registro para mejorar la experiencia del estudiante ' +
         'y reducir los tiempos de espera en cada paso del formulario de postulación universitaria.',
     });
-    // Forzar números
+    
     dto.problemDescription = dto.problemDescription!.replace('cinco', '5').replace('doscientos', '200');
     const errors = await validate(dto);
     const descError = errors.find(

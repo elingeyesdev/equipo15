@@ -24,6 +24,9 @@ model User {
   displayName       String
   bio               String?      @db.Text
   avatarUrl         String?
+  nickname          String?
+  phone             String?
+  studentCode       String?
   role              Role?        @relation(fields: [roleId], references: [id])
   roleId            String?
   fcmToken          String?
@@ -85,8 +88,8 @@ model Idea {
   @@index([challengeId])
   @@index([authorId])
   @@index([status])
-  @@index([challengeId, status, createdAt])  // filtro cronológico compuesto
-  @@index([challengeId, likesCount])          // filtro por popularidad
+  @@index([challengeId, status, createdAt])  
+  @@index([challengeId, likesCount])          
 }
 
 model Comment {

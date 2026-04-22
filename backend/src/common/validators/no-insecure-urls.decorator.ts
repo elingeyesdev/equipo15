@@ -15,7 +15,7 @@ export function NoInsecureUrls(validationOptions?: ValidationOptions) {
         validate(value: any, args: ValidationArguments) {
           if (typeof value !== 'string') return true;
           
-          // Buscar http:// 
+          
           const insecureUrlRegex = /http:\/\/[^\s]+/i;
           if (insecureUrlRegex.test(value)) {
             return false;

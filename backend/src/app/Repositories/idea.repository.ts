@@ -29,7 +29,7 @@ export class IdeaRepository {
         skip,
         take,
         include: {
-          author: { select: { displayName: true, role: true, facultyId: true } },
+          author: { select: { displayName: true, nickname: true, role: true, facultyId: true } },
           challenge: true,
         },
       }),
@@ -58,7 +58,7 @@ export class IdeaRepository {
       ];
     }
 
-    // Determinar el campo y dirección de ordenamiento
+    
     let orderBy: Record<string, 'asc' | 'desc'>;
     switch (sort) {
       case 'oldest':
@@ -76,7 +76,7 @@ export class IdeaRepository {
         break;
     }
 
-    // Optimización: select solo los campos necesarios
+    
     const data = await this.prisma.idea.findMany({
       where,
       skip,
@@ -97,7 +97,7 @@ export class IdeaRepository {
         authorId: true,
         challengeId: true,
         votesCount: true,
-        author: { select: { displayName: true, email: true, facultyId: true } },
+        author: { select: { displayName: true, nickname: true, email: true, facultyId: true } },
         ...(userId
           ? { ideaLikes: { where: { userId }, select: { id: true } } }
           : {}),

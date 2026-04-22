@@ -15,14 +15,14 @@ export function HasMinimumUniqueWords(minUniqueRatio: number = 0.3, validationOp
         validate(value: any, args: ValidationArguments) {
           if (typeof value !== 'string') return false;
           
-          // Dividir por espacios y filtrar vacíos
+          
           const words = value.toLowerCase().match(/\b[\wáéíóúüñ]+\b/g) || [];
-          if (words.length === 0) return true; // Si está vacío la validación de IsNotEmpty saltará aparte.
+          if (words.length === 0) return true; 
 
           const uniqueWords = new Set(words);
           const ratio = uniqueWords.size / words.length;
 
-          // Exigimos que al menos el X% de las palabras sean únicas
+          
           return ratio >= minUniqueRatio;
         },
         defaultMessage(args: ValidationArguments) {
