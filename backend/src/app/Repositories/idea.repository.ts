@@ -138,6 +138,13 @@ export class IdeaRepository {
     });
   }
 
+  async checkUserLike(ideaId: string, userId: string): Promise<boolean> {
+    const count = await this.prisma.ideaLike.count({
+      where: { ideaId, userId },
+    });
+    return count > 0;
+  }
+
   async registerLikeAndIncrement(ideaId: string, userId: string): Promise<Idea> {
     const [, updated] = await this.prisma.$transaction([
       this.prisma.ideaLike.create({
@@ -146,6 +153,19 @@ export class IdeaRepository {
       this.prisma.idea.update({
         where: { id: ideaId },
         data: { likesCount: { increment: 1 } },
+      }),
+    ]);
+    return updated;
+  }
+
+  async removeLikeAndDecrement(ideaId: string, userId: string): Promise<Idea> {
+    const [, updated] = await this.prisma.$transaction([
+      this.prisma.ideaLike.delete({
+        where: { ideaId_userId: { ideaId, userId } },
+      }),
+      this.prisma.idea.update({
+        where: { id: ideaId },
+        data: { likesCount: { decrement: 1 } },
       }),
     ]);
     return updated;

@@ -5,6 +5,7 @@ import type { PlaneIdea } from '../types';
 import LikeButton from './LikeButton';
 import { Pista8Theme } from '../../../config/theme';
 import CommentsSection from '../../../components/comments/CommentsSection';
+import { useAuth } from '../../../context/AuthContext';
 
 const overlayIn = keyframes`
   from { opacity: 0; }
@@ -239,6 +240,7 @@ interface IdeaDetailModalProps {
 }
 
 export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
+  const { userProfile } = useAuth();
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [commentsCount, setCommentsCount] = useState(idea.commentsCount);
 
@@ -306,7 +308,12 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
 
           <SectionBlock>
             <ActionsRow>
-              <LikeButton ideaId={idea.id} initialLikes={idea.likesCount} hasVoted={idea.hasVoted} />
+              <LikeButton 
+                ideaId={idea.id} 
+                initialLikes={idea.likesCount} 
+                hasVoted={idea.hasVoted} 
+                isAuthor={idea.authorId === userProfile?.id}
+              />
 
               <CommentToggleButton
                 type="button"

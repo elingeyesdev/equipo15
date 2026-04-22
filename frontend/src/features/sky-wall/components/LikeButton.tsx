@@ -53,6 +53,7 @@ interface LikeButtonProps {
   ideaId: string;
   initialLikes: number;
   hasVoted?: boolean;
+  isAuthor?: boolean;
 }
 
 const getLocalVoted = (id: string) => {
@@ -64,13 +65,16 @@ const getLocalVoted = (id: string) => {
   }
 };
 
-const saveLocalVoted = (id: string) => {
+const saveLocalVoted = (id: string, voted: boolean) => {
   try {
     const votedIdeas = JSON.parse(localStorage.getItem('pista8_voted_ideas') || '[]');
-    if (!votedIdeas.includes(id)) {
+    if (voted && !votedIdeas.includes(id)) {
       votedIdeas.push(id);
-      localStorage.setItem('pista8_voted_ideas', JSON.stringify(votedIdeas));
+    } else if (!voted && votedIdeas.includes(id)) {
+      const idx = votedIdeas.indexOf(id);
+      votedIdeas.splice(idx, 1);
     }
+    localStorage.setItem('pista8_voted_ideas', JSON.stringify(votedIdeas));
   } catch { }
 };
 
@@ -79,7 +83,12 @@ const isConflictError = (error: unknown): boolean => {
   return axiosError?.response?.status === 409;
 };
 
-export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted }: LikeButtonProps) => {
+const isForbiddenError = (error: unknown): boolean => {
+  const axiosError = error as any;
+  return axiosError?.response?.status === 403 || axiosError?.response?.data?.code === 'AUTOLIKE_FORBIDDEN';
+};
+
+export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuthor }: LikeButtonProps) => {
   const [likes, setLikes] = useState(initialLikes);
   const [hasVoted, setHasVoted] = useState(() => serverVoted || getLocalVoted(ideaId));
   const [isVoting, setIsVoting] = useState(false);
@@ -89,31 +98,41 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted }: Like
   }, [initialLikes]);
 
   useEffect(() => {
-    if (serverVoted) {
-      setHasVoted(true);
-      saveLocalVoted(ideaId);
+    if (serverVoted !== undefined) {
+      setHasVoted(serverVoted);
+      saveLocalVoted(ideaId, serverVoted);
     }
   }, [serverVoted, ideaId]);
 
   const handleVote = async () => {
-    if (hasVoted || isVoting) return;
+    if (isAuthor) {
+      toast.info('No puedes votar por tu propia idea. ¡Tu avión ya tiene su propio impulso!');
+      return;
+    }
+    if (isVoting) return;
 
+    const willVote = !hasVoted;
     setIsVoting(true);
-    setHasVoted(true);
-    setLikes(prev => prev + 1);
+    setHasVoted(willVote);
+    setLikes(prev => willVote ? prev + 1 : Math.max(0, prev - 1));
 
     try {
       await ideaService.voteIdea(ideaId);
-      saveLocalVoted(ideaId);
-      toast.success('Voto registrado');
+      saveLocalVoted(ideaId, willVote);
+      toast.success(willVote ? '¡Apoyo enviado!' : 'Apoyo retirado');
     } catch (error: unknown) {
-      if (isConflictError(error)) {
-        saveLocalVoted(ideaId);
-        toast.info('Ya apoyaste este avion');
-      } else {
+      if (isForbiddenError(error)) {
+        const msg = (error as any)?.response?.data?.message || 'No puedes votar por tu propia idea.';
+        toast.error(msg);
         setHasVoted(false);
         setLikes(prev => Math.max(0, prev - 1));
-        toast.error('Hubo un error al registrar tu voto.');
+      } else if (isConflictError(error)) {
+        setHasVoted(true);
+        saveLocalVoted(ideaId, true);
+      } else {
+        setHasVoted(!willVote);
+        setLikes(prev => !willVote ? prev + 1 : Math.max(0, prev - 1));
+        toast.error('No pudimos procesar tu voto. Intenta de nuevo.');
       }
     } finally {
       setIsVoting(false);
@@ -121,7 +140,14 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted }: Like
   };
 
   return (
-    <Button $hasVoted={hasVoted} $isVoting={isVoting} onClick={handleVote} disabled={isVoting || hasVoted}>
+    <Button
+      $hasVoted={hasVoted}
+      $isVoting={isVoting}
+      onClick={handleVote}
+      disabled={isVoting}
+      style={isAuthor ? { cursor: 'help', opacity: 0.8 } : {}}
+      title={isAuthor ? 'No puedes votar por tu propia idea' : ''}
+    >
       <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
         fill={hasVoted ? Pista8Theme.primary : 'none'}
         style={{ color: hasVoted ? Pista8Theme.primary : 'currentColor' }}

@@ -1,4 +1,4 @@
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 import { fadeUp } from './CommonStyles';
 

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException, ForbiddenException, Logger } from '@nestjs/common';
 import { IdeaRepository } from '../Repositories/idea.repository';
 import { ChallengeRepository } from '../Repositories/challenge.repository';
 import { UserRepository } from '../Repositories/user.repository';
@@ -259,20 +259,38 @@ export class IdeaService {
 
   async addLike(ideaId: string, firebaseUid: string): Promise<Idea | null> {
     const userId = await this.resolveAuthorId(firebaseUid);
+    
+    const idea = await this.ideaRepository.findById(ideaId);
+    if (!idea) {
+      throw new BadRequestException('La idea no existe.');
+    }
+
+    if (idea.authorId === userId) {
+      throw new ForbiddenException({
+        message: 'No puedes votar por tu propia idea. ¡Tu avión ya tiene su propio impulso!',
+        code: 'AUTOLIKE_FORBIDDEN',
+      });
+    }
+
+    const hasLiked = await this.ideaRepository.checkUserLike(ideaId, userId);
+
     try {
-      const updated = await this.ideaRepository.registerLikeAndIncrement(ideaId, userId);
+      let updated: Idea;
+      if (hasLiked) {
+        updated = await this.ideaRepository.removeLikeAndDecrement(ideaId, userId);
+      } else {
+        updated = await this.ideaRepository.registerLikeAndIncrement(ideaId, userId);
+      }
+
       this.eventsGateway.server.emit('idea:voted', {
         ideaId: updated.id,
         likesCount: updated.likesCount,
         challengeId: updated.challengeId,
       });
+
       return updated;
     } catch (error: unknown) {
-      const isPrismaUniqueViolation =
-        error instanceof Error && 'code' in error && (error as { code: string }).code === 'P2002';
-      if (isPrismaUniqueViolation) {
-        throw new ConflictException('Ya has votado por esta idea');
-      }
+      this.logger.error(`Error al procesar voto para idea ${ideaId}: ${(error as Error).message}`);
       throw error;
     }
   }

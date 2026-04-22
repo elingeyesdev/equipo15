@@ -14,6 +14,7 @@ import SortToggle from './components/SortToggle';
 import IdeasChronologicalList from './components/IdeasChronologicalList';
 import IdeaDetailModal from '../../features/sky-wall/components/IdeaDetailModal';
 import type { RawIdea, PlaneIdea } from '../../features/sky-wall/types';
+import type { Challenge } from '../../types/models';
 import { resolveDisplayName } from '../../utils/user.utils';
 
 import { useDashboardState } from './hooks/useDashboardState';
