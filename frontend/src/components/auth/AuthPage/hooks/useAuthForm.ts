@@ -18,13 +18,13 @@ export const useAuthForm = () => {
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.(com|edu|org|net|bo|info|biz|co|mx)$/i.test(email);
   };
-  
+
   const validateName = (name: string) => {
     if (!name) return false;
     return /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(name);
   };
 
-  const isFormValid = isLogin 
+  const isFormValid = isLogin
     ? validateEmail(formData.email) && formData.password.length > 0
     : validateName(formData.name) && validateEmail(formData.email) && isPasswordValid;
 
@@ -69,6 +69,8 @@ export const useAuthForm = () => {
         await authService.login(formData.email, formData.password);
       } else {
         await authService.register(formData.email, formData.password, formData.name);
+        setIsLogin(true);
+        setFormData(prev => ({ ...prev, password: '' }));
       }
     } catch (error: any) {
       setErrorVisible(getFriendlyError(error));

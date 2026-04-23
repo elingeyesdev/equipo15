@@ -15,6 +15,9 @@ export interface PlaneIdea {
   hasVoted?: boolean;
   authorId: string;
   createdAt?: string;
+  authorRealName?: string;
+  authorStudentCode?: string;
+  authorPhone?: string;
 }
 
 export type WallPhase = 'active' | 'race' | 'podium';
@@ -36,6 +39,9 @@ export interface RawAuthor {
   nickname?: string;
   email?: string;
   facultyId?: number;
+  phone?: string;
+  studentCode?: string;
+  role?: { name: string };
 }
 
 export interface RawIdea {

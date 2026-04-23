@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { computeSize, computeXPosition, computeScale, computeFloatDuration } from './flight.engine';
+import { Pista8Theme } from '../../config/theme';
 import type { PlaneIdea, WallPhase } from './types';
 import planeImg from '../../assets/logo_avion.png';
 
@@ -15,10 +16,21 @@ const raceFly = keyframes`
   to   { left: calc(100% + 200px); }
 `;
 
-const glowPulse = keyframes`
-  0%   { box-shadow: 0 0 8px 2px rgba(255, 200, 60, 0.5); }
-  50%  { box-shadow: 0 0 18px 6px rgba(255, 200, 60, 0.8); }
-  100% { box-shadow: 0 0 8px 2px rgba(255, 200, 60, 0.5); }
+const auraBreath = keyframes`
+  0%   { transform: scale(1);   opacity: 0.55; }
+  50%  { transform: scale(1.18); opacity: 0.85; }
+  100% { transform: scale(1);   opacity: 0.55; }
+`;
+
+const ringSpin = keyframes`
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+`;
+
+const badgePop = keyframes`
+  0%   { transform: translateX(-50%) scale(0); opacity: 0; }
+  60%  { transform: translateX(-50%) scale(1.15); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1);   opacity: 1; }
 `;
 
 const PlaneWrapper = styled.div<{
@@ -59,14 +71,42 @@ const PlaneWrapper = styled.div<{
   filter: ${p => p.$dimmed ? 'grayscale(0.4)' : 'none'};
 
   ${p => p.$glowIntensity > 0 && css`
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 160%;
+      height: 160%;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        rgba(254, 65, 10, 0.30) 0%,
+        rgba(255, 140, 50, 0.12) 45%,
+        transparent 70%
+      );
+      opacity: ${p.$glowIntensity};
+      transform: translate(-50%, -50%);
+      animation: ${auraBreath} 2.6s ease-in-out infinite;
+      pointer-events: none;
+      z-index: -1;
+    }
+
     &::after {
       content: '';
       position: absolute;
-      inset: -6px;
+      top: 50%;
+      left: 50%;
+      width: 130%;
+      height: 130%;
       border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: rgba(254, 65, 10, ${0.45 * p.$glowIntensity});
+      border-right-color: rgba(255, 160, 60, ${0.25 * p.$glowIntensity});
       opacity: ${p.$glowIntensity};
-      animation: ${glowPulse} 2s ease-in-out infinite;
+      animation: ${ringSpin} 3s linear infinite;
       pointer-events: none;
+      z-index: -1;
     }
   `}
 
@@ -106,6 +146,25 @@ const DateLabel = styled.div<{ $size: number }>`
   border-radius: 5px;
   backdrop-filter: blur(4px);
   pointer-events: none;
+`;
+
+const NewBadge = styled.span<{ $intensity: number }>`
+  position: absolute;
+  top: calc(100% + 20px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: ${Pista8Theme.white};
+  background: linear-gradient(135deg, ${Pista8Theme.primary}, #ff7b00);
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(254, 65, 10, 0.35);
+  opacity: ${p => Math.min(1, p.$intensity + 0.2)};
+  animation: ${badgePop} 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 `;
 
 const flyIn = keyframes`
@@ -174,8 +233,8 @@ const Plane = memo(
     const isRacing = phase === 'race';
     const zIndex = BASE_Z_INDEX + idea.likesCount;
 
-    const hueRotate = (!challengeFacultyId && idea.authorFacultyId) 
-      ? (FACULTY_HUE_MAP[idea.authorFacultyId] || 0) 
+    const hueRotate = (!challengeFacultyId && idea.authorFacultyId)
+      ? (FACULTY_HUE_MAP[idea.authorFacultyId] || 0)
       : 0;
 
     return (
@@ -197,6 +256,7 @@ const Plane = memo(
         {idea.createdAt && (
           <DateLabel $size={size}>{formatRelativeDate(idea.createdAt)}</DateLabel>
         )}
+        {glowIntensity > 0 && <NewBadge $intensity={glowIntensity}>NUEVA</NewBadge>}
       </PlaneWrapper>
     );
   },

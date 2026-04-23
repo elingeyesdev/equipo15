@@ -27,6 +27,9 @@ const buildPlanes = (
     hasVoted: idea.hasVoted ?? false,
     authorId: idea.authorId || '',
     createdAt: idea.createdAt,
+    authorRealName: idea.author?.displayName,
+    authorStudentCode: idea.author?.studentCode,
+    authorPhone: idea.author?.phone,
   }));
 };
 
@@ -116,6 +119,9 @@ export const useWallSocket = (
           solution: rawIdea.solution,
           authorId: rawIdea.authorId || '',
           createdAt: rawIdea.createdAt,
+          authorRealName: rawIdea.author?.displayName,
+          authorStudentCode: rawIdea.author?.studentCode,
+          authorPhone: rawIdea.author?.phone,
         };
         return [...prev, newPlane];
       });

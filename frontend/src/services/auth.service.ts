@@ -34,12 +34,14 @@ export const authService = {
     await updateProfile(userCredential.user, { displayName: name });
 
 
-    return axiosInstance.post('/users/sync', {
+    await axiosInstance.post('/users/sync', {
       firebaseUid: userCredential.user.uid,
       email: email,
       displayName: name,
       role: 'student'
     });
+    
+    await signOut(auth);
   },
 
   login: async (email: string, pass: string) => {

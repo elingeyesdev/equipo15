@@ -112,7 +112,7 @@ export const ConfirmBackdrop = styled.div`
   inset: 0;
   background: rgba(7,10,13,0.65);
   backdrop-filter: blur(3px);
-  z-index: 120;
+  z-index: 10001;
 `;
 
 export const ConfirmDialog = styled.div`
@@ -122,7 +122,7 @@ export const ConfirmDialog = styled.div`
   align-items: center;
   justify-content: center;
   padding: 24px;
-  z-index: 130;
+  z-index: 10002;
 `;
 
 export const ConfirmCard = styled.div`

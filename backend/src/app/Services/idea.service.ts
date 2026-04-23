@@ -10,6 +10,7 @@ import { CreateIdeaDto } from '../DTOs/create-idea.dto';
 import { CreateDraftIdeaDto } from '../DTOs/create-draft-idea.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { EventsGateway } from '../Gateways/events.gateway';
+import { VisibilityStrategy, UserRoleName } from '../Utils/visibility.strategy';
 import {
   IDEA_WORD_RULES,
   assertWordRange,
@@ -208,47 +209,56 @@ export class IdeaService {
   }
 
   async findAllPublic(paginationDto?: PaginationDto, firebaseUid?: string) {
-    
+    let userRole: UserRoleName = 'guest';
+    if (firebaseUid) {
+      const user = await this.userRepository.findByUid(firebaseUid);
+      if (user && (user as any).role?.name) {
+        userRole = (user as any).role.name as UserRoleName;
+      }
+    }
+
     const cacheKey = `public:${paginationDto?.challengeId || 'all'}:${paginationDto?.page || 1}:${paginationDto?.limit || 20}:${paginationDto?.search || ''}:${paginationDto?.sort || 'newest'}`;
 
-    
+    let rawResult;
     const cached = this.publicCache.get(cacheKey);
     if (cached && Date.now() < cached.expiry) {
       this.logger.log(`⚡ Cache HIT: ${cacheKey}`);
-      return cached.data;
+      rawResult = cached.data;
+    } else {
+      const limit = paginationDto?.limit ? Number(paginationDto.limit) : undefined;
+      const skip = paginationDto?.page && limit ? (Number(paginationDto.page) - 1) * limit : undefined;
+
+      const { data, total } = await this.ideaRepository.findPublic(
+        skip,
+        limit,
+        paginationDto?.challengeId,
+        undefined,
+        paginationDto?.search,
+        paginationDto?.sort,
+      );
+
+      rawResult = {
+        data,
+        meta: {
+          total,
+          page: paginationDto?.page || 1,
+          limit,
+        },
+      };
+
+      this.publicCache.set(cacheKey, { data: rawResult, expiry: Date.now() + this.CACHE_TTL_MS });
+      this.logger.log(`🔄 Cache MISS → stored: ${cacheKey}`);
     }
 
-    const limit = paginationDto?.limit
-      ? Number(paginationDto.limit)
-      : undefined;
-    const skip =
-      paginationDto?.page && limit
-        ? (Number(paginationDto.page) - 1) * limit
-        : undefined;
-
-    const { data, total } = await this.ideaRepository.findPublic(
-      skip,
-      limit,
-      paginationDto?.challengeId,
-      undefined,
-      paginationDto?.search,
-      paginationDto?.sort,
+    // Proxy Pattern: Proyectar los datos según el rol del usuario usando la Estrategia de Visibilidad
+    const projectedData = rawResult.data.map((idea: any) => 
+      VisibilityStrategy.applyToIdea(idea, userRole, idea.challenge?.status)
     );
 
-    const result = {
-      data,
-      meta: {
-        total,
-        page: paginationDto?.page || 1,
-        limit,
-      },
+    return {
+      ...rawResult,
+      data: projectedData,
     };
-
-    
-    this.publicCache.set(cacheKey, { data: result, expiry: Date.now() + this.CACHE_TTL_MS });
-    this.logger.log(`🔄 Cache MISS → stored: ${cacheKey}`);
-
-    return result;
   }
 
   async updateStatus(id: string, status: string) {

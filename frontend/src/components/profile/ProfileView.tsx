@@ -12,6 +12,13 @@ import BackButton from '../common/BackButton';
 import { authService } from '../../services/auth.service';
 import { AnimatePresence, motion } from 'framer-motion';
 
+const PROFILE_CONFIGS: Record<string, { badge: string; showCode: boolean; bioPlaceholder: string }> = {
+  student: { badge: "INNOVADOR", showCode: true, bioPlaceholder: "Cuéntanos sobre tus pasiones..." },
+  company: { badge: "EMPRESA SOCIA", showCode: false, bioPlaceholder: "Descripción de la institución o área..." },
+  judge: { badge: "EXPERTO EVALUADOR", showCode: false, bioPlaceholder: "Resumen de tu expertise técnico..." },
+  admin: { badge: "SOPORTE TÉCNICO", showCode: false, bioPlaceholder: "Notas de administración..." }
+};
+
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -597,7 +604,7 @@ export const ProfileView: React.FC = () => {
             <Email>{profile.email}</Email>
             <BannerPills>
               {profile.facultyId && <FacultyPill>{getFacultyName(profile.facultyId)}</FacultyPill>}
-              <RolePill>{profile.roleInfo?.description || profile.roleInfo?.name || profile.role || 'Usuario'}</RolePill>
+              <RolePill>{PROFILE_CONFIGS[profile.role || 'student']?.badge || 'Usuario'}</RolePill>
             </BannerPills>
           </BannerMeta>
         </ProfileBanner>
@@ -634,24 +641,26 @@ export const ProfileView: React.FC = () => {
                   />
                 </PhoneInputWrap>
               </FormRow>
-              <FieldFull>
-                <FormRow>
-                  <FormLabel>Código Estudiantil</FormLabel>
-                  <FormInput
-                    type="text"
-                    value={profileData.studentCode}
-                    onChange={e => setProfileData({ ...profileData, studentCode: e.target.value.toUpperCase() })}
-                    placeholder="Opcional"
-                  />
-                </FormRow>
-              </FieldFull>
+              {PROFILE_CONFIGS[profile.role || 'student']?.showCode && (
+                <FieldFull>
+                  <FormRow>
+                    <FormLabel>Código Estudiantil</FormLabel>
+                    <FormInput
+                      type="text"
+                      value={profileData.studentCode}
+                      onChange={e => setProfileData({ ...profileData, studentCode: e.target.value.toUpperCase() })}
+                      placeholder="Opcional"
+                    />
+                  </FormRow>
+                </FieldFull>
+              )}
               <FieldFull>
                 <FormRow>
                   <FormLabel>Acerca de mí</FormLabel>
                   <TextArea
                     value={profileData.bio}
                     onChange={e => setProfileData({ ...profileData, bio: e.target.value })}
-                    placeholder="Escribe algo interesante sobre ti..."
+                    placeholder={PROFILE_CONFIGS[profile.role || 'student']?.bioPlaceholder || "Escribe algo interesante sobre ti..."}
                   />
                 </FormRow>
               </FieldFull>

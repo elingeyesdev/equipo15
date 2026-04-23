@@ -57,13 +57,28 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
       });
 
       const scrollContainer = document.querySelector('[role="dialog"]');
-      if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+      if (scrollContainer) {
+        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+        scrollContainer.firstElementChild?.scrollTo({ top: 0, behavior: 'smooth' });
+      }
       return;
     }
 
     const errors = form.validatePublicSubmission(challenge);
     if (Object.keys(errors).length === 0) {
       setConfirmOpen(true);
+    } else {
+      form.setFormErrors(errors);
+      form.setFormFeedback({
+        tone: 'error',
+        title: 'Revisa tu propuesta',
+        message: 'Algunos campos no cumplen con los requisitos mínimos.'
+      });
+      const scrollContainer = document.querySelector('[role="dialog"]');
+      if (scrollContainer) {
+        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+        scrollContainer.firstElementChild?.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   };
 
