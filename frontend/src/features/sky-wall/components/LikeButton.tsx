@@ -4,6 +4,7 @@ import { Pista8Theme } from '../../../config/theme';
 import { ideaService } from '../../../services/idea.service';
 import { toast } from 'sonner';
 import type { AxiosLikeError } from '../types';
+import { useAuth } from '../../../context/AuthContext';
 
 const pop = keyframes`
   0%   { transform: scale(1); }
@@ -56,25 +57,24 @@ interface LikeButtonProps {
   isAuthor?: boolean;
 }
 
-const getLocalVoted = (id: string) => {
+const getLocalVoted = (id: string, userId?: string) => {
   try {
-    const votedIdeas = JSON.parse(localStorage.getItem('pista8_voted_ideas') || '[]');
+    const key = userId ? `pista8_voted_ideas_${userId}` : 'pista8_voted_ideas';
+    const votedIdeas = JSON.parse(localStorage.getItem(key) || '[]');
     return votedIdeas.includes(id);
   } catch {
     return false;
   }
 };
 
-const saveLocalVoted = (id: string, voted: boolean) => {
+const saveLocalVoted = (id: string, userId?: string) => {
   try {
-    const votedIdeas = JSON.parse(localStorage.getItem('pista8_voted_ideas') || '[]');
-    if (voted && !votedIdeas.includes(id)) {
+    const key = userId ? `pista8_voted_ideas_${userId}` : 'pista8_voted_ideas';
+    const votedIdeas = JSON.parse(localStorage.getItem(key) || '[]');
+    if (!votedIdeas.includes(id)) {
       votedIdeas.push(id);
-    } else if (!voted && votedIdeas.includes(id)) {
-      const idx = votedIdeas.indexOf(id);
-      votedIdeas.splice(idx, 1);
     }
-    localStorage.setItem('pista8_voted_ideas', JSON.stringify(votedIdeas));
+    localStorage.setItem(key, JSON.stringify(votedIdeas));
   } catch { }
 };
 
@@ -89,8 +89,10 @@ const isForbiddenError = (error: unknown): boolean => {
 };
 
 export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuthor }: LikeButtonProps) => {
+  const { userProfile } = useAuth();
+  const currentUserId = userProfile?.id;
   const [likes, setLikes] = useState(initialLikes);
-  const [hasVoted, setHasVoted] = useState(() => serverVoted || getLocalVoted(ideaId));
+  const [hasVoted, setHasVoted] = useState(() => serverVoted || getLocalVoted(ideaId, currentUserId));
   const [isVoting, setIsVoting] = useState(false);
 
   useEffect(() => {
@@ -98,28 +100,31 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
   }, [initialLikes]);
 
   useEffect(() => {
-    if (serverVoted !== undefined) {
-      setHasVoted(serverVoted);
-      saveLocalVoted(ideaId, serverVoted);
+    if (serverVoted) {
+      setHasVoted(true);
+      saveLocalVoted(ideaId, currentUserId);
     }
-  }, [serverVoted, ideaId]);
+  }, [serverVoted, ideaId, currentUserId]);
+
+  useEffect(() => {
+    setHasVoted(serverVoted || getLocalVoted(ideaId, currentUserId));
+  }, [currentUserId, ideaId, serverVoted]);
 
   const handleVote = async () => {
     if (isAuthor) {
-      toast.info('No puedes votar por tu propia idea. ¡Tu avión ya tiene su propio impulso!');
+      toast.info('No puedes votar por tu propia idea.');
       return;
     }
-    if (isVoting) return;
+    if (isVoting || hasVoted) return;
 
-    const willVote = !hasVoted;
     setIsVoting(true);
-    setHasVoted(willVote);
-    setLikes(prev => willVote ? prev + 1 : Math.max(0, prev - 1));
+    setHasVoted(true);
+    setLikes(prev => prev + 1);
 
     try {
       await ideaService.voteIdea(ideaId);
-      saveLocalVoted(ideaId, willVote);
-      toast.success(willVote ? '¡Apoyo enviado!' : 'Apoyo retirado');
+      saveLocalVoted(ideaId, currentUserId);
+      toast.success('Apoyo enviado');
     } catch (error: unknown) {
       if (isForbiddenError(error)) {
         const msg = (error as any)?.response?.data?.message || 'No puedes votar por tu propia idea.';
@@ -128,10 +133,10 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
         setLikes(prev => Math.max(0, prev - 1));
       } else if (isConflictError(error)) {
         setHasVoted(true);
-        saveLocalVoted(ideaId, true);
+        saveLocalVoted(ideaId, currentUserId);
       } else {
-        setHasVoted(!willVote);
-        setLikes(prev => !willVote ? prev + 1 : Math.max(0, prev - 1));
+        setHasVoted(false);
+        setLikes(prev => Math.max(0, prev - 1));
         toast.error('No pudimos procesar tu voto. Intenta de nuevo.');
       }
     } finally {
@@ -144,9 +149,9 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
       $hasVoted={hasVoted}
       $isVoting={isVoting}
       onClick={handleVote}
-      disabled={isVoting}
-      style={isAuthor ? { cursor: 'help', opacity: 0.8 } : {}}
-      title={isAuthor ? 'No puedes votar por tu propia idea' : ''}
+      disabled={isVoting || hasVoted}
+      style={isAuthor ? { cursor: 'help', opacity: 0.8 } : hasVoted ? { cursor: 'default' } : {}}
+      title={isAuthor ? 'No puedes votar por tu propia idea' : hasVoted ? 'Ya apoyaste esta idea' : ''}
     >
       <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
         fill={hasVoted ? Pista8Theme.primary : 'none'}

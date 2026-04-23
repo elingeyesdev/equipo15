@@ -210,19 +210,23 @@ export class IdeaService {
 
   async findAllPublic(paginationDto?: PaginationDto, firebaseUid?: string) {
     let userRole: UserRoleName = 'guest';
+    let userId: string | undefined;
     if (firebaseUid) {
       const user = await this.userRepository.findByUid(firebaseUid);
-      if (user && (user as any).role?.name) {
-        userRole = (user as any).role.name as UserRoleName;
+      if (user) {
+        userId = user.id;
+        if ((user as any).role?.name) {
+          userRole = (user as any).role.name as UserRoleName;
+        }
       }
     }
 
-    const cacheKey = `public:${paginationDto?.challengeId || 'all'}:${paginationDto?.page || 1}:${paginationDto?.limit || 20}:${paginationDto?.search || ''}:${paginationDto?.sort || 'newest'}`;
+    const cacheKey = `public:${userId || 'anon'}:${paginationDto?.challengeId || 'all'}:${paginationDto?.page || 1}:${paginationDto?.limit || 20}:${paginationDto?.search || ''}:${paginationDto?.sort || 'newest'}`;
 
     let rawResult;
     const cached = this.publicCache.get(cacheKey);
     if (cached && Date.now() < cached.expiry) {
-      this.logger.log(`⚡ Cache HIT: ${cacheKey}`);
+      this.logger.log(`Cache HIT: ${cacheKey}`);
       rawResult = cached.data;
     } else {
       const limit = paginationDto?.limit ? Number(paginationDto.limit) : undefined;
@@ -232,7 +236,7 @@ export class IdeaService {
         skip,
         limit,
         paginationDto?.challengeId,
-        undefined,
+        userId,
         paginationDto?.search,
         paginationDto?.sort,
       );
@@ -247,7 +251,6 @@ export class IdeaService {
       };
 
       this.publicCache.set(cacheKey, { data: rawResult, expiry: Date.now() + this.CACHE_TTL_MS });
-      this.logger.log(`🔄 Cache MISS → stored: ${cacheKey}`);
     }
 
     // Proxy Pattern: Proyectar los datos según el rol del usuario usando la Estrategia de Visibilidad
@@ -284,13 +287,12 @@ export class IdeaService {
 
     const hasLiked = await this.ideaRepository.checkUserLike(ideaId, userId);
 
+    if (hasLiked) {
+      throw new ConflictException('Ya has votado por esta idea.');
+    }
+
     try {
-      let updated: Idea;
-      if (hasLiked) {
-        updated = await this.ideaRepository.removeLikeAndDecrement(ideaId, userId);
-      } else {
-        updated = await this.ideaRepository.registerLikeAndIncrement(ideaId, userId);
-      }
+      const updated = await this.ideaRepository.registerLikeAndIncrement(ideaId, userId);
 
       this.eventsGateway.server.emit('idea:voted', {
         ideaId: updated.id,

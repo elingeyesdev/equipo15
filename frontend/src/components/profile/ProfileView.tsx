@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import styled, { keyframes } from 'styled-components';
 import { useAuth } from '../../context/AuthContext';
 import { userService } from '../../services/user.service';
+import { resolveDisplayName } from '../../utils/user.utils';
 import { RoleGuard } from '../common/RoleGuard';
 import { Pista8Theme } from '../../config/theme';
 import { getFacultyName } from '../../config/faculties';
@@ -594,13 +595,13 @@ export const ProfileView: React.FC = () => {
           <AvatarWrap>
             <AvatarRing>
               <Avatar
-                src={profile.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=' + profile.displayName}
+                src={profile.avatarUrl || 'https://api.dicebear.com/7.x/initials/svg?seed=' + resolveDisplayName(profile)}
                 alt="Avatar"
               />
             </AvatarRing>
           </AvatarWrap>
           <BannerMeta>
-            <DisplayName>{profile.displayName}</DisplayName>
+            <DisplayName>{resolveDisplayName(profile)}</DisplayName>
             <Email>{profile.email}</Email>
             <BannerPills>
               {profile.facultyId && <FacultyPill>{getFacultyName(profile.facultyId)}</FacultyPill>}

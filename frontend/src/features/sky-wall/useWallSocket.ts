@@ -127,6 +127,14 @@ export const useWallSocket = (
       });
     });
 
+    socket.on('user:profile_updated', (payload: { userId: string; displayName: string; nickname?: string }) => {
+      setIdeas(prev => prev.map(idea =>
+        idea.authorId === payload.userId
+          ? { ...idea, authorName: payload.displayName }
+          : idea
+      ));
+    });
+
     socket.on('challenge:close', () => {
       setPhase('race');
     });

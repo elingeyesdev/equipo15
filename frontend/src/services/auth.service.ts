@@ -32,16 +32,25 @@ export const authService = {
     }
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(userCredential.user, { displayName: name });
+    const token = await userCredential.user.getIdToken();
+    const uid = userCredential.user.uid;
 
-
-    await axiosInstance.post('/users/sync', {
-      firebaseUid: userCredential.user.uid,
-      email: email,
-      displayName: name,
-      role: 'student'
-    });
-    
     await signOut(auth);
+
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    await fetch(`${baseURL}/users/sync`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        firebaseUid: uid,
+        email: email,
+        displayName: name,
+        role: 'student'
+      })
+    });
   },
 
   login: async (email: string, pass: string) => {

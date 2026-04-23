@@ -4,6 +4,7 @@ import { RoleRepository } from '../Repositories/role.repository';
 import { User, Role } from '@prisma/client';
 import { extractFacultyFromEmail } from '../Utils/email-parser.util';
 import { getRoleFromEmail, isAuthorizedEmail } from '../Utils/user-metadata.util';
+import { EventsGateway } from '../Gateways/events.gateway';
 
 export type UserWithRole = User & { role?: Role | null };
 
@@ -17,6 +18,7 @@ export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly roleRepository: RoleRepository,
+    private readonly eventsGateway: EventsGateway,
   ) { }
 
   async findOrCreate(
@@ -111,6 +113,18 @@ export class UserService {
     if (!updatedUser) {
       throw new NotFoundException('Usuario no encontrado');
     }
+
+    if (data.nickname !== undefined) {
+      const displayName = data.nickname && data.nickname.trim().length > 0
+        ? data.nickname
+        : updatedUser.displayName;
+      this.eventsGateway.server.emit('user:profile_updated', {
+        userId: updatedUser.id,
+        displayName,
+        nickname: updatedUser.nickname,
+      });
+    }
+
     return this.formatUserResponse(updatedUser as UserWithRole);
   }
 
