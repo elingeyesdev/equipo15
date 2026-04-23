@@ -5,7 +5,10 @@ import { CommentListItem, CommentRepository } from '../Repositories/comment.repo
 import { IdeaRepository } from '../Repositories/idea.repository';
 import { UserRepository } from '../Repositories/user.repository';
 import { GetCommentsQueryDto } from '../DTOs/get-comments-query.dto';
-import { normalizeCommentContent } from '../Utils/comment-validation.util';
+import {
+  buildComparableCommentFingerprint,
+  normalizeCommentContent,
+} from '../Utils/comment-validation.util';
 
 export interface CreateCommentInput {
   content: string;
@@ -22,6 +25,8 @@ export interface ReplyCommentInput {
 
 @Injectable()
 export class CommentService {
+  private readonly duplicateWindowMs = 30_000;
+
   constructor(
     private readonly commentRepository: CommentRepository,
     private readonly ideaRepository: IdeaRepository,
@@ -29,16 +34,58 @@ export class CommentService {
     private readonly eventsGateway: EventsGateway,
   ) {}
 
+  private ensureUserCanComment(isActive?: boolean) {
+    if (isActive === false) {
+      throw new BadRequestException('Tu cuenta está inactiva y no puede publicar comentarios.');
+    }
+  }
+
+  private ensureIdeaAllowsComments(status: string) {
+    if (status !== 'public' && status !== 'top5') {
+      throw new BadRequestException('Solo se puede comentar en ideas publicadas.');
+    }
+  }
+
+  private async ensureNoRecentDuplicateComment(input: {
+    ideaId: string;
+    authorId: string;
+    parentCommentId?: string | null;
+    normalizedContent: string;
+  }): Promise<void> {
+    const lastComment = await this.commentRepository.findLatestVisibleByAuthorInThread({
+      ideaId: input.ideaId,
+      authorId: input.authorId,
+      parentCommentId: input.parentCommentId ?? null,
+    });
+
+    if (!lastComment) return;
+
+    const isSameContent =
+      buildComparableCommentFingerprint(lastComment.content) ===
+      buildComparableCommentFingerprint(input.normalizedContent);
+
+    const isInsideWindow =
+      Date.now() - new Date(lastComment.createdAt).getTime() <= this.duplicateWindowMs;
+
+    if (isSameContent && isInsideWindow) {
+      throw new BadRequestException(
+        'Detectamos un comentario duplicado reciente. Espera un momento antes de reenviar.',
+      );
+    }
+  }
+
   async createComment(input: CreateCommentInput): Promise<Comment> {
     const user = await this.userRepository.findByUid(input.firebaseUid);
     if (!user) {
       throw new NotFoundException('Usuario no encontrado en el sistema.');
     }
+    this.ensureUserCanComment(user.isActive);
 
     const idea = await this.ideaRepository.findById(input.ideaId);
     if (!idea) {
       throw new NotFoundException('La idea a la que intentas comentar no existe.');
     }
+    this.ensureIdeaAllowsComments(idea.status);
 
     if (input.parentCommentId) {
       const parentComment = await this.commentRepository.findById(input.parentCommentId);
@@ -51,9 +98,19 @@ export class CommentService {
       if (parentComment.deletedAt) {
         throw new BadRequestException('No puedes responder a un comentario eliminado.');
       }
+      if (parentComment.status !== 'visible') {
+        throw new BadRequestException('No puedes responder a un comentario oculto.');
+      }
     }
 
     const content = normalizeCommentContent(input.content, 'El comentario');
+
+    await this.ensureNoRecentDuplicateComment({
+      ideaId: input.ideaId,
+      authorId: user.id,
+      parentCommentId: input.parentCommentId ?? null,
+      normalizedContent: content,
+    });
 
     const createdComment = await this.commentRepository.createAndIncrementIdeaCount({
       content,
@@ -75,6 +132,7 @@ export class CommentService {
     if (!user) {
       throw new NotFoundException('Usuario no encontrado en el sistema.');
     }
+    this.ensureUserCanComment(user.isActive);
 
     const parentComment = await this.commentRepository.findById(input.parentCommentId);
     if (!parentComment) {
@@ -84,13 +142,24 @@ export class CommentService {
     if (parentComment.deletedAt) {
       throw new BadRequestException('No puedes responder a un comentario eliminado.');
     }
+    if (parentComment.status !== 'visible') {
+      throw new BadRequestException('No puedes responder a un comentario oculto.');
+    }
 
     const idea = await this.ideaRepository.findById(parentComment.ideaId);
     if (!idea) {
       throw new NotFoundException('La idea asociada al comentario no existe.');
     }
+    this.ensureIdeaAllowsComments(idea.status);
 
     const content = normalizeCommentContent(input.content, 'La respuesta');
+
+    await this.ensureNoRecentDuplicateComment({
+      ideaId: parentComment.ideaId,
+      authorId: user.id,
+      parentCommentId: parentComment.id,
+      normalizedContent: content,
+    });
 
     const createdComment = await this.commentRepository.createAndIncrementIdeaCount({
       content,
@@ -112,6 +181,7 @@ export class CommentService {
     if (!idea) {
       throw new NotFoundException('La idea solicitada no existe.');
     }
+    this.ensureIdeaAllowsComments(idea.status);
 
     if (query.parentCommentId) {
       const parentComment = await this.commentRepository.findById(query.parentCommentId);

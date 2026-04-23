@@ -3,6 +3,7 @@ export type SortMode = 'newest' | 'oldest' | 'likes' | 'comments';
 export interface PlaneIdea {
   id: string;
   title: string;
+  challengeTitle?: string;
   authorName: string;
   likesCount: number;
   commentsCount: number;
@@ -41,6 +42,7 @@ export interface RawIdea {
   _id?: string;
   id?: string;
   title: string;
+  challengeTitle?: string;
   problem?: string;
   solution?: string;
   author?: RawAuthor;

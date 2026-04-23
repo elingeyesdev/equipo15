@@ -51,6 +51,28 @@ export type CommentListItem = Prisma.CommentGetPayload<{
 export class CommentRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findLatestVisibleByAuthorInThread(params: {
+    ideaId: string;
+    authorId: string;
+    parentCommentId?: string | null;
+  }): Promise<Pick<Comment, 'content' | 'createdAt'> | null> {
+    return this.prisma.comment.findFirst({
+      where: {
+        ideaId: params.ideaId,
+        authorId: params.authorId,
+        parentCommentId:
+          params.parentCommentId === undefined ? null : params.parentCommentId,
+        status: 'visible',
+        deletedAt: null,
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      select: {
+        content: true,
+        createdAt: true,
+      },
+    });
+  }
+
   async createAndIncrementIdeaCount(data: CreateCommentData) {
     const [createdComment] = await this.prisma.$transaction([
       this.prisma.comment.create({

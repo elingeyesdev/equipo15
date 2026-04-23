@@ -183,6 +183,7 @@ const formatFull = (dateStr?: string): string => {
 const rawToPlane = (idea: RawIdea, index: number): PlaneIdea => ({
   id: idea.id ?? idea._id ?? String(index),
   title: idea.title,
+  challengeTitle: idea.challengeTitle,
   authorName: idea.isAnonymous
     ? 'Anónimo'
     : resolveDisplayName(idea.author),
@@ -194,6 +195,7 @@ const rawToPlane = (idea: RawIdea, index: number): PlaneIdea => ({
   problem: idea.problem,
   solution: idea.solution,
   hasVoted: idea.hasVoted ?? false,
+  authorId: idea.authorId ?? '',
   createdAt: idea.createdAt,
 });
 

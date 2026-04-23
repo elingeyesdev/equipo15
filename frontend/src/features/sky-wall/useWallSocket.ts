@@ -8,10 +8,14 @@ import { resolveDisplayName } from '../../utils/user.utils';
 const DEFAULT_SOCKET_URL = 'http://localhost:3000';
 const DEBOUNCE_MS = 200;
 
-const buildPlanes = (rawIdeas: RawIdea[]): PlaneIdea[] => {
+const buildPlanes = (
+  rawIdeas: RawIdea[],
+  fallbackChallengeTitle?: string,
+): PlaneIdea[] => {
   return rawIdeas.map((idea, i) => ({
     id: idea.id ?? idea._id ?? String(i),
     title: idea.title,
+    challengeTitle: idea.challengeTitle ?? fallbackChallengeTitle,
     authorName: idea.isAnonymous ? 'Anónimo' : resolveDisplayName(idea.author),
     likesCount: idea.likesCount ?? 0,
     commentsCount: idea.commentsCount ?? 0,
@@ -32,8 +36,14 @@ interface UseWallSocketResult {
   serverTimeOffset: number;
 }
 
-export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): UseWallSocketResult => {
-  const [ideas, setIdeas] = useState<PlaneIdea[]>(() => buildPlanes(initialIdeas));
+export const useWallSocket = (
+  token?: string,
+  initialIdeas: RawIdea[] = [],
+  fallbackChallengeTitle?: string,
+): UseWallSocketResult => {
+  const [ideas, setIdeas] = useState<PlaneIdea[]>(() =>
+    buildPlanes(initialIdeas, fallbackChallengeTitle),
+  );
   const [phase, setPhase] = useState<WallPhase>('active');
   const [serverTimeOffset, setServerTimeOffset] = useState(0);
   const socketRef = useRef<Socket | null>(null);
@@ -58,8 +68,8 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
   }, [flushUpdates]);
 
   useEffect(() => {
-    setIdeas(buildPlanes(initialIdeas));
-  }, [initialIdeas]);
+    setIdeas(buildPlanes(initialIdeas, fallbackChallengeTitle));
+  }, [initialIdeas, fallbackChallengeTitle]);
 
   useEffect(() => {
     if (!token) return;
@@ -95,6 +105,7 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
         const newPlane: PlaneIdea = {
           id: rawIdea.id ?? rawIdea._id ?? String(i),
           title: rawIdea.title || 'Idea sin título',
+          challengeTitle: rawIdea.challengeTitle ?? fallbackChallengeTitle,
           authorName: rawIdea.isAnonymous ? 'Anónimo' : resolveDisplayName(rawIdea.author),
           likesCount: rawIdea.likesCount ?? 0,
           commentsCount: rawIdea.commentsCount ?? 0,
@@ -123,7 +134,7 @@ export const useWallSocket = (token?: string, initialIdeas: RawIdea[] = []): Use
       socket.disconnect();
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
-  }, [scheduleFlush, token]);
+  }, [scheduleFlush, token, fallbackChallengeTitle]);
 
   return { ideas, phase, serverTimeOffset };
 };

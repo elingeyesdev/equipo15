@@ -199,7 +199,7 @@ export const useIdeationForm = (
   const validatePublicSubmission = (formChallenge: Challenge | null): FormErrors => {
     const errors: FormErrors = {};
     (
-      ['challenge', 'ideaName', 'ideaProblem', 'ideaSolution', 'consents'] as FormErrorKey[]
+      ['challenge', 'ideaName', 'ideaSolution', 'consents'] as FormErrorKey[]
     ).forEach(field => {
       const errorMessage = getFieldError(field, formChallenge);
       if (errorMessage) errors[field] = errorMessage;
@@ -321,9 +321,11 @@ export const useIdeationForm = (
         });
         success = true;
       } else {
+        const normalizedProblem =
+          ideaProblem.trim() || ideaSolution.trim() || ideaName.trim();
         await ideaService.createIdea({
           title: ideaName.trim(),
-          problem: ideaProblem.trim(),
+          problem: normalizedProblem,
           solution: ideaSolution.trim(),
           tags: normalizedTags(),
           status: targetStatus,

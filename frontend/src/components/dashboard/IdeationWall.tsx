@@ -111,6 +111,7 @@ const IdeationWall = () => {
 
         <SkyCanvas
           challengeId={ds.selectedChallenge?.id}
+          challengeTitle={ds.selectedChallenge?.title}
           challengeFacultyId={ds.selectedChallenge?.facultyId ?? undefined}
           isDashboardLoading={ds.loading}
           search={ds.debouncedSearch}

@@ -291,10 +291,10 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
 
         <Body>
           <SectionBlock>
-            <SectionLabel>El Problema</SectionLabel>
-            {idea.problem
-              ? <SectionContent>{idea.problem}</SectionContent>
-              : <EmptyContent>No se detalló el problema.</EmptyContent>
+            <SectionLabel>El reto</SectionLabel>
+            {idea.challengeTitle
+              ? <SectionContent>{idea.challengeTitle}</SectionContent>
+              : <EmptyContent>No se pudo identificar el reto asignado.</EmptyContent>
             }
           </SectionBlock>
 

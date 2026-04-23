@@ -26,7 +26,6 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
   const checklist = [
     { label: 'Reto asignado', done: !!challenge },
     { label: 'Nombre de la idea (5-20 palabras)', done: form.isTitleValid },
-    { label: 'Problema definido (20-200 palabras)', done: form.isProblemValid },
     { label: 'Solución propuesta (30-200 palabras)', done: form.isSolutionValid },
     { label: 'Consentimientos', done: Object.values(form.consents).every(Boolean) },
   ];
@@ -38,7 +37,6 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
   ];
 
   const maxIdeaName = 150;
-  const maxIdeaProblem = 1000;
   const maxIdeaSolution = 1000;
   const maxTags = 6;
 
@@ -143,27 +141,6 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                   $invalid={Boolean(form.formErrors.ideaName)}
                 />
                 {form.formErrors.ideaName && <S.FieldError>{form.formErrors.ideaName}</S.FieldError>}
-              </S.Field>
-
-              <S.Field>
-                <S.FieldHeader>
-                  <S.Label>El Problema</S.Label>
-                  <S.CharCounter>{form.problemWords} palabras ({form.minProblemWords}-{form.maxProblemWords})</S.CharCounter>
-                </S.FieldHeader>
-                <S.Tip>¿Qué dolor o necesidad detectaste en el entorno?</S.Tip>
-                <S.TextArea
-                  value={form.ideaProblem}
-                  onChange={e => {
-                    form.setIdeaProblem(e.target.value);
-                    if (form.formErrors.ideaProblem) form.clearFieldError('ideaProblem');
-                  }}
-                  onBlur={() => form.validateField('ideaProblem', challenge)}
-                  placeholder="Explica el vacío o la oportunidad de mejora que motiva esta idea..."
-                  rows={4}
-                  maxLength={maxIdeaProblem}
-                  $invalid={Boolean(form.formErrors.ideaProblem)}
-                />
-                {form.formErrors.ideaProblem && <S.FieldError>{form.formErrors.ideaProblem}</S.FieldError>}
               </S.Field>
 
               <S.Field>

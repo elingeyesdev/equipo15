@@ -56,6 +56,13 @@ const HelperText = styled.p`
   font-weight: 600;
 `;
 
+const CounterText = styled.span<{ $danger?: boolean }>`
+  font-size: 12px;
+  font-weight: 700;
+  color: ${({ $danger }) => ($danger ? '#d33c3c' : '#8a92a5')};
+  align-self: flex-end;
+`;
+
 const Actions = styled.div`
   display: flex;
   gap: 10px;
@@ -92,6 +99,60 @@ const Button = styled.button<{ $variant?: 'primary' | 'ghost' }>`
   }
 `;
 
+const COMMENT_FORM_RULES = {
+  minLength: 2,
+  maxLength: 2000,
+  maxWords: 350,
+  maxConsecutiveLineBreaks: 2,
+  maxRepeatedCharacterStreak: 8,
+} as const;
+
+const normalizeCommentInput = (value: string): string =>
+  value
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+const countWords = (value: string): number =>
+  value.trim().split(/\s+/).filter(Boolean).length;
+
+const getCommentValidationError = (value: string): string | null => {
+  if (!value) return 'El comentario no puede estar vacío.';
+  if (value.length < COMMENT_FORM_RULES.minLength) {
+    return `El comentario debe tener al menos ${COMMENT_FORM_RULES.minLength} caracteres.`;
+  }
+  if (value.length > COMMENT_FORM_RULES.maxLength) {
+    return `El comentario no puede superar ${COMMENT_FORM_RULES.maxLength} caracteres.`;
+  }
+  if (!/[A-Za-z0-9\u00C0-\u024F]/.test(value)) {
+    return 'El comentario debe incluir letras o números legibles.';
+  }
+
+  const words = countWords(value);
+  if (words > COMMENT_FORM_RULES.maxWords) {
+    return `El comentario no puede superar ${COMMENT_FORM_RULES.maxWords} palabras.`;
+  }
+
+  const repeatedCharsRegex = new RegExp(`(.)\\1{${COMMENT_FORM_RULES.maxRepeatedCharacterStreak - 1},}`);
+  if (repeatedCharsRegex.test(value)) {
+    return 'El comentario contiene repeticiones excesivas de caracteres.';
+  }
+
+  const consecutiveBreaksRegex = new RegExp(`\\n{${COMMENT_FORM_RULES.maxConsecutiveLineBreaks + 1},}`);
+  if (consecutiveBreaksRegex.test(value.replace(/\r\n/g, '\n'))) {
+    return 'El comentario tiene demasiados saltos de línea consecutivos.';
+  }
+
+  if (/(https?:\/\/|www\.)/i.test(value)) {
+    return 'Por seguridad, evita incluir enlaces en los comentarios.';
+  }
+
+  return null;
+};
+
 export const CommentForm = ({
   placeholder = 'Escribe un comentario...',
   submitLabel = 'Enviar',
@@ -104,18 +165,23 @@ export const CommentForm = ({
   const [content, setContent] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  const normalizedPreview = normalizeCommentInput(content);
+  const words = countWords(normalizedPreview);
+  const isNearLimit = normalizedPreview.length > COMMENT_FORM_RULES.maxLength * 0.9;
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const trimmed = content.trim();
+    const normalized = normalizeCommentInput(content);
+    const validationError = getCommentValidationError(normalized);
 
-    if (!trimmed) {
-      setError('El comentario no puede estar vacío.');
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     try {
       setError(null);
-      await onSubmit(trimmed);
+      await onSubmit(normalized);
       setContent('');
     } catch (submitError) {
       setError(
@@ -130,13 +196,22 @@ export const CommentForm = ({
         value={content}
         onChange={(event) => {
           setContent(event.target.value);
-          if (error) setError(null);
+          if (error) {
+            const nextError = getCommentValidationError(
+              normalizeCommentInput(event.target.value),
+            );
+            setError(nextError);
+          }
         }}
         placeholder={placeholder}
         aria-label="Contenido del comentario"
+        maxLength={COMMENT_FORM_RULES.maxLength}
       />
 
       <HelperText>{helperText}</HelperText>
+      <CounterText $danger={isNearLimit}>
+        {normalizedPreview.length}/{COMMENT_FORM_RULES.maxLength} caracteres - {words} palabras
+      </CounterText>
 
       {error && <ErrorText>{error}</ErrorText>}
 
