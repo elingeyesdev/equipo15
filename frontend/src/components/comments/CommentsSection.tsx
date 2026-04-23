@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 import { commentService } from '../../services/comment.service';
@@ -15,6 +15,31 @@ interface CommentsSectionProps {
 interface CommentTreeNode extends Comment {
   replies?: CommentTreeNode[];
 }
+
+interface FlatCommentNode extends Comment {
+  replies: CommentTreeNode[];
+}
+
+const createTemporaryComment = (params: {
+  ideaId: string;
+  content: string;
+  parentCommentId?: string | null;
+}): CommentTreeNode => ({
+  id: `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  ideaId: params.ideaId,
+  authorId: 'current-user',
+  parentCommentId: params.parentCommentId ?? null,
+  content: params.content,
+  status: 'visible',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  author: {
+    id: 'current-user',
+    displayName: 'Tu',
+  },
+  canWithdraw: true,
+  replies: [],
+});
 
 const Wrapper = styled.section`
   width: 100%;
@@ -121,27 +146,116 @@ const EmptyState = styled.div`
   line-height: 1.6;
 `;
 
-const buildCommentTree = async (
-  ideaId: string,
-  parentCommentId?: string,
-): Promise<CommentTreeNode[]> => {
-  const response = await commentService.getComments({
-    ideaId,
-    parentCommentId,
-    page: 1,
-    limit: 100,
-    sort: 'oldest',
+const sortByCreatedAtAsc = (a: Comment, b: Comment) => {
+  const aMs = new Date(a.createdAt).getTime();
+  const bMs = new Date(b.createdAt).getTime();
+  if (aMs === bMs) return a.id.localeCompare(b.id);
+  return aMs - bMs;
+};
+
+const buildCommentTreeFromFlatList = (comments: Comment[]): CommentTreeNode[] => {
+  const byId = new Map<string, FlatCommentNode>();
+  const roots: CommentTreeNode[] = [];
+
+  comments.forEach((comment) => {
+    byId.set(comment.id, {
+      ...comment,
+      replies: [],
+    });
   });
 
-  const nodes: CommentTreeNode[] = response.data.data;
+  const ordered = [...comments].sort(sortByCreatedAtAsc);
 
-  return Promise.all(
-    nodes.map(async (comment) => ({
-      ...comment,
-      replies: await buildCommentTree(ideaId, comment.id),
-    })),
-  );
+  ordered.forEach((comment) => {
+    const current = byId.get(comment.id);
+    if (!current) return;
+
+    if (comment.parentCommentId) {
+      const parent = byId.get(comment.parentCommentId);
+      if (parent) {
+        parent.replies.push(current);
+        return;
+      }
+    }
+
+    roots.push(current);
+  });
+
+  return roots;
 };
+
+const appendReplyToTree = (
+  nodes: CommentTreeNode[],
+  parentId: string,
+  reply: CommentTreeNode,
+): CommentTreeNode[] => {
+  let updated = false;
+
+  const next = nodes.map((node) => {
+    if (node.id === parentId) {
+      updated = true;
+      const replies = [...(node.replies ?? []), reply].sort(sortByCreatedAtAsc);
+      return { ...node, replies };
+    }
+
+    if (node.replies?.length) {
+      const nested = appendReplyToTree(node.replies, parentId, reply);
+      if (nested !== node.replies) {
+        updated = true;
+        return { ...node, replies: nested };
+      }
+    }
+
+    return node;
+  });
+
+  return updated ? next : nodes;
+};
+
+const replaceCommentInTree = (
+  nodes: CommentTreeNode[],
+  targetId: string,
+  replacement: CommentTreeNode,
+): CommentTreeNode[] =>
+  nodes.map((node) => {
+    if (node.id === targetId) {
+      return { ...replacement, replies: replacement.replies ?? node.replies ?? [] };
+    }
+
+    if (node.replies?.length) {
+      return { ...node, replies: replaceCommentInTree(node.replies, targetId, replacement) };
+    }
+
+    return node;
+  });
+
+const updateCommentInTree = (
+  nodes: CommentTreeNode[],
+  targetId: string,
+  updates: Partial<CommentTreeNode>,
+): CommentTreeNode[] =>
+  nodes.map((node) => {
+    if (node.id === targetId) {
+      return { ...node, ...updates };
+    }
+
+    if (node.replies?.length) {
+      return { ...node, replies: updateCommentInTree(node.replies, targetId, updates) };
+    }
+
+    return node;
+  });
+
+const removeCommentFromTree = (
+  nodes: CommentTreeNode[],
+  targetId: string,
+): CommentTreeNode[] =>
+  nodes
+    .filter((node) => node.id !== targetId)
+    .map((node) => {
+      if (!node.replies?.length) return node;
+      return { ...node, replies: removeCommentFromTree(node.replies, targetId) };
+    });
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (axios.isAxiosError(error)) {
@@ -178,74 +292,156 @@ export const CommentsSection = ({
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
-  const [reloadToken, setReloadToken] = useState(0);
   const [shouldScrollToEnd, setShouldScrollToEnd] = useState(false);
   const listEndRef = useRef<HTMLDivElement | null>(null);
+  const requestIdRef = useRef(0);
+
+  const loadComments = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await commentService.getComments({
+        ideaId,
+        includeReplies: true,
+        page: 1,
+        limit: 500,
+        sort: 'oldest',
+      });
+
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
+
+      const tree = buildCommentTreeFromFlatList(response.data.data);
+      setComments(tree);
+    } catch (loadError) {
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
+
+      const message = getErrorMessage(loadError, 'No se pudieron cargar los comentarios.');
+      setError(message);
+      setComments([]);
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
+    }
+  }, [ideaId]);
 
   useEffect(() => {
-    let active = true;
-
-    const loadComments = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const tree = await buildCommentTree(ideaId);
-        if (active) {
-          setComments(tree);
-          if (shouldScrollToEnd) {
-            requestAnimationFrame(() => {
-              listEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-              setShouldScrollToEnd(false);
-            });
-          }
-        }
-      } catch (loadError) {
-        if (!active) return;
-
-        const message = getErrorMessage(loadError, 'No se pudieron cargar los comentarios.');
-
-        setError(message);
-        setComments([]);
-      } finally {
-        if (active) setIsLoading(false);
-      }
-    };
-
     loadComments();
+  }, [loadComments]);
 
-    return () => {
-      active = false;
-    };
-  }, [ideaId, reloadToken]);
+  useEffect(() => {
+    if (!shouldScrollToEnd) return;
 
-  const handleCreateComment = async (content: string) => {
+    requestAnimationFrame(() => {
+      listEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      setShouldScrollToEnd(false);
+    });
+  }, [comments, shouldScrollToEnd]);
+
+  const handleCreateComment = useCallback(async (content: string) => {
     setIsCreating(true);
     setSubmitSuccess(null);
 
+    const optimisticComment = createTemporaryComment({
+      ideaId,
+      content,
+    });
+
+    setComments((prev) => [...prev, optimisticComment].sort(sortByCreatedAtAsc));
+    setShouldScrollToEnd(true);
+
     try {
-      await commentService.createComment({ ideaId, content });
+      const created = await commentService.createComment({ ideaId, content });
+      const newComment: CommentTreeNode = {
+        ...created.data,
+        replies: [],
+      };
+
+      setComments((prev) => replaceCommentInTree(prev, optimisticComment.id, newComment));
       setSubmitSuccess('Comentario publicado correctamente.');
-      setShouldScrollToEnd(true);
-      setReloadToken((current) => current + 1);
     } catch (submitError) {
+      setComments((prev) => removeCommentFromTree(prev, optimisticComment.id));
       throw new Error(getErrorMessage(submitError, 'No se pudo publicar el comentario.'));
     } finally {
       setIsCreating(false);
     }
-  };
+  }, [ideaId]);
 
-  const handleReply = async (commentId: string, content: string) => {
+  const handleReply = useCallback(async (commentId: string, content: string) => {
     setSubmitSuccess(null);
+
+    const optimisticReply = createTemporaryComment({
+      ideaId,
+      content,
+      parentCommentId: commentId,
+    });
+
+    setComments((prev) => appendReplyToTree(prev, commentId, optimisticReply));
+    setShouldScrollToEnd(true);
+
     try {
-      await commentService.replyToComment(commentId, content);
+      const created = await commentService.replyToComment(commentId, content, ideaId);
+      const newReply: CommentTreeNode = {
+        ...created.data,
+        replies: [],
+      };
+
+      setComments((prev) => replaceCommentInTree(prev, optimisticReply.id, newReply));
       setSubmitSuccess('Respuesta publicada correctamente.');
-      setShouldScrollToEnd(true);
-      setReloadToken((current) => current + 1);
     } catch (submitError) {
+      setComments((prev) => removeCommentFromTree(prev, optimisticReply.id));
       throw new Error(getErrorMessage(submitError, 'No se pudo publicar la respuesta.'));
     }
-  };
+  }, [ideaId]);
+
+  const handleWithdraw = useCallback(async (commentId: string) => {
+    setSubmitSuccess(null);
+
+    const previous = comments;
+    setComments((prev) => removeCommentFromTree(prev, commentId));
+
+    try {
+      await commentService.withdrawComment(commentId, ideaId);
+      setSubmitSuccess('Comentario retirado correctamente.');
+    } catch (withdrawError) {
+      setComments(previous);
+      throw new Error(getErrorMessage(withdrawError, 'No se pudo retirar el comentario.'));
+    }
+  }, [comments, ideaId]);
+
+  const handleEditComment = useCallback(async (commentId: string, content: string) => {
+    setSubmitSuccess(null);
+    const originalComments = comments;
+
+    setComments((prev) =>
+      updateCommentInTree(prev, commentId, {
+        content,
+        editedAt: new Date().toISOString(),
+      })
+    );
+
+    try {
+      const updated = await commentService.updateComment(commentId, content, ideaId);
+
+      setComments((prev) =>
+        updateCommentInTree(prev, commentId, {
+          content: updated.data.content,
+          editedAt: updated.data.editedAt,
+          updatedAt: updated.data.updatedAt,
+        })
+      );
+      setSubmitSuccess('Comentario editado correctamente.');
+    } catch (submitError) {
+      setComments(originalComments);
+      throw new Error(getErrorMessage(submitError, 'No se pudo editar el comentario.'));
+    }
+  }, [comments, ideaId]);
 
   const totalVisibleComments = useMemo(() => countAllComments(comments), [comments]);
 
@@ -291,7 +487,13 @@ export const CommentsSection = ({
       {!isLoading && !error && comments.length > 0 && (
         <List>
           {comments.map((comment) => (
-            <CommentItem key={comment.id} comment={comment} onReply={handleReply} />
+            <CommentItem
+              key={comment.id}
+              comment={comment}
+              onReply={handleReply}
+              onEdit={handleEditComment}
+              onWithdraw={handleWithdraw}
+            />
           ))}
           <div ref={listEndRef} />
         </List>

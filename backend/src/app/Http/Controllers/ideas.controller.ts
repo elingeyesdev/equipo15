@@ -20,6 +20,7 @@ import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { IdeaService } from '../../Services/idea.service';
 import { CreateIdeaDto } from '../../DTOs/create-idea.dto';
 import { CreateDraftIdeaDto } from '../../DTOs/create-draft-idea.dto';
+import { UpdateIdeaDto } from '../../DTOs/update-idea.dto';
 import { FirebaseAuthGuard } from '../../../common/guards/firebase-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/guards/roles.decorator';
@@ -75,6 +76,16 @@ export class IdeasController {
   @ApiOperation({ summary: 'Update the status of an idea (Admin only)' })
   updateStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.ideaService.updateStatus(id, status);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Edit an idea (author only)' })
+  updateIdea(
+    @Param('id') id: string,
+    @Body() updateIdeaDto: UpdateIdeaDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.ideaService.updateIdea(id, updateIdeaDto, request.user.uid);
   }
 
   @Post(':id/like')

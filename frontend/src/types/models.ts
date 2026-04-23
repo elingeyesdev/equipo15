@@ -78,6 +78,8 @@ export interface Comment {
   deletedAt?: string | Date | null;
   author?: CommentAuthor;
   replies?: Comment[];
+  canWithdraw?: boolean;
+  canEdit?: boolean;
 }
 
 export interface CommentListResponse {

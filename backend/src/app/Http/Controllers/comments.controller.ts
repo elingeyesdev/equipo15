@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FirebaseAuthGuard } from '../../../common/guards/firebase-auth.guard';
 import type { AuthenticatedRequest } from '../../../common/types/authenticated-request.interface';
 import { CreateCommentDto } from '../../DTOs/create-comment.dto';
 import { GetCommentsQueryDto } from '../../DTOs/get-comments-query.dto';
 import { ReplyCommentDto } from '../../DTOs/reply-comment.dto';
+import { UpdateCommentDto } from '../../DTOs/update-comment.dto';
 import { CommentService } from '../../Services/comment.service';
 
 @ApiTags('Comentarios')
@@ -18,11 +19,15 @@ export class CommentsController {
   @ApiOperation({ summary: 'Obtener comentarios de una idea' })
   @ApiQuery({ name: 'ideaId', required: true, type: String })
   @ApiQuery({ name: 'parentCommentId', required: false, type: String })
+  @ApiQuery({ name: 'includeReplies', required: false, type: Boolean })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'sort', required: false, enum: ['newest', 'oldest'] })
-  getComments(@Query() query: GetCommentsQueryDto) {
-    return this.commentService.findComments(query);
+  getComments(
+    @Query() query: GetCommentsQueryDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.commentService.findComments(query, request.user.uid);
   }
 
   @Post()
@@ -49,6 +54,34 @@ export class CommentsController {
     return this.commentService.replyToComment({
       parentCommentId: id,
       content: replyCommentDto.content,
+      firebaseUid: request.user.uid,
+    });
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Retirar comentario (autor, company dueña del reto o admin)' })
+  @ApiResponse({ status: 200, description: 'Comentario retirado correctamente.' })
+  withdraw(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.commentService.withdrawComment({
+      commentId: id,
+      firebaseUid: request.user.uid,
+    });
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Editar un comentario' })
+  @ApiResponse({ status: 200, description: 'Comentario editado correctamente.' })
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateCommentDto: UpdateCommentDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.commentService.updateComment({
+      commentId: id,
+      content: updateCommentDto.content,
       firebaseUid: request.user.uid,
     });
   }

@@ -8,6 +8,7 @@ import { Model } from 'mongoose';
 import { ProjectDetails } from '../../database/schemas/project-details.schema';
 import { CreateIdeaDto } from '../DTOs/create-idea.dto';
 import { CreateDraftIdeaDto } from '../DTOs/create-draft-idea.dto';
+import { UpdateIdeaDto } from '../DTOs/update-idea.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { EventsGateway } from '../Gateways/events.gateway';
 import { VisibilityStrategy, UserRoleName } from '../Utils/visibility.strategy';
@@ -267,6 +268,74 @@ export class IdeaService {
   async updateStatus(id: string, status: string) {
     const updatedIdea = await this.ideaRepository.update(id, { status });
     this.logger.log(`Estado de idea con ID ${id} cambiado a: ${status}`);
+    return updatedIdea;
+  }
+
+  async updateIdea(
+    ideaId: string,
+    updateIdeaDto: UpdateIdeaDto,
+    firebaseUid: string,
+  ): Promise<Idea> {
+    const authorId = await this.resolveAuthorId(firebaseUid);
+    const existingIdea = await this.ideaRepository.findById(ideaId);
+
+    if (!existingIdea) {
+      throw new BadRequestException('La idea que intentas editar no existe.');
+    }
+
+    if (existingIdea.authorId !== authorId) {
+      throw new ForbiddenException('Solo el autor de la idea puede editarla.');
+    }
+
+    if (updateIdeaDto.challengeId || updateIdeaDto.status) {
+      throw new BadRequestException(
+        'No está permitido cambiar el reto o estado desde esta edición.',
+      );
+    }
+
+    const nextTitle = updateIdeaDto.title?.trim();
+    const nextProblem = updateIdeaDto.problem?.trim();
+    const nextSolution = updateIdeaDto.solution?.trim();
+
+    if (nextTitle !== undefined) {
+      assertWordRange(
+        'ideaName',
+        'El título',
+        nextTitle,
+        IDEA_WORD_RULES.title.min,
+        IDEA_WORD_RULES.title.max,
+      );
+    }
+
+    if (nextProblem !== undefined) {
+      assertWordRange(
+        'ideaProblem',
+        'El problema',
+        nextProblem,
+        IDEA_WORD_RULES.problem.min,
+        IDEA_WORD_RULES.problem.max,
+      );
+    }
+
+    if (nextSolution !== undefined) {
+      assertWordRange(
+        'ideaSolution',
+        'La solución',
+        nextSolution,
+        IDEA_WORD_RULES.solution.min,
+        IDEA_WORD_RULES.solution.max,
+      );
+    }
+
+    const updatedIdea = await this.ideaRepository.update(ideaId, {
+      title: nextTitle,
+      problem: nextProblem,
+      solution: nextSolution,
+      tags: updateIdeaDto.tags,
+      isAnonymous: updateIdeaDto.isAnonymous,
+    });
+
+    this.logger.log(`Idea ${ideaId} editada por su autor.`);
     return updatedIdea;
   }
 

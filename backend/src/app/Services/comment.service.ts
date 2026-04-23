@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { Comment } from '@prisma/client';
 import { EventsGateway } from '../Gateways/events.gateway';
+import { ChallengeRepository } from '../Repositories/challenge.repository';
 import { CommentListItem, CommentRepository } from '../Repositories/comment.repository';
 import { IdeaRepository } from '../Repositories/idea.repository';
 import { UserRepository } from '../Repositories/user.repository';
@@ -23,12 +24,24 @@ export interface ReplyCommentInput {
   parentCommentId: string;
 }
 
+export interface WithdrawCommentInput {
+  commentId: string;
+  firebaseUid: string;
+}
+
+export interface UpdateCommentInput {
+  commentId: string;
+  content: string;
+  firebaseUid: string;
+}
+
 @Injectable()
 export class CommentService {
   private readonly duplicateWindowMs = 30_000;
 
   constructor(
     private readonly commentRepository: CommentRepository,
+    private readonly challengeRepository: ChallengeRepository,
     private readonly ideaRepository: IdeaRepository,
     private readonly userRepository: UserRepository,
     private readonly eventsGateway: EventsGateway,
@@ -44,6 +57,29 @@ export class CommentService {
     if (status !== 'public' && status !== 'top5') {
       throw new BadRequestException('Solo se puede comentar en ideas publicadas.');
     }
+  }
+
+  private collectSubtreeCommentIds(input: {
+    targetId: string;
+    ideaId: string;
+    nodes: Array<{ id: string; parentCommentId: string | null; status: string }>;
+  }): string[] {
+    const allIds = new Set<string>();
+    const queue = [input.targetId];
+
+    while (queue.length > 0) {
+      const current = queue.shift() as string;
+      if (allIds.has(current)) continue;
+      allIds.add(current);
+
+      input.nodes.forEach((node) => {
+        if (node.parentCommentId === current && node.status === 'visible') {
+          queue.push(node.id);
+        }
+      });
+    }
+
+    return Array.from(allIds);
   }
 
   private async ensureNoRecentDuplicateComment(input: {
@@ -176,7 +212,119 @@ export class CommentService {
     return createdComment;
   }
 
-  async findComments(query: GetCommentsQueryDto): Promise<{ data: CommentListItem[]; total: number; page: number; limit: number }> {
+  async withdrawComment(input: WithdrawCommentInput): Promise<{ success: boolean; removedCount: number }> {
+    const requester = await this.userRepository.findByUid(input.firebaseUid);
+    if (!requester) {
+      throw new NotFoundException('Usuario no encontrado en el sistema.');
+    }
+
+    const comment = await this.commentRepository.findById(input.commentId);
+    if (!comment) {
+      throw new NotFoundException('El comentario no existe.');
+    }
+
+    if (comment.status !== 'visible') {
+      throw new BadRequestException('El comentario ya no está visible.');
+    }
+
+    const idea = await this.ideaRepository.findById(comment.ideaId);
+    if (!idea) {
+      throw new NotFoundException('La idea asociada al comentario no existe.');
+    }
+
+    const challenge = await this.challengeRepository.findById(idea.challengeId);
+    if (!challenge) {
+      throw new NotFoundException('El reto asociado a la idea no existe.');
+    }
+
+    const requesterRole = (requester as any)?.role?.name ?? 'student';
+    const isAuthor = requester.id === comment.authorId;
+    const isAdmin = requesterRole === 'admin';
+    const isCompanyOwnerOfChallenge =
+      requesterRole === 'company' && requester.id === challenge.authorId;
+
+    if (!isAuthor && !isAdmin && !isCompanyOwnerOfChallenge) {
+      throw new ForbiddenException(
+        'No tienes permiso para retirar este comentario.',
+      );
+    }
+
+    const thread = await this.commentRepository.findThreadByIdeaId(comment.ideaId);
+    const visibleNodes = thread
+      .filter((node) => node.status === 'visible')
+      .map((node) => ({
+        id: node.id,
+        parentCommentId: node.parentCommentId ?? null,
+        status: node.status,
+      }));
+
+    const idsToRemove = this.collectSubtreeCommentIds({
+      targetId: comment.id,
+      ideaId: comment.ideaId,
+      nodes: visibleNodes,
+    });
+
+    await this.commentRepository.softDeleteManyAndDecrementIdeaComments({
+      ideaId: comment.ideaId,
+      commentIds: idsToRemove,
+    });
+
+    this.eventsGateway.server.emit('idea_commented', {
+      challengeId: idea.challengeId,
+      ideaId: idea.id,
+    });
+
+    return {
+      success: true,
+      removedCount: idsToRemove.length,
+    };
+  }
+
+  async updateComment(input: UpdateCommentInput): Promise<Comment> {
+    const requester = await this.userRepository.findByUid(input.firebaseUid);
+    if (!requester) {
+      throw new NotFoundException('Usuario no encontrado en el sistema.');
+    }
+    this.ensureUserCanComment(requester.isActive);
+
+    const comment = await this.commentRepository.findById(input.commentId);
+    if (!comment) {
+      throw new NotFoundException('El comentario no existe.');
+    }
+
+    if (comment.status !== 'visible') {
+      throw new BadRequestException('Solo se pueden editar comentarios visibles.');
+    }
+
+    if (comment.authorId !== requester.id) {
+      throw new ForbiddenException('No tienes permiso para editar este comentario.');
+    }
+
+    const idea = await this.ideaRepository.findById(comment.ideaId);
+    if (!idea) {
+      throw new NotFoundException('La idea asociada al comentario no existe.');
+    }
+    this.ensureIdeaAllowsComments(idea.status);
+
+    const content = normalizeCommentContent(input.content, 'El comentario');
+
+    const updatedComment = await this.commentRepository.updateCommentContent(
+      input.commentId,
+      content,
+    );
+
+    this.eventsGateway.server.emit('idea_commented', {
+      challengeId: idea.challengeId,
+      ideaId: idea.id,
+    });
+
+    return updatedComment;
+  }
+
+  async findComments(
+    query: GetCommentsQueryDto,
+    requesterFirebaseUid?: string,
+  ): Promise<{ data: Array<CommentListItem & { canWithdraw: boolean; canEdit: boolean }>; total: number; page: number; limit: number }> {
     const idea = await this.ideaRepository.findById(query.ideaId);
     if (!idea) {
       throw new NotFoundException('La idea solicitada no existe.');
@@ -200,13 +348,42 @@ export class CommentService {
     const { data, total } = await this.commentRepository.findByIdeaId({
       ideaId: query.ideaId,
       parentCommentId: query.parentCommentId,
+      includeReplies: query.includeReplies,
       skip,
       take: limit,
       sort: (query.sort === 'newest' || query.sort === 'oldest') ? query.sort : 'newest',
     });
 
+    let requesterId: string | undefined;
+    let requesterRole = 'student';
+
+    const challenge = await this.challengeRepository.findById(idea.challengeId);
+    if (!challenge) {
+      throw new NotFoundException('El reto asociado a la idea no existe.');
+    }
+
+    if (requesterFirebaseUid) {
+      const requester = await this.userRepository.findByUid(requesterFirebaseUid);
+      if (requester) {
+        requesterId = requester.id;
+        requesterRole = (requester as any)?.role?.name ?? 'student';
+      }
+    }
+
+    const canCompanyWithdraw =
+      requesterRole === 'company' && requesterId === challenge.authorId;
+    const canAdminWithdraw = requesterRole === 'admin';
+
+    const dataWithPermissions = data.map((comment) => ({
+      ...comment,
+      canWithdraw:
+        !!requesterId &&
+        (comment.authorId === requesterId || canAdminWithdraw || canCompanyWithdraw),
+      canEdit: !!requesterId && comment.authorId === requesterId,
+    }));
+
     return {
-      data,
+      data: dataWithPermissions,
       total,
       page,
       limit,

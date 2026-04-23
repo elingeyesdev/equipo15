@@ -32,6 +32,14 @@ export interface CreateDraftIdeaPayload {
   isAnonymous?: boolean;
 }
 
+export interface UpdateIdeaPayload {
+  title?: string;
+  problem?: string;
+  solution?: string;
+  tags?: string[];
+  isAnonymous?: boolean;
+}
+
 export const ideaService = {
   getAllIdeas: async () => {
     const response = await axiosInstance.get('/ideas');
@@ -81,6 +89,11 @@ export const ideaService = {
 
   voteIdea: async (ideaId: string) => {
     const response = await axiosInstance.post(`/ideas/${ideaId}/like`);
+    return response.data;
+  },
+
+  updateIdea: async (ideaId: string, payload: UpdateIdeaPayload) => {
+    const response = await axiosInstance.patch(`/ideas/${ideaId}`, payload);
     return response.data;
   },
 };

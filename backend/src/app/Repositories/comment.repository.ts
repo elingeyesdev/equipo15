@@ -51,6 +51,49 @@ export type CommentListItem = Prisma.CommentGetPayload<{
 export class CommentRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findThreadByIdeaId(ideaId: string): Promise<Array<Pick<Comment, 'id' | 'parentCommentId' | 'status'>>> {
+    return this.prisma.comment.findMany({
+      where: { ideaId },
+      select: {
+        id: true,
+        parentCommentId: true,
+        status: true,
+      },
+    });
+  }
+
+  async softDeleteManyAndDecrementIdeaComments(input: {
+    ideaId: string;
+    commentIds: string[];
+  }): Promise<void> {
+    const visibleCount = await this.prisma.comment.count({
+      where: {
+        id: { in: input.commentIds },
+        status: 'visible',
+      },
+    });
+
+    if (visibleCount === 0) return;
+
+    await this.prisma.$transaction([
+      this.prisma.comment.updateMany({
+        where: {
+          id: { in: input.commentIds },
+        },
+        data: {
+          status: 'deleted',
+          deletedAt: new Date(),
+        },
+      }),
+      this.prisma.idea.update({
+        where: { id: input.ideaId },
+        data: {
+          commentsCount: { decrement: visibleCount },
+        },
+      }),
+    ]);
+  }
+
   async findLatestVisibleByAuthorInThread(params: {
     ideaId: string;
     authorId: string;
@@ -93,6 +136,16 @@ export class CommentRepository {
     return createdComment;
   }
 
+  async updateCommentContent(id: string, content: string): Promise<Comment> {
+    return this.prisma.comment.update({
+      where: { id },
+      data: {
+        content,
+        editedAt: new Date(),
+      },
+    });
+  }
+
   async findById(id: string): Promise<Comment | null> {
     return this.prisma.comment.findUnique({
       where: { id },
@@ -102,6 +155,7 @@ export class CommentRepository {
   async findByIdeaId(params: {
     ideaId: string;
     parentCommentId?: string | null;
+    includeReplies?: boolean;
     skip?: number;
     take?: number;
     sort?: 'newest' | 'oldest';
@@ -110,9 +164,12 @@ export class CommentRepository {
     const where: Prisma.CommentWhereInput = {
       ideaId: params.ideaId,
       status: 'visible',
-      parentCommentId:
-        params.parentCommentId === undefined ? null : params.parentCommentId,
     };
+
+    if (!params.includeReplies || params.parentCommentId !== undefined) {
+      where.parentCommentId =
+        params.parentCommentId === undefined ? null : params.parentCommentId;
+    }
 
     const [data, total] = await this.prisma.$transaction([
       this.prisma.comment.findMany({

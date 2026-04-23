@@ -16,6 +16,11 @@ const countWords = (value: string): number =>
 
 const URL_PATTERN = /(https?:\/\/|www\.)/i;
 
+const isOnlyNumbers = (value: string): boolean => {
+  const compact = value.replace(/\s+/g, '');
+  return /^[0-9]+$/.test(compact);
+};
+
 const normalizeCommentWhitespace = (value: string): string => {
   const normalizedLines = value
     .replace(/\r\n/g, '\n')
@@ -66,6 +71,15 @@ export const normalizeCommentContent = (content: string, fieldLabel: string): st
       message: `${fieldLabel} debe incluir letras o números legibles.`,
       details: {
         content: `${fieldLabel} debe incluir letras o números legibles.`,
+      },
+    });
+  }
+
+  if (isOnlyNumbers(normalized)) {
+    throw new BadRequestException({
+      message: `${fieldLabel} no puede contener solo números.`,
+      details: {
+        content: `${fieldLabel} no puede contener solo números.`,
       },
     });
   }
