@@ -398,6 +398,7 @@ export const useIdeationForm = (
     consentsTouched,
     setConsentsTouched,
     formErrors,
+    setFormErrors,
     clearFieldError,
     validateField,
     validatePublicSubmission,
