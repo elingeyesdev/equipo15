@@ -194,7 +194,11 @@ const rawToPlane = (idea: RawIdea, index: number): PlaneIdea => ({
   problem: idea.problem,
   solution: idea.solution,
   hasVoted: idea.hasVoted ?? false,
+  authorId: idea.authorId || '',
   createdAt: idea.createdAt,
+  authorRealName: idea.author?.displayName,
+  authorStudentCode: idea.author?.studentCode,
+  authorPhone: idea.author?.phone,
 });
 
 interface IdeasChronologicalListProps {

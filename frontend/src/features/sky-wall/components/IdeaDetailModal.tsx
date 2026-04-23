@@ -290,6 +290,28 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
         </ModalBanner>
 
         <Body>
+          {(idea.authorRealName || idea.authorStudentCode || idea.authorPhone) && (
+            <SectionBlock style={{ background: '#f8fafc', borderRadius: '16px', padding: '20px', marginTop: '-10px', marginBottom: '10px' }}>
+              <SectionLabel style={{ color: '#475569', marginBottom: '12px' }}>Datos Institucionales (Solo Autorizados)</SectionLabel>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'center' }}>
+                {idea.authorRealName && (
+                  <div style={{ fontSize: '14px', color: '#1e293b' }}>
+                    <strong style={{ color: '#64748b' }}>Nombre:</strong> {idea.authorRealName}
+                  </div>
+                )}
+                {idea.authorStudentCode && (
+                  <div style={{ fontSize: '14px', color: '#1e293b' }}>
+                    <strong style={{ color: '#64748b' }}>Código:</strong> {idea.authorStudentCode}
+                  </div>
+                )}
+                {idea.authorPhone && (
+                  <div style={{ fontSize: '14px', color: '#1e293b' }}>
+                    <strong style={{ color: '#64748b' }}>Teléfono:</strong> {idea.authorPhone}
+                  </div>
+                )}
+              </div>
+            </SectionBlock>
+          )}
           <SectionBlock>
             <SectionLabel>El Problema</SectionLabel>
             {idea.problem

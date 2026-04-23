@@ -97,7 +97,8 @@ export class IdeaRepository {
         authorId: true,
         challengeId: true,
         votesCount: true,
-        author: { select: { displayName: true, nickname: true, email: true, facultyId: true } },
+        author: { select: { displayName: true, nickname: true, email: true, facultyId: true, phone: true, studentCode: true, role: { select: { name: true } } } },
+        challenge: { select: { status: true } },
         ...(userId
           ? { ideaLikes: { where: { userId }, select: { id: true } } }
           : {}),

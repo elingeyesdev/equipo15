@@ -6,8 +6,12 @@ const parseAuthor = (author: unknown): RawAuthor | undefined => {
   const record = author as Record<string, unknown>;
   return {
     displayName: typeof record.displayName === 'string' ? record.displayName : undefined,
+    nickname: typeof record.nickname === 'string' ? record.nickname : undefined,
     email: typeof record.email === 'string' ? record.email : undefined,
     facultyId: typeof record.facultyId === 'number' ? record.facultyId : undefined,
+    phone: typeof record.phone === 'string' ? record.phone : undefined,
+    studentCode: typeof record.studentCode === 'string' ? record.studentCode : undefined,
+    role: typeof record.role === 'object' && record.role !== null ? record.role as { name: string } : undefined,
   };
 };
 

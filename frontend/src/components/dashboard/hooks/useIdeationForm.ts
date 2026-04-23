@@ -191,9 +191,15 @@ export const useIdeationForm = (
   };
 
   const isProfileComplete = () => {
-    const hasCode = !!profile?.studentCode?.trim();
+    const role = profile?.role || 'student';
     const hasPhone = !!profile?.phone?.trim();
-    return { hasCode, hasPhone, complete: hasCode && hasPhone };
+
+    if (role === 'student') {
+      const hasCode = !!profile?.studentCode?.trim();
+      return { hasCode, hasPhone, complete: hasCode && hasPhone };
+    }
+
+    return { hasCode: true, hasPhone, complete: hasPhone };
   };
 
   const validatePublicSubmission = (formChallenge: Challenge | null): FormErrors => {
