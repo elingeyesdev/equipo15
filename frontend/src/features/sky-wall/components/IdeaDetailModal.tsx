@@ -6,6 +6,7 @@ import LikeButton from './LikeButton';
 import { Pista8Theme } from '../../../config/theme';
 import CommentsSection from '../../../components/comments/CommentsSection';
 import { useAuth } from '../../../context/AuthContext';
+import { ideaService } from '../../../services/idea.service';
 
 const overlayIn = keyframes`
   from { opacity: 0; }
@@ -234,6 +235,73 @@ const Counter = styled.span`
   letter-spacing: -0.02em;
 `;
 
+const EditButton = styled.button`
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+`;
+
+const EditForm = styled.form`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const EditInput = styled.input`
+  width: 100%;
+  border: 1px solid rgba(72, 80, 84, 0.18);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+`;
+
+const EditTextArea = styled.textarea`
+  width: 100%;
+  border: 1px solid rgba(72, 80, 84, 0.18);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 140px;
+`;
+
+const EditActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+`;
+
+const EditActionButton = styled.button<{ $primary?: boolean }>`
+  border: ${({ $primary }) => ($primary ? 'none' : '1px solid rgba(72, 80, 84, 0.2)')};
+  background: ${({ $primary }) => ($primary ? Pista8Theme.primary : 'transparent')};
+  color: ${({ $primary }) => ($primary ? 'white' : '#374151')};
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+`;
+
+const EditError = styled.p`
+  margin: 0;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 600;
+`;
+
 interface IdeaDetailModalProps {
   idea: PlaneIdea;
   onClose: () => void;
@@ -243,10 +311,20 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
   const { userProfile } = useAuth();
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [commentsCount, setCommentsCount] = useState(idea.commentsCount);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editableTitle, setEditableTitle] = useState(idea.title);
+  const [editableSolution, setEditableSolution] = useState(idea.solution || '');
 
   useEffect(() => {
     setCommentsCount(idea.commentsCount);
     setIsCommentsOpen(false);
+    setIsEditing(false);
+    setIsSaving(false);
+    setEditError(null);
+    setEditableTitle(idea.title);
+    setEditableSolution(idea.solution || '');
   }, [idea.id, idea.commentsCount]);
 
   useEffect(() => {
@@ -259,6 +337,40 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
+  };
+
+  const isAuthor = idea.authorId === userProfile?.id;
+
+  const handleSaveEdit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const title = editableTitle.trim();
+    const solution = editableSolution.trim();
+
+    if (!title || !solution) {
+      setEditError('El título y la solución son obligatorios para editar la idea.');
+      return;
+    }
+
+    setIsSaving(true);
+    setEditError(null);
+    try {
+      await ideaService.updateIdea(idea.id, {
+        title,
+        solution,
+      });
+      setIsEditing(false);
+    } catch (error) {
+      const message = (error as any)?.response?.data?.message;
+      if (Array.isArray(message)) {
+        setEditError(message[0]);
+      } else if (typeof message === 'string') {
+        setEditError(message);
+      } else {
+        setEditError('No se pudo guardar la edición. Intenta nuevamente.');
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const modalContent = (
@@ -274,7 +386,7 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
           </CloseButton>
 
           <IdeaTag>Idea en vuelo</IdeaTag>
-          <ModalTitle>{idea.title}</ModalTitle>
+          <ModalTitle>{editableTitle}</ModalTitle>
           <AuthorRow>
             <AuthorDot />
             <AuthorName>{idea.authorName}</AuthorName>
@@ -286,10 +398,44 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
                 })}
               </DateChip>
             )}
+            {isAuthor && (
+              <EditButton type="button" onClick={() => setIsEditing((current) => !current)}>
+                {isEditing ? 'Cancelar edición' : 'Editar idea'}
+              </EditButton>
+            )}
           </AuthorRow>
         </ModalBanner>
 
         <Body>
+          {isEditing && isAuthor && (
+            <SectionBlock>
+              <SectionLabel>Editar idea</SectionLabel>
+              <EditForm onSubmit={handleSaveEdit}>
+                <EditInput
+                  value={editableTitle}
+                  onChange={(e) => setEditableTitle(e.target.value)}
+                  placeholder="Título de la idea"
+                  maxLength={150}
+                />
+                <EditTextArea
+                  value={editableSolution}
+                  onChange={(e) => setEditableSolution(e.target.value)}
+                  placeholder="Describe la solución"
+                  maxLength={2000}
+                />
+                {editError && <EditError>{editError}</EditError>}
+                <EditActions>
+                  <EditActionButton type="button" onClick={() => setIsEditing(false)}>
+                    Cancelar
+                  </EditActionButton>
+                  <EditActionButton type="submit" $primary disabled={isSaving}>
+                    {isSaving ? 'Guardando...' : 'Guardar cambios'}
+                  </EditActionButton>
+                </EditActions>
+              </EditForm>
+            </SectionBlock>
+          )}
+
           {(idea.authorRealName || idea.authorStudentCode || idea.authorPhone) && (
             <SectionBlock style={{ background: '#f8fafc', borderRadius: '16px', padding: '20px', marginTop: '-10px', marginBottom: '10px' }}>
               <SectionLabel style={{ color: '#475569', marginBottom: '12px' }}>Datos Institucionales (Solo Autorizados)</SectionLabel>
@@ -322,8 +468,8 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
 
           <SectionBlock>
             <SectionLabel>La Solución</SectionLabel>
-            {idea.solution
-              ? <SectionContent>{idea.solution}</SectionContent>
+            {editableSolution
+              ? <SectionContent>{editableSolution}</SectionContent>
               : <EmptyContent>No se detalló la solución.</EmptyContent>
             }
           </SectionBlock>
@@ -334,7 +480,7 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
                 ideaId={idea.id} 
                 initialLikes={idea.likesCount} 
                 hasVoted={idea.hasVoted} 
-                isAuthor={idea.authorId === userProfile?.id}
+                isAuthor={isAuthor}
               />
 
               <CommentToggleButton

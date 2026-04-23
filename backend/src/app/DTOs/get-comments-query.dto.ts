@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
@@ -29,13 +29,21 @@ export class GetCommentsQueryDto extends PaginationDto {
   @ApiPropertyOptional({
     description: 'Máximo de comentarios por página',
     minimum: 1,
-    maximum: 100,
+    maximum: 500,
     default: 20,
   })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(100, { message: 'No puedes solicitar más de 100 comentarios por página.' })
+  @Max(500, { message: 'No puedes solicitar más de 500 comentarios por página.' })
   override limit?: number = undefined;
+
+  @ApiPropertyOptional({
+    description: 'Si es true y no se envía parentCommentId, retorna comentarios raiz y respuestas en una sola consulta.',
+    default: false,
+  })
+  @IsOptional()
+  @Transform(({ value }) => value === true || value === 'true')
+  includeReplies?: boolean;
 }

@@ -9,6 +9,7 @@ interface CommentFormProps {
   onCancel?: () => void;
   cancelLabel?: string;
   helperText?: string;
+  initialContent?: string;
 }
 
 const Form = styled.form`
@@ -119,6 +120,11 @@ const normalizeCommentInput = (value: string): string =>
 const countWords = (value: string): number =>
   value.trim().split(/\s+/).filter(Boolean).length;
 
+const isOnlyNumbers = (value: string): boolean => {
+  const compact = value.replace(/\s+/g, '');
+  return /^[0-9]+$/.test(compact);
+};
+
 const getCommentValidationError = (value: string): string | null => {
   if (!value) return 'El comentario no puede estar vacío.';
   if (value.length < COMMENT_FORM_RULES.minLength) {
@@ -129,6 +135,10 @@ const getCommentValidationError = (value: string): string | null => {
   }
   if (!/[A-Za-z0-9\u00C0-\u024F]/.test(value)) {
     return 'El comentario debe incluir letras o números legibles.';
+  }
+
+  if (isOnlyNumbers(value)) {
+    return 'El comentario no puede contener solo números.';
   }
 
   const words = countWords(value);
@@ -161,8 +171,9 @@ export const CommentForm = ({
   isSubmitting = false,
   onSubmit,
   onCancel,
+  initialContent = '',
 }: CommentFormProps) => {
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(initialContent);
   const [error, setError] = useState<string | null>(null);
 
   const normalizedPreview = normalizeCommentInput(content);
