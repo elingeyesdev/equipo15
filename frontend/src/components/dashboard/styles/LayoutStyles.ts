@@ -57,12 +57,19 @@ export const HamburgerBtn = styled.button`
   &:active { transform: scale(0.96); }
 `;
 
-export const MainGrid = styled.div`
+export const SplitGrid = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1.5rem;
+  margin-bottom: 1.5rem;
   animation: ${fadeUp} 0.4s 0.1s ease both;
   @media (max-width: 980px) {
     grid-template-columns: 1fr;
   }
 `;
+
+export const FullWidthContainer = styled.div`
+  width: 100%;
+  animation: ${fadeUp} 0.4s 0.2s ease both;
+`;
+

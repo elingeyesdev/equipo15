@@ -43,6 +43,7 @@ export class UserService {
     }
 
     if (user && !forceUpdate) {
+      user = await this.clearExpiredPenalties(user as UserWithRole);
       return this.formatUserResponse(user as UserWithRole);
     }
 
@@ -100,8 +101,21 @@ export class UserService {
     };
   }
 
+  private async clearExpiredPenalties(user: UserWithRole | null): Promise<UserWithRole | null> {
+    if (!user) return null;
+    
+    if (user.status !== 'ACTIVE' && user.penaltyExpiresAt) {
+      if (new Date() > new Date(user.penaltyExpiresAt)) {
+        const updated = await this.userRepository.updateStatus(user.id, 'ACTIVE', null as any);
+        return { ...user, status: updated.status, penaltyExpiresAt: updated.penaltyExpiresAt };
+      }
+    }
+    return user;
+  }
+
   async findByUid(firebaseUid: string): Promise<UserResponse | null> {
-    const user = await this.userRepository.findByUid(firebaseUid);
+    let user = await this.userRepository.findByUid(firebaseUid);
+    user = await this.clearExpiredPenalties(user as UserWithRole);
     return this.formatUserResponse(user as UserWithRole);
   }
 

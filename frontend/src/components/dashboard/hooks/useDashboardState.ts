@@ -147,12 +147,85 @@ export const useDashboardState = () => {
             : c
         ));
         if (payload.challengeId === selectedChallenge.id) {
+          setChallengeStats((prev: any) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              totalLikes: (prev.totalLikes || 0) + 1,
+              topIdeas: prev.topIdeas?.map((idea: any) => 
+                idea.id === payload.ideaId 
+                  ? { ...idea, likesCount: payload.likesCount } 
+                  : idea
+              ).sort((a: any, b: any) => (b.likesCount || 0) - (a.likesCount || 0))
+            };
+          });
+          fetchStats();
+        }
+      });
+
+      socket.on('idea:unvoted', (payload: any) => {
+        setChallenges(prev => prev.map(c => 
+          c.id === payload.challengeId 
+            ? { ...c, likesCount: Math.max(0, (c.likesCount || 0) - 1) } 
+            : c
+        ));
+        if (payload.challengeId === selectedChallenge.id) {
+          setChallengeStats((prev: any) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              totalLikes: Math.max(0, (prev.totalLikes || 0) - 1),
+              topIdeas: prev.topIdeas?.map((idea: any) => 
+                idea.id === payload.ideaId 
+                  ? { ...idea, likesCount: payload.likesCount } 
+                  : idea
+              ).sort((a: any, b: any) => (b.likesCount || 0) - (a.likesCount || 0))
+            };
+          });
           fetchStats();
         }
       });
 
       socket.on('idea_commented', (payload: any) => {
         if (payload.challengeId === selectedChallenge.id) {
+          setChallengeStats((prev: any) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              totalComments: (prev.totalComments || 0) + 1,
+              topIdeas: prev.topIdeas?.map((idea: any) => 
+                idea.id === payload.ideaId 
+                  ? { ...idea, commentsCount: payload.commentsCount } 
+                  : idea
+              )
+            };
+          });
+          fetchStats();
+        }
+      });
+      
+      socket.on('idea_created', (payload: any) => {
+        setChallenges(prev => prev.map(c => 
+          c.id === payload.challengeId 
+            ? { ...c, ideasCount: (c.ideasCount || 0) + 1 } 
+            : c
+        ));
+        if (payload.challengeId === selectedChallenge.id) {
+          setChallengeStats((prev: any) => {
+            if (!prev) return prev;
+            const newIdea = {
+              id: payload.id ?? payload._id,
+              title: payload.title || 'Idea sin título',
+              likesCount: 0,
+              commentsCount: 0,
+              impact: 0
+            };
+            return {
+              ...prev,
+              totalIdeas: (prev.totalIdeas || 0) + 1,
+              topIdeas: [...(prev.topIdeas || []), newIdea].sort((a: any, b: any) => (b.likesCount || 0) - (a.likesCount || 0)).slice(0, 5)
+            };
+          });
           fetchStats();
         }
       });

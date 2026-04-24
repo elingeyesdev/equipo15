@@ -503,6 +503,9 @@ export const ProfileView: React.FC = () => {
     phone: profile?.phone || '',
     studentCode: profile?.studentCode || '',
   });
+  
+  const countWords = (text: string) => text.trim().split(/\s+/).filter(Boolean).length;
+  
   const [saving, setSaving] = useState(false);
   const [showPassChange, setShowPassChange] = useState(false);
   const [passData, setPassData] = useState({ old: '', newPass: '', confirm: '' });
@@ -623,8 +626,14 @@ export const ProfileView: React.FC = () => {
                 <FormInput
                   type="text"
                   value={profileData.nickname}
-                  onChange={e => setProfileData({ ...profileData, nickname: e.target.value })}
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (val.length <= 30 && countWords(val) <= 3) {
+                      setProfileData({ ...profileData, nickname: val });
+                    }
+                  }}
                   placeholder="ViajeroEstelar"
+                  maxLength={30}
                 />
               </FormRow>
               <FormRow>
@@ -636,9 +645,12 @@ export const ProfileView: React.FC = () => {
                     value={profileData.phone ? profileData.phone.replace('+591', '') : ''}
                     onChange={e => {
                       const digits = e.target.value.replace(/\D/g, '');
-                      setProfileData({ ...profileData, phone: digits ? `+591${digits}` : '' });
+                      if (digits.length <= 9) {
+                        setProfileData({ ...profileData, phone: digits ? `+591${digits}` : '' });
+                      }
                     }}
                     placeholder="70000000"
+                    maxLength={9}
                   />
                 </PhoneInputWrap>
               </FormRow>
@@ -649,8 +661,14 @@ export const ProfileView: React.FC = () => {
                     <FormInput
                       type="text"
                       value={profileData.studentCode}
-                      onChange={e => setProfileData({ ...profileData, studentCode: e.target.value.toUpperCase() })}
+                      onChange={e => {
+                        const val = e.target.value.toUpperCase();
+                        if (val.length <= 10) {
+                          setProfileData({ ...profileData, studentCode: val });
+                        }
+                      }}
                       placeholder="Opcional"
+                      maxLength={10}
                     />
                   </FormRow>
                 </FieldFull>
@@ -660,9 +678,17 @@ export const ProfileView: React.FC = () => {
                   <FormLabel>Acerca de mí</FormLabel>
                   <TextArea
                     value={profileData.bio}
-                    onChange={e => setProfileData({ ...profileData, bio: e.target.value })}
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (countWords(val) <= 50) {
+                        setProfileData({ ...profileData, bio: val });
+                      }
+                    }}
                     placeholder={PROFILE_CONFIGS[profile.role || 'student']?.bioPlaceholder || "Escribe algo interesante sobre ti..."}
                   />
+                  <div style={{ fontSize: '11px', color: '#a8b2ba', textAlign: 'right', fontWeight: 600 }}>
+                    {countWords(profileData.bio)} / 50 palabras
+                  </div>
                 </FormRow>
               </FieldFull>
             </FieldGrid>

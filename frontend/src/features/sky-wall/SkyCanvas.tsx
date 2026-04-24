@@ -113,7 +113,7 @@ const SkyCanvasWrapper = styled.div`
 `;
 
 const ScrollableSkyContainer = styled.div`
-  max-height: 500px;
+  max-height: 460px;
   overflow-y: auto;
   overflow-x: hidden;
   width: 100%;

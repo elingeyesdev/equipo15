@@ -101,6 +101,23 @@ export const useWallSocket = (
       ));
     });
 
+    socket.on('idea:unvoted', (payload: IdeaVotedPayload) => {
+      setIdeas(prev => prev.map(idea => 
+        idea.id === payload.ideaId 
+          ? { ...idea, likesCount: payload.likesCount } 
+          : idea
+      ));
+    });
+
+    const handleLocalVoteChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { ideaId, hasVoted, likesCount } = customEvent.detail;
+      setIdeas(prev => prev.map(idea => 
+        idea.id === ideaId ? { ...idea, hasVoted, likesCount } : idea
+      ));
+    };
+    window.addEventListener('pista8:vote_changed', handleLocalVoteChange);
+
     socket.on('idea_created', (rawIdea: RawIdea) => {
       setIdeas(prev => {
         if (prev.some(p => p.id === rawIdea.id || p.id === rawIdea._id)) return prev;
@@ -147,6 +164,7 @@ export const useWallSocket = (
     return () => {
       socket.disconnect();
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      window.removeEventListener('pista8:vote_changed', handleLocalVoteChange);
     };
   }, [scheduleFlush, token, fallbackChallengeTitle]);
 

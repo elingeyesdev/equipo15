@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import SkyCanvas from '../../features/sky-wall';
 
@@ -13,6 +13,7 @@ import OmniSearchBar from './components/OmniSearchBar';
 import SortToggle from './components/SortToggle';
 import IdeasChronologicalList from './components/IdeasChronologicalList';
 import IdeaDetailModal from '../../features/sky-wall/components/IdeaDetailModal';
+import { ModerationModals } from './components/ModerationModals';
 import type { RawIdea, PlaneIdea } from '../../features/sky-wall/types';
 import type { Challenge } from '../../types/models';
 import { resolveDisplayName } from '../../utils/user.utils';
@@ -34,8 +35,22 @@ const IdeationWall = () => {
     setListLoading(false);
   };
 
+  useEffect(() => {
+    const handleLocalVoteChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { ideaId, hasVoted, likesCount } = customEvent.detail;
+      setWallIdeas(prev => prev.map(idea => 
+        (idea.id === ideaId || idea._id === ideaId) ? { ...idea, hasVoted, likesCount } : idea
+      ));
+      setSelectedListIdea(prev => 
+        (prev && prev.id === ideaId) ? { ...prev, hasVoted, likesCount } : prev
+      );
+    };
+    window.addEventListener('pista8:vote_changed', handleLocalVoteChange);
+    return () => window.removeEventListener('pista8:vote_changed', handleLocalVoteChange);
+  }, []);
+
   const resolvedName = resolveDisplayName(userProfile as any);
-  const firstName = resolvedName.split(' ')[0] || '';
   const fullName = resolvedName || user?.email || '';
 
   const roleName: string = (userProfile?.roleInfo?.name || userProfile?.role || '').toLowerCase();
@@ -70,7 +85,7 @@ const IdeationWall = () => {
               <text x="209" y="60" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="64" fill="#1a1f22">8</text>
             </svg>
             <S.WelcomeZone>
-              <S.Greeting>Hola, {userRole} <span>{firstName}</span></S.Greeting>
+              <S.Greeting>Hola, {userRole} <span>{resolvedName}</span></S.Greeting>
               <S.Sub>¿Listo para despegar tu próxima gran idea?</S.Sub>
 
               {ds.profileError && (
@@ -128,7 +143,8 @@ const IdeationWall = () => {
           />
         )}
 
-        <S.MainGrid>
+        <S.SplitGrid>
+          <div></div>
           <ChallengeList
             loading={ds.loading}
             challenges={ds.challenges}
@@ -143,15 +159,19 @@ const IdeationWall = () => {
             searchQuery={ds.debouncedSearch}
             userFacultyId={userProfile?.facultyId}
           />
+        </S.SplitGrid>
 
+        <S.FullWidthContainer>
           <StatsPanel
             selectedChallenge={ds.selectedChallenge}
             challengeStats={ds.challengeStats}
           />
-        </S.MainGrid>
+        </S.FullWidthContainer>
       </S.Page>
 
       <FeedbackToast message={ds.toastMessage} onDismiss={ds.dismissToast} />
+
+      <ModerationModals />
 
       {selectedListIdea && (
         <IdeaDetailModal

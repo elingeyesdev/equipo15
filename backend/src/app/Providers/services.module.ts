@@ -5,6 +5,7 @@ import { IdeaService } from '../Services/idea.service';
 import { ChallengeService } from '../Services/challenge.service';
 import { EvaluationService } from '../Services/evaluation.service';
 import { CommentService } from '../Services/comment.service';
+import { ModerationService } from '../Services/moderation.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
   ProjectDetails,
@@ -18,7 +19,7 @@ import {
       { name: ProjectDetails.name, schema: ProjectDetailsSchema },
     ]),
   ],
-  providers: [UserService, IdeaService, ChallengeService, EvaluationService, CommentService],
-  exports: [UserService, IdeaService, ChallengeService, EvaluationService, CommentService],
+  providers: [UserService, IdeaService, ChallengeService, EvaluationService, CommentService, ModerationService],
+  exports: [UserService, IdeaService, ChallengeService, EvaluationService, CommentService, ModerationService],
 })
 export class ServicesModule {}

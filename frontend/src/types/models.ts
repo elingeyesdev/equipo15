@@ -20,6 +20,8 @@ export interface UserProfile {
   facultyId?: number;
   career?: string;
   specialty?: string;
+  status?: 'ACTIVE' | 'SOFT_BLOCK' | 'SUSPENDED';
+  penaltyExpiresAt?: string | Date;
 }
 
 export type ChallengeStatus = 'Borrador' | 'Activo' | 'Finalizado' | 'En Evaluación';

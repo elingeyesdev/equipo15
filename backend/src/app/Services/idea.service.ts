@@ -17,11 +17,12 @@ import {
   assertWordRange,
   ensureActiveChallengeStatus,
 } from '../Utils/idea-validation.util';
+import { ModerationService } from './moderation.service';
 
 @Injectable()
 export class IdeaService {
   private readonly logger = new Logger(IdeaService.name);
-  
+
   private readonly publicCache = new Map<string, { data: any; expiry: number }>();
   private readonly CACHE_TTL_MS = 30_000;
 
@@ -32,6 +33,7 @@ export class IdeaService {
     @InjectModel(ProjectDetails.name)
     private projectDetailsModel: Model<ProjectDetails>,
     private readonly eventsGateway: EventsGateway,
+    private readonly moderationService: ModerationService,
   ) { }
 
   private async resolveAuthorId(firebaseUid: string): Promise<string> {
@@ -133,6 +135,7 @@ export class IdeaService {
     this.logger.log(
       `Nueva idea creada (Híbrida): "${createdIdea.title}" para el reto: ${challenge.title}`,
     );
+    this.invalidateCache();
     if (createdIdea.status === 'public') {
       const ideaWithRelations = await this.ideaRepository.findById(createdIdea.id);
       if (ideaWithRelations) {
@@ -186,6 +189,7 @@ export class IdeaService {
     this.logger.log(
       `Borrador de idea creado (Híbrido): "${createdDraft.title}"`,
     );
+    this.invalidateCache();
     return createdDraft;
   }
 
@@ -254,8 +258,7 @@ export class IdeaService {
       this.publicCache.set(cacheKey, { data: rawResult, expiry: Date.now() + this.CACHE_TTL_MS });
     }
 
-    // Proxy Pattern: Proyectar los datos según el rol del usuario usando la Estrategia de Visibilidad
-    const projectedData = rawResult.data.map((idea: any) => 
+    const projectedData = rawResult.data.map((idea: any) =>
       VisibilityStrategy.applyToIdea(idea, userRole, idea.challenge?.status)
     );
 
@@ -267,6 +270,7 @@ export class IdeaService {
 
   async updateStatus(id: string, status: string) {
     const updatedIdea = await this.ideaRepository.update(id, { status });
+    this.invalidateCache();
     this.logger.log(`Estado de idea con ID ${id} cambiado a: ${status}`);
     return updatedIdea;
   }
@@ -335,14 +339,21 @@ export class IdeaService {
       isAnonymous: updateIdeaDto.isAnonymous,
     });
 
+    this.invalidateCache();
     this.logger.log(`Idea ${ideaId} editada por su autor.`);
     return updatedIdea;
   }
 
-  async addLike(ideaId: string, firebaseUid: string): Promise<Idea | null> {
-    const userId = await this.resolveAuthorId(firebaseUid);
-    
-    const idea = await this.ideaRepository.findById(ideaId);
+  private invalidateCache() {
+    this.publicCache.clear();
+  }
+
+  async addLike(ideaId: string, firebaseUid: string): Promise<Idea | any> {
+    const [userId, idea] = await Promise.all([
+      this.resolveAuthorId(firebaseUid),
+      this.ideaRepository.findById(ideaId)
+    ]);
+
     if (!idea) {
       throw new BadRequestException('La idea no existe.');
     }
@@ -354,31 +365,51 @@ export class IdeaService {
       });
     }
 
-    const hasLiked = await this.ideaRepository.checkUserLike(ideaId, userId);
+    const hasVoted = await this.ideaRepository.checkUserLike(ideaId, userId);
 
-    if (hasLiked) {
-      throw new ConflictException('Ya has votado por esta idea.');
-    }
-
-    try {
-      const updated = await this.ideaRepository.registerLikeAndIncrement(ideaId, userId);
-
-      this.eventsGateway.server.emit('idea:voted', {
-        ideaId: updated.id,
-        likesCount: updated.likesCount,
-        challengeId: updated.challengeId,
+    if (hasVoted) {
+      await this.ideaRepository.removeLikeAndDecrement(ideaId, userId);
+      this.invalidateCache();
+      
+      this.moderationService.trackUnlike(userId).catch(err => {
+        this.logger.error(`Error in trackUnlike for user ${userId}:`, err);
       });
 
-      return updated;
-    } catch (error: unknown) {
-      this.logger.error(`Error al procesar voto para idea ${ideaId}: ${(error as Error).message}`);
-      throw error;
+      const optimisticLikes = Math.max(0, idea.likesCount - 1);
+      this.eventsGateway.server.emit('idea:unvoted', {
+        ideaId: idea.id,
+        likesCount: optimisticLikes,
+        challengeId: idea.challengeId,
+      });
+
+      return {
+        ...idea,
+        likesCount: optimisticLikes,
+        hasVoted: false,
+      };
+    } else {
+      await this.ideaRepository.registerLikeAndIncrement(ideaId, userId);
+      this.invalidateCache();
+
+      const optimisticLikes = idea.likesCount + 1;
+      this.eventsGateway.server.emit('idea:voted', {
+        ideaId: idea.id,
+        likesCount: optimisticLikes,
+        challengeId: idea.challengeId,
+      });
+
+      return {
+        ...idea,
+        likesCount: optimisticLikes,
+        hasVoted: true,
+      };
     }
   }
 
   async addComment(ideaId: string): Promise<Idea | null> {
     const updated = await this.ideaRepository.incrementComments(ideaId);
     if (updated) {
+      this.invalidateCache();
       this.eventsGateway.server.emit('idea_commented', { challengeId: updated.challengeId, ideaId: updated.id });
     }
     return updated;

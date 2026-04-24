@@ -13,7 +13,7 @@ const pop = keyframes`
   100% { transform: scale(1); }
 `;
 
-const Button = styled.button<{ $hasVoted: boolean; $isVoting: boolean }>`
+const Button = styled.button<{ $hasVoted: boolean }>`
   display: flex;
   align-items: center;
   gap: 8px;
@@ -25,10 +25,10 @@ const Button = styled.button<{ $hasVoted: boolean; $isVoting: boolean }>`
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.03em;
-  cursor: ${p => p.$isVoting || p.$hasVoted ? 'default' : 'pointer'};
+  cursor: pointer;
   transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
   box-shadow: ${p => p.$hasVoted ? `0 0 0 3px ${Pista8Theme.primary}18` : 'none'};
-  opacity: ${p => p.$isVoting ? 0.6 : 1};
+  opacity: 1;
 
   svg {
     transition: transform 0.18s, fill 0.18s;
@@ -39,6 +39,48 @@ const Button = styled.button<{ $hasVoted: boolean; $isVoting: boolean }>`
     background: ${p => !p.$hasVoted ? `${Pista8Theme.primary}08` : ''};
     border-color: ${p => !p.$hasVoted ? `${Pista8Theme.primary}40` : ''};
     color: ${p => !p.$hasVoted ? Pista8Theme.primary : ''};
+  }
+`;
+
+const TooltipContainer = styled.div`
+  position: relative;
+  display: inline-flex;
+
+  &:hover .custom-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+`;
+
+const TooltipText = styled.span`
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: rgba(26, 31, 34, 0.95);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(26, 31, 34, 0.95) transparent transparent transparent;
   }
 `;
 
@@ -78,6 +120,15 @@ const saveLocalVoted = (id: string, userId?: string) => {
   } catch { }
 };
 
+const removeLocalVoted = (id: string, userId?: string) => {
+  try {
+    const key = userId ? `pista8_voted_ideas_${userId}` : 'pista8_voted_ideas';
+    const votedIdeas = JSON.parse(localStorage.getItem(key) || '[]');
+    const updatedIdeas = votedIdeas.filter((votedId: string) => votedId !== id);
+    localStorage.setItem(key, JSON.stringify(updatedIdeas));
+  } catch { }
+};
+
 const isConflictError = (error: unknown): boolean => {
   const axiosError = error as AxiosLikeError;
   return axiosError?.response?.status === 409;
@@ -93,7 +144,6 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
   const currentUserId = userProfile?.id;
   const [likes, setLikes] = useState(initialLikes);
   const [hasVoted, setHasVoted] = useState(() => serverVoted || getLocalVoted(ideaId, currentUserId));
-  const [isVoting, setIsVoting] = useState(false);
 
   useEffect(() => {
     setLikes(initialLikes);
@@ -110,57 +160,101 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
     setHasVoted(serverVoted || getLocalVoted(ideaId, currentUserId));
   }, [currentUserId, ideaId, serverVoted]);
 
-  const handleVote = async () => {
+  const handleVote = () => {
+    if (userProfile?.status === 'SOFT_BLOCK') {
+      toast.error('Tu capacidad de votar ha sido pausada temporalmente.');
+      return;
+    }
+
     if (isAuthor) {
       toast.info('No puedes votar por tu propia idea.');
       return;
     }
-    if (isVoting || hasVoted) return;
 
-    setIsVoting(true);
-    setHasVoted(true);
-    setLikes(prev => prev + 1);
+    const nextVotedState = !hasVoted;
+    setHasVoted(nextVotedState);
+    let nextLikes = likes;
 
-    try {
-      await ideaService.voteIdea(ideaId);
-      saveLocalVoted(ideaId, currentUserId);
-      toast.success('Apoyo enviado');
-    } catch (error: unknown) {
+    if (nextVotedState) {
+      setLikes(prev => {
+        nextLikes = prev + 1;
+        saveLocalVoted(ideaId, currentUserId);
+        window.dispatchEvent(new CustomEvent('pista8:vote_changed', { detail: { ideaId, hasVoted: true, likesCount: nextLikes } }));
+        return nextLikes;
+      });
+    } else {
+      setLikes(prev => {
+        nextLikes = Math.max(0, prev - 1);
+        removeLocalVoted(ideaId, currentUserId);
+        window.dispatchEvent(new CustomEvent('pista8:vote_changed', { detail: { ideaId, hasVoted: false, likesCount: nextLikes } }));
+        return nextLikes;
+      });
+    }
+
+    ideaService.voteIdea(ideaId).catch((error: unknown) => {
       if (isForbiddenError(error)) {
         const msg = (error as any)?.response?.data?.message || 'No puedes votar por tu propia idea.';
         toast.error(msg);
-        setHasVoted(false);
-        setLikes(prev => Math.max(0, prev - 1));
-      } else if (isConflictError(error)) {
-        setHasVoted(true);
-        saveLocalVoted(ideaId, currentUserId);
-      } else {
-        setHasVoted(false);
-        setLikes(prev => Math.max(0, prev - 1));
-        toast.error('No pudimos procesar tu voto. Intenta de nuevo.');
+      } else if (!isConflictError(error)) {
+        toast.error('No pudimos procesar tu acción. Intenta de nuevo.');
       }
-    } finally {
-      setIsVoting(false);
-    }
+      setHasVoted(!nextVotedState);
+      if (!nextVotedState) {
+        setLikes(prev => {
+          const revertedLikes = prev + 1;
+          saveLocalVoted(ideaId, currentUserId);
+          window.dispatchEvent(new CustomEvent('pista8:vote_changed', { detail: { ideaId, hasVoted: true, likesCount: revertedLikes } }));
+          return revertedLikes;
+        });
+      } else {
+        setLikes(prev => {
+          const revertedLikes = Math.max(0, prev - 1);
+          removeLocalVoted(ideaId, currentUserId);
+          window.dispatchEvent(new CustomEvent('pista8:vote_changed', { detail: { ideaId, hasVoted: false, likesCount: revertedLikes } }));
+          return revertedLikes;
+        });
+      }
+    });
   };
 
+  const isSoftBlocked = userProfile?.status === 'SOFT_BLOCK';
+
+  const tooltipMessage = isSoftBlocked
+    ? 'Acción pausada temporalmente'
+    : isAuthor
+      ? 'No puedes votar por tu propia idea'
+      : hasVoted
+        ? 'Quitar voto'
+        : 'Apoyar idea';
+
   return (
-    <Button
-      $hasVoted={hasVoted}
-      $isVoting={isVoting}
-      onClick={handleVote}
-      disabled={isVoting || hasVoted}
-      style={isAuthor ? { cursor: 'help', opacity: 0.8 } : hasVoted ? { cursor: 'default' } : {}}
-      title={isAuthor ? 'No puedes votar por tu propia idea' : hasVoted ? 'Ya apoyaste esta idea' : ''}
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-        fill={hasVoted ? Pista8Theme.primary : 'none'}
-        style={{ color: hasVoted ? Pista8Theme.primary : 'currentColor' }}
+    <TooltipContainer>
+      <Button
+        $hasVoted={hasVoted}
+        onClick={handleVote}
+        style={
+          isSoftBlocked ? { cursor: 'not-allowed', opacity: 0.5, filter: 'grayscale(1)' } 
+          : isAuthor ? { cursor: 'help', opacity: 0.8 } 
+          : {}
+        }
       >
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-      </svg>
-      <Count $hasVoted={hasVoted}>{likes}</Count>
-    </Button>
+        <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          fill={hasVoted && !isSoftBlocked ? Pista8Theme.primary : 'none'}
+          style={{ color: hasVoted && !isSoftBlocked ? Pista8Theme.primary : 'currentColor' }}
+        >
+          {isSoftBlocked ? (
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          ) : (
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          )}
+          {isSoftBlocked && (
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          )}
+        </svg>
+        <Count $hasVoted={hasVoted && !isSoftBlocked}>{likes}</Count>
+      </Button>
+      <TooltipText className="custom-tooltip">{tooltipMessage}</TooltipText>
+    </TooltipContainer>
   );
 };
 

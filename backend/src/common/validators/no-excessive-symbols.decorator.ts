@@ -21,7 +21,6 @@ export function NoExcessiveSymbols(maxRatio: number = 0.3, validationOptions?: V
           const cleanChars = value.match(/[a-záéíóúüñA-ZÁÉÍÓÚÜÑ\s.,;:¿?¡!()\-"']/g) || [];
           const ratio = cleanChars.length / value.length;
 
-          // Si menos del (1 - maxRatio) del texto es "limpio", es spam
           return ratio >= (1 - maxRatio);
         },
         defaultMessage(args: ValidationArguments) {

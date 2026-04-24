@@ -17,6 +17,12 @@ model Role {
   updatedAt   DateTime @updatedAt
 }
 
+enum UserStatus {
+  ACTIVE
+  SOFT_BLOCK
+  SUSPENDED
+}
+
 model User {
   id                String       @id @default(uuid())
   firebaseUid       String       @unique
@@ -33,6 +39,8 @@ model User {
   totalPoints       Int          @default(0)
   facultyId         Int?
   isActive          Boolean      @default(true)
+  status            UserStatus   @default(ACTIVE)
+  penaltyExpiresAt  DateTime?
   ideas             Idea[]
   ideaLikes         IdeaLike[]
   comments          Comment[]
