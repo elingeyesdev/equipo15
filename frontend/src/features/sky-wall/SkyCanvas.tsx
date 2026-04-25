@@ -322,7 +322,7 @@ const SkyCanvas = memo(({ challengeId, challengeTitle, challengeFacultyId, isDas
 
     (async () => {
       try {
-        const response = await ideaService.getIdeasByChallenge(challengeId, search);
+        const response = await ideaService.getIdeasByChallenge(challengeId, search, sort);
         if (!active) return;
         const payload = (response as { success?: boolean; data?: unknown })?.success
           ? (response as { data?: unknown }).data
@@ -371,7 +371,7 @@ const SkyCanvas = memo(({ challengeId, challengeTitle, challengeFacultyId, isDas
       active = false;
       timeouts.forEach(clearTimeout);
     };
-  }, [challengeId, search]);
+  }, [challengeId, search, sort]);
 
   return <SkyCanvasScene initialIdeas={publicIdeas} token={token} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeTitle={challengeTitle} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} search={search} sort={sort} />;
 });

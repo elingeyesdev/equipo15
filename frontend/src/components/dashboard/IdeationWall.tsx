@@ -121,7 +121,10 @@ const IdeationWall = () => {
         </S.Header>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 10px', flexWrap: 'wrap', gap: '8px' }}>
-          <SortToggle value={ds.sortOrder} onChange={ds.setSortOrder} />
+          <SortToggle value={ds.sortOrder} onChange={(v) => {
+            ds.setSortOrder(v);
+            setListLoading(true);
+          }} />
         </div>
 
         <SkyCanvas

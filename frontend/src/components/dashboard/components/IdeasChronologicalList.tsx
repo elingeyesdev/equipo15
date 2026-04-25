@@ -10,7 +10,7 @@ const fadeUp = keyframes`
 `;
 
 const Wrapper = styled.div`
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
   margin-bottom: 2.5rem;        /* ← separa del MainGrid */
   animation: ${fadeUp} 0.35s ease both;
 `;
@@ -71,7 +71,14 @@ const IdeaCard = styled.div<{ $index: number }>`
   }
 `;
 
-const Rank = styled.div<{ $top: boolean }>`
+
+const medalColors: Record<number, { bg: string; color: string }> = {
+  0: { bg: '#FFD700', color: '#7a5c00' },   // Oro
+  1: { bg: '#C0C0C0', color: '#4a4a4a' },   // Plata
+  2: { bg: '#CD7F32', color: '#fff' },       // Bronce
+};
+
+const Rank = styled.div<{ $index: number }>`
   width: 32px;
   height: 32px;
   border-radius: 10px;
@@ -81,8 +88,9 @@ const Rank = styled.div<{ $top: boolean }>`
   font-size: 12px;
   font-weight: 900;
   flex-shrink: 0;
-  background: ${p => p.$top ? Pista8Theme.primary : '#f1f3f5'};
-  color: ${p => p.$top ? 'white' : '#9ca3af'};
+  background: ${p => medalColors[p.$index]?.bg ?? '#f1f3f5'};
+  color: ${p => medalColors[p.$index]?.color ?? '#9ca3af'};
+  box-shadow: ${p => p.$index < 3 ? '0 2px 6px rgba(0,0,0,0.15)' : 'none'};
 `;
 
 const Info = styled.div`
@@ -226,11 +234,11 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
            sortOrder === 'likes' ? 'Más populares' :
            'Más comentadas'}
         </Title>
-        <Counter>{ideas.length} idea{ideas.length !== 1 ? 's' : ''}</Counter>
+        <Counter>Top 3</Counter>
       </Header>
 
       <List>
-        {ideas.map((idea, i) => {
+        {ideas.slice(0, 3).map((idea, i) => {
           const authorName = idea.isAnonymous
             ? 'Anónimo'
             : resolveDisplayName(idea.author);
@@ -241,7 +249,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
               $index={i}
               onClick={() => onSelectIdea?.(rawToPlane(idea, i))}
             >
-              <Rank $top={i === 0}>#{i + 1}</Rank>
+              <Rank $index={i}>#{i + 1}</Rank>
 
               <Info>
                 <IdeaTitle>{idea.title}</IdeaTitle>
