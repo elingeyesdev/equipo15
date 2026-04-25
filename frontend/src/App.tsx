@@ -4,12 +4,11 @@ import AuthPage from './components/auth/AuthPage';
 import IdeationWall from './components/dashboard/IdeationWall';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { CompleteProfileView } from './components/auth/CompleteProfileView';
-import { AdminDashboard } from './components/admin/AdminDashboard';
-import { EvaluationPanel } from './components/evaluations/EvaluationPanel';
 import { ProfileView } from './components/profile/ProfileView';
 import { ResetPasswordPage } from './components/auth/ResetPasswordPage';
 import { GlobalErrorBoundary } from './components/errors/GlobalErrorBoundary';
 import RunwayLoader from './components/common/RunwayLoader';
+import { DashboardRoutes } from './components/dashboard/layout/DashboardRoutes';
 
 const RoleRouter = () => {
   const { user, userProfile, refetchProfile } = useAuth();
@@ -25,27 +24,21 @@ const RoleRouter = () => {
     return <CompleteProfileView onComplete={refetchProfile} />;
   }
 
+  if (role === 'student') {
+    return (
+      <Routes>
+        <Route path="perfil" element={<ProfileView />} />
+        <Route path="/" element={<IdeationWall />} />
+        <Route path="reto/:challengeId" element={<IdeationWall />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    );
+  }
+
   return (
     <Routes>
       <Route path="perfil" element={<ProfileView />} />
-      <Route path="/" element={
-        (() => {
-          switch (role) {
-            case 'company':
-            case 'admin':
-              return <AdminDashboard />;
-            case 'judge':
-              return <EvaluationPanel />;
-            case 'student':
-            default:
-              return <IdeationWall />;
-          }
-        })()
-      } />
-      <Route path="reto/:challengeId" element={
-        role === 'student' ? <IdeationWall /> : <Navigate to="/dashboard" replace />
-      } />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/*" element={<DashboardRoutes />} />
     </Routes>
   );
 };
