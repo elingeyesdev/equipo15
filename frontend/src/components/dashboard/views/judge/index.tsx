@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 export const JudgeInboxView = () => {
   const navigate = useNavigate();
-  const [pendingChallenges, setPendingChallenges] = React.useState<any[]>([]);
+  const [pendingChallenges] = React.useState<any[]>([]);
 
   return (
     <div>

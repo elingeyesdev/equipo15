@@ -1,4 +1,4 @@
-export const CURRENT_SCALE: 'SMALL' | 'MEDIUM' | 'LARGE' = 'MEDIUM';
+export const CURRENT_SCALE: 'SMALL' | 'MEDIUM' | 'LARGE' = 'SMALL';
 
 export const MODERATION_RULES = {
   SMALL: {
@@ -17,6 +17,6 @@ export const MODERATION_RULES = {
     likesThresholdPhase1: 100,
     likesThresholdPhase2: 200,
     penaltyHoursPhase1: 48,
-    penaltyHoursPhase2: 48,
+    penaltyHoursPhase2: 72,
   },
 };
