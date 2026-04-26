@@ -222,4 +222,111 @@ export class ChallengeRepository {
        }))
     };
   }
+
+  // ─── Innovation Stats for Company Dashboard (E1.4) ───────────────────────────
+  async getInnovationStats(authorId: string) {
+    const FACULTY_NAMES: Record<number, string> = {
+      1: 'Ingeniería',
+      2: 'Medicina',
+      3: 'Ciencias Exactas',
+      4: 'Humanidades',
+      5: 'Derecho',
+      6: 'Economía',
+      7: 'Arquitectura',
+      8: 'Educación',
+    };
+
+    // All challenge IDs owned by this company
+    const companyChallenges = await this.prisma.challenge.findMany({
+      where: { authorId },
+      select: { id: true },
+    });
+    const challengeIds = companyChallenges.map(c => c.id);
+
+    if (challengeIds.length === 0) {
+      return {
+        ideasByFaculty: [],
+        interactionsByDay: [],
+        kpis: { totalIdeas: 0, mostActiveUser: null, leadingFaculty: null },
+      };
+    }
+
+    // 1. Ideas per faculty ─────────────────────────────────────────────────────
+    const ideasRaw = await this.prisma.idea.findMany({
+      where: { challengeId: { in: challengeIds }, status: 'public' },
+      select: {
+        likesCount: true,
+        commentsCount: true,
+        createdAt: true,
+        author: { select: { displayName: true, nickname: true, email: true, facultyId: true } },
+      },
+    });
+
+    const facultyMap = new Map<number, number>();
+    ideasRaw.forEach(idea => {
+      const fId = idea.author?.facultyId;
+      if (fId != null) facultyMap.set(fId, (facultyMap.get(fId) ?? 0) + 1);
+    });
+
+    const ideasByFaculty = Array.from(facultyMap.entries()).map(([facultyId, count]) => ({
+      facultyId,
+      facultyName: FACULTY_NAMES[facultyId] ?? `Facultad ${facultyId}`,
+      ideasCount: count,
+    })).sort((a, b) => b.ideasCount - a.ideasCount);
+
+    // 2. Interactions by day (last 30 days) ────────────────────────────────────
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const recentIdeas = ideasRaw.filter(i => new Date(i.createdAt) >= thirtyDaysAgo);
+
+    const dayMap = new Map<string, { date: string; likes: number; comments: number }>();
+    // Pre-fill last 30 days so chart shows continuous line even on empty days
+    for (let d = 0; d < 30; d++) {
+      const dt = new Date();
+      dt.setDate(dt.getDate() - (29 - d));
+      const key = dt.toISOString().split('T')[0];
+      dayMap.set(key, { date: key, likes: 0, comments: 0 });
+    }
+
+    recentIdeas.forEach(idea => {
+      const key = new Date(idea.createdAt).toISOString().split('T')[0];
+      const entry = dayMap.get(key);
+      if (entry) {
+        entry.likes    += idea.likesCount    ?? 0;
+        entry.comments += idea.commentsCount ?? 0;
+      }
+    });
+
+    const interactionsByDay = Array.from(dayMap.values());
+
+    // 3. KPIs ──────────────────────────────────────────────────────────────────
+    const totalIdeas = ideasRaw.length;
+
+    // Most active user (most ideas submitted in company challenges)
+    const userIdeaCount = new Map<string, { name: string; count: number }>();
+    ideasRaw.forEach(idea => {
+      const email = idea.author?.email ?? '';
+      const name  = idea.author?.nickname || idea.author?.displayName || email.split('@')[0] || 'Anónimo';
+      const prev  = userIdeaCount.get(email) ?? { name, count: 0 };
+      userIdeaCount.set(email, { name, count: prev.count + 1 });
+    });
+
+    let mostActiveUser: { name: string; ideaCount: number } | null = null;
+    userIdeaCount.forEach((val) => {
+      if (!mostActiveUser || val.count > mostActiveUser.ideaCount) {
+        mostActiveUser = { name: val.name, ideaCount: val.count };
+      }
+    });
+
+    // Leading faculty (most ideas)
+    let leadingFaculty: { facultyId: number; facultyName: string; ideasCount: number } | null = null;
+    if (ideasByFaculty.length > 0) leadingFaculty = ideasByFaculty[0];
+
+    return {
+      ideasByFaculty,
+      interactionsByDay,
+      kpis: { totalIdeas, mostActiveUser, leadingFaculty },
+    };
+  }
 }

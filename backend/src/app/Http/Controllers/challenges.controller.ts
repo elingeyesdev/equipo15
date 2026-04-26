@@ -89,6 +89,34 @@ export class ChallengesController {
     return this.challengeService.getChallengeStats(id);
   }
 
+  // ─── Innovation Stats for Company Dashboard (E1.4) ───────────────────────────
+  @Get('company/innovation-stats')
+  @UseGuards(RolesGuard)
+  @Roles('company')
+  @ApiOperation({
+    summary: 'Get innovation statistics for the company dashboard (E1.4)',
+    description:
+      'Returns: ideas grouped by faculty (bar chart), daily likes/comments interactions (line chart), and KPI cards (total ideas, most active user, leading faculty). Scoped to the authenticated company\'s own challenges.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Innovation stats returned successfully.',
+    schema: {
+      example: {
+        ideasByFaculty: [{ facultyId: 1, facultyName: 'Ingeniería', ideasCount: 12 }],
+        interactionsByDay: [{ date: '2025-04-01', likes: 8, comments: 3 }],
+        kpis: {
+          totalIdeas: 42,
+          mostActiveUser: { name: 'Ana Pérez', ideaCount: 7 },
+          leadingFaculty: { facultyId: 1, facultyName: 'Ingeniería', ideasCount: 12 },
+        },
+      },
+    },
+  })
+  getInnovationStats(@Request() req: AuthenticatedRequest) {
+    return this.challengeService.getInnovationStats(req.user.uid);
+  }
+
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles('company')

@@ -190,4 +190,11 @@ export class ChallengeService {
       ...stats
     };
   }
+
+  // ─── Innovation Stats for Company Dashboard (E1.4) ───────────────────────────
+  async getInnovationStats(uid: string) {
+    const user = await this.userService.findByUid(uid);
+    if (!user) throw new Error('Usuario no encontrado');
+    return this.challengeRepository.getInnovationStats(user.id);
+  }
 }
