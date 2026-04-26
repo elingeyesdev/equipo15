@@ -79,4 +79,11 @@ export class CreateChallengeDto {
   @IsEnum(ChallengeStatus)
   @IsOptional()
   status?: ChallengeStatus;
+
+  @IsString()
+  @IsOptional()
+  logoUrl?: string;
+
+  @IsOptional()
+  evaluationCriteria?: any;
 }

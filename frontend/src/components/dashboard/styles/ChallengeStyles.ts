@@ -115,6 +115,25 @@ export const ChallengeCard = styled.div<{ active: boolean }>`
   }
 `;
 
+export const CardLogoWrap = styled.div`
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid rgba(72,80,84,0.09);
+  flex-shrink: 0;
+  background: #f1f3f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+export const CardLogo = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 export const ActiveBar = styled.div`
   position: absolute;
   left: 0;
@@ -130,7 +149,16 @@ export const CardTopRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   margin-bottom: 10px;
+`;
+
+export const CardTopLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
 `;
 
 export const CategoryTag = styled.span`

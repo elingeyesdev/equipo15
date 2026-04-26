@@ -26,6 +26,14 @@ export interface UserProfile {
 
 export type ChallengeStatus = 'Borrador' | 'Activo' | 'Finalizado' | 'En Evaluación';
 
+export interface EvaluationCriterion {
+  id: string;           // 'desirability' | 'feasibility' | 'viability' | custom uuid
+  name: string;
+  enabled: boolean;
+  weight: number;       // 1-100
+  isCustom?: boolean;
+}
+
 export interface Challenge {
   id: string;
   title: string;
@@ -43,6 +51,8 @@ export interface Challenge {
   badge?: string;
   ideasCount?: number;
   likesCount?: number;
+  logoUrl?: string;
+  evaluationCriteria?: EvaluationCriterion[];
 }
 
 export interface PaginatedResponse<T> {

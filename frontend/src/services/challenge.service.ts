@@ -6,12 +6,14 @@ export interface ChallengePayload {
   problemDescription?: string;
   companyContext?: string;
   participationRules?: string;
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
   publicationDate?: string;
   isPrivate?: boolean;
   status?: ChallengeStatus;
   facultyId?: number | null;
+  logoUrl?: string;
+  evaluationCriteria?: any[];
 }
 
 interface ApiResponse<T> {

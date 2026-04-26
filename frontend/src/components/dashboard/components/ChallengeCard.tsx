@@ -35,7 +35,17 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSele
       {active && <S.ActiveBar />}
 
       <S.CardTopRow>
-        {challenge.category && <S.CategoryTag>{challenge.category}</S.CategoryTag>}
+        {/* Logo + Category left side */}
+        <S.CardTopLeft>
+          {challenge.logoUrl && (
+            <S.CardLogoWrap>
+              <S.CardLogo src={challenge.logoUrl} alt={challenge.title} />
+            </S.CardLogoWrap>
+          )}
+          {challenge.category && <S.CategoryTag>{challenge.category}</S.CategoryTag>}
+        </S.CardTopLeft>
+
+        {/* Badge right side */}
         {isExpired
           ? <S.StatusBadge expired>Expirado</S.StatusBadge>
           : challenge.badge && <S.StatusBadge>{challenge.badge}</S.StatusBadge>
@@ -87,4 +97,4 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSele
   );
 };
 
-export default ChallengeCard;
+export default ChallengeCard;
