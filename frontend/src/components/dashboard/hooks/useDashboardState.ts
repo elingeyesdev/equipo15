@@ -92,6 +92,7 @@ export const useDashboardState = () => {
 
         if (challengeId && mapped.some(c => c.id === challengeId)) {
           setSelectedChallenge(mapped.find(c => c.id === challengeId) || mapped[0]);
+          setSortOrder('newest');
         }
       } catch (error: unknown) {
         if (active) {
@@ -284,6 +285,10 @@ export const useDashboardState = () => {
       setSelectedChallenge(null);
       setChallengeStats(null);
       setSortOrder(null);
-    }
+    },
+    selectChallenge: (c: Challenge | null) => {
+      setSelectedChallenge(c);
+      if (c) setSortOrder('newest');
+    },
   };
 };

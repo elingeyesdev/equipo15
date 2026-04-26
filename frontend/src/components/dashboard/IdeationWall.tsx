@@ -146,8 +146,7 @@ const IdeationWall = () => {
           />
         )}
 
-        <S.SplitGrid>
-          <div></div>
+        <S.FullWidthContainer>
           <ChallengeList
             loading={ds.loading}
             challenges={ds.challenges}
@@ -156,13 +155,13 @@ const IdeationWall = () => {
             filterOpen={ds.filterOpen}
             setFilterOpen={ds.setFilterOpen}
             selectedChallengeId={ds.selectedChallenge?.id || ''}
-            onSelectChallenge={ds.setSelectedChallenge}
+            onSelectChallenge={ds.selectChallenge}
             onRespond={(c: Challenge) => ds.handleOpenForm(c, form.resetForm)}
             onClearSelection={ds.clearSelectedChallenge}
             searchQuery={ds.debouncedSearch}
             userFacultyId={userProfile?.facultyId}
           />
-        </S.SplitGrid>
+        </S.FullWidthContainer>
 
         <S.FullWidthContainer>
           <StatsPanel

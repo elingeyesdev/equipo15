@@ -65,7 +65,7 @@ export const PreviewLabel = styled.p`
 export const PreviewTitle = styled.h3`
   font-size: 18px; font-weight: 900;
   color: ${Pista8Theme.secondary}; margin: 0 0 10px;
-  min-height: 28px;
+  min-height: 28px; text-align: center;
 `;
 
 export const PreviewSection = styled.div`
@@ -83,14 +83,15 @@ export const PreviewText = styled.p`
 `;
 
 export const PreviewLogoWrap = styled.div`
-  width: 64px; height: 64px; border-radius: 16px; overflow: hidden;
-  border: 2px solid rgba(72,80,84,0.08); margin-bottom: 16px;
+  width: 100%; max-width: 140px; margin: 0 auto 16px;
+  border-radius: 16px; overflow: hidden;
+  border: 2px solid rgba(72,80,84,0.08);
   background: #f9fafb; display: flex; align-items: center; justify-content: center;
-  img { width: 100%; height: 100%; object-fit: cover; }
+  img { width: 100%; height: auto; max-height: 140px; object-fit: contain; }
 `;
 
 export const PreviewDateRow = styled.div`
-  display: flex; gap: 8px; align-items: center;
+  display: flex; gap: 8px; align-items: center; justify-content: center;
   font-size: 12px; color: #9ca3af; margin-bottom: 14px;
 `;
 
@@ -111,9 +112,11 @@ export const PreviewWeightBadge = styled.span`
   padding: 2px 8px; border-radius: 20px;
 `;
 
-export const PreviewPrivateBadge = styled.span`
+export const PreviewTypeBadge = styled.span<{ $isPrivate: boolean }>`
   display: inline-flex; align-items: center; gap: 5px;
-  background: #fef3c7; color: #92400e; font-size: 11px;
+  background: ${p => p.$isPrivate ? '#fef3c7' : '#dcfce7'}; 
+  color: ${p => p.$isPrivate ? '#92400e' : '#166534'}; 
+  font-size: 11px;
   font-weight: 700; padding: 4px 10px; border-radius: 20px;
 `;
 

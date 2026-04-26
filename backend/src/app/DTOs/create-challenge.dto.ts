@@ -32,7 +32,6 @@ export class CreateChallengeDto {
   @IsOptional()
   @HasMinimumUniqueWords(0.3)
   @NoInsecureUrls()
-  @NoNumbers()
   @NoExcessiveSymbols(0.3)
   problemDescription?: string;
 
@@ -40,7 +39,6 @@ export class CreateChallengeDto {
   @IsOptional()
   @HasMinimumUniqueWords(0.3)
   @NoInsecureUrls()
-  @NoNumbers()
   @NoExcessiveSymbols(0.3)
   companyContext?: string;
 

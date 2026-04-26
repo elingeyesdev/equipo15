@@ -38,7 +38,8 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
       const q = searchQuery.toLowerCase();
       return (
         c.title?.toLowerCase().includes(q) ||
-        (c as any).problemDescription?.toLowerCase().includes(q)
+        (c as any).problemDescription?.toLowerCase().includes(q) ||
+        (c as any).companyContext?.toLowerCase().includes(q)
       );
     });
 

@@ -90,9 +90,9 @@ export const FilterOption = styled.button<{ active: boolean }>`
 `;
 
 export const ChallengeList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 14px;
 `;
 
 
@@ -116,22 +116,23 @@ export const ChallengeCard = styled.div<{ active: boolean }>`
 `;
 
 export const CardLogoWrap = styled.div`
-  width: 42px;
   height: 42px;
-  border-radius: 12px;
-  overflow: hidden;
+  max-width: 80px;
+  min-width: 42px;
+  border-radius: 8px;
   border: 1.5px solid rgba(72,80,84,0.09);
   flex-shrink: 0;
   background: #f1f3f5;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 4px;
 `;
 
 export const CardLogo = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 `;
 
 export const ActiveBar = styled.div`

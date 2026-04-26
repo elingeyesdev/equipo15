@@ -5,7 +5,7 @@ import {
   Wrapper, TopRow, BackBtn, FormTitle, FormCard, PreviewCard,
   PreviewLabel, PreviewTitle, PreviewSection, PreviewSectionLabel,
   PreviewText, PreviewLogoWrap, PreviewDateRow, PreviewCriteriaList,
-  PreviewCriteriaChip, PreviewWeightBadge, PreviewPrivateBadge, Divider,
+  PreviewCriteriaChip, PreviewWeightBadge, PreviewTypeBadge, Divider,
   SectionTitle, FormGrid, FullSpan, FieldGroup, Label, LockedBadge,
   InputField, TextAreaField, CharCount, ErrorText, CheckboxRow,
   LogoUploadArea, LogoThumb, LogoPlaceholder, UploadText,
@@ -301,7 +301,7 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
       {hasIdeas && isEditMode && (
         <div style={{ background: '#fef3c7', border: '2px solid #f59e0b', borderRadius: 14,
           padding: '12px 20px', marginBottom: 20, fontSize: 13, fontWeight: 600, color: '#92400e' }}>
-          🔒 Este reto ya tiene ideas postuladas. Título, descripción, contexto y criterios están bloqueados.
+          Este reto ya tiene ideas postuladas. Título, descripción, contexto y criterios están bloqueados.
         </div>
       )}
 
@@ -373,7 +373,7 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
               <FieldGroup>
                 <Label $locked={locked('core')}>
                   Título del reto *
-                  {locked('core') && <LockedBadge>🔒 No editable</LockedBadge>}
+                  {locked('core') && <LockedBadge>No editable</LockedBadge>}
                 </Label>
                 <InputField $locked={locked('core')} $error={!!errors.title}
                   placeholder="Ej: Optimización de procesos logísticos"
@@ -392,7 +392,7 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
             <FieldGroup>
               <Label $locked={locked('core')}>
                 Descripción del problema
-                {locked('core') && <LockedBadge>🔒 No editable</LockedBadge>}
+                {locked('core') && <LockedBadge>No editable</LockedBadge>}
               </Label>
               <TextAreaField $locked={locked('core')} $error={!!errors.problemDescription}
                 placeholder="Describe el problema que quieres resolver..."
@@ -410,7 +410,7 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
             <FieldGroup>
               <Label $locked={locked('core')}>
                 Contexto de la empresa
-                {locked('core') && <LockedBadge>🔒 No editable</LockedBadge>}
+                {locked('core') && <LockedBadge>No editable</LockedBadge>}
               </Label>
               <TextAreaField $locked={locked('core')}
                 placeholder="Información relevante sobre tu empresa..." rows={2}
@@ -474,7 +474,7 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
               <CriteriaPanel style={{ marginTop: 12 }}>
                 {locked('core') && (
                   <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
-                    🔒 Criterios bloqueados porque ya hay ideas postuladas.
+                    Criterios bloqueados porque ya hay ideas postuladas.
                   </p>
                 )}
 
@@ -579,11 +579,11 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
             </PreviewDateRow>
           )}
 
-          {form.isPrivate && (
-            <div style={{ marginBottom: 14 }}>
-              <PreviewPrivateBadge>🔒 Reto privado</PreviewPrivateBadge>
-            </div>
-          )}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+            <PreviewTypeBadge $isPrivate={form.isPrivate}>
+              {form.isPrivate ? 'Reto privado' : 'Reto público'}
+            </PreviewTypeBadge>
+          </div>
 
           {form.problemDescription && (
             <PreviewSection>
