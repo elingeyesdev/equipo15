@@ -98,7 +98,11 @@ export const authService = {
   logout: () => signOut(auth),
 
   sendPasswordReset: async (email: string) => {
-    return sendPasswordResetEmail(auth, email);
+    const actionCodeSettings = {
+      url: import.meta.env.VITE_RESET_PASSWORD_URL || `${window.location.origin}/reset-password`,
+      handleCodeInApp: true,
+    };
+    return sendPasswordResetEmail(auth, email, actionCodeSettings);
   },
 
   verifyResetCode: async (code: string) => {
