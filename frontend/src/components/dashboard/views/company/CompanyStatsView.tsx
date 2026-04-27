@@ -39,10 +39,10 @@ const colors = {
 
 const MOCK_INNOVATION_STATS: InnovationStatsResponse = {
   ideasByFaculty: [
-    { facultyId: 1, facultyName: 'Ingenieria', ideasCount: 24 },
-    { facultyId: 2, facultyName: 'Medicina', ideasCount: 18 },
-    { facultyId: 3, facultyName: 'Ciencias Exactas', ideasCount: 15 },
-    { facultyId: 4, facultyName: 'Humanidades', ideasCount: 11 },
+    { facultyId: 1, facultyName: 'Ingenieria', ideasCount: 24, votesCount: 117 },
+    { facultyId: 2, facultyName: 'Medicina', ideasCount: 18, votesCount: 95 },
+    { facultyId: 3, facultyName: 'Ciencias Exactas', ideasCount: 15, votesCount: 71 },
+    { facultyId: 4, facultyName: 'Humanidades', ideasCount: 11, votesCount: 46 },
   ],
   interactionsByDay: [
     { date: '2026-03-28', likes: 12, comments: 4 },
@@ -62,6 +62,7 @@ const MOCK_INNOVATION_STATS: InnovationStatsResponse = {
   ],
   kpis: {
     totalIdeas: 68,
+    totalVotes: 329,
     mostActiveUser: { name: 'Ana Perez', ideaCount: 9 },
     leadingFaculty: { facultyId: 1, facultyName: 'Ingenieria', ideasCount: 24 },
   },
@@ -109,9 +110,13 @@ const StatusPill = styled.span<{ $mock: boolean }>`
 
 const KpiGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 20px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
   @media (max-width: 980px) {
     grid-template-columns: 1fr;
@@ -202,6 +207,10 @@ const RetryButton = styled.button`
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
+`;
+
+const RefreshButton = styled(RetryButton)`
+  margin-top: 0;
 `;
 
 const EmptyState = styled.div`
@@ -303,7 +312,12 @@ export const CompanyStatsView = () => {
             Vista consolidada de ideas por facultad, interacciones por dia y KPIs principales.
           </Subheading>
         </div>
-        <StatusPill $mock={usingMock}>{usingMock ? 'Modo mock' : 'Datos en vivo'}</StatusPill>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <RefreshButton onClick={fetchStats} disabled={loading}>
+            {loading ? 'Actualizando...' : 'Refrescar'}
+          </RefreshButton>
+          <StatusPill $mock={usingMock}>{usingMock ? 'Modo mock' : 'Datos en vivo'}</StatusPill>
+        </div>
       </Header>
 
       {error && (
@@ -323,6 +337,12 @@ export const CompanyStatsView = () => {
         </KpiCard>
 
         <KpiCard>
+          <KpiLabel>Total de votos</KpiLabel>
+          <KpiValue>{stats.kpis.totalVotes}</KpiValue>
+          <KpiHint>Votos acumulados sobre ideas publicas.</KpiHint>
+        </KpiCard>
+
+        <KpiCard>
           <KpiLabel>Usuario mas activo</KpiLabel>
           <KpiValue>{stats.kpis.mostActiveUser?.name ?? 'Sin datos'}</KpiValue>
           <KpiHint>
@@ -336,9 +356,7 @@ export const CompanyStatsView = () => {
           <KpiLabel>Facultad lider</KpiLabel>
           <KpiValue>{stats.kpis.leadingFaculty?.facultyName ?? 'Sin datos'}</KpiValue>
           <KpiHint>
-            {stats.kpis.leadingFaculty
-              ? `${stats.kpis.leadingFaculty.ideasCount} idea${stats.kpis.leadingFaculty.ideasCount === 1 ? '' : 's'} publicadas`
-              : 'Aun no hay facultad destacada.'}
+            {stats.kpis.leadingFaculty ? `${stats.kpis.leadingFaculty.ideasCount} idea${stats.kpis.leadingFaculty.ideasCount === 1 ? '' : 's'} publicadas` : 'Aun no hay facultad destacada.'}
           </KpiHint>
         </KpiCard>
       </KpiGrid>

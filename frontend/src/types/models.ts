@@ -59,6 +59,7 @@ export interface InnovationIdeasByFacultyItem {
   facultyId: number;
   facultyName: string;
   ideasCount: number;
+  votesCount: number;
 }
 
 export interface InnovationInteractionByDayItem {
@@ -83,6 +84,7 @@ export interface InnovationStatsResponse {
   interactionsByDay: InnovationInteractionByDayItem[];
   kpis: {
     totalIdeas: number;
+    totalVotes: number;
     mostActiveUser: InnovationMostActiveUser | null;
     leadingFaculty: InnovationLeadingFaculty | null;
   };

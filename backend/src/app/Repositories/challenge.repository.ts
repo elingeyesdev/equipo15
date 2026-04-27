@@ -275,39 +275,61 @@ export class ChallengeRepository {
       return {
         ideasByFaculty: [],
         interactionsByDay: [],
-        kpis: { totalIdeas: 0, mostActiveUser: null, leadingFaculty: null },
+        kpis: {
+          totalIdeas: 0,
+          totalVotes: 0,
+          mostActiveUser: null,
+          leadingFaculty: null,
+        },
       };
     }
 
-    // 1. Ideas per faculty ─────────────────────────────────────────────────────
-    const ideasRaw = await this.prisma.idea.findMany({
+    // 1. Ideas and votes per faculty (Prisma groupBy) ─────────────────────────
+    const groupedIdeasByAuthor = await this.prisma.idea.groupBy({
+      by: ['authorId'],
       where: { challengeId: { in: challengeIds }, status: 'public' },
-      select: {
-        likesCount: true,
-        commentsCount: true,
-        createdAt: true,
-        author: {
+      _count: { _all: true },
+      _sum: { votesCount: true },
+    });
+
+    const groupedAuthorIds = groupedIdeasByAuthor.map((item) => item.authorId);
+    const groupedAuthors = groupedAuthorIds.length
+      ? await this.prisma.user.findMany({
+          where: { id: { in: groupedAuthorIds } },
           select: {
+            id: true,
+            facultyId: true,
             displayName: true,
             nickname: true,
             email: true,
-            facultyId: true,
           },
-        },
-      },
+        })
+      : [];
+
+    const authorFacultyMap = new Map<string, number>();
+    groupedAuthors.forEach((author) => {
+      if (author.facultyId != null) {
+        authorFacultyMap.set(author.id, author.facultyId);
+      }
     });
 
-    const facultyMap = new Map<number, number>();
-    ideasRaw.forEach((idea) => {
-      const fId = idea.author?.facultyId;
-      if (fId != null) facultyMap.set(fId, (facultyMap.get(fId) ?? 0) + 1);
+    const facultyMap = new Map<number, { ideasCount: number; votesCount: number }>();
+    groupedIdeasByAuthor.forEach((group) => {
+      const facultyId = authorFacultyMap.get(group.authorId);
+      if (facultyId == null) return;
+
+      const current = facultyMap.get(facultyId) ?? { ideasCount: 0, votesCount: 0 };
+      current.ideasCount += group._count._all;
+      current.votesCount += group._sum.votesCount ?? 0;
+      facultyMap.set(facultyId, current);
     });
 
     const ideasByFaculty = Array.from(facultyMap.entries())
-      .map(([facultyId, count]) => ({
+      .map(([facultyId, aggregate]) => ({
         facultyId,
         facultyName: FACULTY_NAMES[facultyId] ?? `Facultad ${facultyId}`,
-        ideasCount: count,
+        ideasCount: aggregate.ideasCount,
+        votesCount: aggregate.votesCount,
       }))
       .sort((a, b) => b.ideasCount - a.ideasCount);
 
@@ -315,9 +337,18 @@ export class ChallengeRepository {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const recentIdeas = ideasRaw.filter(
-      (i) => new Date(i.createdAt) >= thirtyDaysAgo,
-    );
+    const recentIdeas = await this.prisma.idea.findMany({
+      where: {
+        challengeId: { in: challengeIds },
+        status: 'public',
+        createdAt: { gte: thirtyDaysAgo },
+      },
+      select: {
+        likesCount: true,
+        commentsCount: true,
+        createdAt: true,
+      },
+    });
 
     const dayMap = new Map<
       string,
@@ -343,19 +374,31 @@ export class ChallengeRepository {
     const interactionsByDay = Array.from(dayMap.values());
 
     // 3. KPIs ──────────────────────────────────────────────────────────────────
-    const totalIdeas = ideasRaw.length;
+    const totalIdeas = groupedIdeasByAuthor.reduce(
+      (acc, item) => acc + item._count._all,
+      0,
+    );
+    const totalVotes = groupedIdeasByAuthor.reduce(
+      (acc, item) => acc + (item._sum.votesCount ?? 0),
+      0,
+    );
 
     // Most active user (most ideas submitted in company challenges)
     const userIdeaCount = new Map<string, { name: string; count: number }>();
-    ideasRaw.forEach((idea) => {
-      const email = idea.author?.email ?? '';
-      const name =
-        idea.author?.nickname ||
-        idea.author?.displayName ||
-        email.split('@')[0] ||
+    groupedIdeasByAuthor.forEach((item) => {
+      const author = groupedAuthors.find(
+        (candidate) => candidate.id === item.authorId,
+      );
+      if (!author) return;
+      const resolvedName =
+        author.nickname ||
+        author.displayName ||
+        author.email.split('@')[0] ||
         'Anónimo';
-      const prev = userIdeaCount.get(email) ?? { name, count: 0 };
-      userIdeaCount.set(email, { name, count: prev.count + 1 });
+      userIdeaCount.set(author.id, {
+        name: resolvedName,
+        count: item._count._all,
+      });
     });
 
     let mostActiveUser: { name: string; ideaCount: number } | null = null;
@@ -376,7 +419,7 @@ export class ChallengeRepository {
     return {
       ideasByFaculty,
       interactionsByDay,
-      kpis: { totalIdeas, mostActiveUser, leadingFaculty },
+      kpis: { totalIdeas, totalVotes, mostActiveUser, leadingFaculty },
     };
   }
 }
