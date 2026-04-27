@@ -18,11 +18,13 @@ interface ChallengeListProps {
   onClearSelection?: () => void;
   searchQuery?: string;
   userFacultyId?: number | null;
+  forceColumn?: boolean;
 }
 
 const ChallengeList: React.FC<ChallengeListProps> = ({
   loading, challenges, activeFilter, onFilterChange, filterOpen, setFilterOpen,
-  selectedChallengeId, onSelectChallenge, onRespond, onClearSelection, searchQuery = '', userFacultyId
+  selectedChallengeId, onSelectChallenge, onRespond, onClearSelection, searchQuery = '', userFacultyId,
+  forceColumn = false,
 }) => {
   const userSlug = getFacultySlug(userFacultyId || null);
   const filters = ['Todos'];
@@ -93,7 +95,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
         </S.FilterWrap>
       </S.PanelHeader>
 
-      <S.ChallengeList $isFullWidth={!selectedChallengeId}>
+      <S.ChallengeList $isFullWidth={!selectedChallengeId} $forceColumn={forceColumn}>
         {loading ? (
           <>
             <ChallengeCardSkeleton />
@@ -111,18 +113,32 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
               />
             ))
         ) : (
-          <div style={{ 
-            padding: '40px 20px', 
-            textAlign: 'center', 
-            color: '#718096', 
-            fontSize: '14px',
+          <div style={{
+            padding: '40px 20px',
+            textAlign: 'center',
             background: 'white',
             borderRadius: '16px',
-            border: '1px dashed #cbd5e0'
+            border: '1px dashed #e5e7eb',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '12px',
           }}>
-            {searchQuery.trim()
-              ? `No se encontraron retos para: "${searchQuery}"`
-              : 'No hay retos activos disponibles para tu facultad por ahora.'}
+            <div style={{
+              width: '56px', height: '56px',
+              borderRadius: '18px',
+              background: 'rgba(254, 65, 10, 0.07)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '26px'
+            }}>🏁</div>
+            <p style={{ margin: 0, fontSize: '15px', fontWeight: 900, color: '#1a1f22' }}>
+              {searchQuery.trim() ? `Sin resultados para "${searchQuery}"` : '¡La pista se está preparando!'}
+            </p>
+            <p style={{ margin: 0, fontSize: '13px', color: '#9ca3af', lineHeight: 1.6, maxWidth: '260px' }}>
+              {searchQuery.trim()
+                ? 'Intenta con otras palabras clave.'
+                : 'Actualmente no hay retos abiertos, pero las empresas están diseñando nuevos desafíos para ti. ¡Vuelve pronto para demostrar tu talento!'}
+            </p>
           </div>
         )}
       </S.ChallengeList>

@@ -18,6 +18,7 @@ import { ModerationModals } from './components/ModerationModals';
 import type { RawIdea, PlaneIdea } from '../../features/sky-wall/types';
 import type { Challenge } from '../../types/models';
 import { resolveDisplayName } from '../../utils/user.utils';
+import InnovationStepsPanel from './components/InnovationStepsPanel';
 
 import { useDashboardState } from './hooks/useDashboardState';
 import { useIdeationForm } from './hooks/useIdeationForm';
@@ -63,6 +64,8 @@ const IdeationWall = () => {
     judge: 'jurado',
   };
   const userRole = roleLabels[roleName] || 'participante';
+
+  const showStepsPanel = !ds.selectedChallenge;
 
   const handleConfirmSubmit = async () => {
     if (form.formSaving) return;
@@ -173,20 +176,41 @@ const IdeationWall = () => {
               </S.SplitGrid>
             ) : (
               <S.FullWidthContainer as={motion.div} layout>
-                <ChallengeList
-                  loading={ds.loading}
-                  challenges={ds.challenges}
-                  activeFilter={ds.activeFilter}
-                  onFilterChange={ds.setActiveFilter}
-                  filterOpen={ds.filterOpen}
-                  setFilterOpen={ds.setFilterOpen}
-                  selectedChallengeId={ds.selectedChallenge?.id || ''}
-                  onSelectChallenge={ds.selectChallenge}
-                  onRespond={(c: Challenge) => ds.handleOpenForm(c, form.resetForm)}
-                  onClearSelection={ds.clearSelectedChallenge}
-                  searchQuery={ds.debouncedSearch}
-                  userFacultyId={userProfile?.facultyId}
-                />
+                {showStepsPanel ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+                    <ChallengeList
+                      loading={ds.loading}
+                      challenges={ds.challenges}
+                      activeFilter={ds.activeFilter}
+                      onFilterChange={ds.setActiveFilter}
+                      filterOpen={ds.filterOpen}
+                      setFilterOpen={ds.setFilterOpen}
+                      selectedChallengeId={ds.selectedChallenge?.id || ''}
+                      onSelectChallenge={ds.selectChallenge}
+                      onRespond={(c: Challenge) => ds.handleOpenForm(c, form.resetForm)}
+                      onClearSelection={ds.clearSelectedChallenge}
+                      searchQuery={ds.debouncedSearch}
+                      userFacultyId={userProfile?.facultyId}
+                      forceColumn
+                    />
+                    <InnovationStepsPanel />
+                  </div>
+                ) : (
+                  <ChallengeList
+                    loading={ds.loading}
+                    challenges={ds.challenges}
+                    activeFilter={ds.activeFilter}
+                    onFilterChange={ds.setActiveFilter}
+                    filterOpen={ds.filterOpen}
+                    setFilterOpen={ds.setFilterOpen}
+                    selectedChallengeId={ds.selectedChallenge?.id || ''}
+                    onSelectChallenge={ds.selectChallenge}
+                    onRespond={(c: Challenge) => ds.handleOpenForm(c, form.resetForm)}
+                    onClearSelection={ds.clearSelectedChallenge}
+                    searchQuery={ds.debouncedSearch}
+                    userFacultyId={userProfile?.facultyId}
+                  />
+                )}
               </S.FullWidthContainer>
             )}
 

@@ -89,18 +89,19 @@ export const FilterOption = styled.button<{ active: boolean }>`
   &:hover { background: rgba(72,80,84,0.05); }
 `;
 
-export const ChallengeList = styled.div<{ $isFullWidth?: boolean }>`
+export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?: boolean }>`
   display: flex;
-  flex-direction: ${p => p.$isFullWidth ? 'row' : 'column'};
-  flex-wrap: ${p => p.$isFullWidth ? 'wrap' : 'nowrap'};
-  justify-content: ${p => p.$isFullWidth ? 'center' : 'flex-start'};
+  flex-direction: ${p => (p.$forceColumn || !p.$isFullWidth) ? 'column' : 'row'};
+  flex-wrap: ${p => (!p.$forceColumn && p.$isFullWidth) ? 'wrap' : 'nowrap'};
+  justify-content: ${p => (!p.$forceColumn && p.$isFullWidth) ? 'center' : 'flex-start'};
   gap: 14px;
 
   > * {
-    ${p => p.$isFullWidth && `
+    ${p => (!p.$forceColumn && p.$isFullWidth) && `
       width: calc(33.33% - 10px);
       min-width: 300px;
     `}
+    ${p => p.$forceColumn && 'width: 100%;'}
   }
 `;
 
