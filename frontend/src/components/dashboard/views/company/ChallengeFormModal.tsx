@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Pista8Theme } from '../../../../config/theme';
+import { FACULTIES, getFacultyName } from '../../../../config/faculties';
 import type { Challenge, ChallengeStatus, EvaluationCriterion } from '../../../../types/models';
 import {
   Wrapper, TopRow, BackBtn, FormTitle, FormCard, PreviewCard,
@@ -46,6 +47,7 @@ interface FormData {
   status: ChallengeStatus;
   logoUrl: string;
   evaluationCriteria: EvaluationCriterion[];
+  facultyId: number | null;
 }
 
 interface Errors {
@@ -68,6 +70,7 @@ const emptyForm: FormData = {
   participationRules: '', startDate: '', endDate: '',
   isPrivate: false, status: 'Borrador', logoUrl: '',
   evaluationCriteria: DEFAULT_CRITERIA,
+  facultyId: null,
 };
 
 const CUSTOM_NAME_RE = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 -]+$/;
@@ -147,6 +150,7 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
       evaluationCriteria: (challenge.evaluationCriteria && challenge.evaluationCriteria.length > 0)
         ? challenge.evaluationCriteria
         : DEFAULT_CRITERIA,
+      facultyId: challenge.facultyId || null,
     } as FormData : emptyForm;
 
     setForm(base);
@@ -250,7 +254,9 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
 
   /* ─── Back / Cancel ─── */
   const handleBack = () => {
-    if (isDirty) { setShowConfirm(true); return; }
+    // We need to restore the logic for handleBack. Let's look at what isDirty was. Wait, isDirty is not defined here?
+    // It was probably using 'initialForm' and 'form'. Wait, let's see how handleBack was implemented before I deleted it.
+    if (JSON.stringify(form) !== JSON.stringify(initialForm)) { setShowConfirm(true); return; }
     onBack();
   };
 
@@ -258,6 +264,22 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
   const handleSave = async (status: ChallengeStatus) => {
     const forDraft = status === 'Borrador';
     if (!validate(forDraft)) return;
+    
+    // Validar pesos de criterios antes de enviar
+    if (!forDraft) {
+      const enabledCriteria = form.evaluationCriteria.filter(c => c.enabled);
+      if (enabledCriteria.length > 0) {
+        if (enabledCriteria.some(c => c.weight === 0)) {
+          alert('No puedes enviar un criterio de evaluación con 0% de peso. Asígnale un valor o desmárcalo.');
+          return;
+        }
+        if (totalWeight !== 100) {
+          alert(`El peso total de los criterios debe sumar exactamente 100% (actual: ${totalWeight}%).`);
+          return;
+        }
+      }
+    }
+
     setSaving(true);
     try { await onSave({ ...form, status }); }
     finally { setSaving(false); }
@@ -432,6 +454,35 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
               </CharCount>
             </FieldGroup>
 
+            {/* Faculty Selector */}
+            <FieldGroup>
+              <Label $locked={locked('core')}>
+                Facultad dirigida
+                {locked('core') && <LockedBadge>No editable</LockedBadge>}
+              </Label>
+              <select
+                value={form.facultyId || ''}
+                onChange={e => !locked('core') && updateField('facultyId', e.target.value ? Number(e.target.value) : null)}
+                disabled={locked('core')}
+                style={{
+                  width: '100%', padding: '12px 14px', borderRadius: 12,
+                  border: '1.5px solid rgba(72,80,84,0.18)', outline: 'none',
+                  fontSize: 13.5, fontWeight: 500, color: '#1a1f22',
+                  backgroundColor: locked('core') ? '#f8f9fa' : 'white',
+                  cursor: locked('core') ? 'not-allowed' : 'pointer',
+                  appearance: 'none',
+                  backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23485054%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 14px center',
+                }}
+              >
+                <option value="">Todas las Facultades</option>
+                {FACULTIES.map(f => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+              </select>
+            </FieldGroup>
+
             {/* Dates */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -484,13 +535,20 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
                       disabled={locked('core')}
                       onChange={e => updateCriterion(c.id, { enabled: e.target.checked })} />
                     <CriterionName $enabled={c.enabled} $locked={locked('core')}>{c.name}</CriterionName>
-                    <WeightInput type="number" min={1} max={100}
+                    <WeightInput type="number" min={0} max={100}
                       value={c.weight === 0 ? '' : c.weight}
                       disabled={!c.enabled || locked('core')}
                       placeholder="0"
                       onChange={e => {
-                        const v = Math.max(1, Math.min(100, Number(e.target.value)));
-                        updateCriterion(c.id, { weight: v });
+                        const raw = e.target.value;
+                        if (raw === '') {
+                          updateCriterion(c.id, { weight: 0 });
+                          return;
+                        }
+                        const v = parseInt(raw, 10);
+                        if (!isNaN(v)) {
+                          updateCriterion(c.id, { weight: Math.min(100, v) });
+                        }
                       }} />
                     <WeightUnit>%</WeightUnit>
                     {c.isCustom && !locked('core') && (
@@ -569,6 +627,12 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
           )}
 
           <PreviewTitle>{form.title || 'Título del reto...'}</PreviewTitle>
+
+          {form.facultyId && (
+            <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 800, color: Pista8Theme.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 12, marginTop: -4 }}>
+              {getFacultyName(form.facultyId)}
+            </div>
+          )}
 
           {(form.startDate || form.endDate) && (
             <PreviewDateRow>

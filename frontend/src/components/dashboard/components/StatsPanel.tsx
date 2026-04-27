@@ -1,6 +1,7 @@
 import React from 'react';
 import * as S from '../styles/StatsStyles';
-
+import { Pista8Theme } from '../../../config/theme';
+import { getFacultyName } from '../../../config/faculties';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface StatsPanelProps {
@@ -19,6 +20,11 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
           <S.StatsHeader>
             <S.StatsTitle>Estadísticas</S.StatsTitle>
             <S.StatsSub>{selectedChallenge.title}</S.StatsSub>
+            {selectedChallenge.facultyId && (
+              <S.StatsSub style={{ fontSize: 11, color: Pista8Theme.primary, fontWeight: 700, marginTop: 4 }}>
+                {getFacultyName(selectedChallenge.facultyId)}
+              </S.StatsSub>
+            )}
           </S.StatsHeader>
 
           <S.StatsSummary>
