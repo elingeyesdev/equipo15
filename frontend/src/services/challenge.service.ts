@@ -70,5 +70,10 @@ export const challengeService = {
   getInnovationStats: async (): Promise<InnovationStatsResponse> => {
     const response = await axiosInstance.get<InnovationStatsResponse | ApiResponse<InnovationStatsResponse>>('/challenges/company/innovation-stats');
     return unwrapApiData(response.data);
+  },
+
+  finalizePodium: async (id: string, payload: { category: string; limit: number }): Promise<ApiResponse<any>> => {
+    const response = await axiosInstance.post<ApiResponse<any>>(`/challenges/${id}/finalize-podium`, payload);
+    return response.data;
   }
 };

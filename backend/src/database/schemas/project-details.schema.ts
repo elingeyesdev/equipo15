@@ -6,6 +6,9 @@ export class ProjectDetails extends Document {
   @Prop({ required: true, unique: true })
   projectId: string;
 
+  @Prop({ default: false })
+  isFinalist: boolean;
+
   @Prop()
   description: string;
 
@@ -30,3 +33,5 @@ export class ProjectDetails extends Document {
 
 export const ProjectDetailsSchema =
   SchemaFactory.createForClass(ProjectDetails);
+
+ProjectDetailsSchema.index({ projectId: 1, isFinalist: 1 });

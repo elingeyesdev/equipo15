@@ -97,6 +97,7 @@ interface LikeButtonProps {
   initialLikes: number;
   hasVoted?: boolean;
   isAuthor?: boolean;
+  disabled?: boolean;
 }
 
 const getLocalVoted = (id: string, userId?: string) => {
@@ -139,7 +140,7 @@ const isForbiddenError = (error: unknown): boolean => {
   return axiosError?.response?.status === 403 || axiosError?.response?.data?.code === 'AUTOLIKE_FORBIDDEN';
 };
 
-export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuthor }: LikeButtonProps) => {
+export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuthor, disabled }: LikeButtonProps) => {
   const { userProfile } = useAuth();
   const currentUserId = userProfile?.id;
   const [likes, setLikes] = useState(initialLikes);
@@ -161,6 +162,7 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
   }, [currentUserId, ideaId, serverVoted]);
 
   const handleVote = () => {
+    if (disabled) return;
     if (userProfile?.status === 'SOFT_BLOCK') {
       toast.error('Tu capacidad de votar ha sido pausada temporalmente.');
       return;
@@ -219,21 +221,25 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
 
   const isSoftBlocked = userProfile?.status === 'SOFT_BLOCK';
 
-  const tooltipMessage = isSoftBlocked
-    ? 'Acción pausada temporalmente'
-    : isAuthor
-      ? 'No puedes votar por tu propia idea'
-      : hasVoted
-        ? 'Quitar voto'
-        : 'Apoyar idea';
+  const tooltipMessage = disabled
+    ? 'Fase de evaluación técnica'
+    : isSoftBlocked
+      ? 'Acción pausada temporalmente'
+      : isAuthor
+        ? 'No puedes votar por tu propia idea'
+        : hasVoted
+          ? 'Quitar voto'
+          : 'Apoyar idea';
 
   return (
     <TooltipContainer>
       <Button
         $hasVoted={hasVoted}
         onClick={handleVote}
+        disabled={disabled}
         style={
-          isSoftBlocked ? { cursor: 'not-allowed', opacity: 0.5, filter: 'grayscale(1)' } 
+          disabled ? { cursor: 'not-allowed', opacity: 0.5, filter: 'grayscale(1)' }
+          : isSoftBlocked ? { cursor: 'not-allowed', opacity: 0.5, filter: 'grayscale(1)' } 
           : isAuthor ? { cursor: 'help', opacity: 0.8 } 
           : {}
         }

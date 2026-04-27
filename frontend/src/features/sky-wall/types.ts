@@ -18,6 +18,7 @@ export interface PlaneIdea {
   authorRealName?: string;
   authorStudentCode?: string;
   authorPhone?: string;
+  challengeStatus?: string;
 }
 
 export type WallPhase = 'active' | 'race' | 'podium';

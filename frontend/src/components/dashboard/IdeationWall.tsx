@@ -136,6 +136,7 @@ const IdeationWall = () => {
           isDashboardLoading={ds.loading}
           search={ds.debouncedSearch}
           sort={ds.sortOrder ?? undefined}
+          challengeStatus={ds.selectedChallenge?.status}
           onIdeasLoaded={handleIdeasLoaded}
         />
 

@@ -1,10 +1,14 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { ChallengeRepository } from '../Repositories/challenge.repository';
 import { Challenge } from '@prisma/client';
 import { CreateChallengeDto } from '../DTOs/create-challenge.dto';
 import { UpdateChallengeDto } from '../DTOs/update-challenge.dto';
+import { FinalizePodiumDto, RankingCategory } from '../DTOs/finalize-podium.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { UserService, UserResponse } from './user.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { ProjectDetails } from '../../database/schemas/project-details.schema';
 
 @Injectable()
 export class ChallengeService {
@@ -13,6 +17,8 @@ export class ChallengeService {
   constructor(
     private readonly challengeRepository: ChallengeRepository,
     private readonly userService: UserService,
+    @InjectModel(ProjectDetails.name)
+    private readonly projectDetailsModel: Model<ProjectDetails>,
   ) {}
 
   async getUserByUid(uid: string): Promise<UserResponse | null> {
@@ -202,5 +208,76 @@ export class ChallengeService {
     const user = await this.userService.findByUid(uid);
     if (!user) throw new Error('Usuario no encontrado');
     return this.challengeRepository.getInnovationStats(user.id);
+  }
+
+  // ─── Finalize Podium (Company Control) ──────────────────────────────────────
+  async finalizePodium(
+    challengeId: string,
+    dto: FinalizePodiumDto,
+    firebaseUid: string,
+  ) {
+    const user = await this.userService.findByUid(firebaseUid);
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const challenge = await this.challengeRepository.findById(challengeId);
+    if (!challenge) throw new NotFoundException('Reto no encontrado');
+
+    if (challenge.authorId !== user.id) {
+      throw new ForbiddenException(
+        'No tienes permisos para finalizar este reto.',
+      );
+    }
+
+    const ideas = (challenge as any).ideas || [];
+    if (ideas.length === 0) {
+      throw new ForbiddenException('No hay ideas en este reto para finalizar.');
+    }
+
+    // Sort ideas based on the selected category
+    const sortedIdeas = [...ideas].sort((a, b) => {
+      let valA = 0;
+      let valB = 0;
+
+      if (dto.category === RankingCategory.LIKES) {
+        valA = a.likesCount || 0;
+        valB = b.likesCount || 0;
+      } else if (dto.category === RankingCategory.COMMENTS) {
+        valA = a.commentsCount || 0;
+        valB = b.commentsCount || 0;
+      } else if (dto.category === RankingCategory.VOTES) {
+        valA = a.votesCount || 0;
+        valB = b.votesCount || 0;
+      }
+
+      return valB - valA; // Descending order
+    });
+
+    const totalIdeasCount = sortedIdeas.length;
+    const finalLimit = Math.min(dto.limit, totalIdeasCount);
+    const finalistIdeas = sortedIdeas.slice(0, finalLimit);
+    const finalistIds = finalistIdeas.map((idea) => idea.id);
+
+    // Hybrid Transaction
+    // 1. Update Challenge Status and Podium Size in PostgreSQL
+    await this.challengeRepository.update(challengeId, {
+      status: 'EVALUATION',
+      podiumSize: finalLimit,
+    } as any);
+
+    // 2. Mark ideas as finalists in MongoDB
+    await this.projectDetailsModel.updateMany(
+      { projectId: { $in: finalistIds } },
+      { $set: { isFinalist: true } },
+    );
+
+    this.logger.log(
+      `Reto ${challengeId} finalizado. ${finalLimit} finalistas seleccionados basándose en ${dto.category}.`,
+    );
+
+    return {
+      success: true,
+      podiumSize: finalLimit,
+      finalistCount: finalistIds.length,
+    };
   }
 }

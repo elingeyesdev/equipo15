@@ -145,6 +145,25 @@ const DateChip = styled.span`
   margin-left: 4px;
 `;
 
+const EvaluationBanner = styled.div`
+  width: 100%;
+  padding: 12px;
+  background: #fff7ed;
+  border-bottom: 1px solid #ffedd5;
+  color: #c2410c;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+`;
+
 const Body = styled.div`
   padding: 36px;
   display: flex;
@@ -406,6 +425,17 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
           </AuthorRow>
         </ModalBanner>
 
+        {idea.challengeStatus === 'EVALUATION' && (
+          <EvaluationBanner>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            Este reto ha pasado a fase de evaluación técnica.
+          </EvaluationBanner>
+        )}
+
         <Body>
           {isEditing && isAuthor && (
             <SectionBlock>
@@ -481,6 +511,7 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
                 initialLikes={idea.likesCount} 
                 hasVoted={idea.hasVoted} 
                 isAuthor={isAuthor}
+                disabled={idea.challengeStatus === 'EVALUATION'}
               />
 
               <CommentToggleButton
@@ -488,6 +519,8 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
                 $active={isCommentsOpen}
                 onClick={() => setIsCommentsOpen((current) => !current)}
                 aria-label={isCommentsOpen ? 'Ocultar comentarios' : 'Mostrar comentarios'}
+                disabled={idea.challengeStatus === 'EVALUATION'}
+                style={idea.challengeStatus === 'EVALUATION' ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />

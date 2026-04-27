@@ -149,6 +149,7 @@ interface SkyCanvasProps {
   isDashboardLoading?: boolean;
   search?: string;
   sort?: SortMode;
+  challengeStatus?: string;
   onIdeasLoaded?: (ideas: RawIdea[]) => void;
 }
 
@@ -163,9 +164,10 @@ interface SkyCanvasSceneProps {
   isDashboardLoading?: boolean;
   search?: string;
   sort?: SortMode;
+  challengeStatus?: string;
 }
 
-const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress = 0, challengeId, challengeTitle, challengeFacultyId, isDashboardLoading = false, search, sort }: SkyCanvasSceneProps) => {
+const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress = 0, challengeId, challengeTitle, challengeFacultyId, isDashboardLoading = false, search, sort, challengeStatus }: SkyCanvasSceneProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState(800);
   const [showPodium, setShowPodium] = useState(false);
@@ -181,9 +183,9 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
   }, [socketPhase]);
 
   const displayIdeas = useMemo(() => {
-    if (!sort) return ideas;
-    return sortIdeas(ideas, sort);
-  }, [ideas, sort]);
+    const base = sort ? sortIdeas(ideas, sort) : ideas;
+    return base.map(i => ({ ...i, challengeStatus }));
+  }, [ideas, sort, challengeStatus]);
 
   const currentSelectedIdea = useMemo(() => {
     if (!selectedIdea) return null;
@@ -282,7 +284,7 @@ SkyCanvasScene.displayName = 'SkyCanvasScene';
 
 
 
-const SkyCanvas = memo(({ challengeId, challengeTitle, challengeFacultyId, isDashboardLoading, search, sort, onIdeasLoaded }: SkyCanvasProps) => {
+const SkyCanvas = memo(({ challengeId, challengeTitle, challengeFacultyId, isDashboardLoading, search, sort, challengeStatus, onIdeasLoaded }: SkyCanvasProps) => {
   const [token, setToken] = useState<string>();
   const [publicIdeas, setPublicIdeas] = useState<RawIdea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -373,7 +375,7 @@ const SkyCanvas = memo(({ challengeId, challengeTitle, challengeFacultyId, isDas
     };
   }, [challengeId, search, sort]);
 
-  return <SkyCanvasScene initialIdeas={publicIdeas} token={token} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeTitle={challengeTitle} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} search={search} sort={sort} />;
+  return <SkyCanvasScene initialIdeas={publicIdeas} token={token} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeTitle={challengeTitle} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} search={search} sort={sort} challengeStatus={challengeStatus} />;
 });
 
 SkyCanvas.displayName = 'SkyCanvas';

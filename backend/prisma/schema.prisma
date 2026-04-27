@@ -64,6 +64,7 @@ model Challenge {
   accessToken        String?  @unique
   facultyId          Int?
   status             String   @default("DRAFT")
+  podiumSize         Int?
   logoUrl            String?  @db.Text
   evaluationCriteria Json?
   author             User     @relation("AuthorChallenges", fields: [authorId], references: [id])

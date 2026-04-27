@@ -10,6 +10,7 @@ interface CommentsSectionProps {
   ideaId: string;
   title?: string;
   onCountChange?: (count: number) => void;
+  disabled?: boolean;
 }
 
 interface CommentTreeNode extends Comment {
@@ -286,6 +287,7 @@ export const CommentsSection = ({
   ideaId,
   title = 'Comentarios',
   onCountChange,
+  disabled = false,
 }: CommentsSectionProps) => {
   const [comments, setComments] = useState<CommentTreeNode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -465,14 +467,16 @@ export const CommentsSection = ({
         <Meta>{totalVisibleComments} comentarios</Meta>
       </Header>
 
-      <FormCard>
-        <CommentForm
-          submitLabel="Publicar comentario"
-          placeholder="Escribe un comentario sobre esta idea..."
-          isSubmitting={isCreating}
-          onSubmit={handleCreateComment}
-        />
-      </FormCard>
+      {!disabled && (
+        <FormCard>
+          <CommentForm
+            submitLabel="Publicar comentario"
+            placeholder="Escribe un comentario sobre esta idea..."
+            isSubmitting={isCreating}
+            onSubmit={handleCreateComment}
+          />
+        </FormCard>
+      )}
 
       {submitSuccess && <SuccessState>{submitSuccess}</SuccessState>}
 
@@ -493,6 +497,7 @@ export const CommentsSection = ({
               onReply={handleReply}
               onEdit={handleEditComment}
               onWithdraw={handleWithdraw}
+              disabled={disabled}
             />
           ))}
           <div ref={listEndRef} />

@@ -10,6 +10,7 @@ interface CommentItemProps {
   onEdit: (commentId: string, content: string) => Promise<void> | void;
   onWithdraw: (commentId: string) => Promise<void> | void;
   depth?: number;
+  disabled?: boolean;
 }
 
 const Item = styled.article<{ $depth: number }>`
@@ -116,7 +117,7 @@ const DeletedContent = styled.em`
   font-size: 14px;
 `;
 
-export const CommentItem = memo(({ comment, onReply, onEdit, onWithdraw, depth = 0 }: CommentItemProps) => {
+export const CommentItem = memo(({ comment, onReply, onEdit, onWithdraw, depth = 0, disabled = false }: CommentItemProps) => {
   const [isReplying, setIsReplying] = useState(false);
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -165,7 +166,7 @@ export const CommentItem = memo(({ comment, onReply, onEdit, onWithdraw, depth =
           <Meta>{createdAt.toLocaleString('es', { dateStyle: 'medium', timeStyle: 'short' })}</Meta>
         </AuthorBlock>
 
-        {!isDeleted && !isEditing && (
+        {!isDeleted && !isEditing && !disabled && (
           <HeaderActions>
             <ReplyButton type="button" onClick={() => setIsReplying((current) => !current)}>
               Responder
@@ -222,6 +223,7 @@ export const CommentItem = memo(({ comment, onReply, onEdit, onWithdraw, depth =
               onEdit={onEdit}
               onWithdraw={onWithdraw}
               depth={depth + 1}
+              disabled={disabled}
             />
           ))}
         </Replies>

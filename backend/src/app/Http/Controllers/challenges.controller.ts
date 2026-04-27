@@ -23,6 +23,7 @@ import { PaginationDto } from '../../../common/dto/pagination.dto';
 import { ChallengeService } from '../../Services/challenge.service';
 import { CreateChallengeDto } from '../../DTOs/create-challenge.dto';
 import { UpdateChallengeDto } from '../../DTOs/update-challenge.dto';
+import { FinalizePodiumDto } from '../../DTOs/finalize-podium.dto';
 import { FirebaseAuthGuard } from '../../../common/guards/firebase-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/guards/roles.decorator';
@@ -147,5 +148,21 @@ export class ChallengesController {
   @ApiOperation({ summary: 'Delete a challenge (Company only)' })
   remove(@Param('id') id: string) {
     return this.challengeService.delete(id);
+  }
+
+  @Post(':id/finalize-podium')
+  @UseGuards(RolesGuard)
+  @Roles('company')
+  @ApiOperation({ summary: 'Finalize challenge podium (Company only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'The podium has been finalized and ideas marked as finalists.',
+  })
+  finalizePodium(
+    @Param('id') id: string,
+    @Body() dto: FinalizePodiumDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.challengeService.finalizePodium(id, dto, req.user.uid);
   }
 }

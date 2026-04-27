@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../../config/theme';
@@ -7,6 +8,7 @@ import type { ChallengePayload } from '../../../../services/challenge.service';
 import type { Challenge, ChallengeStatus } from '../../../../types/models';
 import ChallengeFormView from './ChallengeFormModal';
 import { CompanyStatsView } from './CompanyStatsView';
+import { CompanyPodiumView } from './CompanyPodiumView';
 
 /* ─── Animations ─── */
 const fadeUp = keyframes`
@@ -318,6 +320,7 @@ const extractErrorMessage = (error: unknown) => {
 type FilterValue = 'all' | ChallengeStatus;
 
 export const CompanyChallengesView = () => {
+  const navigate = useNavigate();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterValue>('all');
@@ -529,6 +532,11 @@ export const CompanyChallengesView = () => {
                   >
                     {canEdit ? 'Editar' : 'Edición bloqueada'}
                   </ActionBtn>
+                  {(displayStatus === 'Finalizado' || displayStatus === 'En Evaluación' || displayStatus === 'EVALUATION') && (
+                    <ActionBtn onClick={() => navigate(`/dashboard/company/podium?challengeId=${challenge.id}`)}>
+                      Gestionar Podio
+                    </ActionBtn>
+                  )}
                 </CardActions>
               </Card>
             );
@@ -580,19 +588,12 @@ export const CompanyChallengesView = () => {
 };
 
 /* ─── Other company views ─── */
-export { CompanyStatsView };
+export { CompanyStatsView, CompanyPodiumView };
 
 export const CompanyCriteriaView = () => (
   <div>
     <h2 style={{ fontSize: 22, fontWeight: 900, color: '#485054', margin: 0 }}>Criterios de Evaluación</h2>
     <p style={{ color: '#9ca3af', marginTop: 8 }}>Definir los criterios (Creatividad, Factibilidad, Costo) y su peso para los jueces.</p>
-  </div>
-);
-
-export const CompanyPodiumView = () => (
-  <div>
-    <h2 style={{ fontSize: 22, fontWeight: 900, color: '#485054', margin: 0 }}>Gestión de Podio</h2>
-    <p style={{ color: '#9ca3af', marginTop: 8 }}>Ranking y botón "Pasar a Jueces".</p>
   </div>
 );
 
