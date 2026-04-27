@@ -93,7 +93,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
         </S.FilterWrap>
       </S.PanelHeader>
 
-      <S.ChallengeList>
+      <S.ChallengeList $isFullWidth={!selectedChallengeId}>
         {loading ? (
           <>
             <ChallengeCardSkeleton />

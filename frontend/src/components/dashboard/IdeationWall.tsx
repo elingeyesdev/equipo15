@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import SkyCanvas from '../../features/sky-wall';
 
@@ -29,6 +30,7 @@ const IdeationWall = () => {
   const [wallIdeas, setWallIdeas] = useState<RawIdea[]>([]);
   const [listLoading, setListLoading] = useState(false);
   const [selectedListIdea, setSelectedListIdea] = useState<PlaneIdea | null>(null);
+  const [showAllIdeas, setShowAllIdeas] = useState(false);
 
   const handleIdeasLoaded = (ideas: RawIdea[]) => {
     setWallIdeas(ideas);
@@ -137,38 +139,104 @@ const IdeationWall = () => {
           onIdeasLoaded={handleIdeasLoaded}
         />
 
-        {ds.sortOrder && (
-          <IdeasChronologicalList
-            ideas={wallIdeas}
-            sortOrder={ds.sortOrder}
-            isLoading={listLoading}
-            onSelectIdea={setSelectedListIdea}
-          />
+        {!showAllIdeas ? (
+          <>
+            {ds.sortOrder ? (
+              <S.SplitGrid as={motion.div} layout>
+                <motion.div layout>
+                  <IdeasChronologicalList
+                    ideas={wallIdeas}
+                    sortOrder={ds.sortOrder}
+                    isLoading={listLoading}
+                    onSelectIdea={setSelectedListIdea}
+                    showAll={showAllIdeas}
+                    onToggleShowAll={() => setShowAllIdeas(!showAllIdeas)}
+                  />
+                </motion.div>
+                <motion.div layout>
+                  <ChallengeList
+                    loading={ds.loading}
+                    challenges={ds.challenges}
+                    activeFilter={ds.activeFilter}
+                    onFilterChange={ds.setActiveFilter}
+                    filterOpen={ds.filterOpen}
+                    setFilterOpen={ds.setFilterOpen}
+                    selectedChallengeId={ds.selectedChallenge?.id || ''}
+                    onSelectChallenge={ds.selectChallenge}
+                    onRespond={(c: Challenge) => ds.handleOpenForm(c, form.resetForm)}
+                    onClearSelection={ds.clearSelectedChallenge}
+                    searchQuery={ds.debouncedSearch}
+                    userFacultyId={userProfile?.facultyId}
+                  />
+                </motion.div>
+              </S.SplitGrid>
+            ) : (
+              <S.FullWidthContainer as={motion.div} layout>
+                <ChallengeList
+                  loading={ds.loading}
+                  challenges={ds.challenges}
+                  activeFilter={ds.activeFilter}
+                  onFilterChange={ds.setActiveFilter}
+                  filterOpen={ds.filterOpen}
+                  setFilterOpen={ds.setFilterOpen}
+                  selectedChallengeId={ds.selectedChallenge?.id || ''}
+                  onSelectChallenge={ds.selectChallenge}
+                  onRespond={(c: Challenge) => ds.handleOpenForm(c, form.resetForm)}
+                  onClearSelection={ds.clearSelectedChallenge}
+                  searchQuery={ds.debouncedSearch}
+                  userFacultyId={userProfile?.facultyId}
+                />
+              </S.FullWidthContainer>
+            )}
+
+            <S.FullWidthContainer as={motion.div} layout style={{ marginTop: '32px' }}>
+              <StatsPanel
+                selectedChallenge={ds.selectedChallenge}
+                challengeStats={ds.challengeStats}
+              />
+            </S.FullWidthContainer>
+          </>
+        ) : (
+          <>
+            <S.FullWidthContainer as={motion.div} layout>
+              {ds.sortOrder && (
+                <IdeasChronologicalList
+                  ideas={wallIdeas}
+                  sortOrder={ds.sortOrder}
+                  isLoading={listLoading}
+                  onSelectIdea={setSelectedListIdea}
+                  showAll={showAllIdeas}
+                  onToggleShowAll={() => setShowAllIdeas(!showAllIdeas)}
+                />
+              )}
+            </S.FullWidthContainer>
+
+            <S.SplitGrid as={motion.div} layout style={{ marginTop: '32px' }}>
+              <motion.div layout>
+                <ChallengeList
+                  loading={ds.loading}
+                  challenges={ds.challenges}
+                  activeFilter={ds.activeFilter}
+                  onFilterChange={ds.setActiveFilter}
+                  filterOpen={ds.filterOpen}
+                  setFilterOpen={ds.setFilterOpen}
+                  selectedChallengeId={ds.selectedChallenge?.id || ''}
+                  onSelectChallenge={ds.selectChallenge}
+                  onRespond={(c: Challenge) => ds.handleOpenForm(c, form.resetForm)}
+                  onClearSelection={ds.clearSelectedChallenge}
+                  searchQuery={ds.debouncedSearch}
+                  userFacultyId={userProfile?.facultyId}
+                />
+              </motion.div>
+              <motion.div layout>
+                <StatsPanel
+                  selectedChallenge={ds.selectedChallenge}
+                  challengeStats={ds.challengeStats}
+                />
+              </motion.div>
+            </S.SplitGrid>
+          </>
         )}
-
-        <S.FullWidthContainer>
-          <ChallengeList
-            loading={ds.loading}
-            challenges={ds.challenges}
-            activeFilter={ds.activeFilter}
-            onFilterChange={ds.setActiveFilter}
-            filterOpen={ds.filterOpen}
-            setFilterOpen={ds.setFilterOpen}
-            selectedChallengeId={ds.selectedChallenge?.id || ''}
-            onSelectChallenge={ds.selectChallenge}
-            onRespond={(c: Challenge) => ds.handleOpenForm(c, form.resetForm)}
-            onClearSelection={ds.clearSelectedChallenge}
-            searchQuery={ds.debouncedSearch}
-            userFacultyId={userProfile?.facultyId}
-          />
-        </S.FullWidthContainer>
-
-        <S.FullWidthContainer>
-          <StatsPanel
-            selectedChallenge={ds.selectedChallenge}
-            challengeStats={ds.challengeStats}
-          />
-        </S.FullWidthContainer>
       </S.Page>
 
       <FeedbackToast message={ds.toastMessage} onDismiss={ds.dismissToast} />

@@ -89,10 +89,19 @@ export const FilterOption = styled.button<{ active: boolean }>`
   &:hover { background: rgba(72,80,84,0.05); }
 `;
 
-export const ChallengeList = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+export const ChallengeList = styled.div<{ $isFullWidth?: boolean }>`
+  display: flex;
+  flex-direction: ${p => p.$isFullWidth ? 'row' : 'column'};
+  flex-wrap: ${p => p.$isFullWidth ? 'wrap' : 'nowrap'};
+  justify-content: ${p => p.$isFullWidth ? 'center' : 'flex-start'};
   gap: 14px;
+
+  > * {
+    ${p => p.$isFullWidth && `
+      width: calc(33.33% - 10px);
+      min-width: 300px;
+    `}
+  }
 `;
 
 

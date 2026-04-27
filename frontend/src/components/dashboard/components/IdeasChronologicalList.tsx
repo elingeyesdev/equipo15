@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled, { keyframes } from 'styled-components';
+import { motion } from 'framer-motion';
 import { Pista8Theme } from '../../../config/theme';
 import type { RawIdea, PlaneIdea, SortMode } from '../../../features/sky-wall/types';
 import { resolveDisplayName } from '../../../utils/user.utils';
@@ -122,7 +123,7 @@ const medalStyles: Record<number, { border: string; bg: string; gradient: string
 
 const TopCard = styled.div<{ $rank: number; $idx: number }>`
   position: relative;
-  padding: 20px 18px 16px;
+  padding: 48px 18px 16px;
   border-radius: 18px;
   background: ${p => medalStyles[p.$rank]?.bg ?? 'white'};
   border: 2px solid ${p => medalStyles[p.$rank]?.border ?? 'rgba(72,80,84,0.08)'};
@@ -131,6 +132,10 @@ const TopCard = styled.div<{ $rank: number; $idx: number }>`
   cursor: pointer;
   transition: all 0.2s;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 
   &:hover {
     transform: translateY(-3px);
@@ -170,7 +175,6 @@ const CardTitle = styled.p`
   font-weight: 800;
   color: #1a1f22;
   margin: 0 0 6px;
-  padding-right: 36px;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -188,7 +192,9 @@ const CardAuthor = styled.p`
 const CardStats = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
+  margin-bottom: 8px;
 `;
 
 const StatChip = styled.span`
@@ -201,76 +207,66 @@ const StatChip = styled.span`
 `;
 
 const DateLabel = styled.span`
+  position: absolute;
+  bottom: 16px;
+  right: 18px;
   font-size: 10px;
   font-weight: 500;
   color: #c0c8d0;
-  margin-left: auto;
 `;
 
-/* ─── Full list cards ─── */
-const FullList = styled.div`
+/* ─── Expanded list cards (Grid 6 columns) ─── */
+const ExpandedGrid = styled(motion.div)`
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
   animation: ${fadeUp} 0.25s ease both;
 `;
 
-const ListCard = styled.div<{ $index: number }>`
-  display: grid;
-  grid-template-columns: 32px 1fr auto;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
+const ExpandedCard = styled(motion.div)<{ $rank: number; $idx: number }>`
+  position: relative;
+  width: calc(16.66% - 1.5rem);
+  min-width: 200px;
+  padding: 48px 18px 16px;
+  border-radius: 18px;
   background: white;
-  border-radius: 14px;
-  border: 1px solid rgba(72, 80, 84, 0.07);
-  box-shadow: 0 2px 8px rgba(72, 80, 84, 0.06);
-  animation: ${fadeUp} 0.3s ${p => p.$index * 0.03}s ease both;
+  border: 2px solid rgba(72,80,84,0.08);
+  box-shadow: 0 4px 16px rgba(72,80,84,0.08);
   cursor: pointer;
-  transition: all 0.18s;
+  transition: all 0.2s;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 
   &:hover {
-    box-shadow: 0 6px 20px rgba(72, 80, 84, 0.12);
-    transform: translateY(-2px);
-    border-color: rgba(254, 65, 10, 0.18);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(72,80,84,0.15);
   }
 `;
 
-const Rank = styled.div<{ $index: number }>`
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+const ExpandedBadge = styled.div<{ $rank: number }>`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   font-weight: 900;
-  flex-shrink: 0;
-  background: ${p => medalStyles[p.$index]?.badge ?? '#f1f3f5'};
-  color: ${p => medalStyles[p.$index]?.badgeText ?? '#9ca3af'};
-  box-shadow: ${p => p.$index < 3 ? '0 2px 6px rgba(0,0,0,0.15)' : 'none'};
+  background: #f1f3f5;
+  color: #9ca3af;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 `;
 
-const Info = styled.div`
-  min-width: 0;
-`;
 
-const ListTitle = styled.p`
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #1a1f22;
-  margin: 0 0 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
 
-const Meta = styled.p`
-  font-size: 11px;
-  font-weight: 500;
-  color: #a8b0b8;
-  margin: 0;
-`;
+
 
 /* ─── Loading Spinner ─── */
 const SpinnerWrap = styled.div`
@@ -343,6 +339,8 @@ interface IdeasChronologicalListProps {
   sortOrder: SortMode;
   isLoading?: boolean;
   onSelectIdea?: (idea: PlaneIdea) => void;
+  showAll: boolean;
+  onToggleShowAll: () => void;
 }
 
 const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
@@ -350,8 +348,9 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
   sortOrder,
   isLoading,
   onSelectIdea,
+  showAll,
+  onToggleShowAll,
 }) => {
-  const [showAll, setShowAll] = useState(false);
 
   if (isLoading) {
     return (
@@ -383,7 +382,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
           <Counter>Top 3</Counter>
         </HeaderLeft>
         {ideas.length > 3 && !showAll && (
-          <ViewAllBtn onClick={() => setShowAll(true)}>
+          <ViewAllBtn onClick={onToggleShowAll}>
             Ver Todos
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M5 12h14M12 5l7 7-7 7" />
@@ -391,7 +390,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
           </ViewAllBtn>
         )}
         {showAll && (
-          <ViewAllBtn onClick={() => setShowAll(false)}>
+          <ViewAllBtn onClick={onToggleShowAll}>
             Solo Top 3
           </ViewAllBtn>
         )}
@@ -438,7 +437,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
 
       {/* ─── Full List (when "Ver Todos") ─── */}
       {showAll && rest.length > 0 && (
-        <FullList>
+        <ExpandedGrid layout>
           {rest.map((idea, i) => {
             const idx = i + 3;
             const authorName = idea.isAnonymous
@@ -446,34 +445,38 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
               : resolveDisplayName(idea.author);
 
             return (
-              <ListCard
+              <ExpandedCard
+                layout
                 key={idea.id ?? idea._id ?? idx}
-                $index={i}
+                $rank={idx}
+                $idx={i}
                 onClick={() => onSelectIdea?.(rawToPlane(idea, idx))}
               >
-                <Rank $index={idx}>#{idx + 1}</Rank>
-                <Info>
-                  <ListTitle>{idea.title}</ListTitle>
-                  <Meta>por {authorName} · {formatRelative(idea.createdAt)}</Meta>
-                </Info>
+                <ExpandedBadge $rank={idx}>#{idx + 1}</ExpandedBadge>
+                
+                <CardTitle>{idea.title}</CardTitle>
+                <CardAuthor>por {authorName}</CardAuthor>
+
                 <CardStats>
                   <StatChip>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                     </svg>
                     {idea.likesCount ?? 0}
                   </StatChip>
                   <StatChip>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                     </svg>
                     {idea.commentsCount ?? 0}
                   </StatChip>
                 </CardStats>
-              </ListCard>
+
+                <DateLabel>{formatRelative(idea.createdAt)}</DateLabel>
+              </ExpandedCard>
             );
           })}
-        </FullList>
+        </ExpandedGrid>
       )}
     </Wrapper>
   );
