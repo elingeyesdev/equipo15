@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
@@ -15,11 +16,11 @@ const fadeUp = keyframes`
 
 /* ─── Status Config ─── */
 const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; dot: string }> = {
-  Borrador:       { label: 'Borrador',       bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
-  DRAFT:          { label: 'Borrador',       bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
-  Activo:         { label: 'Activo',         bg: '#dcfce7', color: '#166534', dot: '#22c55e' },
-  'En Evaluación':{ label: 'En Evaluación',  bg: '#fef3c7', color: '#92400e', dot: '#f59e0b' },
-  Finalizado:     { label: 'Finalizado',     bg: '#fee2e2', color: '#991b1b', dot: '#ef4444' },
+  Borrador: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
+  DRAFT: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
+  Activo: { label: 'Activo', bg: '#dcfce7', color: '#166534', dot: '#22c55e' },
+  'En Evaluación': { label: 'En Evaluación', bg: '#fef3c7', color: '#92400e', dot: '#f59e0b' },
+  Finalizado: { label: 'Finalizado', bg: '#fee2e2', color: '#991b1b', dot: '#ef4444' },
 };
 
 /** Deriva el estado visual real considerando las fechas */
@@ -157,6 +158,49 @@ const StatusBadge = styled.span<{ $bg: string; $color: string; $dot: string }>`
   }
 `;
 
+const TooltipWrapper = styled.div`
+  position: relative;
+  display: inline-flex;
+
+  &:hover .custom-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+`;
+
+const TooltipText = styled.span`
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  margin-bottom: 8px;
+  background: ${Pista8Theme.primary};
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(254, 65, 10, 0.2);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 4px;
+    border-style: solid;
+    border-color: ${Pista8Theme.primary} transparent transparent transparent;
+  }
+`;
+
 const CardDescription = styled.p`
   font-size: 13px;
   color: #6b7280;
@@ -279,6 +323,7 @@ export const CompanyChallengesView = () => {
   const [filter, setFilter] = useState<FilterValue>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
+  const [copyChallenge, setCopyChallenge] = useState<Challenge | null>(null);
 
   const fetchChallenges = useCallback(async () => {
     setLoading(true);
@@ -299,9 +344,9 @@ export const CompanyChallengesView = () => {
   const filtered = filter === 'all'
     ? challenges
     : challenges.filter(c => {
-        const displayStatus = deriveDisplayStatus(c);
-        return displayStatus === filter || (filter === 'Borrador' && displayStatus === 'DRAFT');
-      });
+      const displayStatus = deriveDisplayStatus(c);
+      return displayStatus === filter || (filter === 'Borrador' && displayStatus === 'DRAFT');
+    });
 
   const handleSave = async (formData: ChallengePayload) => {
     try {
@@ -422,9 +467,25 @@ export const CompanyChallengesView = () => {
               <Card key={challenge.id} $index={i}>
                 <CardHeader>
                   <CardTitle>{challenge.title}</CardTitle>
-                  <StatusBadge $bg={sc.bg} $color={sc.color} $dot={sc.dot}>
-                    {sc.label}
-                  </StatusBadge>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {challenge.isPrivate && (
+                      <TooltipWrapper>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setCopyChallenge(challenge); }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', padding: 0, display: 'flex', alignItems: 'center' }}
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                          </svg>
+                        </button>
+                        <TooltipText className="custom-tooltip">Copiar link</TooltipText>
+                      </TooltipWrapper>
+                    )}
+                    <StatusBadge $bg={sc.bg} $color={sc.color} $dot={sc.dot}>
+                      {sc.label}
+                    </StatusBadge>
+                  </div>
                 </CardHeader>
 
                 {challenge.problemDescription && (
@@ -474,6 +535,46 @@ export const CompanyChallengesView = () => {
           })}
         </Grid>
       )}
+
+      {/* ─── Modal para Copiar Link de Reto Privado ─── */}
+      {copyChallenge && createPortal(
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '400px', boxShadow: '0 12px 32px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: '18px', fontWeight: 800, color: '#1a1f22' }}>Compartir Reto Privado</h3>
+            <p style={{ margin: '0 0 24px', fontSize: '13px', color: '#6b7280' }}>Copia el siguiente enlace para compartir este reto con los estudiantes autorizados.</p>
+
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+              <input
+                readOnly
+                value={`${window.location.origin}/reto/privado/${copyChallenge.id}`}
+                style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '13px', background: '#f9fafb', color: '#374151', outline: 'none' }}
+              />
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/reto/privado/${copyChallenge.id}`);
+                  const btn = document.getElementById('copy-btn');
+                  if (btn) {
+                    btn.innerText = 'Copiado!';
+                    setTimeout(() => { btn.innerText = 'Copiar'; }, 2000);
+                  }
+                }}
+                id="copy-btn"
+                style={{ padding: '0 16px', background: Pista8Theme.primary, color: 'white', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                Copiar
+              </button>
+            </div>
+
+            <button
+              onClick={() => setCopyChallenge(null)}
+              style={{ width: '100%', padding: '12px', background: '#f1f3f5', color: '#485054', border: 'none', borderRadius: '12px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
     </Container>
   );
 };
@@ -490,7 +591,7 @@ export const CompanyCriteriaView = () => (
 
 export const CompanyPodiumView = () => (
   <div>
-    <h2 style={{ fontSize: 22, fontWeight: 900, color: '#485054', margin: 0 }}>Selección de Ganadores</h2>
+    <h2 style={{ fontSize: 22, fontWeight: 900, color: '#485054', margin: 0 }}>Gestión de Podio</h2>
     <p style={{ color: '#9ca3af', marginTop: 8 }}>Ranking y botón "Pasar a Jueces".</p>
   </div>
 );

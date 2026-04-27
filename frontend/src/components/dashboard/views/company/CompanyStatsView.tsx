@@ -405,7 +405,7 @@ export const CompanyStatsView = () => {
                   formatter={(value: unknown, name: unknown) => [Number(value) || 0, name === 'likes' ? 'Likes' : 'Comentarios']}
                   labelFormatter={(label: unknown) => `Dia: ${String(label)}`}
                 />
-                <Legend formatter={(value) => (value === 'likes' ? 'Likes' : 'Comentarios')} />
+                <Legend formatter={(value: string) => (value === 'likes' ? 'Likes' : 'Comentarios')} />
                 <Line type="monotone" dataKey="likes" stroke={colors.likes} strokeWidth={2.5} dot={false} />
                 <Line type="monotone" dataKey="comments" stroke={colors.comments} strokeWidth={2.5} dot={false} />
               </LineChart>

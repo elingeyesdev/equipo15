@@ -76,6 +76,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
                 Ver Retos
               </S.SidebarNavItem>
 
+              <S.SidebarNavItem as={NavLink} to="/dashboard/favoritos" onClick={onClose} style={{ pointerEvents: 'none', opacity: 0.4 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+                Mis Favoritos
+                <S.ComingSoonBadge>Próximamente</S.ComingSoonBadge>
+              </S.SidebarNavItem>
+
               <S.SidebarNavItem as={NavLink} to="/dashboard/mis-ideas" onClick={onClose} style={{ pointerEvents: 'none', opacity: 0.4 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2a7 7 0 0 1 7 7c0 3-1.8 5.4-4 6.5V17a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-1.5C6.8 14.4 5 12 5 9a7 7 0 0 1 7-7z" />

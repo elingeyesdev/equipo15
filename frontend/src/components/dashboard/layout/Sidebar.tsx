@@ -74,6 +74,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
             Mi Perfil
           </S.SidebarNavItem>
 
+
+
           <S.SidebarDivider />
 
           {filteredLinks.map((item) => {
