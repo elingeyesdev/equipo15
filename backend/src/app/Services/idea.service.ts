@@ -1,4 +1,10 @@
-import { Injectable, BadRequestException, ConflictException, ForbiddenException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { IdeaRepository } from '../Repositories/idea.repository';
 import { ChallengeRepository } from '../Repositories/challenge.repository';
 import { UserRepository } from '../Repositories/user.repository';
@@ -23,7 +29,10 @@ import { ModerationService } from './moderation.service';
 export class IdeaService {
   private readonly logger = new Logger(IdeaService.name);
 
-  private readonly publicCache = new Map<string, { data: any; expiry: number }>();
+  private readonly publicCache = new Map<
+    string,
+    { data: any; expiry: number }
+  >();
   private readonly CACHE_TTL_MS = 30_000;
 
   constructor(
@@ -34,13 +43,14 @@ export class IdeaService {
     private projectDetailsModel: Model<ProjectDetails>,
     private readonly eventsGateway: EventsGateway,
     private readonly moderationService: ModerationService,
-  ) { }
+  ) {}
 
   private async resolveAuthorId(firebaseUid: string): Promise<string> {
     const user = await this.userRepository.findByUid(firebaseUid);
     if (!user) {
       throw new BadRequestException({
-        message: 'No encontramos un usuario interno asociado a la sesión actual.',
+        message:
+          'No encontramos un usuario interno asociado a la sesión actual.',
       });
     }
     return user.id;
@@ -91,7 +101,10 @@ export class IdeaService {
     }
   }
 
-  async create(createIdeaDto: CreateIdeaDto, firebaseUid: string): Promise<Idea> {
+  async create(
+    createIdeaDto: CreateIdeaDto,
+    firebaseUid: string,
+  ): Promise<Idea> {
     this.validateIdeaWords(createIdeaDto);
     const authorId = await this.resolveAuthorId(firebaseUid);
 
@@ -137,7 +150,9 @@ export class IdeaService {
     );
     this.invalidateCache();
     if (createdIdea.status === 'public') {
-      const ideaWithRelations = await this.ideaRepository.findById(createdIdea.id);
+      const ideaWithRelations = await this.ideaRepository.findById(
+        createdIdea.id,
+      );
       if (ideaWithRelations) {
         this.eventsGateway.server.emit('idea_created', ideaWithRelations);
       }
@@ -167,7 +182,8 @@ export class IdeaService {
 
     const draftPayload = {
       title: createIdeaDraftDto.title || 'Borrador sin titulo',
-      problem: createIdeaDraftDto.problem || 'Pendiente de descripcion del problema.',
+      problem:
+        createIdeaDraftDto.problem || 'Pendiente de descripcion del problema.',
       solution:
         createIdeaDraftDto.solution ||
         'Pendiente de descripcion de la solucion propuesta.',
@@ -202,7 +218,11 @@ export class IdeaService {
         ? (Number(paginationDto.page) - 1) * limit
         : undefined;
 
-    const { data, total } = await this.ideaRepository.findAll(skip, limit, paginationDto?.challengeId);
+    const { data, total } = await this.ideaRepository.findAll(
+      skip,
+      limit,
+      paginationDto?.challengeId,
+    );
     return {
       data,
       meta: {
@@ -234,8 +254,13 @@ export class IdeaService {
       this.logger.log(`Cache HIT: ${cacheKey}`);
       rawResult = cached.data;
     } else {
-      const limit = paginationDto?.limit ? Number(paginationDto.limit) : undefined;
-      const skip = paginationDto?.page && limit ? (Number(paginationDto.page) - 1) * limit : undefined;
+      const limit = paginationDto?.limit
+        ? Number(paginationDto.limit)
+        : undefined;
+      const skip =
+        paginationDto?.page && limit
+          ? (Number(paginationDto.page) - 1) * limit
+          : undefined;
 
       const { data, total } = await this.ideaRepository.findPublic(
         skip,
@@ -255,11 +280,14 @@ export class IdeaService {
         },
       };
 
-      this.publicCache.set(cacheKey, { data: rawResult, expiry: Date.now() + this.CACHE_TTL_MS });
+      this.publicCache.set(cacheKey, {
+        data: rawResult,
+        expiry: Date.now() + this.CACHE_TTL_MS,
+      });
     }
 
     const projectedData = rawResult.data.map((idea: any) =>
-      VisibilityStrategy.applyToIdea(idea, userRole, idea.challenge?.status)
+      VisibilityStrategy.applyToIdea(idea, userRole, idea.challenge?.status),
     );
 
     return {
@@ -351,7 +379,7 @@ export class IdeaService {
   async addLike(ideaId: string, firebaseUid: string): Promise<Idea | any> {
     const [userId, idea] = await Promise.all([
       this.resolveAuthorId(firebaseUid),
-      this.ideaRepository.findById(ideaId)
+      this.ideaRepository.findById(ideaId),
     ]);
 
     if (!idea) {
@@ -360,7 +388,8 @@ export class IdeaService {
 
     if (idea.authorId === userId) {
       throw new ForbiddenException({
-        message: 'No puedes votar por tu propia idea. ¡Tu avión ya tiene su propio impulso!',
+        message:
+          'No puedes votar por tu propia idea. ¡Tu avión ya tiene su propio impulso!',
         code: 'AUTOLIKE_FORBIDDEN',
       });
     }
@@ -370,8 +399,8 @@ export class IdeaService {
     if (hasVoted) {
       await this.ideaRepository.removeLikeAndDecrement(ideaId, userId);
       this.invalidateCache();
-      
-      this.moderationService.trackUnlike(userId).catch(err => {
+
+      this.moderationService.trackUnlike(userId).catch((err) => {
         this.logger.error(`Error in trackUnlike for user ${userId}:`, err);
       });
 
@@ -410,7 +439,10 @@ export class IdeaService {
     const updated = await this.ideaRepository.incrementComments(ideaId);
     if (updated) {
       this.invalidateCache();
-      this.eventsGateway.server.emit('idea_commented', { challengeId: updated.challengeId, ideaId: updated.id });
+      this.eventsGateway.server.emit('idea_commented', {
+        challengeId: updated.challengeId,
+        ideaId: updated.id,
+      });
     }
     return updated;
   }

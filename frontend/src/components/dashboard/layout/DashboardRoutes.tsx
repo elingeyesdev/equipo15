@@ -1,17 +1,25 @@
+import { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { DashboardLayout } from './DashboardLayout';
 import { WithRoleGuard } from './WithRoleGuard';
 import { useAuth } from '../../../context/AuthContext';
+import { DashboardSkeleton } from './DashboardSkeleton';
 
-import {
-  AdminStatsView, AdminClientsView, AdminAccessView, AdminUsersView, AdminSupportView
-} from '../views/admin';
-import {
-  CompanyStatsView, CompanyChallengesView, CompanyCriteriaView, CompanyPodiumView, CompanyJudgesView
-} from '../views/company';
-import {
-  JudgeInboxView, JudgeEvaluationView, JudgeHistoryView
-} from '../views/judge';
+const AdminStatsView = lazy(() => import('../views/admin').then(m => ({ default: m.AdminStatsView })));
+const AdminClientsView = lazy(() => import('../views/admin').then(m => ({ default: m.AdminClientsView })));
+const AdminAccessView = lazy(() => import('../views/admin').then(m => ({ default: m.AdminAccessView })));
+const AdminUsersView = lazy(() => import('../views/admin').then(m => ({ default: m.AdminUsersView })));
+const AdminSupportView = lazy(() => import('../views/admin').then(m => ({ default: m.AdminSupportView })));
+
+const CompanyStatsView = lazy(() => import('../views/company').then(m => ({ default: m.CompanyStatsView })));
+const CompanyChallengesView = lazy(() => import('../views/company').then(m => ({ default: m.CompanyChallengesView })));
+const CompanyCriteriaView = lazy(() => import('../views/company').then(m => ({ default: m.CompanyCriteriaView })));
+const CompanyPodiumView = lazy(() => import('../views/company').then(m => ({ default: m.CompanyPodiumView })));
+const CompanyJudgesView = lazy(() => import('../views/company').then(m => ({ default: m.CompanyJudgesView })));
+
+const JudgeInboxView = lazy(() => import('../views/judge').then(m => ({ default: m.JudgeInboxView })));
+const JudgeEvaluationView = lazy(() => import('../views/judge').then(m => ({ default: m.JudgeEvaluationView })));
+const JudgeHistoryView = lazy(() => import('../views/judge').then(m => ({ default: m.JudgeHistoryView })));
 
 const DashboardIndexRedirect = () => {
   const { userProfile } = useAuth();
@@ -28,26 +36,28 @@ const DashboardIndexRedirect = () => {
 export const DashboardRoutes = () => {
   return (
     <DashboardLayout>
-      <Routes>
-        <Route path="admin/stats" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminStatsView /></WithRoleGuard>} />
-        <Route path="admin/clients" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminClientsView /></WithRoleGuard>} />
-        <Route path="admin/access" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminAccessView /></WithRoleGuard>} />
-        <Route path="admin/users" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminUsersView /></WithRoleGuard>} />
-        <Route path="admin/support" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminSupportView /></WithRoleGuard>} />
+      <Suspense fallback={<DashboardSkeleton />}>
+        <Routes>
+          <Route path="admin/stats" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminStatsView /></WithRoleGuard>} />
+          <Route path="admin/clients" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminClientsView /></WithRoleGuard>} />
+          <Route path="admin/access" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminAccessView /></WithRoleGuard>} />
+          <Route path="admin/users" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminUsersView /></WithRoleGuard>} />
+          <Route path="admin/support" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminSupportView /></WithRoleGuard>} />
 
-        <Route path="company/stats" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyStatsView /></WithRoleGuard>} />
-        <Route path="company/challenges" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyChallengesView /></WithRoleGuard>} />
-        <Route path="company/criteria" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyCriteriaView /></WithRoleGuard>} />
-        <Route path="company/podium" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyPodiumView /></WithRoleGuard>} />
-        <Route path="company/judges" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyJudgesView /></WithRoleGuard>} />
+          <Route path="company/stats" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyStatsView /></WithRoleGuard>} />
+          <Route path="company/challenges" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyChallengesView /></WithRoleGuard>} />
+          <Route path="company/criteria" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyCriteriaView /></WithRoleGuard>} />
+          <Route path="company/podium" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyPodiumView /></WithRoleGuard>} />
+          <Route path="company/judges" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyJudgesView /></WithRoleGuard>} />
 
-        <Route path="judge/inbox" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeInboxView /></WithRoleGuard>} />
-        <Route path="judge/evaluation/:challengeId?" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeEvaluationView /></WithRoleGuard>} />
-        <Route path="judge/history" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeHistoryView /></WithRoleGuard>} />
+          <Route path="judge/inbox" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeInboxView /></WithRoleGuard>} />
+          <Route path="judge/evaluation/:challengeId?" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeEvaluationView /></WithRoleGuard>} />
+          <Route path="judge/history" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeHistoryView /></WithRoleGuard>} />
 
-        <Route path="/" element={<DashboardIndexRedirect />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
+          <Route path="/" element={<DashboardIndexRedirect />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Suspense>
     </DashboardLayout>
   );
 };

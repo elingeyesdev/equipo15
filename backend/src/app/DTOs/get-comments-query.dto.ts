@@ -4,12 +4,15 @@ import { IsIn, IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 
 export class GetCommentsQueryDto extends PaginationDto {
-  @ApiProperty({ description: 'Id de la idea de la que se desean obtener comentarios' })
+  @ApiProperty({
+    description: 'Id de la idea de la que se desean obtener comentarios',
+  })
   @IsUUID()
   ideaId: string;
 
   @ApiPropertyOptional({
-    description: 'Id del comentario padre para listar respuestas; si no se envía, se listan comentarios raíz',
+    description:
+      'Id del comentario padre para listar respuestas; si no se envía, se listan comentarios raíz',
   })
   @IsOptional()
   @IsUUID()
@@ -36,11 +39,14 @@ export class GetCommentsQueryDto extends PaginationDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(500, { message: 'No puedes solicitar más de 500 comentarios por página.' })
+  @Max(500, {
+    message: 'No puedes solicitar más de 500 comentarios por página.',
+  })
   override limit?: number = undefined;
 
   @ApiPropertyOptional({
-    description: 'Si es true y no se envía parentCommentId, retorna comentarios raiz y respuestas en una sola consulta.',
+    description:
+      'Si es true y no se envía parentCommentId, retorna comentarios raiz y respuestas en una sola consulta.',
     default: false,
   })
   @IsOptional()

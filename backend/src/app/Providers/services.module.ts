@@ -19,7 +19,21 @@ import {
       { name: ProjectDetails.name, schema: ProjectDetailsSchema },
     ]),
   ],
-  providers: [UserService, IdeaService, ChallengeService, EvaluationService, CommentService, ModerationService],
-  exports: [UserService, IdeaService, ChallengeService, EvaluationService, CommentService, ModerationService],
+  providers: [
+    UserService,
+    IdeaService,
+    ChallengeService,
+    EvaluationService,
+    CommentService,
+    ModerationService,
+  ],
+  exports: [
+    UserService,
+    IdeaService,
+    ChallengeService,
+    EvaluationService,
+    CommentService,
+    ModerationService,
+  ],
 })
 export class ServicesModule {}

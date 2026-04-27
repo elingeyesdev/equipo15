@@ -58,7 +58,11 @@ export class IdeasController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'sort', required: false, enum: ['newest', 'oldest', 'likes', 'comments'] })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    enum: ['newest', 'oldest', 'likes', 'comments'],
+  })
   findAll(
     @Query('public') isPublic?: string,
     @Query() paginationDto?: PaginationDto,
@@ -90,10 +94,7 @@ export class IdeasController {
 
   @Post(':id/like')
   @ApiOperation({ summary: 'Like or unlike an idea' })
-  addLike(
-    @Param('id') id: string,
-    @Req() request: AuthenticatedRequest,
-  ) {
+  addLike(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
     return this.ideaService.addLike(id, request.user.uid);
   }
 }

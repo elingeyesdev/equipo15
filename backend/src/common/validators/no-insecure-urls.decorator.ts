@@ -5,7 +5,7 @@ import {
 } from 'class-validator';
 
 export function NoInsecureUrls(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       name: 'noInsecureUrls',
       target: object.constructor,
@@ -14,8 +14,7 @@ export function NoInsecureUrls(validationOptions?: ValidationOptions) {
       validator: {
         validate(value: any, args: ValidationArguments) {
           if (typeof value !== 'string') return true;
-          
-          
+
           const insecureUrlRegex = /http:\/\/[^\s]+/i;
           if (insecureUrlRegex.test(value)) {
             return false;
@@ -24,7 +23,7 @@ export function NoInsecureUrls(validationOptions?: ValidationOptions) {
         },
         defaultMessage(args: ValidationArguments) {
           return 'No se permiten enlaces inseguros. Utiliza únicamente enlaces HTTPS en tu contenido.';
-        }
+        },
       },
     });
   };

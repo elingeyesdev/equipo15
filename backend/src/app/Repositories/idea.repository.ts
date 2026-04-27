@@ -22,14 +22,21 @@ export class IdeaRepository {
   ): Promise<{ data: Idea[]; total: number }> {
     const where: IdeaWhereInput = {};
     if (challengeId) where.challengeId = challengeId;
-    
+
     const [data, total] = await Promise.all([
       this.prisma.idea.findMany({
         where,
         skip,
         take,
         include: {
-          author: { select: { displayName: true, nickname: true, role: true, facultyId: true } },
+          author: {
+            select: {
+              displayName: true,
+              nickname: true,
+              role: true,
+              facultyId: true,
+            },
+          },
           challenge: true,
         },
       }),
@@ -58,7 +65,6 @@ export class IdeaRepository {
       ];
     }
 
-    
     let orderBy: Record<string, 'asc' | 'desc'>;
     switch (sort) {
       case 'oldest':
@@ -76,7 +82,6 @@ export class IdeaRepository {
         break;
     }
 
-    
     const data = await this.prisma.idea.findMany({
       where,
       skip,
@@ -97,7 +102,17 @@ export class IdeaRepository {
         authorId: true,
         challengeId: true,
         votesCount: true,
-        author: { select: { displayName: true, nickname: true, email: true, facultyId: true, phone: true, studentCode: true, role: { select: { name: true } } } },
+        author: {
+          select: {
+            displayName: true,
+            nickname: true,
+            email: true,
+            facultyId: true,
+            phone: true,
+            studentCode: true,
+            role: { select: { name: true } },
+          },
+        },
         challenge: { select: { status: true } },
         ...(userId
           ? { ideaLikes: { where: { userId }, select: { id: true } } }
@@ -126,7 +141,9 @@ export class IdeaRepository {
     });
   }
 
-  async create(data: Prisma.IdeaCreateInput | Prisma.IdeaUncheckedCreateInput): Promise<Idea> {
+  async create(
+    data: Prisma.IdeaCreateInput | Prisma.IdeaUncheckedCreateInput,
+  ): Promise<Idea> {
     return this.prisma.idea.create({
       data: data as Prisma.IdeaUncheckedCreateInput,
     });
@@ -146,7 +163,10 @@ export class IdeaRepository {
     return count > 0;
   }
 
-  async registerLikeAndIncrement(ideaId: string, userId: string): Promise<Idea> {
+  async registerLikeAndIncrement(
+    ideaId: string,
+    userId: string,
+  ): Promise<Idea> {
     const [, updated] = await this.prisma.$transaction([
       this.prisma.ideaLike.create({
         data: { ideaId, userId },

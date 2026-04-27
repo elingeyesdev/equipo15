@@ -1,9 +1,16 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { UserRepository } from '../Repositories/user.repository';
 import { RoleRepository } from '../Repositories/role.repository';
 import { User, Role } from '@prisma/client';
 import { extractFacultyFromEmail } from '../Utils/email-parser.util';
-import { getRoleFromEmail, isAuthorizedEmail } from '../Utils/user-metadata.util';
+import {
+  getRoleFromEmail,
+  isAuthorizedEmail,
+} from '../Utils/user-metadata.util';
 import { EventsGateway } from '../Gateways/events.gateway';
 
 export type UserWithRole = User & { role?: Role | null };
@@ -19,7 +26,7 @@ export class UserService {
     private readonly userRepository: UserRepository,
     private readonly roleRepository: RoleRepository,
     private readonly eventsGateway: EventsGateway,
-  ) { }
+  ) {}
 
   async findOrCreate(
     createUserDto: {
@@ -101,13 +108,23 @@ export class UserService {
     };
   }
 
-  private async clearExpiredPenalties(user: UserWithRole | null): Promise<UserWithRole | null> {
+  private async clearExpiredPenalties(
+    user: UserWithRole | null,
+  ): Promise<UserWithRole | null> {
     if (!user) return null;
-    
+
     if (user.status !== 'ACTIVE' && user.penaltyExpiresAt) {
       if (new Date() > new Date(user.penaltyExpiresAt)) {
-        const updated = await this.userRepository.updateStatus(user.id, 'ACTIVE', null as any);
-        return { ...user, status: updated.status, penaltyExpiresAt: updated.penaltyExpiresAt };
+        const updated = await this.userRepository.updateStatus(
+          user.id,
+          'ACTIVE',
+          null as any,
+        );
+        return {
+          ...user,
+          status: updated.status,
+          penaltyExpiresAt: updated.penaltyExpiresAt,
+        };
       }
     }
     return user;
@@ -121,17 +138,26 @@ export class UserService {
 
   async updateProfile(
     firebaseUid: string,
-    data: { bio?: string; nickname?: string; phone?: string; studentCode?: string },
+    data: {
+      bio?: string;
+      nickname?: string;
+      phone?: string;
+      studentCode?: string;
+    },
   ): Promise<UserResponse | null> {
-    const updatedUser = await this.userRepository.updateByUid(firebaseUid, data);
+    const updatedUser = await this.userRepository.updateByUid(
+      firebaseUid,
+      data,
+    );
     if (!updatedUser) {
       throw new NotFoundException('Usuario no encontrado');
     }
 
     if (data.nickname !== undefined) {
-      const displayName = data.nickname && data.nickname.trim().length > 0
-        ? data.nickname
-        : updatedUser.displayName;
+      const displayName =
+        data.nickname && data.nickname.trim().length > 0
+          ? data.nickname
+          : updatedUser.displayName;
       this.eventsGateway.server.emit('user:profile_updated', {
         userId: updatedUser.id,
         displayName,

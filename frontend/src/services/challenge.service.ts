@@ -1,5 +1,10 @@
 import axiosInstance from '../api/axiosConfig';
-import type { Challenge, ChallengeStatus } from '../types/models';
+import type {
+  Challenge,
+  ChallengeStatus,
+  EvaluationCriterion,
+  InnovationStatsResponse,
+} from '../types/models';
 
 export interface ChallengePayload {
   title: string;
@@ -13,7 +18,7 @@ export interface ChallengePayload {
   status?: ChallengeStatus;
   facultyId?: number | null;
   logoUrl?: string;
-  evaluationCriteria?: any[];
+  evaluationCriteria?: EvaluationCriterion[];
 }
 
 interface ApiResponse<T> {
@@ -21,6 +26,13 @@ interface ApiResponse<T> {
   data: T;
   message?: string;
 }
+
+const unwrapApiData = <T>(payload: T | ApiResponse<T>): T => {
+  if (payload && typeof payload === 'object' && 'data' in payload) {
+    return (payload as ApiResponse<T>).data;
+  }
+  return payload as T;
+};
 
 export const challengeService = {
   getPublicChallenges: async (page = 1, limit = 10, status?: string): Promise<ApiResponse<{ data: Challenge[]; total: number }>> => {
@@ -45,13 +57,18 @@ export const challengeService = {
     return response.data;
   },
 
-  getChallengeStats: async (id: string): Promise<ApiResponse<any>> => {
-    const response = await axiosInstance.get<ApiResponse<any>>(`/challenges/${id}/stats`);
+  getChallengeStats: async (id: string): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await axiosInstance.get<ApiResponse<Record<string, unknown>>>(`/challenges/${id}/stats`);
     return response.data;
   },
 
-  getGlobalStats: async (): Promise<ApiResponse<any>> => {
-    const response = await axiosInstance.get<ApiResponse<any>>('/challenges/global-stats');
+  getGlobalStats: async (): Promise<ApiResponse<Record<string, unknown>>> => {
+    const response = await axiosInstance.get<ApiResponse<Record<string, unknown>>>('/challenges/global-stats');
     return response.data;
+  },
+
+  getInnovationStats: async (): Promise<InnovationStatsResponse> => {
+    const response = await axiosInstance.get<InnovationStatsResponse | ApiResponse<InnovationStatsResponse>>('/challenges/company/innovation-stats');
+    return unwrapApiData(response.data);
   }
 };

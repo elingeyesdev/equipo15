@@ -48,7 +48,12 @@ export class UsersController {
   @ApiOperation({ summary: 'Force sync user profile with Firebase' })
   async syncUser(
     @Request() req: AuthenticatedRequest,
-    @Body() body: { displayName?: string; avatarUrl?: string; preventCreation?: boolean },
+    @Body()
+    body: {
+      displayName?: string;
+      avatarUrl?: string;
+      preventCreation?: boolean;
+    },
   ) {
     const { user } = req;
     return this.userService.findOrCreate(
@@ -72,7 +77,9 @@ export class UsersController {
   }
 
   @Patch('profile')
-  @ApiOperation({ summary: 'Update user profile (bio, nickname, phone, studentCode)' })
+  @ApiOperation({
+    summary: 'Update user profile (bio, nickname, phone, studentCode)',
+  })
   async updateProfile(
     @Request() req: AuthenticatedRequest,
     @Body() updateUserDto: UpdateUserDto,

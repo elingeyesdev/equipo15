@@ -51,7 +51,9 @@ export type CommentListItem = Prisma.CommentGetPayload<{
 export class CommentRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findThreadByIdeaId(ideaId: string): Promise<Array<Pick<Comment, 'id' | 'parentCommentId' | 'status'>>> {
+  async findThreadByIdeaId(
+    ideaId: string,
+  ): Promise<Array<Pick<Comment, 'id' | 'parentCommentId' | 'status'>>> {
     return this.prisma.comment.findMany({
       where: { ideaId },
       select: {

@@ -24,7 +24,7 @@ import { HealthController } from './app/Http/Controllers/health.controller';
       },
     ]),
     MongooseModule.forRoot(
-      process.env.MONGO_URI || 'mongodb://localhost:27017/pista8'
+      process.env.MONGO_URI || 'mongodb://localhost:27017/pista8',
     ),
     EventsModule,
   ],

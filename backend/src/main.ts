@@ -19,7 +19,7 @@ async function bootstrap() {
     origin: [
       /^http:\/\/localhost:\d+$/,
       'https://pista8-f8e6e.web.app',
-      'https://pista8.com'
+      'https://pista8.com',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,

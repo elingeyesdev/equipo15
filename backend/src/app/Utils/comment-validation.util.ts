@@ -36,7 +36,10 @@ const normalizeCommentWhitespace = (value: string): string => {
 export const buildComparableCommentFingerprint = (value: string): string =>
   normalizeCommentWhitespace(value).toLowerCase();
 
-export const normalizeCommentContent = (content: string, fieldLabel: string): string => {
+export const normalizeCommentContent = (
+  content: string,
+  fieldLabel: string,
+): string => {
   const normalized = normalizeCommentWhitespace(content);
 
   if (!normalized) {
@@ -94,7 +97,9 @@ export const normalizeCommentContent = (content: string, fieldLabel: string): st
     });
   }
 
-  const repeatedCharsRegex = new RegExp(`(.)\\1{${COMMENT_CONTENT_RULES.maxRepeatedCharacterStreak - 1},}`);
+  const repeatedCharsRegex = new RegExp(
+    `(.)\\1{${COMMENT_CONTENT_RULES.maxRepeatedCharacterStreak - 1},}`,
+  );
   if (repeatedCharsRegex.test(normalized)) {
     throw new BadRequestException({
       message: `${fieldLabel} contiene repeticiones excesivas de caracteres.`,
@@ -104,7 +109,9 @@ export const normalizeCommentContent = (content: string, fieldLabel: string): st
     });
   }
 
-  const consecutiveBreaksRegex = new RegExp(`\\n{${COMMENT_CONTENT_RULES.maxConsecutiveLineBreaks + 1},}`);
+  const consecutiveBreaksRegex = new RegExp(
+    `\\n{${COMMENT_CONTENT_RULES.maxConsecutiveLineBreaks + 1},}`,
+  );
   if (consecutiveBreaksRegex.test(content.replace(/\r\n/g, '\n'))) {
     throw new BadRequestException({
       message: `${fieldLabel} tiene demasiados saltos de línea consecutivos.`,

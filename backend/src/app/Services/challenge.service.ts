@@ -13,7 +13,7 @@ export class ChallengeService {
   constructor(
     private readonly challengeRepository: ChallengeRepository,
     private readonly userService: UserService,
-  ) { }
+  ) {}
 
   async getUserByUid(uid: string): Promise<UserResponse | null> {
     return this.userService.findByUid(uid);
@@ -90,7 +90,8 @@ export class ChallengeService {
   }
 
   async findOne(id: string, uid?: string) {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
       throw new NotFoundException(`El ID proporcionado no es válido.`);
     }
@@ -103,8 +104,13 @@ export class ChallengeService {
     if (uid && challenge.isPrivate) {
       const user = await this.userService.findByUid(uid);
       if (user && user.role === 'student') {
-        if (challenge.facultyId !== null && challenge.facultyId !== user.facultyId) {
-          throw new NotFoundException(`El reto es privado y no pertenece a tu facultad.`);
+        if (
+          challenge.facultyId !== null &&
+          challenge.facultyId !== user.facultyId
+        ) {
+          throw new NotFoundException(
+            `El reto es privado y no pertenece a tu facultad.`,
+          );
         }
         await this.challengeRepository.linkPrivateChallenge(id, user.id);
       }
@@ -158,7 +164,7 @@ export class ChallengeService {
     const [totalChallenges, totalIdeas, totalParticipants] = await Promise.all([
       this.challengeRepository.countChallengesByStatus('Activo'),
       this.challengeRepository.countTotalIdeas(),
-      ...(['mock']).map(() => 150) 
+      ...['mock'].map(() => 150),
     ]);
 
     const topFacultades = [
@@ -187,7 +193,7 @@ export class ChallengeService {
     const stats = await this.challengeRepository.getChallengeImpactStats(id);
     return {
       challengeId: id,
-      ...stats
+      ...stats,
     };
   }
 

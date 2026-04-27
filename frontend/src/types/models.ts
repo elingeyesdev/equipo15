@@ -55,6 +55,39 @@ export interface Challenge {
   evaluationCriteria?: EvaluationCriterion[];
 }
 
+export interface InnovationIdeasByFacultyItem {
+  facultyId: number;
+  facultyName: string;
+  ideasCount: number;
+}
+
+export interface InnovationInteractionByDayItem {
+  date: string;
+  likes: number;
+  comments: number;
+}
+
+export interface InnovationMostActiveUser {
+  name: string;
+  ideaCount: number;
+}
+
+export interface InnovationLeadingFaculty {
+  facultyId: number;
+  facultyName: string;
+  ideasCount: number;
+}
+
+export interface InnovationStatsResponse {
+  ideasByFaculty: InnovationIdeasByFacultyItem[];
+  interactionsByDay: InnovationInteractionByDayItem[];
+  kpis: {
+    totalIdeas: number;
+    mostActiveUser: InnovationMostActiveUser | null;
+    leadingFaculty: InnovationLeadingFaculty | null;
+  };
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   meta: {

@@ -1,5 +1,23 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FirebaseAuthGuard } from '../../../common/guards/firebase-auth.guard';
 import type { AuthenticatedRequest } from '../../../common/types/authenticated-request.interface';
 import { CreateCommentDto } from '../../DTOs/create-comment.dto';
@@ -59,8 +77,13 @@ export class CommentsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Retirar comentario (autor, company dueña del reto o admin)' })
-  @ApiResponse({ status: 200, description: 'Comentario retirado correctamente.' })
+  @ApiOperation({
+    summary: 'Retirar comentario (autor, company dueña del reto o admin)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Comentario retirado correctamente.',
+  })
   withdraw(
     @Param('id', ParseUUIDPipe) id: string,
     @Req() request: AuthenticatedRequest,
@@ -73,7 +96,10 @@ export class CommentsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Editar un comentario' })
-  @ApiResponse({ status: 200, description: 'Comentario editado correctamente.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Comentario editado correctamente.',
+  })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateCommentDto: UpdateCommentDto,

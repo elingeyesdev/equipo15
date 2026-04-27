@@ -1,7 +1,11 @@
 export type UserRoleName = 'admin' | 'company' | 'judge' | 'student' | 'guest';
 
 export class VisibilityStrategy {
-  static applyToIdea(idea: any, userRole: UserRoleName, challengeStatus?: string): any {
+  static applyToIdea(
+    idea: any,
+    userRole: UserRoleName,
+    challengeStatus?: string,
+  ): any {
     if (!idea || !idea.author) return idea;
 
     const projectedIdea = { ...idea };

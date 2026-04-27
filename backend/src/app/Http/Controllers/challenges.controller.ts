@@ -60,8 +60,15 @@ export class ChallengesController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, type: String })
   @ApiQuery({ name: 'search', required: false, type: String })
-  findAll(@Query() paginationDto: PaginationDto, @Request() req: AuthenticatedRequest) {
-    return this.challengeService.findAll(paginationDto, paginationDto.status, req.user.uid);
+  findAll(
+    @Query() paginationDto: PaginationDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.challengeService.findAll(
+      paginationDto,
+      paginationDto.status,
+      req.user.uid,
+    );
   }
 
   @Get('global-stats')
@@ -96,19 +103,25 @@ export class ChallengesController {
   @ApiOperation({
     summary: 'Get innovation statistics for the company dashboard (E1.4)',
     description:
-      'Returns: ideas grouped by faculty (bar chart), daily likes/comments interactions (line chart), and KPI cards (total ideas, most active user, leading faculty). Scoped to the authenticated company\'s own challenges.',
+      "Returns: ideas grouped by faculty (bar chart), daily likes/comments interactions (line chart), and KPI cards (total ideas, most active user, leading faculty). Scoped to the authenticated company's own challenges.",
   })
   @ApiResponse({
     status: 200,
     description: 'Innovation stats returned successfully.',
     schema: {
       example: {
-        ideasByFaculty: [{ facultyId: 1, facultyName: 'Ingeniería', ideasCount: 12 }],
+        ideasByFaculty: [
+          { facultyId: 1, facultyName: 'Ingeniería', ideasCount: 12 },
+        ],
         interactionsByDay: [{ date: '2025-04-01', likes: 8, comments: 3 }],
         kpis: {
           totalIdeas: 42,
           mostActiveUser: { name: 'Ana Pérez', ideaCount: 7 },
-          leadingFaculty: { facultyId: 1, facultyName: 'Ingeniería', ideasCount: 12 },
+          leadingFaculty: {
+            facultyId: 1,
+            facultyName: 'Ingeniería',
+            ideasCount: 12,
+          },
         },
       },
     },

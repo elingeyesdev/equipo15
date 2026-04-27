@@ -27,13 +27,16 @@ export const assertWordRange = (
   }
 };
 
-export const ensureActiveChallengeStatus = (status: string | null | undefined): void => {
+export const ensureActiveChallengeStatus = (
+  status: string | null | undefined,
+): void => {
   const normalized = (status || '').trim().toLowerCase();
   if (normalized !== 'activo' && normalized !== 'active') {
     throw new BadRequestException({
       message: 'El reto no está activo y no acepta nuevas ideas.',
       details: {
-        challenge: 'El reto debe estar en estado ACTIVE/Activo para crear ideas.',
+        challenge:
+          'El reto debe estar en estado ACTIVE/Activo para crear ideas.',
       },
     });
   }

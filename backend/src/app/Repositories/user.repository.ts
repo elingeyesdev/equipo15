@@ -70,7 +70,11 @@ export class UserRepository {
       include: { role: true },
     });
   }
-  async updateStatus(id: string, status: any, penaltyExpiresAt: Date): Promise<User> {
+  async updateStatus(
+    id: string,
+    status: any,
+    penaltyExpiresAt: Date,
+  ): Promise<User> {
     return this.prisma.user.update({
       where: { id },
       data: { status, penaltyExpiresAt },

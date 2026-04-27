@@ -1,8 +1,16 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Comment } from '@prisma/client';
 import { EventsGateway } from '../Gateways/events.gateway';
 import { ChallengeRepository } from '../Repositories/challenge.repository';
-import { CommentListItem, CommentRepository } from '../Repositories/comment.repository';
+import {
+  CommentListItem,
+  CommentRepository,
+} from '../Repositories/comment.repository';
 import { IdeaRepository } from '../Repositories/idea.repository';
 import { UserRepository } from '../Repositories/user.repository';
 import { GetCommentsQueryDto } from '../DTOs/get-comments-query.dto';
@@ -49,20 +57,28 @@ export class CommentService {
 
   private ensureUserCanComment(isActive?: boolean) {
     if (isActive === false) {
-      throw new BadRequestException('Tu cuenta está inactiva y no puede publicar comentarios.');
+      throw new BadRequestException(
+        'Tu cuenta está inactiva y no puede publicar comentarios.',
+      );
     }
   }
 
   private ensureIdeaAllowsComments(status: string) {
     if (status !== 'public' && status !== 'top5') {
-      throw new BadRequestException('Solo se puede comentar en ideas publicadas.');
+      throw new BadRequestException(
+        'Solo se puede comentar en ideas publicadas.',
+      );
     }
   }
 
   private collectSubtreeCommentIds(input: {
     targetId: string;
     ideaId: string;
-    nodes: Array<{ id: string; parentCommentId: string | null; status: string }>;
+    nodes: Array<{
+      id: string;
+      parentCommentId: string | null;
+      status: string;
+    }>;
   }): string[] {
     const allIds = new Set<string>();
     const queue = [input.targetId];
@@ -88,11 +104,12 @@ export class CommentService {
     parentCommentId?: string | null;
     normalizedContent: string;
   }): Promise<void> {
-    const lastComment = await this.commentRepository.findLatestVisibleByAuthorInThread({
-      ideaId: input.ideaId,
-      authorId: input.authorId,
-      parentCommentId: input.parentCommentId ?? null,
-    });
+    const lastComment =
+      await this.commentRepository.findLatestVisibleByAuthorInThread({
+        ideaId: input.ideaId,
+        authorId: input.authorId,
+        parentCommentId: input.parentCommentId ?? null,
+      });
 
     if (!lastComment) return;
 
@@ -101,7 +118,8 @@ export class CommentService {
       buildComparableCommentFingerprint(input.normalizedContent);
 
     const isInsideWindow =
-      Date.now() - new Date(lastComment.createdAt).getTime() <= this.duplicateWindowMs;
+      Date.now() - new Date(lastComment.createdAt).getTime() <=
+      this.duplicateWindowMs;
 
     if (isSameContent && isInsideWindow) {
       throw new BadRequestException(
@@ -119,23 +137,33 @@ export class CommentService {
 
     const idea = await this.ideaRepository.findById(input.ideaId);
     if (!idea) {
-      throw new NotFoundException('La idea a la que intentas comentar no existe.');
+      throw new NotFoundException(
+        'La idea a la que intentas comentar no existe.',
+      );
     }
     this.ensureIdeaAllowsComments(idea.status);
 
     if (input.parentCommentId) {
-      const parentComment = await this.commentRepository.findById(input.parentCommentId);
+      const parentComment = await this.commentRepository.findById(
+        input.parentCommentId,
+      );
       if (!parentComment) {
         throw new NotFoundException('El comentario padre no existe.');
       }
       if (parentComment.ideaId !== input.ideaId) {
-        throw new BadRequestException('El comentario padre no pertenece a la misma idea.');
+        throw new BadRequestException(
+          'El comentario padre no pertenece a la misma idea.',
+        );
       }
       if (parentComment.deletedAt) {
-        throw new BadRequestException('No puedes responder a un comentario eliminado.');
+        throw new BadRequestException(
+          'No puedes responder a un comentario eliminado.',
+        );
       }
       if (parentComment.status !== 'visible') {
-        throw new BadRequestException('No puedes responder a un comentario oculto.');
+        throw new BadRequestException(
+          'No puedes responder a un comentario oculto.',
+        );
       }
     }
 
@@ -148,12 +176,13 @@ export class CommentService {
       normalizedContent: content,
     });
 
-    const createdComment = await this.commentRepository.createAndIncrementIdeaCount({
-      content,
-      ideaId: input.ideaId,
-      authorId: user.id,
-      parentCommentId: input.parentCommentId ?? null,
-    });
+    const createdComment =
+      await this.commentRepository.createAndIncrementIdeaCount({
+        content,
+        ideaId: input.ideaId,
+        authorId: user.id,
+        parentCommentId: input.parentCommentId ?? null,
+      });
 
     this.eventsGateway.server.emit('idea_commented', {
       challengeId: idea.challengeId,
@@ -170,16 +199,24 @@ export class CommentService {
     }
     this.ensureUserCanComment(user.isActive);
 
-    const parentComment = await this.commentRepository.findById(input.parentCommentId);
+    const parentComment = await this.commentRepository.findById(
+      input.parentCommentId,
+    );
     if (!parentComment) {
-      throw new NotFoundException('El comentario al que intentas responder no existe.');
+      throw new NotFoundException(
+        'El comentario al que intentas responder no existe.',
+      );
     }
 
     if (parentComment.deletedAt) {
-      throw new BadRequestException('No puedes responder a un comentario eliminado.');
+      throw new BadRequestException(
+        'No puedes responder a un comentario eliminado.',
+      );
     }
     if (parentComment.status !== 'visible') {
-      throw new BadRequestException('No puedes responder a un comentario oculto.');
+      throw new BadRequestException(
+        'No puedes responder a un comentario oculto.',
+      );
     }
 
     const idea = await this.ideaRepository.findById(parentComment.ideaId);
@@ -197,12 +234,13 @@ export class CommentService {
       normalizedContent: content,
     });
 
-    const createdComment = await this.commentRepository.createAndIncrementIdeaCount({
-      content,
-      ideaId: parentComment.ideaId,
-      authorId: user.id,
-      parentCommentId: parentComment.id,
-    });
+    const createdComment =
+      await this.commentRepository.createAndIncrementIdeaCount({
+        content,
+        ideaId: parentComment.ideaId,
+        authorId: user.id,
+        parentCommentId: parentComment.id,
+      });
 
     this.eventsGateway.server.emit('idea_commented', {
       challengeId: idea.challengeId,
@@ -212,7 +250,9 @@ export class CommentService {
     return createdComment;
   }
 
-  async withdrawComment(input: WithdrawCommentInput): Promise<{ success: boolean; removedCount: number }> {
+  async withdrawComment(
+    input: WithdrawCommentInput,
+  ): Promise<{ success: boolean; removedCount: number }> {
     const requester = await this.userRepository.findByUid(input.firebaseUid);
     if (!requester) {
       throw new NotFoundException('Usuario no encontrado en el sistema.');
@@ -237,7 +277,9 @@ export class CommentService {
       throw new NotFoundException('El reto asociado a la idea no existe.');
     }
 
-    const requesterRole = (requester as any)?.role?.name ?? 'student';
+    const requesterRole =
+      (requester as unknown as { role?: { name: string } })?.role?.name ??
+      'student';
     const isAuthor = requester.id === comment.authorId;
     const isAdmin = requesterRole === 'admin';
     const isCompanyOwnerOfChallenge =
@@ -249,7 +291,9 @@ export class CommentService {
       );
     }
 
-    const thread = await this.commentRepository.findThreadByIdeaId(comment.ideaId);
+    const thread = await this.commentRepository.findThreadByIdeaId(
+      comment.ideaId,
+    );
     const visibleNodes = thread
       .filter((node) => node.status === 'visible')
       .map((node) => ({
@@ -293,11 +337,15 @@ export class CommentService {
     }
 
     if (comment.status !== 'visible') {
-      throw new BadRequestException('Solo se pueden editar comentarios visibles.');
+      throw new BadRequestException(
+        'Solo se pueden editar comentarios visibles.',
+      );
     }
 
     if (comment.authorId !== requester.id) {
-      throw new ForbiddenException('No tienes permiso para editar este comentario.');
+      throw new ForbiddenException(
+        'No tienes permiso para editar este comentario.',
+      );
     }
 
     const idea = await this.ideaRepository.findById(comment.ideaId);
@@ -324,7 +372,12 @@ export class CommentService {
   async findComments(
     query: GetCommentsQueryDto,
     requesterFirebaseUid?: string,
-  ): Promise<{ data: Array<CommentListItem & { canWithdraw: boolean; canEdit: boolean }>; total: number; page: number; limit: number }> {
+  ): Promise<{
+    data: Array<CommentListItem & { canWithdraw: boolean; canEdit: boolean }>;
+    total: number;
+    page: number;
+    limit: number;
+  }> {
     const idea = await this.ideaRepository.findById(query.ideaId);
     if (!idea) {
       throw new NotFoundException('La idea solicitada no existe.');
@@ -332,12 +385,16 @@ export class CommentService {
     this.ensureIdeaAllowsComments(idea.status);
 
     if (query.parentCommentId) {
-      const parentComment = await this.commentRepository.findById(query.parentCommentId);
+      const parentComment = await this.commentRepository.findById(
+        query.parentCommentId,
+      );
       if (!parentComment) {
         throw new NotFoundException('El comentario padre no existe.');
       }
       if (parentComment.ideaId !== query.ideaId) {
-        throw new BadRequestException('El comentario padre no pertenece a la misma idea.');
+        throw new BadRequestException(
+          'El comentario padre no pertenece a la misma idea.',
+        );
       }
     }
 
@@ -351,7 +408,10 @@ export class CommentService {
       includeReplies: query.includeReplies,
       skip,
       take: limit,
-      sort: (query.sort === 'newest' || query.sort === 'oldest') ? query.sort : 'newest',
+      sort:
+        query.sort === 'newest' || query.sort === 'oldest'
+          ? query.sort
+          : 'newest',
     });
 
     let requesterId: string | undefined;
@@ -363,10 +423,13 @@ export class CommentService {
     }
 
     if (requesterFirebaseUid) {
-      const requester = await this.userRepository.findByUid(requesterFirebaseUid);
+      const requester =
+        await this.userRepository.findByUid(requesterFirebaseUid);
       if (requester) {
         requesterId = requester.id;
-        requesterRole = (requester as any)?.role?.name ?? 'student';
+        requesterRole =
+          (requester as unknown as { role?: { name: string } })?.role?.name ??
+          'student';
       }
     }
 
@@ -378,7 +441,9 @@ export class CommentService {
       ...comment,
       canWithdraw:
         !!requesterId &&
-        (comment.authorId === requesterId || canAdminWithdraw || canCompanyWithdraw),
+        (comment.authorId === requesterId ||
+          canAdminWithdraw ||
+          canCompanyWithdraw),
       canEdit: !!requesterId && comment.authorId === requesterId,
     }));
 

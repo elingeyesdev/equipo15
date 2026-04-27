@@ -23,12 +23,26 @@ export class ChallengeRepository {
     if (search && search.trim().length > 0) {
       const keyword = search.trim();
       where.AND = [
-        ...(where.AND ? (Array.isArray(where.AND) ? where.AND : [where.AND]) : []),
+        ...(where.AND
+          ? Array.isArray(where.AND)
+            ? where.AND
+            : [where.AND]
+          : []),
         {
           OR: [
             { title: { contains: keyword, mode: 'insensitive' as const } },
-            { problemDescription: { contains: keyword, mode: 'insensitive' as const } },
-            { companyContext: { contains: keyword, mode: 'insensitive' as const } },
+            {
+              problemDescription: {
+                contains: keyword,
+                mode: 'insensitive' as const,
+              },
+            },
+            {
+              companyContext: {
+                contains: keyword,
+                mode: 'insensitive' as const,
+              },
+            },
           ],
         },
       ];
@@ -38,10 +52,7 @@ export class ChallengeRepository {
       where.OR = [
         {
           isPrivate: false,
-          OR: [
-            { facultyId: null },
-            ...(facultyId ? [{ facultyId }] : []),
-          ],
+          OR: [{ facultyId: null }, ...(facultyId ? [{ facultyId }] : [])],
         },
         {
           isPrivate: true,
@@ -155,7 +166,10 @@ export class ChallengeRepository {
     });
   }
 
-  async linkPrivateChallenge(challengeId: string, userId: string): Promise<void> {
+  async linkPrivateChallenge(
+    challengeId: string,
+    userId: string,
+  ): Promise<void> {
     await this.prisma.challenge.update({
       where: { id: challengeId },
       data: {
@@ -178,48 +192,62 @@ export class ChallengeRepository {
         _sum: { likesCount: true, commentsCount: true },
       }),
       this.prisma.idea.findMany({
-         where: { challengeId, status: 'public' },
-         select: {
-            author: { select: { facultyId: true } }
-         }
+        where: { challengeId, status: 'public' },
+        select: {
+          author: { select: { facultyId: true } },
+        },
       }),
       this.prisma.user.findMany({
-         where: {
-            ideas: { some: { challengeId, status: 'public' } }
-         },
-         select: { id: true, displayName: true, nickname: true, role: { select: { name: true } }, email: true }
+        where: {
+          ideas: { some: { challengeId, status: 'public' } },
+        },
+        select: {
+          id: true,
+          displayName: true,
+          nickname: true,
+          role: { select: { name: true } },
+          email: true,
+        },
       }),
       this.prisma.idea.findMany({
-         where: { challengeId, status: 'public' },
-         orderBy: [ { likesCount: 'desc' }, { commentsCount: 'desc' } ],
-         take: 5,
-         select: { id: true, title: true, likesCount: true, commentsCount: true }
-      })
+        where: { challengeId, status: 'public' },
+        orderBy: [{ likesCount: 'desc' }, { commentsCount: 'desc' }],
+        take: 5,
+        select: {
+          id: true,
+          title: true,
+          likesCount: true,
+          commentsCount: true,
+        },
+      }),
     ]);
 
-    const uniqueFaculties = new Set(ideas.map(i => i.author?.facultyId).filter(f => f != null));
+    const uniqueFaculties = new Set(
+      ideas.map((i) => i.author?.facultyId).filter((f) => f != null),
+    );
 
     return {
-       totalIdeas: agg._count || 0,
-       totalLikes: agg._sum.likesCount || 0,
-       totalComments: agg._sum.commentsCount || 0,
-       totalParticipants: allAuthors.length,
-       communityPulse: allAuthors.map(a => {
-          const resolvedName = a.nickname || a.displayName || a.email.split('@')[0] || 'Anónimo';
-          return {
-            id: a.id,
-            name: resolvedName,
-            role: a.role?.name || 'student',
-            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(resolvedName)}&background=random`
-          };
-       }),
-       topIdeas: topIdeas.map(i => ({
-          id: i.id,
-          title: i.title,
-          likesCount: i.likesCount || 0,
-          commentsCount: i.commentsCount || 0,
-          impact: (i.likesCount || 0) + (i.commentsCount || 0)
-       }))
+      totalIdeas: agg._count || 0,
+      totalLikes: agg._sum.likesCount || 0,
+      totalComments: agg._sum.commentsCount || 0,
+      totalParticipants: allAuthors.length,
+      communityPulse: allAuthors.map((a) => {
+        const resolvedName =
+          a.nickname || a.displayName || a.email.split('@')[0] || 'Anónimo';
+        return {
+          id: a.id,
+          name: resolvedName,
+          role: a.role?.name || 'student',
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(resolvedName)}&background=random`,
+        };
+      }),
+      topIdeas: topIdeas.map((i) => ({
+        id: i.id,
+        title: i.title,
+        likesCount: i.likesCount || 0,
+        commentsCount: i.commentsCount || 0,
+        impact: (i.likesCount || 0) + (i.commentsCount || 0),
+      })),
     };
   }
 
@@ -241,7 +269,7 @@ export class ChallengeRepository {
       where: { authorId },
       select: { id: true },
     });
-    const challengeIds = companyChallenges.map(c => c.id);
+    const challengeIds = companyChallenges.map((c) => c.id);
 
     if (challengeIds.length === 0) {
       return {
@@ -258,29 +286,43 @@ export class ChallengeRepository {
         likesCount: true,
         commentsCount: true,
         createdAt: true,
-        author: { select: { displayName: true, nickname: true, email: true, facultyId: true } },
+        author: {
+          select: {
+            displayName: true,
+            nickname: true,
+            email: true,
+            facultyId: true,
+          },
+        },
       },
     });
 
     const facultyMap = new Map<number, number>();
-    ideasRaw.forEach(idea => {
+    ideasRaw.forEach((idea) => {
       const fId = idea.author?.facultyId;
       if (fId != null) facultyMap.set(fId, (facultyMap.get(fId) ?? 0) + 1);
     });
 
-    const ideasByFaculty = Array.from(facultyMap.entries()).map(([facultyId, count]) => ({
-      facultyId,
-      facultyName: FACULTY_NAMES[facultyId] ?? `Facultad ${facultyId}`,
-      ideasCount: count,
-    })).sort((a, b) => b.ideasCount - a.ideasCount);
+    const ideasByFaculty = Array.from(facultyMap.entries())
+      .map(([facultyId, count]) => ({
+        facultyId,
+        facultyName: FACULTY_NAMES[facultyId] ?? `Facultad ${facultyId}`,
+        ideasCount: count,
+      }))
+      .sort((a, b) => b.ideasCount - a.ideasCount);
 
     // 2. Interactions by day (last 30 days) ────────────────────────────────────
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const recentIdeas = ideasRaw.filter(i => new Date(i.createdAt) >= thirtyDaysAgo);
+    const recentIdeas = ideasRaw.filter(
+      (i) => new Date(i.createdAt) >= thirtyDaysAgo,
+    );
 
-    const dayMap = new Map<string, { date: string; likes: number; comments: number }>();
+    const dayMap = new Map<
+      string,
+      { date: string; likes: number; comments: number }
+    >();
     // Pre-fill last 30 days so chart shows continuous line even on empty days
     for (let d = 0; d < 30; d++) {
       const dt = new Date();
@@ -289,11 +331,11 @@ export class ChallengeRepository {
       dayMap.set(key, { date: key, likes: 0, comments: 0 });
     }
 
-    recentIdeas.forEach(idea => {
+    recentIdeas.forEach((idea) => {
       const key = new Date(idea.createdAt).toISOString().split('T')[0];
       const entry = dayMap.get(key);
       if (entry) {
-        entry.likes    += idea.likesCount    ?? 0;
+        entry.likes += idea.likesCount ?? 0;
         entry.comments += idea.commentsCount ?? 0;
       }
     });
@@ -305,10 +347,14 @@ export class ChallengeRepository {
 
     // Most active user (most ideas submitted in company challenges)
     const userIdeaCount = new Map<string, { name: string; count: number }>();
-    ideasRaw.forEach(idea => {
+    ideasRaw.forEach((idea) => {
       const email = idea.author?.email ?? '';
-      const name  = idea.author?.nickname || idea.author?.displayName || email.split('@')[0] || 'Anónimo';
-      const prev  = userIdeaCount.get(email) ?? { name, count: 0 };
+      const name =
+        idea.author?.nickname ||
+        idea.author?.displayName ||
+        email.split('@')[0] ||
+        'Anónimo';
+      const prev = userIdeaCount.get(email) ?? { name, count: 0 };
       userIdeaCount.set(email, { name, count: prev.count + 1 });
     });
 
@@ -320,7 +366,11 @@ export class ChallengeRepository {
     });
 
     // Leading faculty (most ideas)
-    let leadingFaculty: { facultyId: number; facultyName: string; ideasCount: number } | null = null;
+    let leadingFaculty: {
+      facultyId: number;
+      facultyName: string;
+      ideasCount: number;
+    } | null = null;
     if (ideasByFaculty.length > 0) leadingFaculty = ideasByFaculty[0];
 
     return {

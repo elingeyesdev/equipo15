@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
+import type { ChallengePayload } from '../../../../services/challenge.service';
 import type { Challenge, ChallengeStatus } from '../../../../types/models';
 import ChallengeFormView from './ChallengeFormModal';
+import { CompanyStatsView } from './CompanyStatsView';
 
 /* ─── Animations ─── */
 const fadeUp = keyframes`
@@ -257,6 +259,17 @@ const formatDate = (d?: string | Date) => {
   return date.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
+const extractErrorMessage = (error: unknown) => {
+  if (!error || typeof error !== 'object') return 'Error al guardar el reto';
+  const err = error as {
+    response?: { data?: { message?: string | string[] } };
+    message?: string;
+  };
+  const message = err.response?.data?.message;
+  if (Array.isArray(message)) return message.join('\n');
+  return message || err.message || 'Error al guardar el reto';
+};
+
 /* ─── Component ─── */
 type FilterValue = 'all' | ChallengeStatus;
 
@@ -290,7 +303,7 @@ export const CompanyChallengesView = () => {
         return displayStatus === filter || (filter === 'Borrador' && displayStatus === 'DRAFT');
       });
 
-  const handleSave = async (formData: any) => {
+  const handleSave = async (formData: ChallengePayload) => {
     try {
       if (editingChallenge) {
         await challengeService.updateChallenge(editingChallenge.id, formData);
@@ -300,9 +313,8 @@ export const CompanyChallengesView = () => {
       setModalOpen(false);
       setEditingChallenge(null);
       await fetchChallenges();
-    } catch (err: any) {
-      const msg = err?.response?.data?.message;
-      alert(Array.isArray(msg) ? msg.join('\n') : msg || 'Error al guardar el reto');
+    } catch (err) {
+      alert(extractErrorMessage(err));
     }
   };
 
@@ -466,13 +478,8 @@ export const CompanyChallengesView = () => {
   );
 };
 
-/* ─── Placeholder views (other company routes) ─── */
-export const CompanyStatsView = () => (
-  <div>
-    <h2 style={{ fontSize: 22, fontWeight: 900, color: '#485054', margin: 0 }}>Resultados</h2>
-    <p style={{ color: '#9ca3af', marginTop: 8 }}>Gráficas y analíticas del reto actual.</p>
-  </div>
-);
+/* ─── Other company views ─── */
+export { CompanyStatsView };
 
 export const CompanyCriteriaView = () => (
   <div>

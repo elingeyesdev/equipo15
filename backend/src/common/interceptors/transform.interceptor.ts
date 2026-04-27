@@ -39,20 +39,18 @@ export class TransformInterceptor<T> implements NestInterceptor<
 
     const obj = data as Record<string, unknown>;
 
-
     if (
       obj instanceof Date ||
-      (obj._bsontype === 'ObjectID') ||
+      obj._bsontype === 'ObjectID' ||
       (obj.constructor && obj.constructor.name === 'ObjectId')
     ) {
       return obj;
     }
 
-
-    const transformed = typeof obj.toObject === 'function' 
-      ? (obj.toObject() as Record<string, unknown>) 
-      : { ...obj };
-
+    const transformed =
+      typeof obj.toObject === 'function'
+        ? (obj.toObject() as Record<string, unknown>)
+        : { ...obj };
 
     if (
       transformed.roleId &&
@@ -61,7 +59,6 @@ export class TransformInterceptor<T> implements NestInterceptor<
     ) {
       transformed.role = (transformed.roleId as Record<string, unknown>).name;
     }
-
 
     Object.keys(transformed).forEach((key) => {
       const val = transformed[key];
