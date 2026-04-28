@@ -443,57 +443,59 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
               </CharCount>
             </FieldGroup>
 
-            {/* Participation Rules */}
-            <FieldGroup>
+            {/* Participation Rules (Left Column) */}
+            <FieldGroup style={{ display: 'flex', flexDirection: 'column' }}>
               <Label>Reglas de participación</Label>
-              <TextAreaField placeholder="Reglas o restricciones para las ideas..." rows={2}
+              <TextAreaField placeholder="Reglas o restricciones para las ideas..."
                 value={form.participationRules}
+                style={{ flex: 1, resize: 'none' }}
                 onChange={e => updateField('participationRules', e.target.value)} />
               <CharCount $over={form.participationRules.length > LIMITS.participationRules}>
                 {form.participationRules.length}/{LIMITS.participationRules}
               </CharCount>
             </FieldGroup>
 
-            {/* Faculty Selector */}
-            <FieldGroup>
-              <Label $locked={locked('core')}>
-                Facultad dirigida
-                {locked('core') && <LockedBadge>No editable</LockedBadge>}
-              </Label>
-              <select
-                value={form.facultyId || ''}
-                onChange={e => !locked('core') && updateField('facultyId', e.target.value ? Number(e.target.value) : null)}
-                disabled={locked('core')}
-                style={{
-                  width: '100%', padding: '12px 14px', borderRadius: 12,
-                  border: '1.5px solid rgba(72,80,84,0.18)', outline: 'none',
-                  fontSize: 13.5, fontWeight: 500, color: '#1a1f22',
-                  backgroundColor: locked('core') ? '#f8f9fa' : 'white',
-                  cursor: locked('core') ? 'not-allowed' : 'pointer',
-                  appearance: 'none',
-                  backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23485054%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 14px center',
-                }}
-              >
-                <option value="">Todas las Facultades</option>
-                {FACULTIES.map(f => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
-              </select>
-            </FieldGroup>
+            {/* Right Side Stack (Faculty, Dates, Private) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Faculty Selector */}
+              <FieldGroup style={{ marginBottom: 0 }}>
+                <Label $locked={locked('core')}>
+                  Facultad dirigida
+                  {locked('core') && <LockedBadge>No editable</LockedBadge>}
+                </Label>
+                <select
+                  value={form.facultyId || ''}
+                  onChange={e => !locked('core') && updateField('facultyId', e.target.value ? Number(e.target.value) : null)}
+                  disabled={locked('core')}
+                  style={{
+                    width: '100%', padding: '12px 14px', borderRadius: 12,
+                    border: '1.5px solid rgba(72,80,84,0.18)', outline: 'none',
+                    fontSize: 13.5, fontWeight: 500, color: '#1a1f22',
+                    backgroundColor: locked('core') ? '#f8f9fa' : 'white',
+                    cursor: locked('core') ? 'not-allowed' : 'pointer',
+                    appearance: 'none',
+                    backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23485054%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 14px center',
+                  }}
+                >
+                  <option value="">Todas las Facultades</option>
+                  {FACULTIES.map(f => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
+                </select>
+              </FieldGroup>
 
-            {/* Dates */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Dates */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <FieldGroup>
+                <FieldGroup style={{ marginBottom: 0 }}>
                   <Label $locked={locked('core')}>Fecha inicio *</Label>
                   <InputField type="date" $locked={locked('core')} $error={!!errors.startDate}
                     value={form.startDate} readOnly={locked('core')}
                     onChange={e => !locked('core') && updateField('startDate', e.target.value)} />
                   {errors.startDate && <ErrorText>{errors.startDate}</ErrorText>}
                 </FieldGroup>
-                <FieldGroup>
+                <FieldGroup style={{ marginBottom: 0 }}>
                   <Label>Fecha cierre *</Label>
                   <InputField type="date" $error={!!errors.endDate}
                     value={form.endDate}
@@ -501,7 +503,8 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
                   {errors.endDate && <ErrorText>{errors.endDate}</ErrorText>}
                 </FieldGroup>
               </div>
-              <CheckboxRow>
+
+              <CheckboxRow style={{ marginTop: 2, padding: '14px', border: '1.5px solid rgba(72,80,84,0.18)', borderRadius: 12 }}>
                 <input type="checkbox" checked={form.isPrivate}
                   onChange={e => updateField('isPrivate', e.target.checked)}
                   style={{ width: 18, height: 18, accentColor: Pista8Theme.primary }} />
