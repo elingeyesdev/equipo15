@@ -1,4 +1,5 @@
 import React from 'react';
+import IdeationGuidePanel from './IdeationGuidePanel';
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
 import { Pista8Theme } from '../../../config/theme';
@@ -363,7 +364,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
     );
   }
 
-  if (ideas.length === 0) return null;
+  if (ideas.length === 0) return <IdeationGuidePanel />;
 
   const sortLabel =
     sortOrder === 'newest' ? 'Más recientes' :

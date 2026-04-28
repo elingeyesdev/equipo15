@@ -49,16 +49,22 @@ export class ChallengeRepository {
     }
 
     if (userRole === 'student') {
+      const facultyCondition = [
+        { facultyId: null },
+        ...(facultyId ? [{ facultyId }] : []),
+      ];
+
       where.OR = [
         {
           isPrivate: false,
-          OR: [{ facultyId: null }, ...(facultyId ? [{ facultyId }] : [])],
+          OR: facultyCondition,
         },
         {
           isPrivate: true,
-          accessedByUsers: {
-            some: { id: userId },
-          },
+          AND: [
+            { accessedByUsers: { some: { id: userId } } },
+            { OR: facultyCondition },
+          ],
         },
       ];
     }

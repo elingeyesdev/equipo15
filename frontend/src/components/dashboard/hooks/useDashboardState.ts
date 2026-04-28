@@ -5,14 +5,15 @@ import type { Challenge } from '../../../types/models';
 import { challengeService } from '../../../services/challenge.service';
 import { getFacultySlug } from '../../../config/faculties';
 import type { FeedbackMessage } from './useIdeationForm';
-import { useParams } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import type { SortMode } from '../../../features/sky-wall/types';
 import { io } from 'socket.io-client';
 
 export const useDashboardState = () => {
-  const { challengeId } = useParams<{ challengeId: string }>();
+  const location = useLocation();
   const { user } = useAuth();
+
   const [userProfile, setProfile] = useState<UserProfile | null>(null);
   const [profileError, setProfileError] = useState('');
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -34,9 +35,25 @@ export const useDashboardState = () => {
 
   useEffect(() => {
     let active = true;
+
+    const pendingPrivateId = (location.state as any)?.privateChallengeId as string | undefined;
+
+    if (pendingPrivateId) {
+      window.history.replaceState({}, '', location.pathname);
+    }
+
     (async () => {
       try {
         setLoading(true);
+
+        if (pendingPrivateId) {
+          try {
+            await challengeService.getChallengeById(pendingPrivateId);
+          } catch (err) {
+            console.error('Error linking private challenge:', err);
+          }
+        }
+
         const [profile, cloudChallenges, globalStats] = await Promise.all([
           userService.getProfile(),
           challengeService.getPublicChallenges(1, 40, 'Activo'),
@@ -63,13 +80,13 @@ export const useDashboardState = () => {
           badge: c.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
         }));
 
-        if (challengeId) {
-          try {
-            const privateChallengeResp = await challengeService.getChallengeById(challengeId);
-            const privateChallengeRaw = (privateChallengeResp as any)?.success ? (privateChallengeResp as any).data : privateChallengeResp;
-            if (privateChallengeRaw && privateChallengeRaw.id) {
-              const exists = mapped.some(c => c.id === privateChallengeRaw.id);
-              if (!exists) {
+        if (pendingPrivateId) {
+          const exists = mapped.some(c => c.id === pendingPrivateId);
+          if (!exists) {
+            try {
+              const privateChallengeResp = await challengeService.getChallengeById(pendingPrivateId);
+              const privateChallengeRaw = (privateChallengeResp as any)?.success ? (privateChallengeResp as any).data : privateChallengeResp;
+              if (privateChallengeRaw && privateChallengeRaw.id) {
                 const mappedPrivate = {
                   ...privateChallengeRaw,
                   ideasCount: privateChallengeRaw._count?.ideas || privateChallengeRaw.ideas?.length || 0,
@@ -80,20 +97,15 @@ export const useDashboardState = () => {
                 };
                 mapped = [mappedPrivate, ...mapped];
               }
+            } catch (err) {
+              console.error('Error fetching private challenge:', err);
             }
-          } catch (err) {
-            console.error('Error fetching private challenge:', err);
           }
         }
 
         const profileData = (profile as any)?.success ? (profile as any).data : profile;
         setProfile(profileData as UserProfile);
         setChallenges(mapped);
-
-        if (challengeId && mapped.some(c => c.id === challengeId)) {
-          setSelectedChallenge(mapped.find(c => c.id === challengeId) || mapped[0]);
-          setSortOrder('newest');
-        }
       } catch (error: unknown) {
         if (active) {
           const message = error instanceof Error ? error.message : 'Error de conexión.';

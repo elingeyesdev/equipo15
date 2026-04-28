@@ -237,7 +237,7 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
                   </>
                 ) : (
                   <>
-                    Aún no hay ideas en este reto. ¡Sé el primero en volar!
+                    Aun no hay ideas en este reto.
                   </>
                 )}
               </div>
