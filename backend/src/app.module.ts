@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { HttpModule } from './app/Providers/http.module';
-import { DatabaseModule } from './app/Providers/database.module';
+import { HttpModule } from './app/providers/http.module';
+import { DatabaseModule } from './app/providers/database.module';
 import { FirebaseAdminModule } from './config/firebase-admin.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { EventsModule } from './app/Gateways/events.module';
-import { HealthController } from './app/Http/Controllers/health.controller';
+import { EventsModule } from './app/gateways/events.module';
+import { HealthController } from './app/http/controllers/health.controller';
 
 @Module({
   imports: [

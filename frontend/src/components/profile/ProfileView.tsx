@@ -8,7 +8,7 @@ import { resolveDisplayName } from '../../utils/user.utils';
 import { RoleGuard } from '../common/RoleGuard';
 import { Pista8Theme } from '../../config/theme';
 import { getFacultyName } from '../../config/faculties';
-import LogoutButton from '../dashboard/LogoutButton';
+import LogoutButton from '../dashboard/components/LogoutButton';
 import BackButton from '../common/BackButton';
 import { authService } from '../../services/auth.service';
 import { AnimatePresence, motion } from 'framer-motion';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import * as S from '../styles/SidebarStyles';
-import LogoutButton from '../LogoutButton';
+import LogoutButton from './LogoutButton';
 import { useAuth } from '../../../context/AuthContext';
 
 interface SidebarProps {

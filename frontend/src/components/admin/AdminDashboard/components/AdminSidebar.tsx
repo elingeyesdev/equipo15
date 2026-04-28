@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import * as S from '../styles/AdminStyles';
-import LogoutButton from '../../../dashboard/LogoutButton';
+import LogoutButton from '../../../dashboard/components/LogoutButton';
 
 interface AdminSidebarProps {
   userProfile: any;

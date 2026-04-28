@@ -5,3 +5,10 @@
 # Variables de entorno
 .env
 **/.env
+
+# IDEs y Editores
+**/.idea/
+**/.vscode/
+
+# Build artifacts
+**/dist/

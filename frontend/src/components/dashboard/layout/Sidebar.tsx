@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { NAVIGATION_CONFIG } from './navigation.config';
 import { useAuth } from '../../../context/AuthContext';
 import * as S from '../styles/SidebarStyles';
-import LogoutButton from '../LogoutButton';
+import LogoutButton from '../components/LogoutButton';
 
 const NotificationBadge = styled.span`
   background-color: #FE410A;

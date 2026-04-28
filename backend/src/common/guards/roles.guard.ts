@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserService } from '../../app/Services/user.service';
+import { UserService } from '../../app/services/user.service';
 import type { AuthenticatedRequest } from '../types/authenticated-request.interface';
 
 @Injectable()

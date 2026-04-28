@@ -7,7 +7,7 @@ import {
   Validator, RequiredValidation, MaxLengthValidation, MinLengthValidation, 
   NoRepetitiveCharactersValidation, DateRangeValidation,
   NoNumbersValidation, NoExcessiveSymbolsValidation
-} from '../../../../components/Form/ValidationStrategies';
+} from '../../../../components/form/ValidationStrategies';
 
 export const useAdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('challenges');
