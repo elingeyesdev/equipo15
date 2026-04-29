@@ -111,6 +111,7 @@ export const useIdeationForm = (
   const minSolutionWords = IDEA_WORD_RULES.solution.min;
   const maxSolutionWords = IDEA_WORD_RULES.solution.max;
   const maxTags = 6;
+  const isReadOnlyByPenalty = profile?.status === 'SOFT_BLOCK' || profile?.status === 'SUSPENDED';
 
   const allConsentsAccepted = Object.values(consents).every(Boolean);
   const titleWords = countWords(ideaName);
@@ -259,6 +260,19 @@ export const useIdeationForm = (
       showToast(message);
       return false;
     }
+
+    if (isReadOnlyByPenalty) {
+      const blockedMessage: FeedbackMessage = {
+        tone: 'critical',
+        title: 'Cuenta en modo lectura',
+        message: 'Durante la sanción solo puedes consultar contenido. No puedes enviar ni guardar ideas.',
+        persist: true,
+      };
+      setFormFeedback(blockedMessage);
+      showToast(blockedMessage);
+      return false;
+    }
+
     if (!formChallenge) {
       setFormFeedback({
         tone: 'info',
@@ -409,5 +423,6 @@ export const useIdeationForm = (
     isProfileComplete,
     handleIdeaSubmit,
     resetForm,
+    isReadOnlyByPenalty,
   };
 };

@@ -162,9 +162,11 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
   }, [currentUserId, ideaId, serverVoted]);
 
   const handleVote = () => {
+    const isReadOnlyPenalty = userProfile?.status === 'SOFT_BLOCK' || userProfile?.status === 'SUSPENDED';
+
     if (disabled) return;
-    if (userProfile?.status === 'SOFT_BLOCK') {
-      toast.error('Tu capacidad de votar ha sido pausada temporalmente.');
+    if (isReadOnlyPenalty) {
+      toast.error('Tu cuenta está en modo solo lectura durante la sanción.');
       return;
     }
 
@@ -219,12 +221,12 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
     });
   };
 
-  const isSoftBlocked = userProfile?.status === 'SOFT_BLOCK';
+  const isSoftBlocked = userProfile?.status === 'SOFT_BLOCK' || userProfile?.status === 'SUSPENDED';
 
   const tooltipMessage = disabled
     ? 'Fase de evaluación técnica'
     : isSoftBlocked
-      ? 'Acción pausada temporalmente'
+      ? 'Cuenta en modo solo lectura'
       : isAuthor
         ? 'No puedes votar por tu propia idea'
         : hasVoted

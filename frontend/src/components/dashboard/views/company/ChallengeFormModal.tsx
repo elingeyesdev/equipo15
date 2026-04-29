@@ -166,9 +166,6 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
     });
   }, [form.problemDescription, form.companyContext, form.participationRules]);
 
-  /* ─── Dirty check (deep compare) ─── */
-  const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm);
-
   /* ─── Field updaters ─── */
   const updateField = useCallback(<K extends keyof FormData>(key: K, val: FormData[K]) => {
     setForm(prev => ({ ...prev, [key]: val }));

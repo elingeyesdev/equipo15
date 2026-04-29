@@ -28,6 +28,21 @@ export class UserService {
     private readonly eventsGateway: EventsGateway,
   ) {}
 
+  private async ensureUserCanWrite(firebaseUid: string): Promise<UserWithRole> {
+    const user = await this.userRepository.findByUid(firebaseUid);
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    if (user.status !== 'ACTIVE') {
+      throw new ForbiddenException(
+        'Tu cuenta está en modo solo lectura durante la sanción.',
+      );
+    }
+
+    return user as UserWithRole;
+  }
+
   async findOrCreate(
     createUserDto: {
       firebaseUid: string;
@@ -145,6 +160,8 @@ export class UserService {
       studentCode?: string;
     },
   ): Promise<UserResponse | null> {
+    await this.ensureUserCanWrite(firebaseUid);
+
     const updatedUser = await this.userRepository.updateByUid(
       firebaseUid,
       data,
@@ -172,6 +189,8 @@ export class UserService {
     firebaseUid: string,
     data: { facultyId?: number },
   ): Promise<UserResponse | null> {
+    await this.ensureUserCanWrite(firebaseUid);
+
     const updatedUser = await this.userRepository.updateByUid(
       firebaseUid,
       data,

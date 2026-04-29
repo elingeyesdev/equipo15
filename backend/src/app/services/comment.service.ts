@@ -18,6 +18,7 @@ import {
   buildComparableCommentFingerprint,
   normalizeCommentContent,
 } from '../utils/comment-validation.util';
+import { ModerationService } from './moderation.service';
 
 export interface CreateCommentInput {
   content: string;
@@ -53,7 +54,23 @@ export class CommentService {
     private readonly ideaRepository: IdeaRepository,
     private readonly userRepository: UserRepository,
     private readonly eventsGateway: EventsGateway,
+    private readonly moderationService: ModerationService,
   ) {}
+
+  private async ensureUserCanWrite(firebaseUid: string): Promise<string> {
+    const user = await this.userRepository.findByUid(firebaseUid);
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado en el sistema.');
+    }
+
+    if (user.status !== 'ACTIVE') {
+      throw new ForbiddenException(
+        'Tu cuenta está en modo solo lectura durante la sanción.',
+      );
+    }
+
+    return user.id;
+  }
 
   private ensureUserCanComment(isActive?: boolean) {
     if (isActive === false) {
@@ -129,11 +146,7 @@ export class CommentService {
   }
 
   async createComment(input: CreateCommentInput): Promise<Comment> {
-    const user = await this.userRepository.findByUid(input.firebaseUid);
-    if (!user) {
-      throw new NotFoundException('Usuario no encontrado en el sistema.');
-    }
-    this.ensureUserCanComment(user.isActive);
+    const authorId = await this.ensureUserCanWrite(input.firebaseUid);
 
     const idea = await this.ideaRepository.findById(input.ideaId);
     if (!idea) {
@@ -171,7 +184,7 @@ export class CommentService {
 
     await this.ensureNoRecentDuplicateComment({
       ideaId: input.ideaId,
-      authorId: user.id,
+      authorId,
       parentCommentId: input.parentCommentId ?? null,
       normalizedContent: content,
     });
@@ -180,7 +193,7 @@ export class CommentService {
       await this.commentRepository.createAndIncrementIdeaCount({
         content,
         ideaId: input.ideaId,
-        authorId: user.id,
+        authorId,
         parentCommentId: input.parentCommentId ?? null,
       });
 
@@ -193,11 +206,7 @@ export class CommentService {
   }
 
   async replyToComment(input: ReplyCommentInput): Promise<Comment> {
-    const user = await this.userRepository.findByUid(input.firebaseUid);
-    if (!user) {
-      throw new NotFoundException('Usuario no encontrado en el sistema.');
-    }
-    this.ensureUserCanComment(user.isActive);
+    const authorId = await this.ensureUserCanWrite(input.firebaseUid);
 
     const parentComment = await this.commentRepository.findById(
       input.parentCommentId,
@@ -229,7 +238,7 @@ export class CommentService {
 
     await this.ensureNoRecentDuplicateComment({
       ideaId: parentComment.ideaId,
-      authorId: user.id,
+      authorId,
       parentCommentId: parentComment.id,
       normalizedContent: content,
     });
@@ -238,7 +247,7 @@ export class CommentService {
       await this.commentRepository.createAndIncrementIdeaCount({
         content,
         ideaId: parentComment.ideaId,
-        authorId: user.id,
+        authorId,
         parentCommentId: parentComment.id,
       });
 
@@ -318,6 +327,13 @@ export class CommentService {
       ideaId: idea.id,
     });
 
+    // If the requester removed their own comment, track for moderation penalties
+    if (isAuthor) {
+      this.moderationService.trackCommentAction(requester.id).catch((err) => {
+        // don't block the response if moderation tracking fails
+      });
+    }
+
     return {
       success: true,
       removedCount: idsToRemove.length,
@@ -329,7 +345,12 @@ export class CommentService {
     if (!requester) {
       throw new NotFoundException('Usuario no encontrado en el sistema.');
     }
-    this.ensureUserCanComment(requester.isActive);
+
+    if (requester.status !== 'ACTIVE') {
+      throw new ForbiddenException(
+        'Tu cuenta está en modo solo lectura durante la sanción.',
+      );
+    }
 
     const comment = await this.commentRepository.findById(input.commentId);
     if (!comment) {
@@ -365,6 +386,9 @@ export class CommentService {
       challengeId: idea.challengeId,
       ideaId: idea.id,
     });
+
+    // Track edits for moderation penalties (only authors can edit)
+    this.moderationService.trackCommentAction(requester.id).catch(() => {});
 
     return updatedComment;
   }

@@ -5,6 +5,7 @@ import { commentService } from '../../services/comment.service';
 import type { Comment } from '../../types/models';
 import CommentForm from './CommentForm';
 import CommentItem from './CommentItem';
+import { useAuth } from '../../context/AuthContext';
 
 interface CommentsSectionProps {
   ideaId: string;
@@ -297,6 +298,9 @@ export const CommentsSection = ({
   const [shouldScrollToEnd, setShouldScrollToEnd] = useState(false);
   const listEndRef = useRef<HTMLDivElement | null>(null);
   const requestIdRef = useRef(0);
+  const { userProfile } = useAuth();
+  const isReadOnlyByPenalty = userProfile?.status === 'SOFT_BLOCK' || userProfile?.status === 'SUSPENDED';
+  const isReadOnlyMode = disabled || isReadOnlyByPenalty;
 
   const loadComments = useCallback(async () => {
     const requestId = ++requestIdRef.current;
@@ -405,6 +409,12 @@ export const CommentsSection = ({
   const handleWithdraw = useCallback(async (commentId: string) => {
     setSubmitSuccess(null);
 
+    // Warning confirmation before deleting a comment
+    const confirmMsg = 'Estás a punto de borrar este comentario. Si borras o editas muchos comentarios en poco tiempo, tu cuenta podría ser desactivada temporalmente. ¿Deseas continuar?';
+    if (!window.confirm(confirmMsg)) {
+      return;
+    }
+
     const previous = comments;
     setComments((prev) => removeCommentFromTree(prev, commentId));
 
@@ -467,15 +477,20 @@ export const CommentsSection = ({
         <Meta>{totalVisibleComments} comentarios</Meta>
       </Header>
 
-      {!disabled && (
+      {!isReadOnlyMode && (
         <FormCard>
           <CommentForm
             submitLabel="Publicar comentario"
             placeholder="Escribe un comentario sobre esta idea..."
             isSubmitting={isCreating}
+            disabled={isReadOnlyMode}
             onSubmit={handleCreateComment}
           />
         </FormCard>
+      )}
+
+      {isReadOnlyMode && (
+        <ErrorState>Tu cuenta está en modo solo lectura durante la sanción. Solo puedes consultar contenido.</ErrorState>
       )}
 
       {submitSuccess && <SuccessState>{submitSuccess}</SuccessState>}
@@ -497,7 +512,7 @@ export const CommentsSection = ({
               onReply={handleReply}
               onEdit={handleEditComment}
               onWithdraw={handleWithdraw}
-              disabled={disabled}
+                disabled={isReadOnlyMode}
             />
           ))}
           <div ref={listEndRef} />

@@ -53,6 +53,11 @@ export class IdeaService {
           'No encontramos un usuario interno asociado a la sesión actual.',
       });
     }
+    if (user.status !== 'ACTIVE') {
+      throw new ForbiddenException(
+        'Tu cuenta está en modo solo lectura durante la sanción.',
+      );
+    }
     return user.id;
   }
 

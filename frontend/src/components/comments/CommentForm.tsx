@@ -5,6 +5,7 @@ interface CommentFormProps {
   placeholder?: string;
   submitLabel?: string;
   isSubmitting?: boolean;
+  disabled?: boolean;
   onSubmit: (content: string) => Promise<void> | void;
   onCancel?: () => void;
   cancelLabel?: string;
@@ -169,6 +170,7 @@ export const CommentForm = ({
   cancelLabel = 'Cancelar',
   helperText = 'Necesitas iniciar sesión y escribir entre 2 y 2000 caracteres.',
   isSubmitting = false,
+  disabled = false,
   onSubmit,
   onCancel,
   initialContent = '',
@@ -205,6 +207,7 @@ export const CommentForm = ({
     <Form onSubmit={handleSubmit}>
       <TextArea
         value={content}
+        disabled={disabled || isSubmitting}
         onChange={(event) => {
           setContent(event.target.value);
           if (error) {
@@ -219,7 +222,7 @@ export const CommentForm = ({
         maxLength={COMMENT_FORM_RULES.maxLength}
       />
 
-      <HelperText>{helperText}</HelperText>
+      <HelperText>{disabled ? 'Tu cuenta está en modo solo lectura durante la sanción.' : helperText}</HelperText>
       <CounterText $danger={isNearLimit}>
         {normalizedPreview.length}/{COMMENT_FORM_RULES.maxLength} caracteres - {words} palabras
       </CounterText>
@@ -228,11 +231,11 @@ export const CommentForm = ({
 
       <Actions>
         {onCancel && (
-          <Button type="button" $variant="ghost" onClick={onCancel} disabled={isSubmitting}>
+          <Button type="button" $variant="ghost" onClick={onCancel} disabled={disabled || isSubmitting}>
             {cancelLabel}
           </Button>
         )}
-        <Button type="submit" $variant="primary" disabled={isSubmitting}>
+        <Button type="submit" $variant="primary" disabled={disabled || isSubmitting}>
           {isSubmitting ? 'Enviando...' : submitLabel}
         </Button>
       </Actions>

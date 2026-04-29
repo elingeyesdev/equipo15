@@ -14,6 +14,7 @@ interface ActionLog {
 export class ModerationService {
   private readonly logger = new Logger(ModerationService.name);
   private readonly unlikeHistory = new Map<string, ActionLog[]>();
+  private readonly commentHistory = new Map<string, ActionLog[]>();
 
   constructor(
     private readonly userRepository: UserRepository,
@@ -45,6 +46,33 @@ export class ModerationService {
 
     if (unlikesLast30Min >= rules.likesThresholdPhase1) {
       await this.applyPenalty(userId, 'SOFT_BLOCK', rules.penaltyHoursPhase1);
+      return;
+    }
+  }
+
+  async trackCommentAction(userId: string): Promise<void> {
+    const now = Date.now();
+    let history = this.commentHistory.get(userId) || [];
+
+    history.push({ timestamp: now });
+
+    const sixtyMinsAgo = now - 60 * 60 * 1000;
+    history = history.filter((log) => log.timestamp > sixtyMinsAgo);
+    this.commentHistory.set(userId, history);
+
+    const thirtyMinsAgo = now - 30 * 60 * 1000;
+    const commentsLast30Min = history.filter((log) => log.timestamp > thirtyMinsAgo).length;
+    const commentsLast60Min = history.length;
+
+    const rules = MODERATION_RULES[CURRENT_SCALE];
+
+    if (commentsLast60Min >= (rules as any).commentsThresholdPhase2) {
+      await this.applyPenalty(userId, 'SUSPENDED', (rules as any).commentPenaltyHoursPhase2);
+      return;
+    }
+
+    if (commentsLast30Min >= (rules as any).commentsThresholdPhase1) {
+      await this.applyPenalty(userId, 'SOFT_BLOCK', (rules as any).commentPenaltyHoursPhase1);
       return;
     }
   }

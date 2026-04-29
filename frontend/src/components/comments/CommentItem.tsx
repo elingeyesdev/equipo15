@@ -193,6 +193,7 @@ export const CommentItem = memo(({ comment, onReply, onEdit, onWithdraw, depth =
           cancelLabel="Cancelar"
           initialContent={comment.content}
           isSubmitting={isSubmittingEdit}
+          disabled={disabled}
           onSubmit={handleEdit}
           onCancel={() => setIsEditing(false)}
         />
@@ -208,6 +209,7 @@ export const CommentItem = memo(({ comment, onReply, onEdit, onWithdraw, depth =
           submitLabel="Responder"
           placeholder="Escribe tu respuesta..."
           isSubmitting={isSubmittingReply}
+          disabled={disabled}
           onSubmit={handleReply}
           onCancel={() => setIsReplying(false)}
         />
