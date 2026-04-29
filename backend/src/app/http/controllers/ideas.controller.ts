@@ -97,4 +97,13 @@ export class IdeasController {
   addLike(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
     return this.ideaService.addLike(id, request.user.uid);
   }
+
+  @Post(':id/favorite')
+  @ApiOperation({ summary: 'Favorite or unfavorite an idea' })
+  toggleFavorite(
+    @Param('id') id: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.ideaService.toggleFavorite(id, request.user.uid);
+  }
 }

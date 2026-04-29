@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
 import type { PlaneIdea } from '../types';
 import LikeButton from './LikeButton';
+import FavoriteButton from './FavoriteButton';
 import { Pista8Theme } from '../../../config/theme';
 import CommentsSection from '../../../components/comments/CommentsSection';
 import { useAuth } from '../../../context/AuthContext';
@@ -506,6 +507,7 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
 
           <SectionBlock>
             <ActionsRow>
+              <FavoriteButton ideaId={idea.id} hasFavorited={idea.hasFavorited} />
               <LikeButton 
                 ideaId={idea.id} 
                 initialLikes={idea.likesCount} 

@@ -25,6 +25,7 @@ const buildPlanes = (
     problem: idea.problem,
     solution: idea.solution,
     hasVoted: idea.hasVoted ?? false,
+    hasFavorited: idea.hasFavorited ?? false,
     authorId: idea.authorId || '',
     createdAt: idea.createdAt,
     authorRealName: idea.author?.displayName,
@@ -118,6 +119,15 @@ export const useWallSocket = (
     };
     window.addEventListener('pista8:vote_changed', handleLocalVoteChange);
 
+    const handleLocalFavoriteChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { ideaId, isFavorite } = customEvent.detail;
+      setIdeas(prev => prev.map(idea =>
+        idea.id === ideaId ? { ...idea, hasFavorited: isFavorite } : idea
+      ));
+    };
+    window.addEventListener('pista8:favorite_changed', handleLocalFavoriteChange);
+
     socket.on('idea_created', (rawIdea: RawIdea) => {
       setIdeas(prev => {
         if (prev.some(p => p.id === rawIdea.id || p.id === rawIdea._id)) return prev;
@@ -134,6 +144,7 @@ export const useWallSocket = (
           authorFacultyId: rawIdea.author?.facultyId,
           problem: rawIdea.problem,
           solution: rawIdea.solution,
+          hasFavorited: rawIdea.hasFavorited ?? false,
           authorId: rawIdea.authorId || '',
           createdAt: rawIdea.createdAt,
           authorRealName: rawIdea.author?.displayName,
@@ -165,6 +176,7 @@ export const useWallSocket = (
       socket.disconnect();
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
       window.removeEventListener('pista8:vote_changed', handleLocalVoteChange);
+      window.removeEventListener('pista8:favorite_changed', handleLocalFavoriteChange);
     };
   }, [scheduleFlush, token, fallbackChallengeTitle]);
 

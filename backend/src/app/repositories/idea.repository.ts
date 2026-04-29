@@ -9,6 +9,7 @@ interface IdeaWhereInput {
 
 export interface IdeaWithVoteStatus extends Idea {
   hasVoted: boolean;
+  hasFavorited: boolean;
 }
 
 @Injectable()
@@ -115,16 +116,20 @@ export class IdeaRepository {
         },
         challenge: { select: { status: true } },
         ...(userId
-          ? { ideaLikes: { where: { userId }, select: { id: true } } }
+          ? {
+              ideaLikes: { where: { userId }, select: { id: true } },
+              ideaFavorites: { where: { userId }, select: { id: true } },
+            }
           : {}),
       },
     });
 
     const enriched: IdeaWithVoteStatus[] = data.map((idea) => {
-      const { ideaLikes, ...rest } = idea as any;
+      const { ideaLikes, ideaFavorites, ...rest } = idea as any;
       return {
         ...rest,
         hasVoted: Array.isArray(ideaLikes) && ideaLikes.length > 0,
+        hasFavorited: Array.isArray(ideaFavorites) && ideaFavorites.length > 0,
       } as IdeaWithVoteStatus;
     });
 
@@ -190,6 +195,25 @@ export class IdeaRepository {
       }),
     ]);
     return updated;
+  }
+
+  async checkUserFavorite(ideaId: string, userId: string): Promise<boolean> {
+    const count = await this.prisma.ideaFavorite.count({
+      where: { ideaId, userId },
+    });
+    return count > 0;
+  }
+
+  async registerFavorite(ideaId: string, userId: string): Promise<void> {
+    await this.prisma.ideaFavorite.create({
+      data: { ideaId, userId },
+    });
+  }
+
+  async removeFavorite(ideaId: string, userId: string): Promise<void> {
+    await this.prisma.ideaFavorite.delete({
+      where: { ideaId_userId: { ideaId, userId } },
+    });
   }
 
   async incrementComments(id: string): Promise<Idea> {

@@ -151,6 +151,7 @@ interface SkyCanvasProps {
   sort?: SortMode;
   challengeStatus?: string;
   onIdeasLoaded?: (ideas: RawIdea[]) => void;
+  onlyFavorites?: boolean;
 }
 
 interface SkyCanvasSceneProps {
@@ -165,9 +166,10 @@ interface SkyCanvasSceneProps {
   search?: string;
   sort?: SortMode;
   challengeStatus?: string;
+  onlyFavorites?: boolean;
 }
 
-const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress = 0, challengeId, challengeTitle, challengeFacultyId, isDashboardLoading = false, search, sort, challengeStatus }: SkyCanvasSceneProps) => {
+const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress = 0, challengeId, challengeTitle, challengeFacultyId, isDashboardLoading = false, search, sort, challengeStatus, onlyFavorites = false }: SkyCanvasSceneProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState(800);
   const [showPodium, setShowPodium] = useState(false);
@@ -183,9 +185,12 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
   }, [socketPhase]);
 
   const displayIdeas = useMemo(() => {
-    const base = sort ? sortIdeas(ideas, sort) : ideas;
+    const filteredIdeas = onlyFavorites
+      ? ideas.filter((idea) => Boolean(idea.hasFavorited))
+      : ideas;
+    const base = sort ? sortIdeas(filteredIdeas, sort) : filteredIdeas;
     return base.map(i => ({ ...i, challengeStatus }));
-  }, [ideas, sort, challengeStatus]);
+  }, [ideas, sort, challengeStatus, onlyFavorites]);
 
   const currentSelectedIdea = useMemo(() => {
     if (!selectedIdea) return null;
@@ -231,6 +236,8 @@ const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress 
               }}>
                 {search && search.trim().length > 0 ? (
                   <>Sin resultados para: "{search}"</>
+                ) : onlyFavorites ? (
+                  <>Aun no tienes ideas marcadas como favoritas.</>
                 ) : !challengeId ? (
                   <>
                     No hay retos activos en tu tripulación. ¡Regresa más tarde!
@@ -284,7 +291,7 @@ SkyCanvasScene.displayName = 'SkyCanvasScene';
 
 
 
-const SkyCanvas = memo(({ challengeId, challengeTitle, challengeFacultyId, isDashboardLoading, search, sort, challengeStatus, onIdeasLoaded }: SkyCanvasProps) => {
+const SkyCanvas = memo(({ challengeId, challengeTitle, challengeFacultyId, isDashboardLoading, search, sort, challengeStatus, onIdeasLoaded, onlyFavorites = false }: SkyCanvasProps) => {
   const [token, setToken] = useState<string>();
   const [publicIdeas, setPublicIdeas] = useState<RawIdea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -375,7 +382,7 @@ const SkyCanvas = memo(({ challengeId, challengeTitle, challengeFacultyId, isDas
     };
   }, [challengeId, search, sort]);
 
-  return <SkyCanvasScene initialIdeas={publicIdeas} token={token} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeTitle={challengeTitle} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} search={search} sort={sort} challengeStatus={challengeStatus} />;
+  return <SkyCanvasScene initialIdeas={publicIdeas} token={token} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeTitle={challengeTitle} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} search={search} sort={sort} challengeStatus={challengeStatus} onlyFavorites={onlyFavorites} />;
 });
 
 SkyCanvas.displayName = 'SkyCanvas';

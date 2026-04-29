@@ -43,6 +43,7 @@ model User {
   penaltyExpiresAt  DateTime?
   ideas             Idea[]
   ideaLikes         IdeaLike[]
+  ideaFavorites     IdeaFavorite[]
   comments          Comment[]
   evaluations       Evaluation[]
   challenges        Challenge[]  @relation("AuthorChallenges")
@@ -93,6 +94,7 @@ model Idea {
   evaluations   Evaluation[]
   comments      Comment[]
   ideaLikes     IdeaLike[]
+  ideaFavorites IdeaFavorite[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
@@ -145,6 +147,19 @@ model IdeaLike {
   idea      Idea     @relation(fields: [ideaId], references: [id])
   ideaId    String
   user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([ideaId, userId])
+  @@index([ideaId])
+  @@index([userId])
+}
+
+model IdeaFavorite {
+  id        String   @id @default(uuid())
+  idea      Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  ideaId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
   createdAt DateTime @default(now())
 

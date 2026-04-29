@@ -13,6 +13,7 @@ export interface PlaneIdea {
   problem?: string;
   solution?: string;
   hasVoted?: boolean;
+  hasFavorited?: boolean;
   authorId: string;
   createdAt?: string;
   authorRealName?: string;
@@ -57,6 +58,7 @@ export interface RawIdea {
   commentsCount?: number;
   isAnonymous?: boolean;
   hasVoted?: boolean;
+  hasFavorited?: boolean;
   authorId?: string;
   createdAt?: string;
 }

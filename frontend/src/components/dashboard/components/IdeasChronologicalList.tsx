@@ -327,6 +327,7 @@ const rawToPlane = (idea: RawIdea, index: number): PlaneIdea => ({
   problem: idea.problem,
   solution: idea.solution,
   hasVoted: idea.hasVoted ?? false,
+  hasFavorited: idea.hasFavorited ?? false,
   authorId: idea.authorId ?? '',
   createdAt: idea.createdAt,
   authorRealName: idea.author?.displayName,

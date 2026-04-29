@@ -446,4 +446,33 @@ export class IdeaService {
     }
     return updated;
   }
+
+  async toggleFavorite(ideaId: string, firebaseUid: string): Promise<Idea | any> {
+    const [userId, idea] = await Promise.all([
+      this.resolveAuthorId(firebaseUid),
+      this.ideaRepository.findById(ideaId),
+    ]);
+
+    if (!idea) {
+      throw new BadRequestException('La idea no existe.');
+    }
+
+    const hasFavorited = await this.ideaRepository.checkUserFavorite(ideaId, userId);
+
+    if (hasFavorited) {
+      await this.ideaRepository.removeFavorite(ideaId, userId);
+      this.invalidateCache();
+      return {
+        ...idea,
+        hasFavorited: false,
+      };
+    }
+
+    await this.ideaRepository.registerFavorite(ideaId, userId);
+    this.invalidateCache();
+    return {
+      ...idea,
+      hasFavorited: true,
+    };
+  }
 }

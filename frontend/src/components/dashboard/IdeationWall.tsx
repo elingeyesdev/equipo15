@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import styled from 'styled-components';
 import { useAuth } from '../../context/AuthContext';
 import SkyCanvas from '../../features/sky-wall';
 
@@ -23,6 +24,23 @@ import InnovationStepsPanel from './components/InnovationStepsPanel';
 import { useDashboardState } from './hooks/useDashboardState';
 import { useIdeationForm } from './hooks/useIdeationForm';
 
+const FavoritesFilterButton = styled.button<{ $active: boolean }>`
+  border: 1px solid ${(p) => (p.$active ? '#fdba74' : '#e5e7eb')};
+  background: ${(p) => (p.$active ? '#fff7ed' : '#ffffff')};
+  color: ${(p) => (p.$active ? '#c2410c' : '#4b5563')};
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+
+  &:hover {
+    border-color: #fdba74;
+    color: #c2410c;
+  }
+`;
+
 const IdeationWall = () => {
   const { user, userProfile } = useAuth();
   const ds = useDashboardState();
@@ -32,6 +50,7 @@ const IdeationWall = () => {
   const [listLoading, setListLoading] = useState(false);
   const [selectedListIdea, setSelectedListIdea] = useState<PlaneIdea | null>(null);
   const [showAllIdeas, setShowAllIdeas] = useState(false);
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
 
   const handleIdeasLoaded = (ideas: RawIdea[]) => {
     setWallIdeas(ideas);
@@ -52,6 +71,29 @@ const IdeationWall = () => {
     window.addEventListener('pista8:vote_changed', handleLocalVoteChange);
     return () => window.removeEventListener('pista8:vote_changed', handleLocalVoteChange);
   }, []);
+
+  useEffect(() => {
+    const handleFavoriteChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { ideaId, isFavorite } = customEvent.detail;
+      setWallIdeas((prev) =>
+        prev.map((idea) =>
+          idea.id === ideaId || idea._id === ideaId
+            ? { ...idea, hasFavorited: isFavorite }
+            : idea,
+        ),
+      );
+      setSelectedListIdea((prev) =>
+        prev && prev.id === ideaId ? { ...prev, hasFavorited: isFavorite } : prev,
+      );
+    };
+    window.addEventListener('pista8:favorite_changed', handleFavoriteChange);
+    return () => window.removeEventListener('pista8:favorite_changed', handleFavoriteChange);
+  }, []);
+
+  const displayedWallIdeas = onlyFavorites
+    ? wallIdeas.filter((idea) => Boolean(idea.hasFavorited))
+    : wallIdeas;
 
   const resolvedName = resolveDisplayName(userProfile as any);
   const fullName = resolvedName || user?.email || '';
@@ -130,6 +172,15 @@ const IdeationWall = () => {
             ds.setSortOrder(v);
             setListLoading(true);
           }} />
+          <FavoritesFilterButton
+            type="button"
+            $active={onlyFavorites}
+            onClick={() => setOnlyFavorites((current) => !current)}
+            aria-label={onlyFavorites ? 'Mostrar todas las ideas' : 'Mostrar solo favoritos'}
+            title={onlyFavorites ? 'Mostrar todas las ideas' : 'Mostrar solo favoritos'}
+          >
+            {onlyFavorites ? 'Mostrando: Favoritos' : 'Filtrar: Solo favoritos'}
+          </FavoritesFilterButton>
         </div>
 
         <SkyCanvas
@@ -141,6 +192,7 @@ const IdeationWall = () => {
           sort={ds.sortOrder ?? undefined}
           challengeStatus={ds.selectedChallenge?.status}
           onIdeasLoaded={handleIdeasLoaded}
+          onlyFavorites={onlyFavorites}
         />
 
         {!showAllIdeas ? (
@@ -149,7 +201,7 @@ const IdeationWall = () => {
               <S.SplitGrid as={motion.div} layout>
                 <motion.div layout>
                   <IdeasChronologicalList
-                    ideas={wallIdeas}
+                    ideas={displayedWallIdeas}
                     sortOrder={ds.sortOrder}
                     isLoading={listLoading}
                     onSelectIdea={setSelectedListIdea}
@@ -226,7 +278,7 @@ const IdeationWall = () => {
             <S.FullWidthContainer as={motion.div} layout>
               {ds.sortOrder && (
                 <IdeasChronologicalList
-                  ideas={wallIdeas}
+                  ideas={displayedWallIdeas}
                   sortOrder={ds.sortOrder}
                   isLoading={listLoading}
                   onSelectIdea={setSelectedListIdea}
