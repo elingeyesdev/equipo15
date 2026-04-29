@@ -8,17 +8,15 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import * as admin from 'firebase-admin';
+import { CORS_ORIGINS } from '../../common/cors';
 
 @WebSocketGateway({
   cors: {
-    origin: [
-      /^http:\/\/localhost:\d+$/,
-      'https://pista8-f8e6e.web.app',
-      'https://pista8.com',
-    ],
+    origin: CORS_ORIGINS,
     credentials: true,
   },
 })
+
 export class EventsGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {

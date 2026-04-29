@@ -1,0 +1,94 @@
+# ============================================================
+# PISTA 8 | DOCKER COMPOSE
+# Stack: PostgreSQL + pgAdmin + Backend NestJS
+# MongoDB → Atlas (cloud), Frontend → Firebase Hosting
+#
+# Uso:
+#   docker compose up --build -d       ← primera vez o con cambios
+#   docker compose up -d               ← arranque normal
+#   docker compose logs backend -f     ← ver logs del backend
+#   docker compose down                ← detener y eliminar contenedores
+#   docker compose down -v             ← también elimina volúmenes (reset BD)
+# ============================================================
+
+services:
+  # ──────────────────────────────────────────────────────────
+  # POSTGRESQL — Base de datos relacional (reemplaza Supabase)
+  # ──────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: pista8_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pista8_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pista8_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-pista8_db}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pista8_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pista8_user} -d ${POSTGRES_DB:-pista8_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────────────────────────────────────
+  # PGADMIN — Interfaz visual para PostgreSQL
+  # Acceder en: http://localhost:5050
+  # Login: admin@pista8.com / admin123 (o PGADMIN_PASSWORD)
+  # ──────────────────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pista8_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@pista8.com
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pista8_network
+
+  # ──────────────────────────────────────────────────────────
+  # BACKEND NestJS
+  # API:     http://localhost:3000/api
+  # Swagger: http://localhost:3000/docs
+  #
+  # El entrypoint.sh ejecuta `prisma migrate deploy` automáticamente
+  # antes de arrancar el servidor.
+  # ──────────────────────────────────────────────────────────
+  backend:
+    build: ./backend
+    container_name: pista8_backend
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      # Puerto 5433 porque el 5432 lo usa el postgres local de la máquina
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-pista8_user}:${POSTGRES_PASSWORD:-pista8_pass}@postgres:5432/${POSTGRES_DB:-pista8_db}?schema=public"
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pista8_network
+
+# ──────────────────────────────────────────────────────────
+# VOLÚMENES PERSISTENTES
+# ──────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+
+# ──────────────────────────────────────────────────────────
+# RED INTERNA
+# ──────────────────────────────────────────────────────────
+networks:
+  pista8_network:
+    driver: bridge

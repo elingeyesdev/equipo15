@@ -7,6 +7,8 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import helmet from 'helmet';
 import { PrismaClientExceptionFilter } from './common/filters/prisma-client-exception.filter';
 import { HttpAdapterHost } from '@nestjs/core';
+import { CORS_ORIGINS } from './common/cors';
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,14 +18,11 @@ async function bootstrap() {
   app.use(helmet());
 
   app.enableCors({
-    origin: [
-      /^http:\/\/localhost:\d+$/,
-      'https://pista8-f8e6e.web.app',
-      'https://pista8.com',
-    ],
+    origin: CORS_ORIGINS,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
+
 
   app.useGlobalInterceptors(new TransformInterceptor());
 
