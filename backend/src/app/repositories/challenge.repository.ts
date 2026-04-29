@@ -257,6 +257,198 @@ export class ChallengeRepository {
     };
   }
 
+    async getInnovationStatsByChallenge(challengeId: string, authorId: string) {
+      const challenge = await this.prisma.challenge.findFirst({
+        where: {
+          id: challengeId,
+          authorId,
+          status: { in: ['Activo', 'Finalizado'] },
+        },
+        select: { id: true },
+      });
+
+      if (!challenge) {
+        return {
+          ideasByFaculty: [],
+          interactionsByDay: [],
+          kpis: {
+            totalIdeas: 0,
+            totalVotes: 0,
+            mostActiveUser: null,
+            leadingFaculty: null,
+          },
+        };
+      }
+
+      return this.getInnovationStatsScoped(authorId, [challengeId]);
+    }
+
+    async getCompanyChallenges(authorId: string) {
+      return this.prisma.challenge.findMany({
+        where: {
+          authorId,
+          status: { in: ['Activo', 'Finalizado'] },
+        },
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          endDate: true,
+          publicationDate: true,
+        },
+        orderBy: [{ publicationDate: 'desc' }, { createdAt: 'desc' }],
+      });
+    }
+
+    private async getInnovationStatsScoped(authorId: string, challengeIds: string[]) {
+      const FACULTY_NAMES: Record<number, string> = {
+        1: 'Ingeniería',
+        2: 'Medicina',
+        3: 'Ciencias Exactas',
+        4: 'Humanidades',
+        5: 'Derecho',
+        6: 'Economía',
+        7: 'Arquitectura',
+        8: 'Educación',
+      };
+
+      if (challengeIds.length === 0) {
+        return {
+          ideasByFaculty: [],
+          interactionsByDay: [],
+          kpis: {
+            totalIdeas: 0,
+            totalVotes: 0,
+            mostActiveUser: null,
+            leadingFaculty: null,
+          },
+        };
+      }
+
+      const groupedIdeasByAuthor = await this.prisma.idea.groupBy({
+        by: ['authorId'],
+        where: { challengeId: { in: challengeIds }, status: 'public' },
+        _count: { _all: true },
+        _sum: { votesCount: true },
+      });
+
+      const groupedAuthorIds = groupedIdeasByAuthor.map((item) => item.authorId);
+      const groupedAuthors = groupedAuthorIds.length
+        ? await this.prisma.user.findMany({
+            where: { id: { in: groupedAuthorIds } },
+            select: {
+              id: true,
+              facultyId: true,
+              displayName: true,
+              nickname: true,
+              email: true,
+            },
+          })
+        : [];
+
+      const authorFacultyMap = new Map<string, number>();
+      groupedAuthors.forEach((author) => {
+        if (author.facultyId != null) {
+          authorFacultyMap.set(author.id, author.facultyId);
+        }
+      });
+
+      const facultyMap = new Map<number, { ideasCount: number; votesCount: number }>();
+      groupedIdeasByAuthor.forEach((group) => {
+        const facultyId = authorFacultyMap.get(group.authorId);
+        if (facultyId == null) return;
+
+        const current = facultyMap.get(facultyId) ?? { ideasCount: 0, votesCount: 0 };
+        current.ideasCount += group._count._all;
+        current.votesCount += group._sum.votesCount ?? 0;
+        facultyMap.set(facultyId, current);
+      });
+
+      const ideasByFaculty = Array.from(facultyMap.entries())
+        .map(([facultyId, aggregate]) => ({
+          facultyId,
+          facultyName: FACULTY_NAMES[facultyId] ?? `Facultad ${facultyId}`,
+          ideasCount: aggregate.ideasCount,
+          votesCount: aggregate.votesCount,
+        }))
+        .sort((a, b) => b.ideasCount - a.ideasCount);
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const recentIdeas = await this.prisma.idea.findMany({
+        where: {
+          challengeId: { in: challengeIds },
+          status: 'public',
+          createdAt: { gte: thirtyDaysAgo },
+        },
+        select: {
+          likesCount: true,
+          commentsCount: true,
+          createdAt: true,
+        },
+      });
+
+      const dayMap = new Map<string, { date: string; likes: number; comments: number }>();
+      for (let d = 0; d < 30; d++) {
+        const dt = new Date();
+        dt.setDate(dt.getDate() - (29 - d));
+        const key = dt.toISOString().split('T')[0];
+        dayMap.set(key, { date: key, likes: 0, comments: 0 });
+      }
+
+      recentIdeas.forEach((idea) => {
+        const key = new Date(idea.createdAt).toISOString().split('T')[0];
+        const entry = dayMap.get(key);
+        if (entry) {
+          entry.likes += idea.likesCount ?? 0;
+          entry.comments += idea.commentsCount ?? 0;
+        }
+      });
+
+      const interactionsByDay = Array.from(dayMap.values());
+
+      const totalIdeas = ideasByFaculty.reduce((sum, item) => sum + item.ideasCount, 0);
+      const totalVotes = ideasByFaculty.reduce((sum, item) => sum + item.votesCount, 0);
+      const leadingFaculty = ideasByFaculty[0]
+        ? {
+            facultyId: ideasByFaculty[0].facultyId,
+            facultyName: ideasByFaculty[0].facultyName,
+            ideasCount: ideasByFaculty[0].ideasCount,
+          }
+        : null;
+
+      let mostActiveUser: { name: string; ideaCount: number } | null = null;
+      if (groupedAuthors.length > 0) {
+        const authorStats = groupedAuthors
+          .map((author) => ({
+            author,
+            ideaCount:
+              groupedIdeasByAuthor.find((item) => item.authorId === author.id)?._count._all ?? 0,
+          }))
+          .sort((a, b) => b.ideaCount - a.ideaCount);
+
+        if (authorStats[0]) {
+          const topAuthor = authorStats[0].author;
+          mostActiveUser = {
+            name: topAuthor.displayName || topAuthor.nickname || topAuthor.email || 'Usuario',
+            ideaCount: authorStats[0].ideaCount,
+          };
+        }
+      }
+
+      return {
+        ideasByFaculty,
+        interactionsByDay,
+        kpis: {
+          totalIdeas,
+          totalVotes,
+          mostActiveUser,
+          leadingFaculty,
+        },
+      };
+    }
+
   // ─── Innovation Stats for Company Dashboard (E1.4) ───────────────────────────
   async getInnovationStats(authorId: string) {
     const FACULTY_NAMES: Record<number, string> = {

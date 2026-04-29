@@ -127,8 +127,20 @@ export class ChallengesController {
       },
     },
   })
-  getInnovationStats(@Request() req: AuthenticatedRequest) {
-    return this.challengeService.getInnovationStats(req.user.uid);
+  @ApiQuery({ name: 'challengeId', required: false, type: String })
+  getInnovationStats(
+    @Request() req: AuthenticatedRequest,
+    @Query('challengeId') challengeId?: string,
+  ) {
+    return this.challengeService.getInnovationStats(req.user.uid, challengeId);
+  }
+
+  @Get('company/challenges')
+  @UseGuards(RolesGuard)
+  @Roles('company')
+  @ApiOperation({ summary: 'Get company-owned challenges for dashboard filters' })
+  getCompanyChallenges(@Request() req: AuthenticatedRequest) {
+    return this.challengeService.getCompanyChallenges(req.user.uid);
   }
 
   @Patch(':id')

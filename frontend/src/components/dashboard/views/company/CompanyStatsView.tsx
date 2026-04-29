@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { Pista8Theme } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
+import type { CompanyChallengeOption } from '../../../../services/challenge.service';
 import type {
   InnovationInteractionByDayItem,
   InnovationStatsResponse,
@@ -213,6 +214,75 @@ const RefreshButton = styled(RetryButton)`
   margin-top: 0;
 `;
 
+const ControlsColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  min-width: min(100%, 560px);
+`;
+
+const FiltersRow = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  gap: 10px;
+  width: 100%;
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const FilterField = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const FilterLabel = styled.span`
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: ${colors.textMuted};
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(72, 80, 84, 0.16);
+  background: white;
+  color: ${colors.textMain};
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 12px;
+  outline: none;
+  box-shadow: 0 6px 14px rgba(72, 80, 84, 0.05);
+
+  &:focus {
+    border-color: ${Pista8Theme.primary};
+    box-shadow: 0 0 0 3px rgba(254, 65, 10, 0.12);
+  }
+`;
+
+const ChallengeSelect = styled.select`
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(72, 80, 84, 0.16);
+  background: white;
+  color: ${colors.textMain};
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 12px;
+  outline: none;
+  box-shadow: 0 6px 14px rgba(72, 80, 84, 0.05);
+  appearance: none;
+
+  &:focus {
+    border-color: ${Pista8Theme.primary};
+    box-shadow: 0 0 0 3px rgba(254, 65, 10, 0.12);
+  }
+`;
+
 const EmptyState = styled.div`
   border: 1px dashed rgba(72, 80, 84, 0.28);
   background: #ffffff;
@@ -239,8 +309,21 @@ export const CompanyStatsView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [usingMock, setUsingMock] = useState(false);
+  const [selectedChallengeId, setSelectedChallengeId] = useState<string>('all');
+  const [challengeOptions, setChallengeOptions] = useState<CompanyChallengeOption[]>([]);
+  const [challengeQuery, setChallengeQuery] = useState('');
 
-  const fetchStats = useCallback(async () => {
+  const loadChallengeOptions = useCallback(async () => {
+    try {
+      const options = await challengeService.getCompanyChallenges();
+      setChallengeOptions(Array.isArray(options) ? options : []);
+    } catch (err) {
+      console.error('Error cargando retos de company:', err);
+      setChallengeOptions([]);
+    }
+  }, []);
+
+  const fetchStats = useCallback(async (challengeId?: string) => {
     setLoading(true);
     setError(null);
 
@@ -252,7 +335,7 @@ export const CompanyStatsView = () => {
         return;
       }
 
-      const response = await challengeService.getInnovationStats();
+      const response = await challengeService.getInnovationStats(challengeId);
       setStats(response);
       setUsingMock(false);
     } catch (err) {
@@ -266,8 +349,36 @@ export const CompanyStatsView = () => {
   }, []);
 
   useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    void loadChallengeOptions();
+  }, [loadChallengeOptions]);
+
+  useEffect(() => {
+    void fetchStats(selectedChallengeId === 'all' ? undefined : selectedChallengeId);
+  }, [fetchStats, selectedChallengeId]);
+
+  const handleRefresh = () => {
+    void fetchStats(selectedChallengeId === 'all' ? undefined : selectedChallengeId);
+  };
+
+  const filteredChallengeOptions = useMemo(
+    () => challengeOptions.filter((challenge) => {
+      const normalizedQuery = challengeQuery.trim().toLowerCase();
+      return !normalizedQuery || challenge.title.toLowerCase().includes(normalizedQuery);
+    }),
+    [challengeOptions, challengeQuery],
+  );
+
+  const challengeOptionsForSelect = useMemo(() => {
+    if (selectedChallengeId === 'all') return filteredChallengeOptions;
+
+    const selectedOption = challengeOptions.find((challenge) => challenge.id === selectedChallengeId);
+    if (!selectedOption) return filteredChallengeOptions;
+    if (filteredChallengeOptions.some((challenge) => challenge.id === selectedChallengeId)) {
+      return filteredChallengeOptions;
+    }
+
+    return [selectedOption, ...filteredChallengeOptions];
+  }, [challengeOptions, filteredChallengeOptions, selectedChallengeId]);
 
   const interactionSeries = useMemo(
     () => mapInteractionSeries(stats?.interactionsByDay ?? []),
@@ -293,7 +404,7 @@ export const CompanyStatsView = () => {
         <ErrorState>
           No hay datos para mostrar.
           <div>
-            <RetryButton onClick={fetchStats}>Reintentar</RetryButton>
+            <RetryButton onClick={handleRefresh}>Reintentar</RetryButton>
           </div>
         </ErrorState>
       </Container>
@@ -313,9 +424,37 @@ export const CompanyStatsView = () => {
           </Subheading>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <RefreshButton onClick={fetchStats} disabled={loading}>
-            {loading ? 'Actualizando...' : 'Refrescar'}
-          </RefreshButton>
+          <ControlsColumn>
+            <RefreshButton onClick={handleRefresh} disabled={loading}>
+              {loading ? 'Actualizando...' : 'Refrescar'}
+            </RefreshButton>
+            <FiltersRow>
+              <FilterField>
+                <FilterLabel>Buscar por nombre</FilterLabel>
+                <SearchInput
+                  value={challengeQuery}
+                  onChange={(event) => setChallengeQuery(event.target.value)}
+                  placeholder="Escribe el nombre del reto"
+                  disabled={loading}
+                />
+              </FilterField>
+              <FilterField>
+                <FilterLabel>Seleccionar reto</FilterLabel>
+                <ChallengeSelect
+                  value={selectedChallengeId}
+                  onChange={(event) => setSelectedChallengeId(event.target.value)}
+                  disabled={loading}
+                >
+                  <option value="all">Todos los retos</option>
+                  {challengeOptionsForSelect.map((challenge) => (
+                    <option key={challenge.id} value={challenge.id}>
+                      {challenge.title} · {challenge.status}
+                    </option>
+                  ))}
+                </ChallengeSelect>
+              </FilterField>
+            </FiltersRow>
+          </ControlsColumn>
           <StatusPill $mock={usingMock}>{usingMock ? 'Modo mock' : 'Datos en vivo'}</StatusPill>
         </div>
       </Header>
@@ -324,7 +463,7 @@ export const CompanyStatsView = () => {
         <ErrorState>
           {error}
           <div>
-            <RetryButton onClick={fetchStats}>Intentar de nuevo</RetryButton>
+            <RetryButton onClick={handleRefresh}>Intentar de nuevo</RetryButton>
           </div>
         </ErrorState>
       )}
@@ -363,7 +502,7 @@ export const CompanyStatsView = () => {
 
       <ChartsGrid>
         <ChartCard>
-          <ChartTitle>Grafica 1: Ideas por Facultad</ChartTitle>
+          <ChartTitle>Ideas por Facultad</ChartTitle>
           {hasFacultyData ? (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={facultySeries} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
@@ -394,7 +533,7 @@ export const CompanyStatsView = () => {
         </ChartCard>
 
         <ChartCard>
-          <ChartTitle>Grafica 2: Nivel de interaccion (Likes vs Comentarios por dia)</ChartTitle>
+          <ChartTitle>Nivel de interaccion (Likes vs Comentarios por dia)</ChartTitle>
           {hasInteractionsData ? (
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={interactionSeries} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>

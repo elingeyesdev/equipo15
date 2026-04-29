@@ -21,6 +21,14 @@ export interface ChallengePayload {
   evaluationCriteria?: EvaluationCriterion[];
 }
 
+export interface CompanyChallengeOption {
+  id: string;
+  title: string;
+  status: ChallengeStatus;
+  endDate?: string;
+  publicationDate?: string;
+}
+
 interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -67,8 +75,14 @@ export const challengeService = {
     return response.data;
   },
 
-  getInnovationStats: async (): Promise<InnovationStatsResponse> => {
-    const response = await axiosInstance.get<InnovationStatsResponse | ApiResponse<InnovationStatsResponse>>('/challenges/company/innovation-stats');
+  getInnovationStats: async (challengeId?: string): Promise<InnovationStatsResponse> => {
+    const query = challengeId ? `?challengeId=${encodeURIComponent(challengeId)}` : '';
+    const response = await axiosInstance.get<InnovationStatsResponse | ApiResponse<InnovationStatsResponse>>(`/challenges/company/innovation-stats${query}`);
+    return unwrapApiData(response.data);
+  },
+
+  getCompanyChallenges: async (): Promise<CompanyChallengeOption[]> => {
+    const response = await axiosInstance.get<ApiResponse<CompanyChallengeOption[]> | CompanyChallengeOption[]>('/challenges/company/challenges');
     return unwrapApiData(response.data);
   },
 

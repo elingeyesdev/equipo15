@@ -204,10 +204,22 @@ export class ChallengeService {
   }
 
   // ─── Innovation Stats for Company Dashboard (E1.4) ───────────────────────────
-  async getInnovationStats(uid: string) {
+  async getInnovationStats(uid: string, challengeId?: string) {
     const user = await this.userService.findByUid(uid);
     if (!user) throw new Error('Usuario no encontrado');
+    if (challengeId) {
+      return this.challengeRepository.getInnovationStatsByChallenge(
+        challengeId,
+        user.id,
+      );
+    }
     return this.challengeRepository.getInnovationStats(user.id);
+  }
+
+  async getCompanyChallenges(uid: string) {
+    const user = await this.userService.findByUid(uid);
+    if (!user) throw new Error('Usuario no encontrado');
+    return this.challengeRepository.getCompanyChallenges(user.id);
   }
 
   // ─── Finalize Podium (Company Control) ──────────────────────────────────────
