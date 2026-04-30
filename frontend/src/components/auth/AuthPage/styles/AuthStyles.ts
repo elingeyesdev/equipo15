@@ -108,6 +108,14 @@ export const FieldWrap = styled.div<{ isName?: boolean }>`
   ${p => p.isName && 'overflow: hidden;'}
 `;
 
+export const FieldHint = styled.span`
+  font-size: 12px;
+  color: #e53e3e;
+  padding: 0 4px;
+  margin-top: -2px;
+  animation: ${slideDown} 0.25s ease both;
+`;
+
 export const FieldLabel = styled.label`
   font-size: 13px;
   font-weight: 500;
@@ -357,5 +365,77 @@ export const ModalBtnRow = styled.div`
   flex-direction: column;
   gap: 12px;
   width: 100%;
-`; 
+`;
+
+export const ToastContainer = styled(motion.div)`
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  width: 100%;
+  max-width: 440px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  pointer-events: none;
+`;
+
+const toastBase = `
+  padding: 14px 18px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+`;
+
+export const SuccessToast = styled.div`
+  ${toastBase}
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #166534;
+
+  > svg:first-child {
+    flex-shrink: 0;
+    color: #22c55e;
+  }
+`;
+
+export const ErrorToast = styled.div`
+  ${toastBase}
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+  color: #c53030;
+
+  > svg:first-child {
+    flex-shrink: 0;
+  }
+`;
+
+export const ToastText = styled.span`
+  flex: 1;
+  line-height: 1.4;
+`;
+
+export const ToastClose = styled.button`
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.5;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 1;
+  }
+`;
+
 

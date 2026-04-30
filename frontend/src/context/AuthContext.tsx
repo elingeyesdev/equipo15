@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import type { User } from 'firebase/auth';
@@ -12,6 +12,7 @@ interface AuthContextType {
   loading: boolean;
   setProfile: (profile: UserProfile | null) => void;
   refetchProfile: () => Promise<void>;
+  setSuppressAuth: (value: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -19,13 +20,19 @@ const AuthContext = createContext<AuthContextType>({
   userProfile: null,
   loading: true,
   setProfile: () => { },
-  refetchProfile: async () => { }
+  refetchProfile: async () => { },
+  setSuppressAuth: () => { }
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const suppressAuthRef = useRef(false);
+
+  const setSuppressAuth = useCallback((value: boolean) => {
+    suppressAuthRef.current = value;
+  }, []);
 
   const fetchProfile = useCallback(async (firebaseUser: User): Promise<UserProfile | null> => {
     try {
@@ -75,6 +82,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (suppressAuthRef.current) {
+        return;
+      }
+
       setUser(currentUser);
       if (currentUser) {
         setLoading(true);
@@ -82,6 +93,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           let profile = await fetchProfile(currentUser);
           if (!profile) {
             profile = await syncProfile(currentUser);
+          }
+
+          if (suppressAuthRef.current) {
+            return;
           }
 
           if (profile) {
@@ -107,7 +122,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       userProfile,
       loading,
       setProfile: setUserProfile,
-      refetchProfile
+      refetchProfile,
+      setSuppressAuth
     }}>
       {children}
     </AuthContext.Provider>

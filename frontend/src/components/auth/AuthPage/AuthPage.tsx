@@ -6,8 +6,9 @@ import { toast } from 'sonner';
 
 const AuthPage = () => {
   const {
-    isLogin, setIsLogin, formData, setFormData, loading, errorVisible, handleSubmit, handleGoogleLogin,
-    passwordChecks, isFormValid, isResetMode, setIsResetMode, handleResetPassword
+    isLogin, setIsLogin, formData, setFormData, loading, errorVisible, successVisible,
+    clearError, clearSuccess, handleSubmit, handleGoogleLogin,
+    passwordChecks, isFormValid, fieldHints, isResetMode, setIsResetMode, handleResetPassword
   } = useAuthForm();
 
   const [showNoAccountModal, setShowNoAccountModal] = useState(false);
@@ -56,6 +57,56 @@ const AuthPage = () => {
 
   return (
     <S.StyledWrapper>
+      <AnimatePresence>
+        {successVisible && (
+          <S.ToastContainer
+            key="toast-success"
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -30 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+          >
+            <S.SuccessToast>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              <S.ToastText>{successVisible}</S.ToastText>
+              <S.ToastClose onClick={clearSuccess}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </S.ToastClose>
+            </S.SuccessToast>
+          </S.ToastContainer>
+        )}
+        {errorVisible && (
+          <S.ToastContainer
+            key="toast-error"
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -30 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+          >
+            <S.ErrorToast>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <S.ToastText>{errorVisible}</S.ToastText>
+              <S.ToastClose onClick={clearError}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </S.ToastClose>
+            </S.ErrorToast>
+          </S.ToastContainer>
+        )}
+      </AnimatePresence>
+
       <S.Card>
         <S.LogoWrap>
           <S.LogoSvg viewBox="0 0 280 72" xmlns="http://www.w3.org/2000/svg">
@@ -69,17 +120,6 @@ const AuthPage = () => {
         </S.LogoWrap>
 
         <S.SepLine />
-
-        {errorVisible && (
-          <S.ErrorBanner>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            {errorVisible}
-          </S.ErrorBanner>
-        )}
 
         <AnimatePresence mode="wait">
           {isResetMode ? (
@@ -134,8 +174,10 @@ const AuthPage = () => {
                       type="text"
                       placeholder="Tu nombre"
                       required={!isLogin}
+                      value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
+                    {fieldHints.name && <S.FieldHint>{fieldHints.name}</S.FieldHint>}
                   </S.FieldWrap>
                 )}
 
@@ -148,6 +190,7 @@ const AuthPage = () => {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
+                  {fieldHints.email && <S.FieldHint>{fieldHints.email}</S.FieldHint>}
                 </S.FieldWrap>
 
                 <S.FieldWrap>
@@ -157,6 +200,7 @@ const AuthPage = () => {
                       type={showPass ? "text" : "password"}
                       placeholder="••••••••"
                       required
+                      value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     />
                     <S.EyeBtn type="button" onClick={() => setShowPass(!showPass)}>
