@@ -6,3 +6,9 @@ export const Pista8Theme = {
   error: '#FF3333',
   shadow: 'rgba(72, 80, 84, 0.15)',
 };
+
+export const breakpoints = {
+  mobile: '768px',
+  tablet: '1024px',
+  desktop: '1025px',
+};

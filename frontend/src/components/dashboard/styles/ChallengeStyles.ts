@@ -97,18 +97,43 @@ export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?:
   gap: 14px;
 
   > * {
+    flex-shrink: 0;
     ${p => (!p.$forceColumn && p.$isFullWidth) && `
       width: calc(33.33% - 10px);
-      min-width: 300px;
+      min-width: min(100%, 300px);
     `}
     ${p => p.$forceColumn && 'width: 100%;'}
   }
+
+  ${p => (p.$forceColumn || !p.$isFullWidth) && `
+    max-height: 520px;
+    overflow-y: auto;
+    padding-right: 6px;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(72, 80, 84, 0.2);
+      border-radius: 10px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+      background: ${Pista8Theme.primary}80;
+    }
+  `}
 `;
 
 
 export const ChallengeCard = styled.div<{ active: boolean }>`
   position: relative;
-  padding: 18px 20px;
+  padding: 22px 20px;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   border-radius: 18px;
   border: 1.5px solid ${p => p.active ? Pista8Theme.primary : 'rgba(72,80,84,0.08)'};
   background: ${p => p.active

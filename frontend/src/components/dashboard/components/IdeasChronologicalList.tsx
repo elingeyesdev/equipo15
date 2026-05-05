@@ -2,7 +2,7 @@ import React from 'react';
 import IdeationGuidePanel from './IdeationGuidePanel';
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
-import { Pista8Theme } from '../../../config/theme';
+import { Pista8Theme, breakpoints } from '../../../config/theme';
 import type { RawIdea, PlaneIdea, SortMode } from '../../../features/sky-wall/types';
 import { resolveDisplayName } from '../../../utils/user.utils';
 
@@ -21,11 +21,13 @@ const shimmer = keyframes`
   100% { background-position: 200% 0; }
 `;
 
-/* ─── Layout ─── */
 const Wrapper = styled.div`
   margin-top: 0.5rem;
   margin-bottom: 2.5rem;
   animation: ${fadeUp} 0.35s ease both;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 `;
 
 const Header = styled.div`
@@ -84,13 +86,14 @@ const ViewAllBtn = styled.button`
 `;
 
 /* ─── Top 3 horizontal cards ─── */
-const TopGrid = styled.div`
+const TopGrid = styled.div<{ $isOnlyTop3: boolean }>`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: ${p => p.$isOnlyTop3 ? '1fr' : 'repeat(3, 1fr)'};
   gap: 14px;
   margin-bottom: 16px;
+  ${p => p.$isOnlyTop3 && 'flex: 1; grid-auto-rows: 1fr;'}
 
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.mobile}) {
     grid-template-columns: 1fr;
   }
 `;
@@ -136,6 +139,7 @@ const TopCard = styled.div<{ $rank: number; $idx: number }>`
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
 
   &:hover {
@@ -219,16 +223,27 @@ const DateLabel = styled.span`
 /* ─── Expanded list cards (Grid 6 columns) ─── */
 const ExpandedGrid = styled(motion.div)`
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-wrap: nowrap;
   gap: 1.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 16px;
   animation: ${fadeUp} 0.25s ease both;
+
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.15);
+    border-radius: 4px;
+  }
 `;
 
 const ExpandedCard = styled(motion.div)<{ $rank: number; $idx: number }>`
   position: relative;
-  width: calc(16.66% - 1.5rem);
-  min-width: 200px;
+  flex: 0 0 auto;
+  width: 220px;
+  scroll-snap-align: start;
   padding: 48px 18px 16px;
   border-radius: 18px;
   background: white;
@@ -399,7 +414,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
       </Header>
 
       {/* ─── Top 3 Horizontal Cards ─── */}
-      <TopGrid>
+      <TopGrid $isOnlyTop3={!showAll}>
         {top3.map((idea, i) => {
           const authorName = idea.isAnonymous
             ? 'Anónimo'
