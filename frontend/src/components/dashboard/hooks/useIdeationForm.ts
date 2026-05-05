@@ -358,8 +358,7 @@ export const useIdeationForm = (
           message:
             'Tu propuesta ya está registrada. Te avisaremos si necesitamos más información.',
         };
-        setFormFeedback(successMessage);
-        showToast(successMessage);
+        // Toast de éxito eliminado
         resetForm();
         success = true;
       }

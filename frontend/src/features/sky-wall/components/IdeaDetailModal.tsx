@@ -413,6 +413,7 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
           <SectionBlock ref={commentsRef as any} style={{ display: isCommentsOpen ? 'block' : 'none' }}>
             <CommentsSection
               ideaId={idea.id}
+              challengeId={idea.challengeId}
               title="Debate y feedback"
               onCountChange={setCommentsCount}
             />

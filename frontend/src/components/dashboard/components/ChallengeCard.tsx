@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import * as S from '../styles/ChallengeStyles';
 
 interface ChallengeCardProps {
@@ -27,8 +27,29 @@ const getRemainingText = (endDateStr?: string): { text: string; urgent: boolean 
 };
 
 const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSelect, onRespond }) => {
+  const [commentsCount, setCommentsCount] = useState(challenge.commentsCount || 0);
   const isExpired = challenge.endDate ? new Date() > new Date(challenge.endDate) : false;
   const remaining = !isExpired ? getRemainingText(challenge.endDate) : null;
+
+  // Escuchar eventos de cambios en comentarios de ideas en este reto
+  useEffect(() => {
+    const handleCommentCountChanged = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { challengeId, count } = customEvent.detail;
+      
+      if (challengeId === challenge.id) {
+        // El evento trae el contador de la idea, necesitamos recalcular el total del reto
+        // Por ahora incrementamos/decrementamos en 1 cuando hay cambio en una idea del reto
+        setCommentsCount((prev) => Math.max(0, prev + 1));
+      }
+    };
+
+    window.addEventListener('pista8:comment_count_changed', handleCommentCountChanged);
+
+    return () => {
+      window.removeEventListener('pista8:comment_count_changed', handleCommentCountChanged);
+    };
+  }, [challenge.id]);
 
   return (
     <S.ChallengeCard active={active} onClick={onSelect}>
@@ -76,7 +97,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSele
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(72,80,84,0.4)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-            {challenge.commentsCount || 0}
+            {commentsCount}
           </S.StatChip>
         </S.StatsRow>
 
@@ -97,4 +118,4 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSele
   );
 };
 
-export default ChallengeCard;
+export default ChallengeCard;

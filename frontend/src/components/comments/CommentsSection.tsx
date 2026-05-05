@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 
 interface CommentsSectionProps {
   ideaId: string;
+  challengeId?: string;
   title?: string;
   onCountChange?: (count: number) => void;
   disabled?: boolean;
@@ -298,6 +299,7 @@ const countAllComments = (nodes: CommentTreeNode[]): number =>
 
 export const CommentsSection = ({
   ideaId,
+  challengeId,
   title = 'Comentarios',
   onCountChange,
   disabled = false,
@@ -377,7 +379,7 @@ export const CommentsSection = ({
       const updated = [...prev, optimisticComment].sort(sortByCreatedAtAsc);
       const newTotal = countAllComments(updated);
       window.dispatchEvent(new CustomEvent('pista8:comment_count_changed', { 
-        detail: { ideaId, count: newTotal } 
+        detail: { ideaId, challengeId, count: newTotal } 
       }));
       return updated;
     });
@@ -394,7 +396,7 @@ export const CommentsSection = ({
         const updated = replaceCommentInTree(prev, optimisticComment.id, newComment);
         const newTotal = countAllComments(updated);
         window.dispatchEvent(new CustomEvent('pista8:comment_count_changed', { 
-          detail: { ideaId, count: newTotal } 
+          detail: { ideaId, challengeId, count: newTotal } 
         }));
         return updated;
       });
@@ -457,7 +459,7 @@ export const CommentsSection = ({
         const updated = removeCommentFromTree(prev, commentId);
         const newTotal = countAllComments(updated);
         window.dispatchEvent(new CustomEvent('pista8:comment_count_changed', { 
-          detail: { ideaId, count: newTotal } 
+          detail: { ideaId, challengeId, count: newTotal } 
         }));
         return updated;
       });

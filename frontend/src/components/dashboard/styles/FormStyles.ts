@@ -34,6 +34,11 @@ export const ModalCard = styled.section`
   box-shadow: 0 45px 90px rgba(26,31,36,0.25);
   max-height: calc(100vh - 80px);
   overflow-y: auto;
+  scrollbar-width: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 export const ModalHalo = styled.div`

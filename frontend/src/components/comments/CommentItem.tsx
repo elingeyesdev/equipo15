@@ -59,69 +59,239 @@ const Content = styled.p`
 `;
 
 const ReplyButton = styled.button`
-  border: 0;
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(72, 80, 84, 0.2);
   background: transparent;
   color: #fe410a;
-  font-size: 12px;
-  font-weight: 800;
   cursor: pointer;
-  padding: 0;
-  transition: all 0.2s;
+  padding: 6px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover:not(:disabled) {
-    text-decoration: underline;
+    background: #fe410a08;
+    border-color: #fe410a;
+    transform: translateY(-2px);
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  &::after {
+    content: 'Responder';
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1f22;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 4px solid #1a1f22;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+  }
+
+  &:hover::after,
+  &:hover::before {
+    opacity: 1;
   }
 `;
 
 const EditButton = styled.button`
-  border: 0;
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(72, 80, 84, 0.2);
   background: transparent;
   color: #1976d2;
-  font-size: 12px;
-  font-weight: 800;
   cursor: pointer;
-  padding: 0;
-  transition: all 0.2s;
+  padding: 6px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover:not(:disabled) {
-    text-decoration: underline;
+    background: #1976d208;
+    border-color: #1976d2;
+    transform: translateY(-2px);
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  &::after {
+    content: 'Editar';
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1f22;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 4px solid #1a1f22;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+  }
+
+  &:hover::after,
+  &:hover::before {
+    opacity: 1;
   }
 `;
 
 const WithdrawButton = styled.button`
-  border: 0;
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(72, 80, 84, 0.2);
   background: transparent;
   color: #c62828;
-  font-size: 12px;
-  font-weight: 800;
   cursor: pointer;
-  padding: 0;
-  transition: all 0.2s;
+  padding: 6px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover:not(:disabled) {
-    text-decoration: underline;
+    background: #c6282808;
+    border-color: #c62828;
+    transform: translateY(-2px);
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+  }
+
+  &::after {
+    content: 'Borrar';
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1f22;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 4px solid #1a1f22;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 100;
+  }
+
+  &:hover::after,
+  &:hover::before {
+    opacity: 1;
   }
 `;
 
 const HeaderActions = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  position: relative;
 `;
 
 const Replies = styled.div`
@@ -186,17 +356,24 @@ export const CommentItem = memo(({ comment, onReply, onEdit, onWithdraw, depth =
 
         {!isDeleted && !isEditing && !disabled && (
           <HeaderActions>
-            <ReplyButton type="button" onClick={() => setIsReplying((current) => !current)} disabled={isSubmittingReply}>
-              Responder
+            <ReplyButton type="button" onClick={() => setIsReplying((current) => !current)} disabled={isSubmittingReply} title="Responder">
+              <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 10l-5 5m0 0l5 5m-5-5h11a4 4 0 000-8h-1" />
+              </svg>
             </ReplyButton>
             {comment.canEdit && (
-              <EditButton type="button" onClick={() => setIsEditing((current) => !current)} disabled={isSubmittingEdit}>
-                Editar
+              <EditButton type="button" onClick={() => setIsEditing((current) => !current)} disabled={isSubmittingEdit} title="Editar">
+                <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
               </EditButton>
             )}
             {comment.canWithdraw && (
-              <WithdrawButton type="button" onClick={handleWithdraw} disabled={isWithdrawing}>
-                {isWithdrawing ? 'Retirando...' : 'Retirar'}
+              <WithdrawButton type="button" onClick={handleWithdraw} disabled={isWithdrawing} title="Borrar">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 6h-3.5l-1-1h-9l-1 1H5v2h14V6zM7 19a2 2 0 002 2h6a2 2 0 002-2V9H7v10zm2-8h2v6H9v-6zm4 0h2v6h-2v-6z" />
+                </svg>
               </WithdrawButton>
             )}
           </HeaderActions>
