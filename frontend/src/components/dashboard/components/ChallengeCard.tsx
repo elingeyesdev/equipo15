@@ -52,7 +52,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSele
   }, [challenge.id]);
 
   return (
-    <S.ChallengeCard active={active} onClick={onSelect}>
+    <S.ChallengeCard $active={active} onClick={() => onSelect(challenge.id)} role="button">
       {active && <S.ActiveBar />}
 
       <S.CardTopRow>

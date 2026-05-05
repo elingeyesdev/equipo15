@@ -44,16 +44,15 @@ export const FilterWrap = styled.div`
   position: relative;
 `;
 
-export const FilterBtn = styled.button<{ active: boolean }>`
+export const FilterBtn = styled.button<{ $active: boolean }>`
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 11px;
-  border: 1.5px solid ${p => p.active ? Pista8Theme.primary : 'rgba(72,80,84,0.13)'};
-  background: ${p => p.active ? `${Pista8Theme.primary}10` : 'transparent'};
-  color: ${p => p.active ? Pista8Theme.primary : Pista8Theme.secondary};
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1.5px solid ${p => p.$active ? Pista8Theme.primary : 'rgba(72,80,84,0.13)'};
+  background: ${p => p.$active ? `${Pista8Theme.primary}10` : 'transparent'};
+  color: ${p => p.$active ? Pista8Theme.primary : Pista8Theme.secondary};
   cursor: pointer;
   transition: all 0.18s;
   &:hover { border-color: ${Pista8Theme.primary}; color: ${Pista8Theme.primary}; }
@@ -73,17 +72,18 @@ export const FilterDropdown = styled.div`
   animation: ${fadeUp} 0.18s ease both;
 `;
 
-export const FilterOption = styled.button<{ active: boolean }>`
-  display: block;
+export const FilterOption = styled.button<{ $active: boolean }>`
   width: 100%;
   text-align: left;
   padding: 10px 14px;
   border: none;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: ${p => p.active ? '700' : '500'};
-  color: ${p => p.active ? Pista8Theme.primary : Pista8Theme.secondary};
-  background: ${p => p.active ? `${Pista8Theme.primary}10` : 'transparent'};
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-weight: ${p => p.$active ? '700' : '500'};
+  color: ${p => p.$active ? Pista8Theme.primary : Pista8Theme.secondary};
+  background: ${p => p.$active ? `${Pista8Theme.primary}10` : 'transparent'};
   cursor: pointer;
   transition: background 0.15s;
   &:hover { background: rgba(72,80,84,0.05); }
@@ -127,20 +127,17 @@ export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?:
 `;
 
 
-export const ChallengeCard = styled.div<{ active: boolean }>`
+export const ChallengeCard = styled.div<{ $active: boolean }>`
   position: relative;
-  padding: 22px 20px;
-  min-height: 140px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border-radius: 18px;
-  border: 1.5px solid ${p => p.active ? Pista8Theme.primary : 'rgba(72,80,84,0.08)'};
-  background: ${p => p.active
-    ? `linear-gradient(135deg, ${Pista8Theme.primary}07 0%, ${Pista8Theme.background} 100%)`
-    : Pista8Theme.background};
+  background: ${Pista8Theme.white};
+  border-radius: 20px;
+  padding: 24px;
   cursor: pointer;
-  transition: all 0.22s ease;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border: 1.5px solid ${p => p.$active ? Pista8Theme.primary : 'rgba(72,80,84,0.08)'};
+  box-shadow: ${p => p.$active 
+    ? `0 12px 32px ${Pista8Theme.primary}25` 
+    : '0 8px 24px rgba(0,0,0,0.04)'};
   overflow: hidden;
 
   &:hover {

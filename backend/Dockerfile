@@ -31,6 +31,7 @@ COPY --from=builder /app/firebase-admin.json ./firebase-admin.json
 RUN npx prisma generate
 
 COPY entrypoint.sh ./entrypoint.sh
+RUN apk add --no-cache dos2unix && dos2unix entrypoint.sh
 RUN chmod +x entrypoint.sh
 
 EXPOSE 3000

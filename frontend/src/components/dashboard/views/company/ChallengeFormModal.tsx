@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { toast } from 'sonner';
 import { Pista8Theme } from '../../../../config/theme';
 import { FACULTIES, getFacultyName } from '../../../../config/faculties';
 import type { Challenge, ChallengeStatus, EvaluationCriterion } from '../../../../types/models';
@@ -110,6 +111,7 @@ const formatDate = (d?: string) => d
 
 /* ─── Component ─── */
 const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, challenge }) => {
+  const today = new Date().toISOString().split('T')[0];
   const [form, setForm]               = useState<FormData>(emptyForm);
   const [initialForm, setInitialForm] = useState<FormData>(emptyForm);
   const [errors, setErrors]           = useState<Errors>({});
@@ -267,11 +269,15 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
       const enabledCriteria = form.evaluationCriteria.filter(c => c.enabled);
       if (enabledCriteria.length > 0) {
         if (enabledCriteria.some(c => c.weight === 0)) {
-          alert('No puedes enviar un criterio de evaluación con 0% de peso. Asígnale un valor o desmárcalo.');
+          toast.error('Criterio sin valor', {
+            description: 'No puedes enviar un criterio de evaluación con 0% de peso. Asígnale un valor o desmárcalo.',
+          });
           return;
         }
         if (totalWeight !== 100) {
-          alert(`El peso total de los criterios debe sumar exactamente 100% (actual: ${totalWeight}%).`);
+          toast.error('Pesos inválidos', {
+            description: `El peso total de los criterios debe sumar exactamente 100% (actual: ${totalWeight}%).`,
+          });
           return;
         }
       }
@@ -487,14 +493,14 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <FieldGroup style={{ marginBottom: 0 }}>
                   <Label $locked={locked('core')}>Fecha inicio *</Label>
-                  <InputField type="date" $locked={locked('core')} $error={!!errors.startDate}
+                  <InputField type="date" min={today} $locked={locked('core')} $error={!!errors.startDate}
                     value={form.startDate} readOnly={locked('core')}
                     onChange={e => !locked('core') && updateField('startDate', e.target.value)} />
                   {errors.startDate && <ErrorText>{errors.startDate}</ErrorText>}
                 </FieldGroup>
                 <FieldGroup style={{ marginBottom: 0 }}>
                   <Label>Fecha cierre *</Label>
-                  <InputField type="date" $error={!!errors.endDate}
+                  <InputField type="date" min={form.startDate || today} $error={!!errors.endDate}
                     value={form.endDate}
                     onChange={e => updateField('endDate', e.target.value)} />
                   {errors.endDate && <ErrorText>{errors.endDate}</ErrorText>}

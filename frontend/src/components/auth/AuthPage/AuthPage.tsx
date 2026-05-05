@@ -162,13 +162,13 @@ const AuthPage = () => {
               transition={{ duration: 0.3 }}
             >
               <S.Tabs>
-                <S.Tab active={isLogin} onClick={() => setIsLogin(true)}>Iniciar sesión</S.Tab>
-                <S.Tab active={!isLogin} onClick={() => setIsLogin(false)}>Registrarse</S.Tab>
+                <S.Tab $active={isLogin} onClick={() => setIsLogin(true)}>Iniciar sesión</S.Tab>
+                <S.Tab $active={!isLogin} onClick={() => setIsLogin(false)}>Registrarse</S.Tab>
               </S.Tabs>
 
               <S.Form onSubmit={handleSubmit}>
                 {!isLogin && (
-                  <S.FieldWrap isName>
+                  <S.FieldWrap $isName>
                     <S.FieldLabel>Nombre completo</S.FieldLabel>
                     <S.FieldInput
                       type="text"
@@ -211,7 +211,7 @@ const AuthPage = () => {
 
                 {!isLogin && (
                   <S.ValidationList>
-                    <S.ValidationItem isValid={passwordChecks.length}>
+                    <S.ValidationItem $isValid={passwordChecks.length}>
                       {passwordChecks.length ? (
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                       ) : (
@@ -219,7 +219,7 @@ const AuthPage = () => {
                       )}
                       8+ caracteres
                     </S.ValidationItem>
-                    <S.ValidationItem isValid={passwordChecks.uppercase}>
+                    <S.ValidationItem $isValid={passwordChecks.uppercase}>
                       {passwordChecks.uppercase ? (
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                       ) : (
@@ -227,7 +227,7 @@ const AuthPage = () => {
                       )}
                       1 mayúscula
                     </S.ValidationItem>
-                    <S.ValidationItem isValid={passwordChecks.symbol}>
+                    <S.ValidationItem $isValid={passwordChecks.symbol}>
                       {passwordChecks.symbol ? (
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                       ) : (

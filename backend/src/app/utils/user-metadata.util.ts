@@ -27,7 +27,7 @@ export function getRoleFromEmail(
 
 export function isAuthorizedEmail(email: string): boolean {
   const normalizedEmail = email.toLowerCase();
-  const allowedDomains = ['@univalle.edu', '@est.univalle.edu', '@pista8.com'];
+  const allowedDomains = ['@univalle.edu', '@est.univalle.edu', '@pista8.com', '@gmail.com', '@hotmail.com', '@outlook.com'];
   const allowedEmails = ['elingeyesdev@gmail.com'];
 
   const hasAllowedDomain = allowedDomains.some((domain) =>

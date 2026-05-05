@@ -62,27 +62,28 @@ const Counter = styled.span`
 `;
 
 const ViewAllBtn = styled.button`
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 8px 16px;
-  border-radius: 10px;
-  border: 1.5px solid rgba(254,65,10,0.2);
-  background: white;
-  color: ${Pista8Theme.primary};
-  font-size: 12px;
-  font-weight: 700;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: none;
+  background: ${Pista8Theme.primary};
+  color: white;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s;
+  box-shadow: 0 8px 22px ${Pista8Theme.primary}30;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 
   &:hover {
-    background: rgba(254,65,10,0.05);
-    border-color: ${Pista8Theme.primary};
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(254,65,10,0.12);
+    box-shadow: 0 12px 28px ${Pista8Theme.primary}42;
   }
 
-  svg { width: 12px; height: 12px; }
+  svg { width: 12px; height: 12px; stroke-width: 3; }
 `;
 
 /* ─── Top 3 horizontal cards ─── */
