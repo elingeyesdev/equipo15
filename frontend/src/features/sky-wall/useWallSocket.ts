@@ -15,6 +15,7 @@ const buildPlanes = (
   return rawIdeas.map((idea, i) => ({
     id: idea.id ?? idea._id ?? String(i),
     title: idea.title,
+    challengeId: idea.challengeId,
     challengeTitle: idea.challengeTitle ?? fallbackChallengeTitle,
     authorName: idea.isAnonymous ? 'Anónimo' : resolveDisplayName(idea.author),
     likesCount: idea.likesCount ?? 0,
@@ -135,6 +136,7 @@ export const useWallSocket = (
         const newPlane: PlaneIdea = {
           id: rawIdea.id ?? rawIdea._id ?? String(i),
           title: rawIdea.title || 'Idea sin título',
+          challengeId: rawIdea.challengeId,
           challengeTitle: rawIdea.challengeTitle ?? fallbackChallengeTitle,
           authorName: rawIdea.isAnonymous ? 'Anónimo' : resolveDisplayName(rawIdea.author),
           likesCount: rawIdea.likesCount ?? 0,

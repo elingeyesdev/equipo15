@@ -330,6 +330,7 @@ const formatRelative = (dateStr?: string): string => {
 const rawToPlane = (idea: RawIdea, index: number): PlaneIdea => ({
   id: idea.id ?? idea._id ?? String(index),
   title: idea.title,
+  challengeId: idea.challengeId,
   challengeTitle: idea.challengeTitle,
   authorName: idea.isAnonymous
     ? 'Anónimo'

@@ -6,6 +6,7 @@ interface CommentFormProps {
   submitLabel?: string;
   isSubmitting?: boolean;
   disabled?: boolean;
+  disabledMessage?: string;
   onSubmit: (content: string) => Promise<void> | void;
   onCancel?: () => void;
   cancelLabel?: string;
@@ -171,6 +172,7 @@ export const CommentForm = ({
   helperText = 'Necesitas iniciar sesión y escribir entre 2 y 2000 caracteres.',
   isSubmitting = false,
   disabled = false,
+  disabledMessage,
   onSubmit,
   onCancel,
   initialContent = '',
@@ -222,7 +224,7 @@ export const CommentForm = ({
         maxLength={COMMENT_FORM_RULES.maxLength}
       />
 
-      <HelperText>{disabled ? 'Tu cuenta está en modo solo lectura durante la sanción.' : helperText}</HelperText>
+      <HelperText>{disabled ? (disabledMessage || 'Tu cuenta está en modo solo lectura durante la sanción.') : helperText}</HelperText>
       <CounterText $danger={isNearLimit}>
         {normalizedPreview.length}/{COMMENT_FORM_RULES.maxLength} caracteres - {words} palabras
       </CounterText>

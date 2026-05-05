@@ -4,6 +4,7 @@ export interface PlaneIdea {
   id: string;
   title: string;
   challengeTitle?: string;
+  challengeId?: string;
   authorName: string;
   likesCount: number;
   commentsCount: number;
@@ -51,6 +52,7 @@ export interface RawIdea {
   id?: string;
   title: string;
   challengeTitle?: string;
+  challengeId?: string;
   problem?: string;
   solution?: string;
   author?: RawAuthor;

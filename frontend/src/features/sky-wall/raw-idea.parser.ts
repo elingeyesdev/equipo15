@@ -19,6 +19,11 @@ const parseRawIdea = (item: Record<string, unknown>): RawIdea => ({
   _id: typeof item._id === 'string' ? item._id : undefined,
   id: typeof item.id === 'string' ? item.id : undefined,
   title: typeof item.title === 'string' ? item.title : 'Idea sin titulo',
+  challengeId: typeof item.challengeId === 'string'
+    ? item.challengeId
+    : (typeof (item.challenge as Record<string, unknown> | undefined)?.id === 'string'
+        ? ((item.challenge as Record<string, unknown>).id as string)
+        : undefined),
   challengeTitle:
     typeof item.challengeTitle === 'string'
       ? item.challengeTitle

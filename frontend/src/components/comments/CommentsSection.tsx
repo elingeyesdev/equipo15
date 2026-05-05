@@ -272,6 +272,26 @@ const removeCommentFromTree = (
       return { ...node, replies: removeCommentFromTree(node.replies, targetId) };
     });
 
+const findCommentInTree = (
+  nodes: CommentTreeNode[],
+  targetId: string,
+): CommentTreeNode | null => {
+  for (const node of nodes) {
+    if (node.id === targetId) {
+      return node;
+    }
+
+    if (node.replies?.length) {
+      const nested = findCommentInTree(node.replies, targetId);
+      if (nested) {
+        return nested;
+      }
+    }
+  }
+
+  return null;
+};
+
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (axios.isAxiosError(error)) {
     const responseData = error.response?.data as
@@ -296,6 +316,23 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
 
 const countAllComments = (nodes: CommentTreeNode[]): number =>
   nodes.reduce((acc, node) => acc + 1 + countAllComments(node.replies ?? []), 0);
+
+const emitCommentCountChanged = (
+  ideaId: string,
+  challengeId: string | undefined,
+  count: number,
+  previousCount: number,
+) => {
+  window.dispatchEvent(new CustomEvent('pista8:comment_count_changed', {
+    detail: {
+      ideaId,
+      challengeId,
+      count,
+      previousCount,
+      delta: count - previousCount,
+    },
+  }));
+};
 
 export const CommentsSection = ({
   ideaId,
@@ -376,11 +413,10 @@ export const CommentsSection = ({
     });
 
     setComments((prev) => {
+      const previousCount = countAllComments(prev);
       const updated = [...prev, optimisticComment].sort(sortByCreatedAtAsc);
       const newTotal = countAllComments(updated);
-      window.dispatchEvent(new CustomEvent('pista8:comment_count_changed', { 
-        detail: { ideaId, challengeId, count: newTotal } 
-      }));
+      emitCommentCountChanged(ideaId, challengeId, newTotal, previousCount);
       return updated;
     });
     setShouldScrollToEnd(true);
@@ -394,15 +430,16 @@ export const CommentsSection = ({
 
       setComments((prev) => {
         const updated = replaceCommentInTree(prev, optimisticComment.id, newComment);
-        const newTotal = countAllComments(updated);
-        window.dispatchEvent(new CustomEvent('pista8:comment_count_changed', { 
-          detail: { ideaId, challengeId, count: newTotal } 
-        }));
         return updated;
       });
       setSubmitSuccess('Comentario publicado correctamente.');
     } catch (submitError) {
-      setComments((prev) => removeCommentFromTree(prev, optimisticComment.id));
+      setComments((prev) => {
+        const previousCount = countAllComments(prev);
+        const updated = removeCommentFromTree(prev, optimisticComment.id);
+        emitCommentCountChanged(ideaId, challengeId, countAllComments(updated), previousCount);
+        return updated;
+      });
       throw new Error(getErrorMessage(submitError, 'No se pudo publicar el comentario.'));
     } finally {
       setIsCreating(false);
@@ -420,7 +457,12 @@ export const CommentsSection = ({
       displayName: userProfile?.displayName || userProfile?.email || 'Tu',
     });
 
-    setComments((prev) => appendReplyToTree(prev, commentId, optimisticReply));
+    setComments((prev) => {
+      const previousCount = countAllComments(prev);
+      const updated = appendReplyToTree(prev, commentId, optimisticReply);
+      emitCommentCountChanged(ideaId, challengeId, countAllComments(updated), previousCount);
+      return updated;
+    });
     setShouldScrollToEnd(true);
 
     try {
@@ -433,7 +475,12 @@ export const CommentsSection = ({
       setComments((prev) => replaceCommentInTree(prev, optimisticReply.id, newReply));
       setSubmitSuccess('Respuesta publicada correctamente.');
     } catch (submitError) {
-      setComments((prev) => removeCommentFromTree(prev, optimisticReply.id));
+      setComments((prev) => {
+        const previousCount = countAllComments(prev);
+        const updated = removeCommentFromTree(prev, optimisticReply.id);
+        emitCommentCountChanged(ideaId, challengeId, countAllComments(updated), previousCount);
+        return updated;
+      });
       throw new Error(getErrorMessage(submitError, 'No se pudo publicar la respuesta.'));
     }
   }, [ideaId]);
@@ -447,24 +494,22 @@ export const CommentsSection = ({
       return;
     }
 
+    const commentToRemove = findCommentInTree(comments, commentId);
+    const removedCount = commentToRemove ? countAllComments([commentToRemove]) : 1;
     const previous = comments;
-    setComments((prev) => removeCommentFromTree(prev, commentId));
+    setComments((prev) => {
+      const previousCount = countAllComments(prev);
+      const updated = removeCommentFromTree(prev, commentId);
+      emitCommentCountChanged(ideaId, challengeId, countAllComments(updated), previousCount);
+      return updated;
+    });
 
     try {
       await commentService.withdrawComment(commentId, ideaId);
       setSubmitSuccess('Comentario retirado correctamente.');
-      
-      // Calcular e informar el nuevo contador
-      setComments((prev) => {
-        const updated = removeCommentFromTree(prev, commentId);
-        const newTotal = countAllComments(updated);
-        window.dispatchEvent(new CustomEvent('pista8:comment_count_changed', { 
-          detail: { ideaId, challengeId, count: newTotal } 
-        }));
-        return updated;
-      });
     } catch (withdrawError) {
       setComments(previous);
+      emitCommentCountChanged(ideaId, challengeId, countAllComments(previous), Math.max(0, countAllComments(previous) - removedCount));
       throw new Error(getErrorMessage(withdrawError, 'No se pudo retirar el comentario.'));
     }
   }, [comments, ideaId]);
@@ -498,6 +543,11 @@ export const CommentsSection = ({
   }, [comments, ideaId]);
 
   const totalVisibleComments = useMemo(() => countAllComments(comments), [comments]);
+  const commentFormDisabledMessage = isLoading
+    ? 'Espera a que se carguen los comentarios.'
+    : isCreating
+      ? 'Espera a que se envíe el comentario.'
+      : 'Tu cuenta está en modo solo lectura durante la sanción.';
 
   useEffect(() => {
     if (isLoading || error) {
@@ -525,7 +575,8 @@ export const CommentsSection = ({
             submitLabel="Publicar comentario"
             placeholder="Escribe un comentario sobre esta idea..."
             isSubmitting={isCreating}
-            disabled={isReadOnlyMode}
+            disabled={isReadOnlyMode || isLoading || isCreating}
+            disabledMessage={commentFormDisabledMessage}
             onSubmit={handleCreateComment}
           />
         </FormCard>
@@ -554,7 +605,8 @@ export const CommentsSection = ({
               onReply={handleReply}
               onEdit={handleEditComment}
               onWithdraw={handleWithdraw}
-                disabled={isReadOnlyMode}
+              disabled={isReadOnlyMode}
+              actionDisabled={isLoading || isCreating}
             />
           ))}
           <div ref={listEndRef} />
