@@ -130,7 +130,7 @@ const IdeationWall = () => {
       ? wallIdeas.filter(idea => Boolean(idea.hasFavorited))
       : wallIdeas;
     if (advFilter.facultyId) {
-      ideas = ideas.filter(idea => idea.authorFacultyId === advFilter.facultyId || (idea.author as any)?.facultyId === advFilter.facultyId);
+      ideas = ideas.filter(idea => (idea as any).authorFacultyId === advFilter.facultyId || (idea.author as any)?.facultyId === advFilter.facultyId);
     }
     if (advFilter.topLimit) {
       ideas = ideas.slice(0, advFilter.topLimit);
@@ -210,7 +210,7 @@ const IdeationWall = () => {
           </div>
         </S.Header>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 10px', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', margin: '0 0 14px 24px', flexWrap: 'wrap', gap: '8px' }}>
           <AdvancedFilter
             value={advFilter}
             onChange={next => {

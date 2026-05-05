@@ -141,7 +141,7 @@ export const ChallengeCard = styled.div<{ $active: boolean }>`
   overflow: hidden;
 
   &:hover {
-    border-color: ${p => p.active ? Pista8Theme.primary : 'rgba(72,80,84,0.18)'};
+    border-color: ${p => p.$active ? Pista8Theme.primary : 'rgba(72,80,84,0.18)'};
     box-shadow: 0 6px 24px ${Pista8Theme.shadow};
     transform: translateY(-1px);
   }

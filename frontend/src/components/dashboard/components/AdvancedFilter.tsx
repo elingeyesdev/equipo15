@@ -145,7 +145,6 @@ const SORT_OPTIONS: { label: string; value: SortMode }[] = [
   { label: 'Más antiguas',   value: 'oldest'   },
   { label: 'Más likes',      value: 'likes'    },
   { label: 'Más comentadas', value: 'comments' },
-  { label: 'Favoritos',      value: 'favorites'},
 ];
 
 const TOP_OPTIONS: { label: string; value: TopLimit }[] = [
