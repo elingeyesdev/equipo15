@@ -210,6 +210,48 @@ const CommentToggleButton = styled.button<{ $active: boolean }>`
   }
 `;
 
+const CommentTooltipContainer = styled.div`
+  position: relative;
+  display: inline-flex;
+
+  &:hover .custom-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+`;
+
+const CommentTooltipText = styled.span`
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: rgba(26, 31, 34, 0.95);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(26, 31, 34, 0.95) transparent transparent transparent;
+  }
+`;
+
 const Counter = styled.span`
   font-size: 14px;
   font-weight: 900;
@@ -258,6 +300,24 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
     setIsCommentsOpen(false);
     setShowFullProposal(false);
   }, [idea.id, idea.commentsCount]);
+
+  // Escuchar eventos de comentarios publicados/retirados para actualizar el contador
+  useEffect(() => {
+    const handleCommentCountChanged = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { ideaId, count } = customEvent.detail;
+      
+      if (ideaId === idea.id) {
+        setCommentsCount(count);
+      }
+    };
+
+    window.addEventListener('pista8:comment_count_changed', handleCommentCountChanged);
+
+    return () => {
+      window.removeEventListener('pista8:comment_count_changed', handleCommentCountChanged);
+    };
+  }, [idea.id]);
 
   useEffect(() => {
     if (!isCommentsOpen) return;
@@ -332,29 +392,31 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
                 hasVoted={idea.hasVoted} 
               />
 
-              <CommentToggleButton
-                type="button"
-                $active={isCommentsOpen}
-                onClick={() => setIsCommentsOpen((current) => !current)}
-                aria-label={isCommentsOpen ? 'Ocultar comentarios' : 'Mostrar comentarios'}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
-                </svg>
-                <Counter>{commentsCount}</Counter>
-              </CommentToggleButton>
+              <CommentTooltipContainer>
+                <CommentToggleButton
+                  type="button"
+                  $active={isCommentsOpen}
+                  onClick={() => setIsCommentsOpen((current) => !current)}
+                  aria-label={isCommentsOpen ? 'Ocultar comentarios' : 'Mostrar comentarios'}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" />
+                  </svg>
+                  <Counter>{commentsCount}</Counter>
+                </CommentToggleButton>
+                <CommentTooltipText className="custom-tooltip">Comentarios</CommentTooltipText>
+              </CommentTooltipContainer>
             </ActionsRow>
           </SectionBlock>
 
-          {isCommentsOpen && (
-            <SectionBlock ref={commentsRef as any}>
-              <CommentsSection
-                ideaId={idea.id}
-                title="Debate y feedback"
-                onCountChange={setCommentsCount}
-              />
-            </SectionBlock>
-          )}
+          {/* CommentsSection siempre se carga para actualizar el contador, pero se oculta si no está abierto */}
+          <SectionBlock ref={commentsRef as any} style={{ display: isCommentsOpen ? 'block' : 'none' }}>
+            <CommentsSection
+              ideaId={idea.id}
+              title="Debate y feedback"
+              onCountChange={setCommentsCount}
+            />
+          </SectionBlock>
         </Body>
       </ModalContainer>
     </ModalOverlay>

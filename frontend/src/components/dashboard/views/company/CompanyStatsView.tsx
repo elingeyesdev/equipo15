@@ -246,6 +246,13 @@ const FilterLabel = styled.span`
   color: ${colors.textMuted};
 `;
 
+const SearchInputWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+`;
+
 const SearchInput = styled.input`
   width: 100%;
   border-radius: 12px;
@@ -255,12 +262,38 @@ const SearchInput = styled.input`
   font-size: 12px;
   font-weight: 700;
   padding: 10px 12px;
+  padding-right: 36px;
   outline: none;
   box-shadow: 0 6px 14px rgba(72, 80, 84, 0.05);
 
   &:focus {
     border-color: ${Pista8Theme.primary};
     box-shadow: 0 0 0 3px rgba(254, 65, 10, 0.12);
+  }
+`;
+
+const ClearSearchButton = styled.button`
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  color: ${colors.textMuted};
+  cursor: pointer;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: ${Pista8Theme.primary};
+    background: ${Pista8Theme.primary}08;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
   }
 `;
 
@@ -281,6 +314,64 @@ const ChallengeSelect = styled.select`
     border-color: ${Pista8Theme.primary};
     box-shadow: 0 0 0 3px rgba(254, 65, 10, 0.12);
   }
+`;
+
+const SearchDropdown = styled.div<{ $isOpen: boolean }>`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid rgba(72, 80, 84, 0.16);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  max-height: 280px;
+  overflow-y: auto;
+  display: ${({ $isOpen }) => ($isOpen ? 'block' : 'none')};
+  box-shadow: 0 6px 14px rgba(72, 80, 84, 0.08);
+  z-index: 10;
+`;
+
+const SearchResultItem = styled.button`
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 12px 12px;
+  text-align: left;
+  color: ${colors.textMain};
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-bottom: 1px solid rgba(72, 80, 84, 0.08);
+
+  &:hover {
+    background: ${Pista8Theme.primary}12;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .challenge-title {
+    display: block;
+    color: ${colors.textMain};
+    font-weight: 800;
+  }
+
+  .challenge-status {
+    display: block;
+    color: ${colors.textMuted};
+    font-size: 11px;
+    margin-top: 2px;
+  }
+`;
+
+const SearchEmptyResult = styled.div`
+  padding: 12px;
+  text-align: center;
+  color: ${colors.textMuted};
+  font-size: 12px;
 `;
 
 const EmptyState = styled.div`
@@ -312,6 +403,7 @@ export const CompanyStatsView = () => {
   const [selectedChallengeId, setSelectedChallengeId] = useState<string>('all');
   const [challengeOptions, setChallengeOptions] = useState<CompanyChallengeOption[]>([]);
   const [challengeQuery, setChallengeQuery] = useState('');
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
 
   const loadChallengeOptions = useCallback(async () => {
     try {
@@ -358,6 +450,12 @@ export const CompanyStatsView = () => {
 
   const handleRefresh = () => {
     void fetchStats(selectedChallengeId === 'all' ? undefined : selectedChallengeId);
+  };
+
+  const handleSelectChallenge = (challengeId: string) => {
+    setSelectedChallengeId(challengeId);
+    setChallengeQuery('');
+    setShowSearchDropdown(false);
   };
 
   const filteredChallengeOptions = useMemo(
@@ -431,12 +529,52 @@ export const CompanyStatsView = () => {
             <FiltersRow>
               <FilterField>
                 <FilterLabel>Buscar por nombre</FilterLabel>
-                <SearchInput
-                  value={challengeQuery}
-                  onChange={(event) => setChallengeQuery(event.target.value)}
-                  placeholder="Escribe el nombre del reto"
-                  disabled={loading}
-                />
+                <SearchInputWrapper>
+                  <SearchInput
+                    value={challengeQuery}
+                    onChange={(event) => {
+                      setChallengeQuery(event.target.value);
+                      setShowSearchDropdown(true);
+                    }}
+                    onFocus={() => challengeQuery && setShowSearchDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowSearchDropdown(false), 150)}
+                    placeholder="Escribe el nombre del reto"
+                    disabled={loading}
+                  />
+                  {challengeQuery && (
+                    <ClearSearchButton
+                      onClick={() => {
+                        setChallengeQuery('');
+                        setShowSearchDropdown(false);
+                      }}
+                      type="button"
+                      aria-label="Limpiar búsqueda"
+                      title="Limpiar búsqueda"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </ClearSearchButton>
+                  )}
+                  {challengeQuery && (
+                    <SearchDropdown $isOpen={showSearchDropdown}>
+                      {filteredChallengeOptions.length > 0 ? (
+                        filteredChallengeOptions.map((challenge) => (
+                          <SearchResultItem
+                            key={challenge.id}
+                            onClick={() => handleSelectChallenge(challenge.id)}
+                          >
+                            <span className="challenge-title">{challenge.title}</span>
+                            <span className="challenge-status">Estado: {challenge.status}</span>
+                          </SearchResultItem>
+                        ))
+                      ) : (
+                        <SearchEmptyResult>No se encontraron retos con ese nombre</SearchEmptyResult>
+                      )}
+                    </SearchDropdown>
+                  )}
+                </SearchInputWrapper>
               </FilterField>
               <FilterField>
                 <FilterLabel>Seleccionar reto</FilterLabel>

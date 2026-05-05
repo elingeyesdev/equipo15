@@ -353,6 +353,32 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
   showAll,
   onToggleShowAll,
 }) => {
+  const [localIdeas, setLocalIdeas] = React.useState(ideas);
+
+  React.useEffect(() => {
+    setLocalIdeas(ideas);
+  }, [ideas]);
+
+  React.useEffect(() => {
+    const handleCommentCountChanged = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { ideaId, count } = customEvent.detail;
+      
+      setLocalIdeas(prev => 
+        prev.map(idea => 
+          idea.id === ideaId || idea._id === ideaId
+            ? { ...idea, commentsCount: count }
+            : idea
+        )
+      );
+    };
+
+    window.addEventListener('pista8:comment_count_changed', handleCommentCountChanged);
+
+    return () => {
+      window.removeEventListener('pista8:comment_count_changed', handleCommentCountChanged);
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -373,8 +399,8 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
     sortOrder === 'likes' ? 'Más populares' :
     'Más comentadas';
 
-  const top3 = ideas.slice(0, 3);
-  const rest = ideas.slice(3);
+  const top3 = localIdeas.slice(0, 3);
+  const rest = localIdeas.slice(3);
 
   return (
     <Wrapper>

@@ -15,12 +15,13 @@ const pop = keyframes`
 const Button = styled.button<{ $isFavorite: boolean }>`
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 0;
   background: ${(p) => (p.$isFavorite ? `${Pista8Theme.primary}12` : 'rgba(248,249,250,0.9)')};
   color: ${(p) => (p.$isFavorite ? Pista8Theme.primary : '#94a3b8')};
   border: 1.5px solid ${(p) => (p.$isFavorite ? `${Pista8Theme.primary}50` : 'rgba(72,80,84,0.1)')};
   border-radius: 99px;
-  padding: 10px 18px;
+  padding: 10px 20px;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.03em;
@@ -37,6 +38,48 @@ const Button = styled.button<{ $isFavorite: boolean }>`
     background: ${(p) => (!p.$isFavorite ? `${Pista8Theme.primary}08` : `${Pista8Theme.primary}16`)};
     border-color: ${(p) => (!p.$isFavorite ? `${Pista8Theme.primary}40` : `${Pista8Theme.primary}66`)};
     color: ${Pista8Theme.primary};
+  }
+`;
+
+const TooltipContainer = styled.div`
+  position: relative;
+  display: inline-flex;
+
+  &:hover .custom-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+`;
+
+const TooltipText = styled.span`
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: rgba(26, 31, 34, 0.95);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(26, 31, 34, 0.95) transparent transparent transparent;
   }
 `;
 
@@ -87,27 +130,29 @@ export const FavoriteButton = ({ ideaId, hasFavorited }: FavoriteButtonProps) =>
   };
 
   return (
-    <Button
-      $isFavorite={isFavorite}
-      onClick={handleToggleFavorite}
-      type="button"
-      aria-label="Marcar como favorito"
-      disabled={isUpdating}
-    >
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill={isFavorite ? Pista8Theme.primary : 'none'}
+    <TooltipContainer>
+      <Button
+        $isFavorite={isFavorite}
+        onClick={handleToggleFavorite}
+        type="button"
+        aria-label="Marcar como favorito"
+        disabled={isUpdating}
       >
-        <polygon points="12 2 15.4 8.9 23 10 17.5 15.2 18.8 22.8 12 19.2 5.2 22.8 6.5 15.2 1 10 8.6 8.9 12 2" />
-      </svg>
-      {isFavorite ? 'Favorito' : 'Guardar'}
-    </Button>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill={isFavorite ? Pista8Theme.primary : 'none'}
+        >
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+        </svg>
+      </Button>
+      <TooltipText className="custom-tooltip">{isFavorite ? 'Marcado' : 'Guardar'}</TooltipText>
+    </TooltipContainer>
   );
 };
 

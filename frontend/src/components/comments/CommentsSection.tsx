@@ -26,20 +26,23 @@ const createTemporaryComment = (params: {
   ideaId: string;
   content: string;
   parentCommentId?: string | null;
+  userId?: string;
+  displayName?: string;
 }): CommentTreeNode => ({
   id: `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
   ideaId: params.ideaId,
-  authorId: 'current-user',
+  authorId: params.userId || 'current-user',
   parentCommentId: params.parentCommentId ?? null,
   content: params.content,
   status: 'visible',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   author: {
-    id: 'current-user',
-    displayName: 'Tu',
+    id: params.userId || 'current-user',
+    displayName: params.displayName || 'Tu',
   },
   canWithdraw: true,
+  canEdit: true,
   replies: [],
 });
 
@@ -221,7 +224,16 @@ const replaceCommentInTree = (
 ): CommentTreeNode[] =>
   nodes.map((node) => {
     if (node.id === targetId) {
-      return { ...replacement, replies: replacement.replies ?? node.replies ?? [] };
+      // Preservar canEdit y canWithdraw del comentario optimista si el servidor no los proporciona
+      const canEdit = replacement.canEdit !== undefined ? replacement.canEdit : node.canEdit;
+      const canWithdraw = replacement.canWithdraw !== undefined ? replacement.canWithdraw : node.canWithdraw;
+      
+      return { 
+        ...replacement, 
+        canEdit: canEdit ?? true,
+        canWithdraw: canWithdraw ?? true,
+        replies: replacement.replies ?? node.replies ?? [] 
+      };
     }
 
     if (node.replies?.length) {
@@ -357,9 +369,18 @@ export const CommentsSection = ({
     const optimisticComment = createTemporaryComment({
       ideaId,
       content,
+      userId: userProfile?.id,
+      displayName: userProfile?.displayName || userProfile?.email || 'Tu',
     });
 
-    setComments((prev) => [...prev, optimisticComment].sort(sortByCreatedAtAsc));
+    setComments((prev) => {
+      const updated = [...prev, optimisticComment].sort(sortByCreatedAtAsc);
+      const newTotal = countAllComments(updated);
+      window.dispatchEvent(new CustomEvent('pista8:comment_count_changed', { 
+        detail: { ideaId, count: newTotal } 
+      }));
+      return updated;
+    });
     setShouldScrollToEnd(true);
 
     try {
@@ -369,7 +390,14 @@ export const CommentsSection = ({
         replies: [],
       };
 
-      setComments((prev) => replaceCommentInTree(prev, optimisticComment.id, newComment));
+      setComments((prev) => {
+        const updated = replaceCommentInTree(prev, optimisticComment.id, newComment);
+        const newTotal = countAllComments(updated);
+        window.dispatchEvent(new CustomEvent('pista8:comment_count_changed', { 
+          detail: { ideaId, count: newTotal } 
+        }));
+        return updated;
+      });
       setSubmitSuccess('Comentario publicado correctamente.');
     } catch (submitError) {
       setComments((prev) => removeCommentFromTree(prev, optimisticComment.id));
@@ -386,6 +414,8 @@ export const CommentsSection = ({
       ideaId,
       content,
       parentCommentId: commentId,
+      userId: userProfile?.id,
+      displayName: userProfile?.displayName || userProfile?.email || 'Tu',
     });
 
     setComments((prev) => appendReplyToTree(prev, commentId, optimisticReply));
@@ -421,6 +451,16 @@ export const CommentsSection = ({
     try {
       await commentService.withdrawComment(commentId, ideaId);
       setSubmitSuccess('Comentario retirado correctamente.');
+      
+      // Calcular e informar el nuevo contador
+      setComments((prev) => {
+        const updated = removeCommentFromTree(prev, commentId);
+        const newTotal = countAllComments(updated);
+        window.dispatchEvent(new CustomEvent('pista8:comment_count_changed', { 
+          detail: { ideaId, count: newTotal } 
+        }));
+        return updated;
+      });
     } catch (withdrawError) {
       setComments(previous);
       throw new Error(getErrorMessage(withdrawError, 'No se pudo retirar el comentario.'));

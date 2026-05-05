@@ -66,9 +66,15 @@ const ReplyButton = styled.button`
   font-weight: 800;
   cursor: pointer;
   padding: 0;
+  transition: all 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     text-decoration: underline;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 
@@ -80,9 +86,15 @@ const EditButton = styled.button`
   font-weight: 800;
   cursor: pointer;
   padding: 0;
+  transition: all 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     text-decoration: underline;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 
@@ -94,9 +106,15 @@ const WithdrawButton = styled.button`
   font-weight: 800;
   cursor: pointer;
   padding: 0;
+  transition: all 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     text-decoration: underline;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 
@@ -168,11 +186,11 @@ export const CommentItem = memo(({ comment, onReply, onEdit, onWithdraw, depth =
 
         {!isDeleted && !isEditing && !disabled && (
           <HeaderActions>
-            <ReplyButton type="button" onClick={() => setIsReplying((current) => !current)}>
+            <ReplyButton type="button" onClick={() => setIsReplying((current) => !current)} disabled={isSubmittingReply}>
               Responder
             </ReplyButton>
             {comment.canEdit && (
-              <EditButton type="button" onClick={() => setIsEditing((current) => !current)}>
+              <EditButton type="button" onClick={() => setIsEditing((current) => !current)} disabled={isSubmittingEdit}>
                 Editar
               </EditButton>
             )}
