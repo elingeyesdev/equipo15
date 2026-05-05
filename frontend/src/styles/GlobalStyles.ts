@@ -15,9 +15,14 @@ export const GlobalStyles = createGlobalStyle`
     box-sizing: border-box;
   }
 
-  body {
+  html, body {
     margin: 0;
     padding: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
     font-family: 'Space Grotesk', 'Chivo', 'Segoe UI', sans-serif;
     background-color: var(--p8-bg);
     color: var(--p8-ink);

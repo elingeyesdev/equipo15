@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Pista8Theme } from '../../../config/theme';
+import { Pista8Theme, breakpoints } from '../../../config/theme';
 import { fadeUp } from './CommonStyles';
 
 export const Root = styled.div`
@@ -63,7 +63,7 @@ export const SplitGrid = styled.div`
   gap: 1.5rem;
   margin-bottom: 1.5rem;
   animation: ${fadeUp} 0.4s 0.1s ease both;
-  @media (max-width: 980px) {
+  @media (max-width: ${breakpoints.tablet}) {
     grid-template-columns: 1fr;
   }
 `;

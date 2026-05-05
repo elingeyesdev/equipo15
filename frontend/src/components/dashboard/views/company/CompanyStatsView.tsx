@@ -13,7 +13,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { Pista8Theme } from '../../../../config/theme';
+import { Pista8Theme, breakpoints } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import type { CompanyChallengeOption } from '../../../../services/challenge.service';
 import type {
@@ -115,11 +115,11 @@ const KpiGrid = styled.div`
   gap: 12px;
   margin-bottom: 20px;
 
-  @media (max-width: 1200px) {
+  @media (max-width: ${breakpoints.tablet}) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  @media (max-width: 980px) {
+  @media (max-width: ${breakpoints.mobile}) {
     grid-template-columns: 1fr;
   }
 `;
@@ -159,7 +159,7 @@ const ChartsGrid = styled.div`
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 14px;
 
-  @media (max-width: 1100px) {
+  @media (max-width: ${breakpoints.tablet}) {
     grid-template-columns: 1fr;
   }
 `;
@@ -228,7 +228,7 @@ const FiltersRow = styled.div`
   gap: 10px;
   width: 100%;
 
-  @media (max-width: 760px) {
+  @media (max-width: ${breakpoints.mobile}) {
     grid-template-columns: 1fr;
   }
 `;

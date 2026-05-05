@@ -229,7 +229,7 @@ const IdeationWall = () => {
             ) : (
               <S.FullWidthContainer as={motion.div} layout>
                 {showStepsPanel ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '1.5rem' }}>
+                  <S.SplitGrid>
                     <ChallengeList
                       loading={ds.loading}
                       challenges={ds.challenges}
@@ -246,7 +246,7 @@ const IdeationWall = () => {
                       forceColumn
                     />
                     <InnovationStepsPanel />
-                  </div>
+                  </S.SplitGrid>
                 ) : (
                   <ChallengeList
                     loading={ds.loading}

@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { keyframes, css } from 'styled-components';
-import { Pista8Theme } from '../../../../config/theme';
+import { Pista8Theme, breakpoints } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import { ideaService } from '../../../../services/idea.service';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Trophy, Users, Star, MessageSquare, Heart, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Trophy, Users, Star, MessageSquare, Heart, AlertTriangle, CheckCircle, Bookmark } from 'lucide-react';
 import { toast } from 'sonner';
 import BackButton from '../../../common/BackButton';
 
@@ -90,7 +90,7 @@ const ControlCard = styled.div`
   gap: 24px;
   flex-wrap: wrap;
 
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.mobile}) {
     flex-direction: column;
     align-items: stretch;
   }
@@ -239,6 +239,16 @@ const IdeaCard = styled.div<{ $isFinalist: boolean; $rank: number }>`
   &:hover {
     transform: translateX(6px);
     border-color: ${p => p.$isFinalist ? Pista8Theme.primary : 'rgba(0,0,0,0.12)'};
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+
+    &:hover {
+      transform: translateY(-4px);
+    }
   }
 `;
 
@@ -522,7 +532,7 @@ export const CompanyPodiumView = () => {
   const [challenge, setChallenge] = useState<any>(null);
   const [ideas, setIdeas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [metric, setMetric] = useState<'likes' | 'comments' | 'votes'>('likes');
+  const [metric, setMetric] = useState<'likes' | 'comments'>('likes');
   const [limit, setLimit] = useState<string>('5');
   const [showConfirm, setShowConfirm] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
@@ -576,7 +586,6 @@ export const CompanyPodiumView = () => {
     return [...safeIdeas].sort((a, b) => {
       if (metric === 'likes') return (b.likesCount || 0) - (a.likesCount || 0);
       if (metric === 'comments') return (b.commentsCount || 0) - (a.commentsCount || 0);
-      if (metric === 'votes') return (b.votesCount || 0) - (a.votesCount || 0);
       return 0;
     });
   }, [ideas, metric]);
@@ -669,7 +678,6 @@ export const CompanyPodiumView = () => {
               <Select value={metric} onChange={(e) => setMetric(e.target.value as any)} disabled={isAlreadyEvaluated}>
                 <option value="likes">Por Likes</option>
                 <option value="comments">Por Comentarios</option>
-                <option value="votes">Por Votos</option>
               </Select>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -739,9 +747,6 @@ export const CompanyPodiumView = () => {
                     <Metric $active={metric === 'comments'}>
                       <MessageSquare fill={metric === 'comments' ? Pista8Theme.primary : 'none'} /> {idea.commentsCount || 0}
                     </Metric>
-                    <Metric $active={metric === 'votes'}>
-                      <Star fill={metric === 'votes' ? Pista8Theme.primary : 'none'} /> {idea.votesCount || 0}
-                    </Metric>
                   </Metrics>
                   {isFinalist && (
                     <MedalIcon>
@@ -763,7 +768,7 @@ export const CompanyPodiumView = () => {
               <ModalTitle>¿Confirmar Podio Final?</ModalTitle>
               <ModalText>
                 Esta acción cerrará las votaciones públicas y notificará a los jueces.
-                Se seleccionarán los primeros <strong>{safeLimit}</strong> participantes según el criterio de <strong>{metric === 'likes' ? 'Likes' : metric === 'comments' ? 'Comentarios' : 'Votos'}</strong>.
+                Se seleccionarán los primeros <strong>{safeLimit}</strong> participantes según el criterio de <strong>{metric === 'likes' ? 'Likes' : 'Comentarios'}</strong>.
                 <br /><br />
                 <strong>Esta acción es irreversible.</strong>
               </ModalText>

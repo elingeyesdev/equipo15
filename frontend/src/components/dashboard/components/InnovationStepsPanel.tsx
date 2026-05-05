@@ -1,6 +1,6 @@
 import React from 'react';
 import styled, { keyframes } from 'styled-components';
-import { MousePointerClick, SearchCode, Send, Rocket } from 'lucide-react';
+import { MousePointerClick, SearchCode, Send } from 'lucide-react';
 import { Pista8Theme } from '../../../config/theme';
 
 const fadeUp = keyframes`
@@ -8,10 +8,7 @@ const fadeUp = keyframes`
   to { opacity: 1; transform: translateY(0); }
 `;
 
-const pulse = keyframes`
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
-`;
+
 
 const Wrapper = styled.div`
   display: flex;
@@ -122,22 +119,7 @@ const StepDesc = styled.p`
   line-height: 1.5;
 `;
 
-const RocketBadge = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, ${Pista8Theme.primary}, #ff7b00);
-  color: white;
-  font-size: 13px;
-  font-weight: 800;
-  align-self: center;
-  animation: ${pulse} 2.5s ease infinite;
-  box-shadow: 0 6px 20px rgba(254, 65, 10, 0.25);
 
-  svg { width: 16px; height: 16px; }
-`;
 
 const STEPS = [
   {
@@ -192,9 +174,6 @@ const InnovationStepsPanel: React.FC = () => (
       ))}
     </StepList>
 
-    <RocketBadge>
-      <Rocket /> ¡Selecciona un reto para empezar!
-    </RocketBadge>
   </Wrapper>
 );
 
