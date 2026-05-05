@@ -5,7 +5,7 @@ import { Pista8Theme, breakpoints } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import { ideaService } from '../../../../services/idea.service';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Trophy, Users, Star, MessageSquare, Heart, AlertTriangle, CheckCircle, Bookmark } from 'lucide-react';
+import { Trophy, Users, Star, MessageSquare, Heart, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import BackButton from '../../../common/BackButton';
 

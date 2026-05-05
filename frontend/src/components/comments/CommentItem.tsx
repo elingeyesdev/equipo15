@@ -357,13 +357,13 @@ export const CommentItem = memo(({ comment, onReply, onEdit, onWithdraw, depth =
 
         {!isDeleted && !isEditing && !disabled && (
           <HeaderActions>
-            <ReplyButton type="button" onClick={() => setIsReplying((current) => !current)} disabled={actionDisabled || isSubmittingReply} title="Responder">
+            <ReplyButton type="button" onClick={() => setIsReplying((current) => !current)} disabled={actionDisabled || isSubmittingReply}>
               <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 10l-5 5m0 0l5 5m-5-5h11a4 4 0 000-8h-1" />
               </svg>
             </ReplyButton>
             {comment.canEdit && (
-              <EditButton type="button" onClick={() => setIsEditing((current) => !current)} disabled={actionDisabled || isSubmittingEdit} title="Editar">
+              <EditButton type="button" onClick={() => setIsEditing((current) => !current)} disabled={actionDisabled || isSubmittingEdit}>
                 <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -371,7 +371,7 @@ export const CommentItem = memo(({ comment, onReply, onEdit, onWithdraw, depth =
               </EditButton>
             )}
             {comment.canWithdraw && (
-              <WithdrawButton type="button" onClick={handleWithdraw} disabled={actionDisabled || isWithdrawing} title="Borrar">
+              <WithdrawButton type="button" onClick={handleWithdraw} disabled={actionDisabled || isWithdrawing}>
                 <svg viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 6h-3.5l-1-1h-9l-1 1H5v2h14V6zM7 19a2 2 0 002 2h6a2 2 0 002-2V9H7v10zm2-8h2v6H9v-6zm4 0h2v6h-2v-6z" />
                 </svg>

@@ -352,12 +352,7 @@ export const useIdeationForm = (
           challengeId: formChallenge.id,
           isAnonymous: isGuest,
         });
-        const successMessage: FeedbackMessage = {
-          tone: 'success',
-          title: 'Idea enviada',
-          message:
-            'Tu propuesta ya está registrada. Te avisaremos si necesitamos más información.',
-        };
+
         // Toast de éxito eliminado
         resetForm();
         success = true;

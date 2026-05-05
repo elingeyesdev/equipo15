@@ -40,7 +40,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSele
       if (challengeId === challenge.id) {
         // El evento trae el contador de la idea, necesitamos recalcular el total del reto
         // Por ahora incrementamos/decrementamos en 1 cuando hay cambio en una idea del reto
-          setCommentsCount((prev) => Math.max(0, prev + (delta || 1)));
+          setCommentsCount((prev: number) => Math.max(0, prev + (delta || 1)));
       }
     };
 
