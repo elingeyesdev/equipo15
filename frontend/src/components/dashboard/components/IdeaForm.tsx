@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import * as S from '../styles/FormStyles';
 import * as FM from '../styles/FeedbackAndMiscStyles';
@@ -18,9 +18,76 @@ interface IdeaFormProps {
   setConfirmOpen: (open: boolean) => void;
 }
 
+const ChallengeInfoModal: React.FC<{ challenge: any; onClose: () => void }> = ({ challenge, onClose }) => {
+  const criteria = Array.isArray(challenge?.evaluationCriteria) ? challenge.evaluationCriteria.filter((c: any) => c.enabled) : [];
+  return createPortal(
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,18,0.55)', zIndex: 10000, backdropFilter: 'blur(3px)' }} />
+      <div style={{
+        position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+        zIndex: 10001, background: 'white', borderRadius: 24, padding: '36px 32px',
+        width: 'min(680px, 92vw)', maxHeight: '85vh', overflowY: 'auto',
+        boxShadow: '0 24px 80px rgba(0,0,0,0.22)',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+          <div style={{ flex: 1 }} />
+          <button onClick={onClose} style={{ background: 'rgba(72,80,84,0.08)', border: 'none', borderRadius: '50%', width: 36, height: 36, fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#485054' }}>×</button>
+        </div>
+
+        {/* Title - center */}
+        <h2 style={{ textAlign: 'center', fontSize: 22, fontWeight: 900, color: '#1a1f22', marginBottom: 8, lineHeight: 1.3 }}>
+          {challenge?.title || 'Sin título'}
+        </h2>
+        {challenge?.facultyId && (
+          <p style={{ textAlign: 'center', fontSize: 11, fontWeight: 800, color: '#FE410A', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 20 }}>
+            {challenge.facultyName || `Facultad ${challenge.facultyId}`}
+          </p>
+        )}
+
+        {/* Problem - center */}
+        {challenge?.problemDescription && (
+          <div style={{ textAlign: 'center', marginBottom: 28 }}>
+            <p style={{ fontSize: 11, fontWeight: 800, color: '#a8b0b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Planteamiento del Problema</p>
+            <p style={{ fontSize: 14, color: '#485054', lineHeight: 1.7, maxWidth: 520, margin: '0 auto' }}>{challenge.problemDescription}</p>
+          </div>
+        )}
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 8 }}>
+          {/* Rules - left */}
+          <div style={{ background: '#f8f9fa', borderRadius: 16, padding: '20px 18px' }}>
+            <p style={{ fontSize: 11, fontWeight: 800, color: '#a8b0b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Reglas de Participación</p>
+            <p style={{ fontSize: 13, color: '#485054', lineHeight: 1.7, whiteSpace: 'pre-line', margin: 0 }}>
+              {challenge?.participationRules || 'Sin reglas definidas.'}
+            </p>
+          </div>
+
+          {/* Criteria - right */}
+          <div style={{ background: '#f8f9fa', borderRadius: 16, padding: '20px 18px' }}>
+            <p style={{ fontSize: 11, fontWeight: 800, color: '#a8b0b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Criterios de Evaluación</p>
+            {criteria.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#a8b0b8', margin: 0 }}>No hay criterios definidos.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {criteria.map((c: any) => (
+                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'white', borderRadius: 10, padding: '8px 12px', border: '1px solid rgba(72,80,84,0.08)' }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#1a1f22' }}>{c.name}</span>
+                    <span style={{ fontSize: 12, fontWeight: 900, color: '#FE410A', background: 'rgba(254,65,10,0.08)', borderRadius: 8, padding: '2px 8px' }}>{c.weight}%</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </>,
+    document.body
+  );
+};
+
 const IdeaForm: React.FC<IdeaFormProps> = ({
   open, challenge, fullName, isGuest, onClose, form, onConfirm, confirmOpen, setConfirmOpen
 }) => {
+  const [showChallengeInfo, setShowChallengeInfo] = useState(false);
   if (!open) return null;
 
   const checklist = [
@@ -107,7 +174,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 <S.MetaFoot>{isGuest ? 'Participando como invitado (Guest)' : 'Sesión autenticada'}</S.MetaFoot>
               </S.MetaCard>
 
-              <S.MetaCard $invalid={Boolean(form.formErrors.challenge)}>
+            <S.MetaCard $invalid={Boolean(form.formErrors.challenge)}>
                 <S.MetaLabel>Reto que respondes</S.MetaLabel>
                 <S.MetaValue>{challenge?.title || 'Selecciona un reto'}</S.MetaValue>
                 {challenge && <S.MetaBadge>{challenge.category}</S.MetaBadge>}
@@ -115,6 +182,28 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                   {challenge ? `${challenge.ideasCount ?? 0} ideas publicadas en este reto` : 'Elige un reto para asociar tu idea.'}
                 </S.MetaFoot>
                 {form.formErrors.challenge && <S.MetaError>{form.formErrors.challenge}</S.MetaError>}
+                {challenge && (
+                  <button
+                    type="button"
+                    onClick={() => setShowChallengeInfo(true)}
+                    style={{
+                      marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 5,
+                      padding: '7px 14px', borderRadius: 999, border: 'none',
+                      background: '#FE410A', color: 'white',
+                      fontSize: 11, fontWeight: 800, letterSpacing: '0.07em',
+                      textTransform: 'uppercase', cursor: 'pointer',
+                      boxShadow: '0 6px 18px rgba(254,65,10,0.25)',
+                      transition: 'transform 0.15s, box-shadow 0.15s',
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    Ver info del reto
+                  </button>
+                )}
               </S.MetaCard>
 
               <S.Checklist>
@@ -272,7 +361,14 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
     </>
   );
 
-  return createPortal(modalContent, document.body);
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      {showChallengeInfo && challenge && (
+        <ChallengeInfoModal challenge={challenge} onClose={() => setShowChallengeInfo(false)} />
+      )}
+    </>
+  );
 };
 
 export default IdeaForm;

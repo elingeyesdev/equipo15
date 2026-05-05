@@ -72,7 +72,11 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
           )}
         </div>
         <S.FilterWrap>
-          <S.FilterBtn onClick={() => setFilterOpen(!filterOpen)} active={filterOpen}>
+          <S.FilterBtn 
+            $active={filterOpen} 
+            onClick={() => setFilterOpen(!filterOpen)}
+            title="Filtrar retos"
+          >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="4" y1="6" x2="20" y2="6" stroke="currentColor" />
               <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" />
@@ -84,7 +88,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
               {filters.map(f => (
                 <S.FilterOption
                   key={f}
-                  active={activeFilter === f}
+                  $active={activeFilter === f}
                   onClick={() => { onFilterChange(f); setFilterOpen(false); }}
                 >
                   {f}

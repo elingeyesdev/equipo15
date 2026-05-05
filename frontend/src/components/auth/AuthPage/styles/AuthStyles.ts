@@ -80,18 +80,21 @@ export const Tabs = styled.div`
   gap: 4px;
 `;
 
-export const Tab = styled.button<{ active?: boolean }>`
+export const Tab = styled.button<{ $active: boolean }>`
   flex: 1;
   padding: 12px;
-  text-align: center;
-  font-size: 14px;
-  font-weight: 500;
-  color: ${p => p.active ? Pista8Theme.secondary : '#9aa0a6'};
-  border-radius: 12px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid ${p => p.$active ? Pista8Theme.primary : 'transparent'};
+  color: ${p => p.$active ? Pista8Theme.primary : '#9aa0a6'};
+  font-weight: 700;
   cursor: pointer;
-  border: ${p => p.active ? '0.5px solid rgba(72, 80, 84, 0.13)' : 'none'};
-  background: ${p => p.active ? Pista8Theme.white : 'transparent'};
-  transition: all 0.22s ease;
+  transition: all 0.2s ease;
+  font-size: 14px;
+
+  &:hover {
+    color: ${Pista8Theme.primary};
+  }
 `;
 
 export const Form = styled.form`
@@ -100,12 +103,12 @@ export const Form = styled.form`
   gap: 16px;
 `;
 
-export const FieldWrap = styled.div<{ isName?: boolean }>`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  ${p => p.isName && slideDown} 0.3s cubic-bezier(.22, .68, 0, 1.1) both;
-  ${p => p.isName && 'overflow: hidden;'}
+export const FieldWrap = styled.div<{ $isName?: boolean }>`
+  position: relative;
+  margin-bottom: 24px;
+  animation: ${slideDown} 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  ${p => p.$isName && slideDown} 0.3s cubic-bezier(.22, .68, 0, 1.1) both;
+  ${p => p.$isName && 'overflow: hidden;'}
 `;
 
 export const FieldHint = styled.span`
@@ -304,19 +307,20 @@ export const ValidationList = styled.div`
   overflow: hidden;
 `;
 
-export const ValidationItem = styled.div<{ isValid: boolean }>`
+export const ValidationItem = styled.div<{ $isValid: boolean }>`
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: ${p => p.isValid ? '#34A853' : '#9aa0a6'};
+  color: ${p => p.$isValid ? '#34A853' : '#9aa0a6'};
   transition: color 0.3s ease;
+  font-weight: 500;
 
   svg {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     flex-shrink: 0;
-    color: ${p => p.isValid ? '#34A853' : '#EA4335'};
+    color: ${p => p.$isValid ? '#34A853' : '#EA4335'};
     transition: color 0.3s ease;
   }
 `;

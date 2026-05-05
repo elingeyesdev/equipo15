@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
 import { motion } from 'framer-motion';
-import styled from 'styled-components';
 import { useAuth } from '../../context/AuthContext';
 import SkyCanvas from '../../features/sky-wall';
 
@@ -12,7 +12,6 @@ import StatsPanel from './components/StatsPanel';
 import IdeaForm from './components/IdeaForm';
 import FeedbackToast from './components/FeedbackToast';
 import OmniSearchBar from './components/OmniSearchBar';
-import SortToggle from './components/SortToggle';
 import IdeasChronologicalList from './components/IdeasChronologicalList';
 import IdeaDetailModal from '../../features/sky-wall/components/IdeaDetailModal';
 import { ModerationModals } from './components/ModerationModals';
@@ -23,23 +22,10 @@ import InnovationStepsPanel from './components/InnovationStepsPanel';
 
 import { useDashboardState } from './hooks/useDashboardState';
 import { useIdeationForm } from './hooks/useIdeationForm';
+import AdvancedFilter from './components/AdvancedFilter';
+import type { AdvancedFilterState } from './components/AdvancedFilter';
 
-const FavoritesFilterButton = styled.button<{ $active: boolean }>`
-  border: 1px solid ${(p) => (p.$active ? '#fdba74' : '#e5e7eb')};
-  background: ${(p) => (p.$active ? '#fff7ed' : '#ffffff')};
-  color: ${(p) => (p.$active ? '#c2410c' : '#4b5563')};
-  border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.18s ease;
 
-  &:hover {
-    border-color: #fdba74;
-    color: #c2410c;
-  }
-`;
 
 const IdeationWall = () => {
   const { user, userProfile } = useAuth();
@@ -50,7 +36,12 @@ const IdeationWall = () => {
   const [listLoading, setListLoading] = useState(false);
   const [selectedListIdea, setSelectedListIdea] = useState<PlaneIdea | null>(null);
   const [showAllIdeas, setShowAllIdeas] = useState(false);
-  const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const [advFilter, setAdvFilter] = useState<AdvancedFilterState>({
+    sortOrder: 'newest',
+    topLimit: null,
+    facultyId: null,
+    onlyFavorites: false,
+  });
 
   const handleIdeasLoaded = (ideas: RawIdea[]) => {
     setWallIdeas(ideas);
@@ -91,9 +82,61 @@ const IdeationWall = () => {
     return () => window.removeEventListener('pista8:favorite_changed', handleFavoriteChange);
   }, []);
 
-  const displayedWallIdeas = onlyFavorites
-    ? wallIdeas.filter((idea) => Boolean(idea.hasFavorited))
-    : wallIdeas;
+  // ── Real-time: prepend new ideas to the chronological list ──────────────
+  const socketRef = useRef<ReturnType<typeof io> | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let active = true;
+
+    // Get a fresh token then open the socket
+    user.getIdToken().then((token: string) => {
+      if (!active) return;
+
+      const socketURL = import.meta.env.VITE_API_URL
+        ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
+        : 'http://localhost:3000';
+
+      const socket = io(socketURL, {
+        reconnection: true,
+        reconnectionDelay: 1000,
+        auth: { token },
+      });
+      socketRef.current = socket;
+
+      socket.on('idea_created', (rawIdea: RawIdea) => {
+        if (!active) return;
+        setWallIdeas(prev => {
+          // Deduplicate: skip if we already have this idea
+          if (prev.some(p => p.id === rawIdea.id || p.id === rawIdea._id)) return prev;
+          // Prepend so it appears at the top of the "Más Recientes" list
+          return [{ ...rawIdea, id: rawIdea.id ?? rawIdea._id } as RawIdea, ...prev];
+        });
+      });
+    }).catch(console.error);
+
+    return () => {
+      active = false;
+      socketRef.current?.disconnect();
+      socketRef.current = null;
+    };
+  }, [user]);
+  // ────────────────────────────────────────────────────────────────────────
+
+
+  const displayedWallIdeas = (() => {
+    let ideas = advFilter.onlyFavorites
+      ? wallIdeas.filter(idea => Boolean(idea.hasFavorited))
+      : wallIdeas;
+    if (advFilter.facultyId) {
+      ideas = ideas.filter(idea => idea.authorFacultyId === advFilter.facultyId || (idea.author as any)?.facultyId === advFilter.facultyId);
+    }
+    if (advFilter.topLimit) {
+      ideas = ideas.slice(0, advFilter.topLimit);
+    }
+    return ideas;
+  })();
 
   const resolvedName = resolveDisplayName(userProfile as any);
   const fullName = resolvedName || user?.email || '';
@@ -168,19 +211,17 @@ const IdeationWall = () => {
         </S.Header>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 10px', flexWrap: 'wrap', gap: '8px' }}>
-          <SortToggle value={ds.sortOrder} onChange={(v) => {
-            ds.setSortOrder(v);
-            setListLoading(true);
-          }} />
-          <FavoritesFilterButton
-            type="button"
-            $active={onlyFavorites}
-            onClick={() => setOnlyFavorites((current) => !current)}
-            aria-label={onlyFavorites ? 'Mostrar todas las ideas' : 'Mostrar solo favoritos'}
-            title={onlyFavorites ? 'Mostrar todas las ideas' : 'Mostrar solo favoritos'}
-          >
-            {onlyFavorites ? 'Mostrando: Favoritos' : 'Filtrar: Solo favoritos'}
-          </FavoritesFilterButton>
+          <AdvancedFilter
+            value={advFilter}
+            onChange={next => {
+              if (next.sortOrder !== advFilter.sortOrder) {
+                ds.setSortOrder(next.sortOrder);
+                setListLoading(true);
+              }
+              setAdvFilter(next);
+            }}
+            disabled={!ds.selectedChallenge}
+          />
         </div>
 
         <SkyCanvas
@@ -189,10 +230,10 @@ const IdeationWall = () => {
           challengeFacultyId={ds.selectedChallenge?.facultyId ?? undefined}
           isDashboardLoading={ds.loading}
           search={ds.debouncedSearch}
-          sort={ds.sortOrder ?? undefined}
+          sort={advFilter.sortOrder ?? undefined}
           challengeStatus={ds.selectedChallenge?.status}
           onIdeasLoaded={handleIdeasLoaded}
-          onlyFavorites={onlyFavorites}
+          onlyFavorites={advFilter.onlyFavorites}
         />
 
         {!showAllIdeas ? (
