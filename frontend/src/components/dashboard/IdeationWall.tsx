@@ -234,6 +234,8 @@ const IdeationWall = () => {
           challengeStatus={ds.selectedChallenge?.status}
           onIdeasLoaded={handleIdeasLoaded}
           onlyFavorites={advFilter.onlyFavorites}
+          topLimit={advFilter.topLimit}
+          facultyId={advFilter.facultyId}
         />
 
         {!showAllIdeas ? (
