@@ -62,7 +62,7 @@ export class TransformInterceptor<T> implements NestInterceptor<
 
     Object.keys(transformed).forEach((key) => {
       const val = transformed[key];
-      if (val && typeof val === 'object' && key !== 'roleId') {
+      if (val && typeof val === 'object') {
         if (Array.isArray(val)) {
           transformed[key] = val.map((item) => this.transform(item));
         } else if (val.constructor && val.constructor.name === 'Object') {

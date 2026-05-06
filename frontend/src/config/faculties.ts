@@ -7,8 +7,36 @@ export const FACULTIES = [
   { id: 6, name: 'Facultad de Arquitectura', slug: 'Arquitectura' },
 ];
 
-export const getFacultyName = (id: number | null) => 
-  id ? (FACULTIES.find(f => f.id === id)?.name || `Facultad ${id}`) : 'Todas las Facultades';
+/**
+ * Resolve a faculty display name.
+ * Supports:
+ *   - Legacy numeric IDs (1..6) for backward compat with hardcoded selects
+ *   - UUID strings (returns a generic label; prefer facultyName from API)
+ *   - null → 'Todas las Facultades'
+ */
+export const getFacultyName = (id: string | number | null, facultyName?: string | null): string => {
+  if (facultyName) return `Facultad de ${facultyName}`;
+  if (id === null || id === undefined) return 'Todas las Facultades';
+  if (typeof id === 'number') {
+    return FACULTIES.find(f => f.id === id)?.name || `Facultad ${id}`;
+  }
+  // UUID string — try numeric parse for legacy compat
+  const numId = Number(id);
+  if (!isNaN(numId) && numId >= 1 && numId <= 6) {
+    return FACULTIES.find(f => f.id === numId)?.name || `Facultad ${id}`;
+  }
+  return 'Facultad';
+};
 
-export const getFacultySlug = (id: number | null) => 
-  id ? (FACULTIES.find(f => f.id === id)?.slug || 'General') : 'Todas';
+export const getFacultySlug = (id: string | number | null, facultyName?: string | null): string => {
+  if (facultyName) return facultyName;
+  if (id === null || id === undefined) return 'Todas';
+  if (typeof id === 'number') {
+    return FACULTIES.find(f => f.id === id)?.slug || 'General';
+  }
+  const numId = Number(id);
+  if (!isNaN(numId) && numId >= 1 && numId <= 6) {
+    return FACULTIES.find(f => f.id === numId)?.slug || 'General';
+  }
+  return 'General';
+};

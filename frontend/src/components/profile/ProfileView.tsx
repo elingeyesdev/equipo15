@@ -607,7 +607,7 @@ export const ProfileView: React.FC = () => {
             <DisplayName>{resolveDisplayName(profile)}</DisplayName>
             <Email>{profile.email}</Email>
             <BannerPills>
-              {profile.facultyId && <FacultyPill>{getFacultyName(profile.facultyId)}</FacultyPill>}
+              {profile.facultyId && <FacultyPill>{getFacultyName(profile.facultyId, (profile as any).facultyName || (profile as any).faculty?.name)}</FacultyPill>}
               <RolePill>{PROFILE_CONFIGS[profile.role || 'student']?.badge || 'Usuario'}</RolePill>
             </BannerPills>
           </BannerMeta>

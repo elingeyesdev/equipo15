@@ -191,15 +191,15 @@ describe('CreateChallengeDto — Contenido y Calidad', () => {
 });
 
 describe('CreateChallengeDto — Validación de Campos Opcionales y Tipos', () => {
-  it('debe fallar si facultyId no es un número', async () => {
-    const dto = buildValidDto({ facultyId: 'texto' as any });
+  it('debe fallar si facultyId no es un string', async () => {
+    const dto = buildValidDto({ facultyId: 123 as any });
     const errors = await validate(dto);
     const facultyError = errors.find((e) => e.property === 'facultyId');
     expect(facultyError).toBeDefined();
   });
 
-  it('debe aceptar facultyId como número válido', async () => {
-    const dto = buildValidDto({ facultyId: 3 });
+  it('debe aceptar facultyId como string válido', async () => {
+    const dto = buildValidDto({ facultyId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' });
     const errors = await validate(dto);
     const facultyError = errors.find((e) => e.property === 'facultyId');
     expect(facultyError).toBeUndefined();

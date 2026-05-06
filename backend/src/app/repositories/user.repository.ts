@@ -6,31 +6,29 @@ import { User } from '@prisma/client';
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByUid(firebaseUid: string): Promise<User | null> {
+  async findByUid(firebaseUid: string): Promise<any | null> {
     return this.prisma.user.findUnique({
       where: { firebaseUid },
-      include: { role: true },
+      include: { faculty: true },
     });
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string): Promise<any | null> {
     return this.prisma.user.findUnique({
       where: { email },
-      include: { role: true },
+      include: { faculty: true },
     });
   }
 
   async findById(id: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { id },
-      include: { role: true },
     });
   }
 
   async create(data: any): Promise<User> {
     return this.prisma.user.create({
       data,
-      include: { role: true },
     });
   }
 
@@ -38,7 +36,6 @@ export class UserRepository {
     return this.prisma.user.update({
       where: { id },
       data,
-      include: { role: true },
     });
   }
 
@@ -46,7 +43,6 @@ export class UserRepository {
     return this.prisma.user.update({
       where: { firebaseUid },
       data,
-      include: { role: true },
     });
   }
 
@@ -54,7 +50,6 @@ export class UserRepository {
     return this.prisma.user.update({
       where: { email },
       data,
-      include: { role: true },
     });
   }
 
@@ -67,7 +62,6 @@ export class UserRepository {
       where: { firebaseUid },
       update: updateData,
       create: createData,
-      include: { role: true },
     });
   }
   async updateStatus(
@@ -78,6 +72,12 @@ export class UserRepository {
     return this.prisma.user.update({
       where: { id },
       data: { status, penaltyExpiresAt },
+    });
+  }
+
+  async findFacultyByName(name: string) {
+    return this.prisma.faculty.findFirst({
+      where: { name: { contains: name, mode: 'insensitive' } },
     });
   }
 }

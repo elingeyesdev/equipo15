@@ -102,7 +102,7 @@ export class IdeaRepository {
         updatedAt: true,
         authorId: true,
         challengeId: true,
-        votesCount: true,
+        finalScore: true,
         author: {
           select: {
             displayName: true,
@@ -111,7 +111,7 @@ export class IdeaRepository {
             facultyId: true,
             phone: true,
             studentCode: true,
-            role: { select: { name: true } },
+            role: true,
           },
         },
         challenge: { select: { status: true } },

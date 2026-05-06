@@ -76,7 +76,7 @@ export const useDashboardState = () => {
           ideasCount: c._count?.ideas || 0,
           likesCount: c.ideas?.reduce((sum: number, idea: any) => sum + (idea.likesCount || 0), 0) || 0,
           commentsCount: c.ideas?.reduce((sum: number, idea: any) => sum + (idea.commentsCount || 0), 0) || 0,
-          category: getFacultySlug(c.facultyId || null),
+          category: getFacultySlug(c.facultyId || null, c.faculty?.name),
           badge: c.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
         }));
 
@@ -92,7 +92,7 @@ export const useDashboardState = () => {
                   ideasCount: privateChallengeRaw._count?.ideas || privateChallengeRaw.ideas?.length || 0,
                   likesCount: privateChallengeRaw.ideas?.reduce((sum: number, idea: any) => sum + (idea.likesCount || 0), 0) || 0,
                   commentsCount: privateChallengeRaw.ideas?.reduce((sum: number, idea: any) => sum + (idea.commentsCount || 0), 0) || 0,
-                  category: getFacultySlug(privateChallengeRaw.facultyId || null),
+                  category: getFacultySlug(privateChallengeRaw.facultyId || null, privateChallengeRaw.faculty?.name),
                   badge: privateChallengeRaw.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
                 };
                 mapped = [mappedPrivate, ...mapped];

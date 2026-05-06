@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../providers/database.service';
-import { Challenge, Prisma } from '@prisma/client';
+import { Challenge, Prisma, UserRole } from '@prisma/client';
 
 @Injectable()
 export class ChallengeRepository {
@@ -12,7 +12,7 @@ export class ChallengeRepository {
     status?: string,
     userId?: string,
     userRole?: string,
-    facultyId?: number | null,
+    facultyId?: string | null,
     search?: string,
   ): Promise<{ data: any[]; total: number }> {
     const where: Prisma.ChallengeWhereInput = {};
@@ -48,8 +48,8 @@ export class ChallengeRepository {
       ];
     }
 
-    if (userRole === 'student') {
-      const facultyCondition = [
+    if (userRole === 'student' || userRole === UserRole.USER) {
+      const facultyCondition: Prisma.ChallengeWhereInput[] = [
         { facultyId: null },
         ...(facultyId ? [{ facultyId }] : []),
       ];
@@ -75,6 +75,7 @@ export class ChallengeRepository {
         skip,
         take,
         include: {
+          faculty: true,
           _count: {
             select: { ideas: true },
           },
@@ -93,6 +94,7 @@ export class ChallengeRepository {
     return this.prisma.challenge.findUnique({
       where: { id },
       include: {
+        faculty: true,
         ideas: true,
       },
     });
@@ -159,9 +161,7 @@ export class ChallengeRepository {
   async countStudentUsers(): Promise<number> {
     return this.prisma.user.count({
       where: {
-        role: {
-          name: 'student',
-        },
+        role: UserRole.USER,
       },
     });
   }
@@ -211,7 +211,7 @@ export class ChallengeRepository {
           id: true,
           displayName: true,
           nickname: true,
-          role: { select: { name: true } },
+          role: true,
           email: true,
         },
       }),
@@ -243,7 +243,7 @@ export class ChallengeRepository {
         return {
           id: a.id,
           name: resolvedName,
-          role: a.role?.name || 'student',
+          role: a.role || UserRole.USER,
           avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(resolvedName)}&background=random`,
         };
       }),
@@ -301,7 +301,7 @@ export class ChallengeRepository {
     }
 
     private async getInnovationStatsScoped(authorId: string, challengeIds: string[]) {
-      const FACULTY_NAMES: Record<number, string> = {
+      const FACULTY_NAMES: Record<string, string> = {
         1: 'Ingeniería',
         2: 'Medicina',
         3: 'Ciencias Exactas',
@@ -329,7 +329,7 @@ export class ChallengeRepository {
         by: ['authorId'],
         where: { challengeId: { in: challengeIds }, status: 'public' },
         _count: { _all: true },
-        _sum: { votesCount: true },
+        _sum: { finalScore: true },
       });
 
       const groupedAuthorIds = groupedIdeasByAuthor.map((item) => item.authorId);
@@ -346,21 +346,21 @@ export class ChallengeRepository {
           })
         : [];
 
-      const authorFacultyMap = new Map<string, number>();
+      const authorFacultyMap = new Map<string, string>();
       groupedAuthors.forEach((author) => {
         if (author.facultyId != null) {
           authorFacultyMap.set(author.id, author.facultyId);
         }
       });
 
-      const facultyMap = new Map<number, { ideasCount: number; votesCount: number }>();
+      const facultyMap = new Map<string, { ideasCount: number; votesCount: number }>();
       groupedIdeasByAuthor.forEach((group) => {
         const facultyId = authorFacultyMap.get(group.authorId);
         if (facultyId == null) return;
 
         const current = facultyMap.get(facultyId) ?? { ideasCount: 0, votesCount: 0 };
-        current.ideasCount += group._count._all;
-        current.votesCount += group._sum.votesCount ?? 0;
+        current.ideasCount += (group._count as any)?._all ?? 0;
+        current.votesCount += group._sum?.finalScore ?? 0;
         facultyMap.set(facultyId, current);
       });
 
@@ -424,7 +424,7 @@ export class ChallengeRepository {
           .map((author) => ({
             author,
             ideaCount:
-              groupedIdeasByAuthor.find((item) => item.authorId === author.id)?._count._all ?? 0,
+              (groupedIdeasByAuthor.find((item) => item.authorId === author.id)?._count as any)?._all ?? 0,
           }))
           .sort((a, b) => b.ideaCount - a.ideaCount);
 
@@ -451,7 +451,7 @@ export class ChallengeRepository {
 
   // ─── Innovation Stats for Company Dashboard (E1.4) ───────────────────────────
   async getInnovationStats(authorId: string) {
-    const FACULTY_NAMES: Record<number, string> = {
+    const FACULTY_NAMES: Record<string, string> = {
       1: 'Ingeniería',
       2: 'Medicina',
       3: 'Ciencias Exactas',
@@ -487,7 +487,7 @@ export class ChallengeRepository {
       by: ['authorId'],
       where: { challengeId: { in: challengeIds }, status: 'public' },
       _count: { _all: true },
-      _sum: { votesCount: true },
+      _sum: { finalScore: true },
     });
 
     const groupedAuthorIds = groupedIdeasByAuthor.map((item) => item.authorId);
@@ -504,21 +504,21 @@ export class ChallengeRepository {
         })
       : [];
 
-    const authorFacultyMap = new Map<string, number>();
+    const authorFacultyMap = new Map<string, string>();
     groupedAuthors.forEach((author) => {
       if (author.facultyId != null) {
         authorFacultyMap.set(author.id, author.facultyId);
       }
     });
 
-    const facultyMap = new Map<number, { ideasCount: number; votesCount: number }>();
+    const facultyMap = new Map<string, { ideasCount: number; votesCount: number }>();
     groupedIdeasByAuthor.forEach((group) => {
       const facultyId = authorFacultyMap.get(group.authorId);
       if (facultyId == null) return;
 
       const current = facultyMap.get(facultyId) ?? { ideasCount: 0, votesCount: 0 };
-      current.ideasCount += group._count._all;
-      current.votesCount += group._sum.votesCount ?? 0;
+      current.ideasCount += (group._count as any)?._all ?? 0;
+      current.votesCount += group._sum?.finalScore ?? 0;
       facultyMap.set(facultyId, current);
     });
 
@@ -573,11 +573,11 @@ export class ChallengeRepository {
 
     // 3. KPIs ──────────────────────────────────────────────────────────────────
     const totalIdeas = groupedIdeasByAuthor.reduce(
-      (acc, item) => acc + item._count._all,
+      (acc, item) => acc + ((item._count as any)?._all ?? 0),
       0,
     );
     const totalVotes = groupedIdeasByAuthor.reduce(
-      (acc, item) => acc + (item._sum.votesCount ?? 0),
+      (acc, item) => acc + (item._sum?.finalScore ?? 0),
       0,
     );
 
@@ -595,7 +595,7 @@ export class ChallengeRepository {
         'Anónimo';
       userIdeaCount.set(author.id, {
         name: resolvedName,
-        count: item._count._all,
+        count: (item._count as any)?._all ?? 0,
       });
     });
 
@@ -608,7 +608,7 @@ export class ChallengeRepository {
 
     // Leading faculty (most ideas)
     let leadingFaculty: {
-      facultyId: number;
+      facultyId: string;
       facultyName: string;
       ideasCount: number;
     } | null = null;

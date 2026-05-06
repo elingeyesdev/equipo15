@@ -13,16 +13,18 @@ export const DOMAIN_FACULTY_MAP: Record<string, number> = {
   '@est.univalle.edu': 6,
 };
 
+import { UserRole } from '@prisma/client';
+
 export function getRoleFromEmail(
   email: string,
-): 'admin' | 'company' | 'judge' | 'student' {
+): UserRole {
   const normalizedEmail = email.toLowerCase();
 
-  if (ADMIN_WHITELIST.includes(normalizedEmail)) return 'admin';
-  if (COMPANY_WHITELIST.includes(normalizedEmail)) return 'company';
-  if (EXPERT_WHITELIST.includes(normalizedEmail)) return 'judge';
+  if (ADMIN_WHITELIST.includes(normalizedEmail)) return UserRole.ADMIN;
+  if (COMPANY_WHITELIST.includes(normalizedEmail)) return UserRole.COMPANY;
+  if (EXPERT_WHITELIST.includes(normalizedEmail)) return UserRole.JUDGE;
 
-  return 'student';
+  return UserRole.USER;
 }
 
 export function isAuthorizedEmail(email: string): boolean {

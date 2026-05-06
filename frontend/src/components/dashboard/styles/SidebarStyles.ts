@@ -1,6 +1,5 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
-import { slideIn, slideOut } from './CommonStyles';
 
 export const Overlay = styled.div<{ open: boolean }>`
   position: fixed;
@@ -24,8 +23,10 @@ export const Sidebar = styled.aside<{ open: boolean }>`
   display: flex;
   flex-direction: column;
   padding: 36px 28px 40px;
-  animation: ${p => p.open ? css`${slideIn} 0.32s cubic-bezier(.22,.68,0,1.1) both` : css`${slideOut} 0.28s ease both`};
-  ${p => !p.open && 'pointer-events: none;'}
+  transform: ${p => p.open ? 'translateX(0)' : 'translateX(100%)'};
+  transition: transform 0.32s cubic-bezier(.22,.68,0,1.1), visibility 0.32s;
+  visibility: ${p => p.open ? 'visible' : 'hidden'};
+  pointer-events: ${p => p.open ? 'auto' : 'none'};
 `;
 
 export const SidebarTop = styled.div`

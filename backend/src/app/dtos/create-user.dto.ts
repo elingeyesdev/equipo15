@@ -25,9 +25,7 @@ export class CreateUserDto {
   @IsOptional()
   role?: string;
 
-  @IsString()
-  @IsOptional()
-  roleId?: string;
+
 
   @IsString()
   @IsOptional()
@@ -61,9 +59,8 @@ export class CreateUserDto {
   @IsOptional()
   specialty?: string;
 
-  @IsNumber()
   @IsOptional()
-  facultyId?: number;
+  facultyId?: string | number;
 
   @IsBoolean()
   @IsOptional()

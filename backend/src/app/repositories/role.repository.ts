@@ -1,24 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../providers/database.service';
-import { Role } from '@prisma/client';
+// This file is intentionally left as a re-export of UserRole.
+// The Role table was removed and replaced by the UserRole enum in Prisma.
+// This file is kept to avoid breaking module imports during transition.
+// TODO: Remove this file and all references once the codebase is fully migrated.
 
-@Injectable()
-export class RoleRepository {
-  constructor(private readonly prisma: PrismaService) {}
-
-  async findByName(name: string): Promise<Role | null> {
-    return this.prisma.role.findUnique({
-      where: { name },
-    });
-  }
-
-  async findAll(): Promise<Role[]> {
-    return this.prisma.role.findMany();
-  }
-
-  async create(data: any): Promise<Role> {
-    return this.prisma.role.create({
-      data,
-    });
-  }
-}
+export { UserRole } from '@prisma/client';

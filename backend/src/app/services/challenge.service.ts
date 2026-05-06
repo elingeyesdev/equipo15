@@ -64,7 +64,7 @@ export class ChallengeService {
 
     let userId: string | undefined;
     let userRole: string | undefined;
-    let facultyId: number | null | undefined;
+    let facultyId: string | null | undefined;
 
     if (uid) {
       const user = await this.userService.findByUid(uid);
@@ -109,7 +109,7 @@ export class ChallengeService {
 
     if (uid && challenge.isPrivate) {
       const user = await this.userService.findByUid(uid);
-      if (user && user.role === 'student') {
+      if (user && user.role === 'USER') {
         if (
           challenge.facultyId !== null &&
           challenge.facultyId !== user.facultyId
@@ -257,8 +257,8 @@ export class ChallengeService {
         valA = a.commentsCount || 0;
         valB = b.commentsCount || 0;
       } else if (dto.category === RankingCategory.VOTES) {
-        valA = a.votesCount || 0;
-        valB = b.votesCount || 0;
+        valA = a.finalScore || 0;
+        valB = b.finalScore || 0;
       }
 
       return valB - valA; // Descending order

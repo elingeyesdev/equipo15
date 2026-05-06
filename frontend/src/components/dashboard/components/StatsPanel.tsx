@@ -22,7 +22,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
             <S.StatsSub>{selectedChallenge.title}</S.StatsSub>
             {selectedChallenge.facultyId && (
               <S.StatsSub style={{ fontSize: 11, color: Pista8Theme.primary, fontWeight: 700, marginTop: 4 }}>
-                {getFacultyName(selectedChallenge.facultyId)}
+                {getFacultyName(selectedChallenge.facultyId, selectedChallenge.faculty?.name)}
               </S.StatsSub>
             )}
           </S.StatsHeader>

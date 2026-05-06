@@ -4,8 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { UserRepository } from '../repositories/user.repository';
-import { RoleRepository } from '../repositories/role.repository';
-import { User, Role } from '@prisma/client';
+import { User, UserRole } from '@prisma/client';
 import { extractFacultyFromEmail } from '../utils/email-parser.util';
 import {
   getRoleFromEmail,
@@ -13,22 +12,18 @@ import {
 } from '../utils/user-metadata.util';
 import { EventsGateway } from '../gateways/events.gateway';
 
-export type UserWithRole = User & { role?: Role | null };
-
-export interface UserResponse extends Omit<User, 'roleId'> {
-  role: string;
-  roleInfo?: Role | null;
+export interface UserResponse extends User {
+  roleName: string;
 }
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly roleRepository: RoleRepository,
     private readonly eventsGateway: EventsGateway,
-  ) {}
+  ) { }
 
-  private async ensureUserCanWrite(firebaseUid: string): Promise<UserWithRole> {
+  private async ensureUserCanWrite(firebaseUid: string): Promise<User> {
     const user = await this.userRepository.findByUid(firebaseUid);
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
@@ -40,7 +35,7 @@ export class UserService {
       );
     }
 
-    return user as UserWithRole;
+    return user;
   }
 
   async findOrCreate(
@@ -65,8 +60,8 @@ export class UserService {
     }
 
     if (user && !forceUpdate) {
-      user = await this.clearExpiredPenalties(user as UserWithRole);
-      return this.formatUserResponse(user as UserWithRole);
+      user = await this.clearExpiredPenalties(user);
+      return this.formatUserResponse(user);
     }
 
     if (!user && preventCreation) {
@@ -83,25 +78,22 @@ export class UserService {
       );
     }
 
-    const roleName = getRoleFromEmail(email);
-    const roleDoc = await this.roleRepository.findByName(roleName);
+    const role = getRoleFromEmail(email);
 
-    if (!roleDoc) {
-      throw new NotFoundException(`Rol ${roleName} no encontrado.`);
-    }
-
-    const userData = {
+    const userData: any = {
       firebaseUid,
       email,
       displayName: createUserDto.displayName,
       avatarUrl: createUserDto.avatarUrl,
-      roleId: roleDoc.id,
-      facultyId: undefined as number | undefined,
+      role,
     };
 
     const detectedFacultyId = extractFacultyFromEmail(email);
     if (detectedFacultyId !== null) {
-      userData.facultyId = detectedFacultyId;
+      const mappedId = await this.mapLegacyFacultyId(detectedFacultyId);
+      if (mappedId) {
+        userData.facultyId = mappedId;
+      }
     }
 
     user = await this.userRepository.upsert(firebaseUid, userData, {
@@ -109,23 +101,32 @@ export class UserService {
       avatarUrl: createUserDto.avatarUrl,
     });
 
-    return this.formatUserResponse(user as UserWithRole);
+    return this.formatUserResponse(user);
   }
 
-  private formatUserResponse(user: UserWithRole | null): UserResponse | null {
+  private formatUserResponse(user: any | null): UserResponse | null {
     if (!user) return null;
 
-    const { roleId: _, ...userData } = user;
+    const roleMapping: Record<string, string> = {
+      ADMIN: 'admin',
+      COMPANY: 'company',
+      JUDGE: 'judge',
+      USER: 'student',
+    };
+
+    const mappedRole = roleMapping[user.role] || 'student';
+
     return {
-      ...userData,
-      role: user.role?.name || 'student',
-      roleInfo: user.role,
+      ...user,
+      role: mappedRole as any,
+      roleName: mappedRole,
+      facultyName: user.faculty?.name || null,
     };
   }
 
   private async clearExpiredPenalties(
-    user: UserWithRole | null,
-  ): Promise<UserWithRole | null> {
+    user: User | null,
+  ): Promise<User | null> {
     if (!user) return null;
 
     if (user.status !== 'ACTIVE' && user.penaltyExpiresAt) {
@@ -147,8 +148,8 @@ export class UserService {
 
   async findByUid(firebaseUid: string): Promise<UserResponse | null> {
     let user = await this.userRepository.findByUid(firebaseUid);
-    user = await this.clearExpiredPenalties(user as UserWithRole);
-    return this.formatUserResponse(user as UserWithRole);
+    user = await this.clearExpiredPenalties(user);
+    return this.formatUserResponse(user);
   }
 
   async updateProfile(
@@ -182,22 +183,54 @@ export class UserService {
       });
     }
 
-    return this.formatUserResponse(updatedUser as UserWithRole);
+    return this.formatUserResponse(updatedUser);
   }
 
   async updateFaculty(
     firebaseUid: string,
-    data: { facultyId?: number },
+    data: { facultyId?: string | number },
   ): Promise<UserResponse | null> {
     await this.ensureUserCanWrite(firebaseUid);
 
+    const updateData: any = { ...data };
+
+    if (data.facultyId !== undefined) {
+      const mappedId = await this.mapLegacyFacultyId(data.facultyId);
+      if (mappedId) {
+        updateData.facultyId = mappedId;
+      }
+    }
+
     const updatedUser = await this.userRepository.updateByUid(
       firebaseUid,
-      data,
+      updateData,
     );
     if (!updatedUser) {
       throw new NotFoundException('Usuario no encontrado');
     }
-    return this.formatUserResponse(updatedUser as UserWithRole);
+    return this.formatUserResponse(updatedUser);
+  }
+
+  private async mapLegacyFacultyId(
+    legacyId: string | number,
+  ): Promise<string | null> {
+    const numericId = Number(legacyId);
+    if (isNaN(numericId)) return null;
+
+    const facultyMapping: Record<number, string> = {
+      1: 'Ingeniería',
+      2: 'Medicina',
+      3: 'Gastronomía',
+      4: 'Medicina',
+      5: 'Derecho',
+      6: 'Arquitectura',
+    };
+
+    const facultyName = facultyMapping[numericId];
+    if (facultyName) {
+      const faculty = await this.userRepository.findFacultyByName(facultyName);
+      return faculty?.id || null;
+    }
+    return null;
   }
 }
