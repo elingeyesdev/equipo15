@@ -1,5 +1,6 @@
 import axiosInstance from '../api/axiosConfig';
 import type { Comment, CommentListResponse, CreateCommentPayload } from '../types/models';
+import { getCommentValidationError, normalizeCommentInput } from '../components/comments/commentValidation';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -73,6 +74,15 @@ const assertCommentPagination = (page: number, limit: number) => {
   }
 };
 
+const assertCommentContent = (content: string): string => {
+  const error = getCommentValidationError(content);
+  if (error) {
+    throw new Error(error);
+  }
+
+  return normalizeCommentInput(content);
+};
+
 export const commentService = {
   getComments: async (params: GetCommentsParams): Promise<ApiResponse<CommentListResponse>> => {
     const page = params.page ?? 1;
@@ -131,7 +141,12 @@ export const commentService = {
       assertUuid(payload.parentCommentId, 'parentCommentId');
     }
 
-    const response = await axiosInstance.post<ApiResponse<Comment>>('/comentarios', payload);
+    const content = assertCommentContent(payload.content);
+
+    const response = await axiosInstance.post<ApiResponse<Comment>>('/comentarios', {
+      ...payload,
+      content,
+    });
     invalidateCommentsCache(payload.ideaId);
     return response.data;
   },
@@ -142,13 +157,11 @@ export const commentService = {
     ideaId?: string,
   ): Promise<ApiResponse<Comment>> => {
     assertUuid(commentId, 'commentId');
-    if (!content.trim()) {
-      throw new Error('La respuesta no puede estar vacía.');
-    }
+    const normalizedContent = assertCommentContent(content);
 
     const response = await axiosInstance.post<ApiResponse<Comment>>(
       `/comentarios/${commentId}/responder`,
-      { content },
+      { content: normalizedContent },
     );
     invalidateCommentsCache(ideaId);
     return response.data;
@@ -160,13 +173,11 @@ export const commentService = {
     ideaId?: string,
   ): Promise<ApiResponse<Comment>> => {
     assertUuid(commentId, 'commentId');
-    if (!content.trim()) {
-      throw new Error('El comentario no puede estar vacío.');
-    }
+    const normalizedContent = assertCommentContent(content);
 
     const response = await axiosInstance.patch<ApiResponse<Comment>>(
       `/comentarios/${commentId}`,
-      { content },
+      { content: normalizedContent },
     );
     invalidateCommentsCache(ideaId);
     return response.data;

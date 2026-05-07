@@ -17,6 +17,7 @@ import { GetCommentsQueryDto } from '../dtos/get-comments-query.dto';
 import {
   buildComparableCommentFingerprint,
   normalizeCommentContent,
+  COMMENT_CONTENT_RULES,
 } from '../utils/comment-validation.util';
 import { ModerationService } from './moderation.service';
 
@@ -25,12 +26,14 @@ export interface CreateCommentInput {
   ideaId: string;
   firebaseUid: string;
   parentCommentId?: string;
+  clientIp?: string;
 }
 
 export interface ReplyCommentInput {
   content: string;
   firebaseUid: string;
   parentCommentId: string;
+  clientIp?: string;
 }
 
 export interface WithdrawCommentInput {
@@ -46,7 +49,11 @@ export interface UpdateCommentInput {
 
 @Injectable()
 export class CommentService {
-  private readonly duplicateWindowMs = 30_000;
+  private readonly duplicateWindowMs = COMMENT_CONTENT_RULES.duplicateWindowMs;
+  private readonly maxCommentsPerMinute = COMMENT_CONTENT_RULES.maxCommentsPerMinute;
+  private readonly cooldownMs = COMMENT_CONTENT_RULES.cooldownMs;
+  private readonly rateLimitHistory = new Map<string, number[]>();
+  private readonly rateLimitBlocks = new Map<string, number>();
 
   constructor(
     private readonly commentRepository: CommentRepository,
@@ -88,6 +95,57 @@ export class CommentService {
     }
   }
 
+  private buildRateLimitKeys(userId: string, clientIp?: string): string[] {
+    const keys = [`user:${userId}`];
+
+    if (clientIp) {
+      keys.push(`ip:${clientIp}`);
+    }
+
+    return keys;
+  }
+
+  private assertRateLimitNotBlocked(keys: string[]): void {
+    const now = Date.now();
+
+    for (const key of keys) {
+      const blockedUntil = this.rateLimitBlocks.get(key);
+      if (blockedUntil && blockedUntil > now) {
+        const remainingSeconds = Math.ceil((blockedUntil - now) / 1000);
+        throw new BadRequestException(
+          `Estás comentando demasiado rápido. Espera ${remainingSeconds} segundos antes de volver a intentar.`,
+        );
+      }
+    }
+  }
+
+  private registerCommentAttempt(keys: string[]): void {
+    const now = Date.now();
+    const windowStart = now - 60_000;
+
+    for (const key of keys) {
+      const history = this.rateLimitHistory.get(key) || [];
+      const recentHistory = history.filter((timestamp) => timestamp > windowStart);
+      recentHistory.push(now);
+
+      this.rateLimitHistory.set(key, recentHistory);
+
+      const lastAttempt = recentHistory[recentHistory.length - 2];
+      if (lastAttempt && now - lastAttempt < this.cooldownMs) {
+        throw new BadRequestException(
+          'Espera unos segundos antes de enviar otro comentario.',
+        );
+      }
+
+      if (recentHistory.length > this.maxCommentsPerMinute) {
+        this.rateLimitBlocks.set(key, now + 60_000);
+        throw new BadRequestException(
+          'Has enviado demasiados comentarios. Intenta de nuevo en un minuto.',
+        );
+      }
+    }
+  }
+
   private collectSubtreeCommentIds(input: {
     targetId: string;
     ideaId: string;
@@ -118,14 +176,12 @@ export class CommentService {
   private async ensureNoRecentDuplicateComment(input: {
     ideaId: string;
     authorId: string;
-    parentCommentId?: string | null;
     normalizedContent: string;
   }): Promise<void> {
     const lastComment =
-      await this.commentRepository.findLatestVisibleByAuthorInThread({
+      await this.commentRepository.findLatestVisibleByAuthorOnIdea({
         ideaId: input.ideaId,
         authorId: input.authorId,
-        parentCommentId: input.parentCommentId ?? null,
       });
 
     if (!lastComment) return;
@@ -147,6 +203,8 @@ export class CommentService {
 
   async createComment(input: CreateCommentInput): Promise<Comment> {
     const authorId = await this.ensureUserCanWrite(input.firebaseUid);
+    const rateLimitKeys = this.buildRateLimitKeys(authorId, input.clientIp);
+    this.assertRateLimitNotBlocked(rateLimitKeys);
 
     const idea = await this.ideaRepository.findById(input.ideaId);
     if (!idea) {
@@ -181,11 +239,11 @@ export class CommentService {
     }
 
     const content = normalizeCommentContent(input.content, 'El comentario');
+    this.registerCommentAttempt(rateLimitKeys);
 
     await this.ensureNoRecentDuplicateComment({
       ideaId: input.ideaId,
       authorId,
-      parentCommentId: input.parentCommentId ?? null,
       normalizedContent: content,
     });
 
@@ -207,6 +265,8 @@ export class CommentService {
 
   async replyToComment(input: ReplyCommentInput): Promise<Comment> {
     const authorId = await this.ensureUserCanWrite(input.firebaseUid);
+    const rateLimitKeys = this.buildRateLimitKeys(authorId, input.clientIp);
+    this.assertRateLimitNotBlocked(rateLimitKeys);
 
     const parentComment = await this.commentRepository.findById(
       input.parentCommentId,
@@ -235,11 +295,11 @@ export class CommentService {
     this.ensureIdeaAllowsComments(idea.status);
 
     const content = normalizeCommentContent(input.content, 'La respuesta');
+    this.registerCommentAttempt(rateLimitKeys);
 
     await this.ensureNoRecentDuplicateComment({
       ideaId: parentComment.ideaId,
       authorId,
-      parentCommentId: parentComment.id,
       normalizedContent: content,
     });
 

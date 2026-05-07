@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import styled from 'styled-components';
+import { getCommentValidationError, normalizeCommentInput } from './commentValidation';
 
 interface CommentFormProps {
   placeholder?: string;
@@ -102,69 +103,6 @@ const Button = styled.button<{ $variant?: 'primary' | 'ghost' }>`
   }
 `;
 
-const COMMENT_FORM_RULES = {
-  minLength: 2,
-  maxLength: 2000,
-  maxWords: 350,
-  maxConsecutiveLineBreaks: 2,
-  maxRepeatedCharacterStreak: 8,
-} as const;
-
-const normalizeCommentInput = (value: string): string =>
-  value
-    .replace(/\r\n/g, '\n')
-    .split('\n')
-    .map((line) => line.replace(/\s+/g, ' ').trim())
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-
-const countWords = (value: string): number =>
-  value.trim().split(/\s+/).filter(Boolean).length;
-
-const isOnlyNumbers = (value: string): boolean => {
-  const compact = value.replace(/\s+/g, '');
-  return /^[0-9]+$/.test(compact);
-};
-
-const getCommentValidationError = (value: string): string | null => {
-  if (!value) return 'El comentario no puede estar vacío.';
-  if (value.length < COMMENT_FORM_RULES.minLength) {
-    return `El comentario debe tener al menos ${COMMENT_FORM_RULES.minLength} caracteres.`;
-  }
-  if (value.length > COMMENT_FORM_RULES.maxLength) {
-    return `El comentario no puede superar ${COMMENT_FORM_RULES.maxLength} caracteres.`;
-  }
-  if (!/[A-Za-z0-9\u00C0-\u024F]/.test(value)) {
-    return 'El comentario debe incluir letras o números legibles.';
-  }
-
-  if (isOnlyNumbers(value)) {
-    return 'El comentario no puede contener solo números.';
-  }
-
-  const words = countWords(value);
-  if (words > COMMENT_FORM_RULES.maxWords) {
-    return `El comentario no puede superar ${COMMENT_FORM_RULES.maxWords} palabras.`;
-  }
-
-  const repeatedCharsRegex = new RegExp(`(.)\\1{${COMMENT_FORM_RULES.maxRepeatedCharacterStreak - 1},}`);
-  if (repeatedCharsRegex.test(value)) {
-    return 'El comentario contiene repeticiones excesivas de caracteres.';
-  }
-
-  const consecutiveBreaksRegex = new RegExp(`\\n{${COMMENT_FORM_RULES.maxConsecutiveLineBreaks + 1},}`);
-  if (consecutiveBreaksRegex.test(value.replace(/\r\n/g, '\n'))) {
-    return 'El comentario tiene demasiados saltos de línea consecutivos.';
-  }
-
-  if (/(https?:\/\/|www\.)/i.test(value)) {
-    return 'Por seguridad, evita incluir enlaces en los comentarios.';
-  }
-
-  return null;
-};
-
 export const CommentForm = ({
   placeholder = 'Escribe un comentario...',
   submitLabel = 'Enviar',
@@ -181,8 +119,8 @@ export const CommentForm = ({
   const [error, setError] = useState<string | null>(null);
 
   const normalizedPreview = normalizeCommentInput(content);
-  const words = countWords(normalizedPreview);
-  const isNearLimit = normalizedPreview.length > COMMENT_FORM_RULES.maxLength * 0.9;
+  const words = normalizedPreview.trim().split(/\s+/).filter(Boolean).length;
+  const isNearLimit = normalizedPreview.length > 1800;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -221,12 +159,12 @@ export const CommentForm = ({
         }}
         placeholder={placeholder}
         aria-label="Contenido del comentario"
-        maxLength={COMMENT_FORM_RULES.maxLength}
+        maxLength={2000}
       />
 
       <HelperText>{disabled ? (disabledMessage || 'Tu cuenta está en modo solo lectura durante la sanción.') : helperText}</HelperText>
       <CounterText $danger={isNearLimit}>
-        {normalizedPreview.length}/{COMMENT_FORM_RULES.maxLength} caracteres - {words} palabras
+        {normalizedPreview.length}/2000 caracteres - {words} palabras
       </CounterText>
 
       {error && <ErrorText>{error}</ErrorText>}

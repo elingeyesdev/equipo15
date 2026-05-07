@@ -58,6 +58,7 @@ export class CommentsController {
     return this.commentService.createComment({
       ...createCommentDto,
       firebaseUid: request.user.uid,
+      clientIp: request.ip,
     });
   }
 
@@ -73,6 +74,7 @@ export class CommentsController {
       parentCommentId: id,
       content: replyCommentDto.content,
       firebaseUid: request.user.uid,
+      clientIp: request.ip,
     });
   }
 

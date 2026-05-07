@@ -350,11 +350,23 @@ export const CommentsSection = ({
   const [shouldScrollToEnd, setShouldScrollToEnd] = useState(false);
   const listEndRef = useRef<HTMLDivElement | null>(null);
   const requestIdRef = useRef(0);
-  const { userProfile } = useAuth();
+  const { userProfile, loading: authLoading } = useAuth();
+  const isAuthenticated = Boolean(userProfile?.id);
   const isReadOnlyByPenalty = userProfile?.status === 'SOFT_BLOCK' || userProfile?.status === 'SUSPENDED';
-  const isReadOnlyMode = disabled || isReadOnlyByPenalty;
+  const isReadOnlyMode = disabled || isReadOnlyByPenalty || !isAuthenticated;
 
   const loadComments = useCallback(async () => {
+    if (authLoading) {
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setIsLoading(false);
+      setError('Debes iniciar sesión para ver y comentar.');
+      setComments([]);
+      return;
+    }
+
     const requestId = ++requestIdRef.current;
     setIsLoading(true);
     setError(null);
@@ -387,7 +399,7 @@ export const CommentsSection = ({
         setIsLoading(false);
       }
     }
-  }, [ideaId]);
+  }, [authLoading, ideaId, isAuthenticated]);
 
   useEffect(() => {
     loadComments();
@@ -555,7 +567,9 @@ export const CommentsSection = ({
     ? 'Espera a que se carguen los comentarios.'
     : isCreating
       ? 'Espera a que se envíe el comentario.'
-      : 'Tu cuenta está en modo solo lectura durante la sanción.';
+      : !isAuthenticated
+        ? 'Debes iniciar sesión para comentar.'
+        : 'Tu cuenta está en modo solo lectura durante la sanción.';
 
   useEffect(() => {
     if (isLoading || error) {

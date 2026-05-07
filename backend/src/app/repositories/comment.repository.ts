@@ -118,6 +118,25 @@ export class CommentRepository {
     });
   }
 
+  async findLatestVisibleByAuthorOnIdea(params: {
+    ideaId: string;
+    authorId: string;
+  }): Promise<Pick<Comment, 'content' | 'createdAt'> | null> {
+    return this.prisma.comment.findFirst({
+      where: {
+        ideaId: params.ideaId,
+        authorId: params.authorId,
+        status: 'visible',
+        deletedAt: null,
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      select: {
+        content: true,
+        createdAt: true,
+      },
+    });
+  }
+
   async createAndIncrementIdeaCount(data: CreateCommentData) {
     const [createdComment] = await this.prisma.$transaction([
       this.prisma.comment.create({
