@@ -2,9 +2,10 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { UserRepository } from '../repositories/user.repository';
-import { User, UserRole } from '@prisma/client';
+import { User } from '@prisma/client';
 import { extractFacultyFromEmail } from '../utils/email-parser.util';
 import {
   getRoleFromEmail,
@@ -192,18 +193,18 @@ export class UserService {
   ): Promise<UserResponse | null> {
     await this.ensureUserCanWrite(firebaseUid);
 
-    const updateData: any = { ...data };
+    if (data.facultyId === undefined || data.facultyId === null || data.facultyId === '') {
+      throw new BadRequestException('Debes seleccionar una facultad válida.');
+    }
 
-    if (data.facultyId !== undefined) {
-      const mappedId = await this.mapLegacyFacultyId(data.facultyId);
-      if (mappedId) {
-        updateData.facultyId = mappedId;
-      }
+    const facultyId = await this.mapLegacyFacultyId(data.facultyId);
+    if (!facultyId) {
+      throw new BadRequestException('Facultad inválida o no encontrada.');
     }
 
     const updatedUser = await this.userRepository.updateByUid(
       firebaseUid,
-      updateData,
+      { facultyId },
     );
     if (!updatedUser) {
       throw new NotFoundException('Usuario no encontrado');
