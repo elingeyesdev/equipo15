@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../providers/database.service';
 import { Challenge, Prisma, UserRole } from '@prisma/client';
 
 @Injectable()
 export class ChallengeRepository {
+  private readonly logger = new Logger(ChallengeRepository.name);
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(
@@ -108,6 +109,11 @@ export class ChallengeRepository {
 
   private prepareData(data: Record<string, any>): Record<string, any> {
     const prepared = { ...data };
+    Object.keys(prepared).forEach(key => {
+      if (prepared[key] === undefined) {
+        delete prepared[key];
+      }
+    });
     if (prepared.startDate)
       prepared.startDate = new Date(
         prepared.startDate as string | number | Date,
@@ -124,21 +130,40 @@ export class ChallengeRepository {
   async create(
     data: { authorId: string } & Partial<Challenge>,
   ): Promise<Challenge> {
-    const { authorId, ...challengeData } = this.prepareData(data);
+    const prepared = this.prepareData(data);
+    const { authorId, facultyId, ...challengeData } = prepared;
+    
+    this.logger.log(`Prisma Create Challenge by Author: ${authorId}`);
+    this.logger.log(`Faculty ID to connect: ${facultyId}`);
+    
     return this.prisma.challenge.create({
       data: {
         ...(challengeData as Prisma.ChallengeCreateInput),
         author: {
           connect: { id: authorId },
         },
+        ...(facultyId ? { faculty: { connect: { id: facultyId } } } : {}),
       },
     });
   }
 
   async update(id: string, data: Partial<Challenge>): Promise<Challenge> {
+    const prepared = this.prepareData(data);
+    const { facultyId, ...challengeData } = prepared;
+    
+    this.logger.log(`Prisma Update Challenge ID: ${id}`);
+    this.logger.log(`Faculty ID to connect: ${facultyId}`);
+    
     return this.prisma.challenge.update({
       where: { id },
-      data: this.prepareData(data) as Prisma.ChallengeUpdateInput,
+      data: {
+        ...(challengeData as Prisma.ChallengeUpdateInput),
+        ...(facultyId !== undefined
+          ? facultyId
+            ? { faculty: { connect: { id: facultyId } } }
+            : { faculty: { disconnect: true } }
+          : {}),
+      },
     });
   }
 
@@ -301,16 +326,12 @@ export class ChallengeRepository {
     }
 
     private async getInnovationStatsScoped(authorId: string, challengeIds: string[]) {
-      const FACULTY_NAMES: Record<string, string> = {
-        1: 'Ingeniería',
-        2: 'Medicina',
-        3: 'Ciencias Exactas',
-        4: 'Humanidades',
-        5: 'Derecho',
-        6: 'Economía',
-        7: 'Arquitectura',
-        8: 'Educación',
-      };
+      // Fetch all faculties from DB to map UUID → name
+      const allFaculties = await this.prisma.faculty.findMany({
+        select: { id: true, name: true },
+      });
+      const FACULTY_NAMES = new Map<string, string>();
+      allFaculties.forEach(f => FACULTY_NAMES.set(f.id, f.name));
 
       if (challengeIds.length === 0) {
         return {
@@ -367,7 +388,7 @@ export class ChallengeRepository {
       const ideasByFaculty = Array.from(facultyMap.entries())
         .map(([facultyId, aggregate]) => ({
           facultyId,
-          facultyName: FACULTY_NAMES[facultyId] ?? `Facultad ${facultyId}`,
+          facultyName: FACULTY_NAMES.get(facultyId) ?? 'Desconocida',
           ideasCount: aggregate.ideasCount,
           votesCount: aggregate.votesCount,
         }))
@@ -451,16 +472,13 @@ export class ChallengeRepository {
 
   // ─── Innovation Stats for Company Dashboard (E1.4) ───────────────────────────
   async getInnovationStats(authorId: string) {
-    const FACULTY_NAMES: Record<string, string> = {
-      1: 'Ingeniería',
-      2: 'Medicina',
-      3: 'Ciencias Exactas',
-      4: 'Humanidades',
-      5: 'Derecho',
-      6: 'Economía',
-      7: 'Arquitectura',
-      8: 'Educación',
-    };
+    const faculties = await this.prisma.faculty.findMany({
+      select: { id: true, name: true },
+    });
+    const facultyNameMap = new Map<string, string>();
+    faculties.forEach((faculty) => {
+      facultyNameMap.set(faculty.id, faculty.name);
+    });
 
     // All challenge IDs owned by this company
     const companyChallenges = await this.prisma.challenge.findMany({
@@ -525,7 +543,7 @@ export class ChallengeRepository {
     const ideasByFaculty = Array.from(facultyMap.entries())
       .map(([facultyId, aggregate]) => ({
         facultyId,
-        facultyName: FACULTY_NAMES[facultyId] ?? `Facultad ${facultyId}`,
+        facultyName: facultyNameMap.get(facultyId) ?? `Facultad ${facultyId}`,
         ideasCount: aggregate.ideasCount,
         votesCount: aggregate.votesCount,
       }))

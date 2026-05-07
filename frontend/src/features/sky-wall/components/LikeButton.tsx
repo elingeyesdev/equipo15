@@ -228,7 +228,7 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
     : isSoftBlocked
       ? 'Cuenta en modo solo lectura'
       : isAuthor
-        ? 'No puedes votar por tu propia idea'
+        ? 'Como autor, no puedes votar por tu propia idea'
         : hasVoted
           ? 'Quitar voto'
           : 'Apoyar idea';

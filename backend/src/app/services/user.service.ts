@@ -215,22 +215,38 @@ export class UserService {
     legacyId: string | number,
   ): Promise<string | null> {
     const numericId = Number(legacyId);
-    if (isNaN(numericId)) return null;
+
+    if (isNaN(numericId)) {
+      if (typeof legacyId === 'string' && legacyId.length > 10) {
+        const faculties = await this.userRepository.getAllFaculties();
+        const exists = faculties.find(f => f.id === legacyId);
+        if (exists) return exists.id;
+      }
+      return null;
+    }
 
     const facultyMapping: Record<number, string> = {
       1: 'Ingeniería',
-      2: 'Medicina',
-      3: 'Gastronomía',
+      2: 'Ciencias',
+      3: 'Humanidades',
       4: 'Medicina',
       5: 'Derecho',
       6: 'Arquitectura',
     };
 
-    const facultyName = facultyMapping[numericId];
-    if (facultyName) {
-      const faculty = await this.userRepository.findFacultyByName(facultyName);
-      return faculty?.id || null;
+    const targetName = facultyMapping[numericId]?.toLowerCase();
+    if (targetName) {
+      const faculties = await this.userRepository.getAllFaculties();
+      const matched = faculties.find(f =>
+        f.name.toLowerCase().includes(targetName) ||
+        targetName.includes(f.name.toLowerCase()),
+      );
+      return matched?.id || null;
     }
     return null;
+  }
+
+  async getAllFaculties() {
+    return this.userRepository.getAllFaculties();
   }
 }

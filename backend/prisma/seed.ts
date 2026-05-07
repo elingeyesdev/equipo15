@@ -8,10 +8,11 @@ async function main() {
   console.log('Poblando tabla Faculty...');
   const faculties = [
     { name: 'Ingeniería' },
+    { name: 'Ciencias y Tecnología' },
+    { name: 'Humanidades' },
     { name: 'Medicina' },
-    { name: 'Gastronomía' },
-    { name: 'Arquitectura' },
     { name: 'Derecho' },
+    { name: 'Arquitectura' },
     { name: 'Todas' },
   ];
 

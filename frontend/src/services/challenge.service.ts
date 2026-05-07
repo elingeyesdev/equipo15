@@ -16,7 +16,7 @@ export interface ChallengePayload {
   publicationDate?: string;
   isPrivate?: boolean;
   status?: ChallengeStatus;
-  facultyId?: number | null;
+  facultyId?: string | number | null;
   logoUrl?: string;
   evaluationCriteria?: EvaluationCriterion[];
 }
@@ -25,6 +25,9 @@ export interface CompanyChallengeOption {
   id: string;
   title: string;
   status: ChallengeStatus;
+  facultyId?: string | number | null;
+  facultyName?: string | null;
+  faculty?: { id?: string | number; name?: string } | null;
   endDate?: string;
   publicationDate?: string;
 }

@@ -31,25 +31,9 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSele
   const isExpired = challenge.endDate ? new Date() > new Date(challenge.endDate) : false;
   const remaining = !isExpired ? getRemainingText(challenge.endDate) : null;
 
-  // Escuchar eventos de cambios en comentarios de ideas en este reto
   useEffect(() => {
-    const handleCommentCountChanged = (event: Event) => {
-      const customEvent = event as CustomEvent;
-        const { challengeId, delta } = customEvent.detail;
-      
-      if (challengeId === challenge.id) {
-        // El evento trae el contador de la idea, necesitamos recalcular el total del reto
-        // Por ahora incrementamos/decrementamos en 1 cuando hay cambio en una idea del reto
-          setCommentsCount((prev: number) => Math.max(0, prev + (delta || 1)));
-      }
-    };
-
-    window.addEventListener('pista8:comment_count_changed', handleCommentCountChanged);
-
-    return () => {
-      window.removeEventListener('pista8:comment_count_changed', handleCommentCountChanged);
-    };
-  }, [challenge.id]);
+    setCommentsCount(challenge.commentsCount || 0);
+  }, [challenge.commentsCount]);
 
   return (
     <S.ChallengeCard $active={active} onClick={() => onSelect()} role="button">

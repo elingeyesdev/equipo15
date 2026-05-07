@@ -19,7 +19,7 @@ export class ChallengeService {
     private readonly userService: UserService,
     @InjectModel(ProjectDetails.name)
     private readonly projectDetailsModel: Model<ProjectDetails>,
-  ) {}
+  ) { }
 
   async getUserByUid(uid: string): Promise<UserResponse | null> {
     return this.userService.findByUid(uid);
@@ -31,7 +31,7 @@ export class ChallengeService {
   ): Promise<Challenge> {
     const { startDate, endDate, publicationDate, ...rest } = createChallengeDto;
 
-    const payload: Partial<Challenge> = {
+    const payload: Record<string, any> = {
       ...rest,
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
@@ -41,6 +41,8 @@ export class ChallengeService {
     if (payload.status === 'Activo' && !payload.publicationDate) {
       payload.publicationDate = new Date();
     }
+
+    payload.facultyId = await this.resolveFacultyId(payload.facultyId);
 
     const createdChallenge = await this.challengeRepository.create({
       ...payload,
@@ -137,12 +139,14 @@ export class ChallengeService {
   async update(id: string, updateChallengeDto: UpdateChallengeDto) {
     const { startDate, endDate, publicationDate, ...rest } = updateChallengeDto;
 
-    const payload: Partial<Challenge> = {
+    const payload: Record<string, any> = {
       ...rest,
       startDate: startDate ? new Date(startDate) : undefined,
       endDate: endDate ? new Date(endDate) : undefined,
       publicationDate: publicationDate ? new Date(publicationDate) : undefined,
     };
+
+    payload.facultyId = await this.resolveFacultyId(payload.facultyId);
 
     if (payload.status === 'Activo') {
       const existing = await this.challengeRepository.findById(id);
@@ -291,5 +295,58 @@ export class ChallengeService {
       podiumSize: finalLimit,
       finalistCount: finalistIds.length,
     };
+  }
+
+  /**
+   * Resolve any incoming facultyId to a valid UUID or null.
+   * Handles: null/undefined, valid UUID strings, numeric IDs, and string-encoded numbers like "4".
+   */
+  private async resolveFacultyId(facultyId: any): Promise<string | null> {
+    if (!facultyId) return null;
+
+    const LEGACY_MAP: Record<number, string> = {
+      1: 'Ingeniería',
+      2: 'Ciencias',
+      3: 'Humanidades',
+      4: 'Medicina',
+      5: 'Derecho',
+      6: 'Arquitectura',
+    };
+
+    // Check if it's a numeric value or a string that looks like a number (1-6)
+    const numericId = typeof facultyId === 'number' ? facultyId : Number(facultyId);
+    
+    if (!isNaN(numericId) && numericId >= 1 && numericId <= 6) {
+      // It's a legacy numeric ID — resolve to UUID
+      const faculties = await this.userService.getAllFaculties();
+      const targetName = LEGACY_MAP[numericId]?.toLowerCase();
+      this.logger.log(`Resolving legacy faculty ID ${facultyId} → name "${targetName}"`);
+      
+      const matched = faculties.find(f =>
+        f.name.toLowerCase().includes(targetName) ||
+        targetName.includes(f.name.toLowerCase()),
+      );
+
+      if (matched) {
+        this.logger.log(`Resolved to: ${matched.name} (UUID: ${matched.id})`);
+        return matched.id;
+      }
+      this.logger.warn(`No match for legacy ID ${facultyId}. DB faculties: ${faculties.map(f => f.name).join(', ')}`);
+      return null;
+    }
+
+    // It's already a UUID string — verify it exists
+    if (typeof facultyId === 'string' && facultyId.length > 10) {
+      const faculties = await this.userService.getAllFaculties();
+      const exists = faculties.find(f => f.id === facultyId);
+      if (exists) {
+        this.logger.log(`Faculty UUID verified: ${exists.name} (${exists.id})`);
+        return exists.id;
+      }
+      this.logger.warn(`Faculty UUID ${facultyId} not found in DB`);
+      return null;
+    }
+
+    return null;
   }
 }

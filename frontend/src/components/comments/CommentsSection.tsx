@@ -342,6 +342,7 @@ export const CommentsSection = ({
   disabled = false,
 }: CommentsSectionProps) => {
   const [comments, setComments] = useState<CommentTreeNode[]>([]);
+  const commentsRef = useRef<CommentTreeNode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -393,6 +394,10 @@ export const CommentsSection = ({
   }, [loadComments]);
 
   useEffect(() => {
+    commentsRef.current = comments;
+  }, [comments]);
+
+  useEffect(() => {
     if (!shouldScrollToEnd) return;
 
     requestAnimationFrame(() => {
@@ -412,13 +417,13 @@ export const CommentsSection = ({
       displayName: userProfile?.displayName || userProfile?.email || 'Tu',
     });
 
-    setComments((prev) => {
-      const previousCount = countAllComments(prev);
-      const updated = [...prev, optimisticComment].sort(sortByCreatedAtAsc);
-      const newTotal = countAllComments(updated);
-      emitCommentCountChanged(ideaId, challengeId, newTotal, previousCount);
-      return updated;
-    });
+    const currentComments = commentsRef.current;
+    const previousCount = countAllComments(currentComments);
+    const updatedComments = [...currentComments, optimisticComment].sort(sortByCreatedAtAsc);
+    const newTotal = countAllComments(updatedComments);
+
+    setComments(updatedComments);
+    emitCommentCountChanged(ideaId, challengeId, newTotal, previousCount);
     setShouldScrollToEnd(true);
 
     try {
@@ -434,12 +439,13 @@ export const CommentsSection = ({
       });
       setSubmitSuccess('Comentario publicado correctamente.');
     } catch (submitError) {
-      setComments((prev) => {
-        const previousCount = countAllComments(prev);
-        const updated = removeCommentFromTree(prev, optimisticComment.id);
-        emitCommentCountChanged(ideaId, challengeId, countAllComments(updated), previousCount);
-        return updated;
-      });
+      const currentComments = commentsRef.current;
+      const previousCount = countAllComments(currentComments);
+      const updatedComments = removeCommentFromTree(currentComments, optimisticComment.id);
+      const newTotal = countAllComments(updatedComments);
+
+      setComments(updatedComments);
+      emitCommentCountChanged(ideaId, challengeId, newTotal, previousCount);
       throw new Error(getErrorMessage(submitError, 'No se pudo publicar el comentario.'));
     } finally {
       setIsCreating(false);
@@ -457,12 +463,13 @@ export const CommentsSection = ({
       displayName: userProfile?.displayName || userProfile?.email || 'Tu',
     });
 
-    setComments((prev) => {
-      const previousCount = countAllComments(prev);
-      const updated = appendReplyToTree(prev, commentId, optimisticReply);
-      emitCommentCountChanged(ideaId, challengeId, countAllComments(updated), previousCount);
-      return updated;
-    });
+    const currentComments = commentsRef.current;
+    const previousCount = countAllComments(currentComments);
+    const updatedComments = appendReplyToTree(currentComments, commentId, optimisticReply);
+    const newTotal = countAllComments(updatedComments);
+
+    setComments(updatedComments);
+    emitCommentCountChanged(ideaId, challengeId, newTotal, previousCount);
     setShouldScrollToEnd(true);
 
     try {
@@ -475,15 +482,16 @@ export const CommentsSection = ({
       setComments((prev) => replaceCommentInTree(prev, optimisticReply.id, newReply));
       setSubmitSuccess('Respuesta publicada correctamente.');
     } catch (submitError) {
-      setComments((prev) => {
-        const previousCount = countAllComments(prev);
-        const updated = removeCommentFromTree(prev, optimisticReply.id);
-        emitCommentCountChanged(ideaId, challengeId, countAllComments(updated), previousCount);
-        return updated;
-      });
+      const currentComments = commentsRef.current;
+      const previousCount = countAllComments(currentComments);
+      const updatedComments = removeCommentFromTree(currentComments, optimisticReply.id);
+      const newTotal = countAllComments(updatedComments);
+
+      setComments(updatedComments);
+      emitCommentCountChanged(ideaId, challengeId, newTotal, previousCount);
       throw new Error(getErrorMessage(submitError, 'No se pudo publicar la respuesta.'));
     }
-  }, [ideaId]);
+  }, [challengeId, ideaId, userProfile?.displayName, userProfile?.email, userProfile?.id]);
 
   const handleWithdraw = useCallback(async (commentId: string) => {
     setSubmitSuccess(null);
@@ -494,25 +502,25 @@ export const CommentsSection = ({
       return;
     }
 
-    const commentToRemove = findCommentInTree(comments, commentId);
+    const currentComments = commentsRef.current;
+    const commentToRemove = findCommentInTree(currentComments, commentId);
     const removedCount = commentToRemove ? countAllComments([commentToRemove]) : 1;
-    const previous = comments;
-    setComments((prev) => {
-      const previousCount = countAllComments(prev);
-      const updated = removeCommentFromTree(prev, commentId);
-      emitCommentCountChanged(ideaId, challengeId, countAllComments(updated), previousCount);
-      return updated;
-    });
+    const previousCount = countAllComments(currentComments);
+    const updatedComments = removeCommentFromTree(currentComments, commentId);
+    const newTotal = countAllComments(updatedComments);
+
+    setComments(updatedComments);
+    emitCommentCountChanged(ideaId, challengeId, newTotal, previousCount);
 
     try {
       await commentService.withdrawComment(commentId, ideaId);
       setSubmitSuccess('Comentario retirado correctamente.');
     } catch (withdrawError) {
-      setComments(previous);
-      emitCommentCountChanged(ideaId, challengeId, countAllComments(previous), Math.max(0, countAllComments(previous) - removedCount));
+      setComments(currentComments);
+      emitCommentCountChanged(ideaId, challengeId, countAllComments(currentComments), Math.max(0, countAllComments(currentComments) - removedCount));
       throw new Error(getErrorMessage(withdrawError, 'No se pudo retirar el comentario.'));
     }
-  }, [comments, ideaId]);
+  }, [challengeId, ideaId]);
 
   const handleEditComment = useCallback(async (commentId: string, content: string) => {
     setSubmitSuccess(null);

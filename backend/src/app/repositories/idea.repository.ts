@@ -36,6 +36,7 @@ export class IdeaRepository {
               nickname: true,
               role: true,
               facultyId: true,
+              faculty: { select: { name: true } },
             },
           },
           challenge: true,
@@ -109,6 +110,7 @@ export class IdeaRepository {
             nickname: true,
             email: true,
             facultyId: true,
+            faculty: { select: { name: true } },
             phone: true,
             studentCode: true,
             role: true,
@@ -140,7 +142,19 @@ export class IdeaRepository {
     return this.prisma.idea.findUnique({
       where: { id },
       include: {
-        author: true,
+        author: {
+          select: {
+            id: true,
+            displayName: true,
+            nickname: true,
+            email: true,
+            facultyId: true,
+            faculty: { select: { name: true } },
+            phone: true,
+            studentCode: true,
+            role: true,
+          },
+        },
         challenge: true,
       },
     });

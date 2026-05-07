@@ -10,7 +10,8 @@ export interface PlaneIdea {
   commentsCount: number;
   laneY: number;
   floatDelay: number;
-  authorFacultyId?: number;
+  authorFacultyId?: number | string;
+  authorFacultyName?: string;
   problem?: string;
   solution?: string;
   hasVoted?: boolean;
@@ -41,7 +42,8 @@ export interface RawAuthor {
   displayName?: string;
   nickname?: string;
   email?: string;
-  facultyId?: number;
+  facultyId?: number | string;
+  faculty?: { name: string };
   phone?: string;
   studentCode?: string;
   role?: { name: string };

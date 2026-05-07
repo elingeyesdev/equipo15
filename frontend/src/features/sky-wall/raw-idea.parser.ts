@@ -4,11 +4,18 @@ const parseAuthor = (author: unknown): RawAuthor | undefined => {
   if (typeof author !== 'object' || author === null) return undefined;
 
   const record = author as Record<string, unknown>;
+  const facultyObj = typeof record.faculty === 'object' && record.faculty !== null
+    ? record.faculty as { name?: string }
+    : undefined;
+
   return {
     displayName: typeof record.displayName === 'string' ? record.displayName : undefined,
     nickname: typeof record.nickname === 'string' ? record.nickname : undefined,
     email: typeof record.email === 'string' ? record.email : undefined,
-    facultyId: typeof record.facultyId === 'number' ? record.facultyId : undefined,
+    facultyId: typeof record.facultyId === 'number' ? record.facultyId
+      : typeof record.facultyId === 'string' ? record.facultyId
+      : undefined,
+    faculty: facultyObj?.name ? { name: facultyObj.name } : undefined,
     phone: typeof record.phone === 'string' ? record.phone : undefined,
     studentCode: typeof record.studentCode === 'string' ? record.studentCode : undefined,
     role: typeof record.role === 'object' && record.role !== null ? record.role as { name: string } : undefined,

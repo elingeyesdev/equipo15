@@ -80,4 +80,10 @@ export class UserRepository {
       where: { name: { contains: name, mode: 'insensitive' } },
     });
   }
+
+  async getAllFaculties() {
+    return this.prisma.faculty.findMany({
+      orderBy: { name: 'asc' },
+    });
+  }
 }

@@ -13,6 +13,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { getFacultyName } from '../../../../config/faculties';
 import { Pista8Theme, breakpoints } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import type { CompanyChallengeOption } from '../../../../services/challenge.service';
@@ -367,6 +368,13 @@ const SearchResultItem = styled.button`
   }
 `;
 
+const getChallengeFacultyLabel = (challenge: CompanyChallengeOption) => {
+  const facultyName = challenge.facultyName ?? challenge.faculty?.name ?? null;
+  const facultyId = challenge.facultyId ?? challenge.faculty?.id ?? null;
+  const cleanedFacultyName = facultyName?.replace(/^Facultad de\s+/i, '') ?? null;
+  return getFacultyName(facultyId, cleanedFacultyName);
+};
+
 const SearchEmptyResult = styled.div`
   padding: 12px;
   text-align: center;
@@ -566,7 +574,9 @@ export const CompanyStatsView = () => {
                             onClick={() => handleSelectChallenge(challenge.id)}
                           >
                             <span className="challenge-title">{challenge.title}</span>
-                            <span className="challenge-status">Estado: {challenge.status}</span>
+                            <span className="challenge-status">
+                              {getChallengeFacultyLabel(challenge)} · Estado: {challenge.status}
+                            </span>
                           </SearchResultItem>
                         ))
                       ) : (
@@ -586,7 +596,7 @@ export const CompanyStatsView = () => {
                   <option value="all">Todos los retos</option>
                   {challengeOptionsForSelect.map((challenge) => (
                     <option key={challenge.id} value={challenge.id}>
-                      {challenge.title} · {challenge.status}
+                      {challenge.title} · {getChallengeFacultyLabel(challenge)} · {challenge.status}
                     </option>
                   ))}
                 </ChallengeSelect>

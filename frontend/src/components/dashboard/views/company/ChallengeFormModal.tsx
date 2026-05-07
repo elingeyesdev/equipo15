@@ -48,7 +48,7 @@ interface FormData {
   status: ChallengeStatus;
   logoUrl: string;
   evaluationCriteria: EvaluationCriterion[];
-  facultyId: number | null;
+  facultyId: string | number | null;
 }
 
 interface Errors {
@@ -82,6 +82,8 @@ interface ChallengeFormViewProps {
   onSave: (data: FormData) => Promise<void>;
   challenge?: Challenge | null;
 }
+
+import axiosInstance from '../../../../api/axiosConfig';
 
 /* ─── Image helpers ─── */
 const compressToWebP = (file: File): Promise<string> =>
@@ -123,12 +125,27 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
   const [customError, setCustomError]   = useState('');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [logoError, setLogoError]       = useState('');
+  const [dbFaculties, setDbFaculties]   = useState<any[]>([]);
   const criteriaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = !!challenge;
   const hasIdeas   = (challenge?.ideasCount ?? 0) > 0;
 
+  useEffect(() => {
+    const fetchFacs = async () => {
+      try {
+        const res = await axiosInstance.get('/users/faculties');
+        if (res.data) {
+          const arr = Array.isArray(res.data.data) ? res.data.data : res.data;
+          setDbFaculties(Array.isArray(arr) ? arr : []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch faculties:', err);
+      }
+    };
+    fetchFacs();
+  }, []);
   /* ─── Field lock logic ─── */
   const locked = (field: 'core' | 'flexible') => {
     if (!isEditMode) return false;
@@ -468,7 +485,7 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
                 </Label>
                 <select
                   value={form.facultyId || ''}
-                  onChange={e => !locked('core') && updateField('facultyId', e.target.value ? Number(e.target.value) : null)}
+                  onChange={e => !locked('core') && updateField('facultyId', e.target.value || null)}
                   disabled={locked('core')}
                   style={{
                     width: '100%', padding: '12px 14px', borderRadius: 12,
@@ -483,9 +500,17 @@ const ChallengeFormView: React.FC<ChallengeFormViewProps> = ({ onBack, onSave, c
                   }}
                 >
                   <option value="">Todas las Facultades</option>
-                  {FACULTIES.map(f => (
-                    <option key={f.id} value={f.id}>{f.name}</option>
-                  ))}
+                  {dbFaculties.length > 0 ? (
+                    dbFaculties.filter(f => f.name !== 'Todas').map(f => (
+                      <option key={f.id} value={f.id}>
+                        {f.name.startsWith('Facultad') ? f.name : `Facultad de ${f.name}`}
+                      </option>
+                    ))
+                  ) : (
+                    FACULTIES.map(f => (
+                      <option key={f.id} value={f.id}>{f.name}</option>
+                    ))
+                  )}
                 </select>
               </FieldGroup>
 

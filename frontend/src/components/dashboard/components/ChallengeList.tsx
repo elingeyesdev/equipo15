@@ -17,7 +17,7 @@ interface ChallengeListProps {
   onRespond: (c: Challenge) => void;
   onClearSelection?: () => void;
   searchQuery?: string;
-  userFacultyId?: number | null;
+  userFacultyId?: number | string | null;
   forceColumn?: boolean;
 }
 

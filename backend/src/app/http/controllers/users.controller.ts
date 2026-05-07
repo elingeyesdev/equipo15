@@ -102,4 +102,10 @@ export class UsersController {
       facultyId: updateUserDto.facultyId,
     });
   }
+
+  @Get('faculties')
+  @ApiOperation({ summary: 'Get all faculties' })
+  async getFaculties() {
+    return this.userService.getAllFaculties();
+  }
 }

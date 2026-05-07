@@ -4,9 +4,18 @@ import type { Socket } from 'socket.io-client';
 import type { PlaneIdea, WallPhase, IdeaUpdatedPayload, IdeaVotedPayload, RawIdea } from './types';
 import { LANE_HEIGHT_PER_IDEA, TOP_PADDING } from './flight.engine';
 import { resolveDisplayName } from '../../utils/user.utils';
+import { FACULTIES } from '../../config/faculties';
 
 const DEFAULT_SOCKET_URL = 'http://localhost:3000';
 const DEBOUNCE_MS = 200;
+
+const resolveAuthorFacultyName = (facultyId?: number | string, facultyName?: string) => {
+  if (facultyName) return facultyName;
+  if (facultyId === null || facultyId === undefined) return undefined;
+  const numericId = typeof facultyId === 'number' ? facultyId : Number(facultyId);
+  if (Number.isNaN(numericId)) return undefined;
+  return FACULTIES.find((faculty) => faculty.id === numericId)?.name;
+};
 
 const buildPlanes = (
   rawIdeas: RawIdea[],
@@ -23,6 +32,7 @@ const buildPlanes = (
     laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),
     floatDelay: (i % 5) * 0.4,
     authorFacultyId: idea.author?.facultyId,
+    authorFacultyName: resolveAuthorFacultyName(idea.author?.facultyId, idea.author?.faculty?.name),
     problem: idea.problem,
     solution: idea.solution,
     hasVoted: idea.hasVoted ?? false,
@@ -144,6 +154,7 @@ export const useWallSocket = (
           laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),
           floatDelay: (i % 5) * 0.4,
           authorFacultyId: rawIdea.author?.facultyId,
+          authorFacultyName: resolveAuthorFacultyName(rawIdea.author?.facultyId, rawIdea.author?.faculty?.name),
           problem: rawIdea.problem,
           solution: rawIdea.solution,
           hasFavorited: rawIdea.hasFavorited ?? false,

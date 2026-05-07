@@ -145,7 +145,7 @@ interface SkyCanvasProps {
   initialIdeas?: RawIdea[];
   challengeId?: string;
   challengeTitle?: string;
-  challengeFacultyId?: number;
+  challengeFacultyId?: number | string | null;
   isDashboardLoading?: boolean;
   search?: string;
   sort?: SortMode;
@@ -153,7 +153,7 @@ interface SkyCanvasProps {
   onIdeasLoaded?: (ideas: RawIdea[]) => void;
   onlyFavorites?: boolean;
   topLimit?: number | null;
-  facultyId?: number | null;
+  facultyId?: number | string | null;
 }
 
 interface SkyCanvasSceneProps {
@@ -163,14 +163,14 @@ interface SkyCanvasSceneProps {
   progress?: number;
   challengeId?: string;
   challengeTitle?: string;
-  challengeFacultyId?: number;
+  challengeFacultyId?: number | string | null;
   isDashboardLoading?: boolean;
   search?: string;
   sort?: SortMode;
   challengeStatus?: string;
   onlyFavorites?: boolean;
   topLimit?: number | null;
-  facultyId?: number | null;
+  facultyId?: number | string | null;
 }
 
 const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress = 0, challengeId, challengeTitle, challengeFacultyId, isDashboardLoading = false, search, sort, challengeStatus, onlyFavorites = false, topLimit, facultyId }: SkyCanvasSceneProps) => {

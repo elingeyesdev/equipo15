@@ -6,6 +6,7 @@ import LikeButton from './LikeButton';
 import FavoriteButton from './FavoriteButton';
 import { Pista8Theme } from '../../../config/theme';
 import CommentsSection from '../../../components/comments/CommentsSection';
+import { useAuth } from '../../../context/AuthContext';
 
 const overlayIn = keyframes`
   from { opacity: 0; }
@@ -290,10 +291,13 @@ interface IdeaDetailModalProps {
 }
 
 export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
+  const { userProfile } = useAuth();
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [commentsCount, setCommentsCount] = useState(idea.commentsCount);
   const [showFullProposal, setShowFullProposal] = useState(false);
   const commentsRef = useRef<HTMLDivElement | null>(null);
+
+  const isAuthor = !!(userProfile?.id && idea.authorId && userProfile.id === idea.authorId);
 
   useEffect(() => {
     setCommentsCount(idea.commentsCount);
@@ -389,7 +393,8 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
               <LikeButton 
                 ideaId={idea.id} 
                 initialLikes={idea.likesCount} 
-                hasVoted={idea.hasVoted} 
+                hasVoted={idea.hasVoted}
+                isAuthor={isAuthor}
               />
 
               <CommentTooltipContainer>

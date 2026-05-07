@@ -87,7 +87,7 @@ const RightEdge = styled.div`
   background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.14) 40%, rgba(255,255,255,0.14) 80%, transparent);
 `;
 
-const DashLine = styled.div<{ index: number }>`
+const DashLine = styled.div<{ $index: number }>`
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -96,9 +96,9 @@ const DashLine = styled.div<{ index: number }>`
   background: rgba(255, 255, 255, 0.82);
   border-radius: 3px;
   box-shadow: 0 0 6px rgba(255,255,255,0.4);
-  top: ${p => p.index * 60 - 200}px;
+  top: ${p => p.$index * 60 - 200}px;
   animation: ${rushForward} 1s linear infinite;
-  animation-delay: ${p => p.index * -0.11}s;
+  animation-delay: ${p => p.$index * -0.11}s;
 `;
 
 const LeftLights = styled.div`
@@ -121,22 +121,22 @@ const RightLights = styled.div`
   justify-content: space-between;
 `;
 
-const Light = styled.div<{ index: number; total: number }>`
+const Light = styled.div<{ $index: number; $total: number }>`
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: ${p => {
-    const t = p.index / (p.total - 1);
+    const t = p.$index / (p.$total - 1);
     if (t < 0.35) return '#ff2222';
     if (t < 0.7)  return '#ff9900';
     return '#00e676';
   }};
   box-shadow: ${p => {
-    const t = p.index / (p.total - 1);
+    const t = p.$index / (p.$total - 1);
     const c = t < 0.35 ? '#ff2222' : t < 0.7 ? '#ff9900' : '#00e676';
     return `0 0 5px ${c}, 0 0 12px ${c}70`;
   }};
-  animation: ${sidePulse} 1.5s ease-in-out ${p => p.index * 0.1}s infinite;
+  animation: ${sidePulse} 1.5s ease-in-out ${p => p.$index * 0.1}s infinite;
 `;
 
 const HorizonGlow = styled.div`
@@ -190,10 +190,10 @@ const LabelText = styled.span`
   color: rgba(255, 255, 255, 0.22);
 `;
 
-const Dot = styled.span<{ delay: number }>`
+const Dot = styled.span<{ $delay: number }>`
   font-size: 10px;
   color: ${Pista8Theme.primary};
-  animation: ${dotBlink} 1.4s ease-in-out ${p => p.delay}s infinite;
+  animation: ${dotBlink} 1.4s ease-in-out ${p => p.$delay}s infinite;
 `;
 
 const DASH_COUNT = 8;
@@ -211,16 +211,16 @@ const IdeasRunwayEmpty = () => {
           <RightEdge />
           <LeftLights>
             {Array.from({ length: LIGHT_COUNT }).map((_, i) => (
-              <Light key={i} index={i} total={LIGHT_COUNT} />
+              <Light key={i} $index={i} $total={LIGHT_COUNT} />
             ))}
           </LeftLights>
           <RightLights>
             {Array.from({ length: LIGHT_COUNT }).map((_, i) => (
-              <Light key={i} index={i} total={LIGHT_COUNT} />
+              <Light key={i} $index={i} $total={LIGHT_COUNT} />
             ))}
           </RightLights>
           {Array.from({ length: DASH_COUNT }).map((_, i) => (
-            <DashLine key={i} index={i} />
+            <DashLine key={i} $index={i} />
           ))}
         </RunwayPlane>
         <HorizonGlow />
@@ -229,9 +229,9 @@ const IdeasRunwayEmpty = () => {
 
       <Label>
         <LabelText>Las ideas despegan pronto</LabelText>
-        <Dot delay={0}>.</Dot>
-        <Dot delay={0.3}>.</Dot>
-        <Dot delay={0.6}>.</Dot>
+        <Dot $delay={0}>.</Dot>
+        <Dot $delay={0.3}>.</Dot>
+        <Dot $delay={0.6}>.</Dot>
       </Label>
     </Wrap>
   );

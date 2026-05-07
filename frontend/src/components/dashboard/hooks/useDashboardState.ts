@@ -251,6 +251,35 @@ export const useDashboardState = () => {
   }, [selectedChallenge?.id, user]);
 
   useEffect(() => {
+    const handleCommentCountChanged = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { challengeId, delta } = customEvent.detail || {};
+
+      if (!challengeId || typeof delta !== 'number') return;
+
+      setChallenges((prev) =>
+        prev.map((challenge) =>
+          challenge.id === challengeId
+            ? { ...challenge, commentsCount: Math.max(0, (challenge.commentsCount || 0) + delta) }
+            : challenge,
+        ),
+      );
+
+      setSelectedChallenge((prev) =>
+        prev && prev.id === challengeId
+          ? { ...prev, commentsCount: Math.max(0, (prev.commentsCount || 0) + delta) }
+          : prev,
+      );
+    };
+
+    window.addEventListener('pista8:comment_count_changed', handleCommentCountChanged);
+
+    return () => {
+      window.removeEventListener('pista8:comment_count_changed', handleCommentCountChanged);
+    };
+  }, []);
+
+  useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = formOpen ? 'hidden' : originalOverflow;
     return () => { document.body.style.overflow = originalOverflow; };

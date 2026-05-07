@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { computeSize, computeXPosition, computeScale, computeFloatDuration } from './flight.engine';
 import { Pista8Theme } from '../../config/theme';
+import { FACULTIES } from '../../config/faculties';
 import type { PlaneIdea, WallPhase } from './types';
 import planeImg from '../../assets/logo_avion.png';
 
@@ -172,12 +173,12 @@ const flyIn = keyframes`
   100% { opacity: 1; transform: translateX(0) scale(1); }
 `;
 
-const PlaneImage = styled.img<{ $hueRotate: number }>`
+const PlaneImage = styled.img<{ $filter?: string }>`
   width: 100%;
   height: 100%;
   display: block;
   object-fit: contain;
-  filter: drop-shadow(0 6px 10px rgba(255, 64, 0, 0.24)) ${p => p.$hueRotate ? `hue-rotate(${p.$hueRotate}deg)` : ''};
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18)) ${p => p.$filter || ''};
   animation: ${flyIn} 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 `;
 
@@ -185,7 +186,7 @@ interface PlaneProps {
   idea: PlaneIdea;
   canvasWidth: number;
   phase: WallPhase;
-  challengeFacultyId?: number;
+  challengeFacultyId?: number | string | null;
   glowIntensity?: number;
   dimmed?: boolean;
   onClick?: () => void;
@@ -207,19 +208,45 @@ const formatRelativeDate = (dateStr?: string): string => {
   return date.toLocaleDateString('es', { day: 'numeric', month: 'short' });
 };
 
-const FACULTY_HUE_MAP: Record<number, number> = {
-  1: 180,
-  2: 300,
-  3: 150,
-  4: 90,
-  5: 240,
-  6: 45,
+const FACULTY_FILTER_MAP: Record<string, string> = {
+  ingenieria: 'sepia(1) hue-rotate(190deg) saturate(4) brightness(0.7)',
+  'ciencias y tecnologia': 'sepia(1) hue-rotate(155deg) saturate(4) brightness(0.75)',
+  ciencias: 'sepia(1) hue-rotate(155deg) saturate(4) brightness(0.75)',
+  humanidades: 'sepia(1) hue-rotate(5deg) saturate(3) brightness(0.9)',
+  medicina: 'sepia(1) hue-rotate(120deg) saturate(4) brightness(0.65)',
+  derecho: 'sepia(1) hue-rotate(325deg) saturate(4) brightness(0.65)',
+  arquitectura: 'sepia(1) hue-rotate(190deg) saturate(0.3) brightness(0.65)',
+  gastronomia: 'sepia(1) hue-rotate(10deg) saturate(3) brightness(0.85)',
+};
+
+const normalizeFacultyKey = (facultyName?: string) => {
+  if (!facultyName) return undefined;
+  return facultyName
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/^facultad de\s+/, '')
+    .trim();
+};
+
+const getFacultyFilter = (facultyId?: number | string, facultyName?: string): string | undefined => {
+  const normalizedName = normalizeFacultyKey(facultyName);
+  if (normalizedName && FACULTY_FILTER_MAP[normalizedName]) {
+    return FACULTY_FILTER_MAP[normalizedName];
+  }
+
+  if (facultyId === null || facultyId === undefined) return undefined;
+  const numericId = typeof facultyId === 'number' ? facultyId : Number(facultyId);
+  if (Number.isNaN(numericId)) return undefined;
+
+  const canonicalFacultyName = FACULTIES.find((faculty) => faculty.id === numericId)?.name;
+  return FACULTY_FILTER_MAP[normalizeFacultyKey(canonicalFacultyName) ?? ''];
 };
 
 const BASE_Z_INDEX = 10;
 
 const Plane = memo(
-  ({ idea, canvasWidth, phase, challengeFacultyId, glowIntensity = 0, dimmed = false, onClick }: PlaneProps) => {
+  ({ idea, canvasWidth, phase, glowIntensity = 0, dimmed = false, onClick }: PlaneProps) => {
     const size = useMemo(() => computeSize(idea.likesCount), [idea.likesCount]);
     const scale = useMemo(() => computeScale(idea.likesCount), [idea.likesCount]);
     const floatDuration = useMemo(() => computeFloatDuration(idea.likesCount), [idea.likesCount]);
@@ -233,9 +260,7 @@ const Plane = memo(
     const isRacing = phase === 'race';
     const zIndex = BASE_Z_INDEX + idea.likesCount;
 
-    const hueRotate = (!challengeFacultyId && idea.authorFacultyId)
-      ? (FACULTY_HUE_MAP[idea.authorFacultyId] || 0)
-      : 0;
+    const facultyFilter = getFacultyFilter(idea.authorFacultyId, idea.authorFacultyName);
 
     return (
       <PlaneWrapper
@@ -251,7 +276,7 @@ const Plane = memo(
         $dimmed={dimmed}
         onClick={onClick}
       >
-        <PlaneImage src={planeImg} alt={idea.title} $hueRotate={hueRotate} />
+        <PlaneImage src={planeImg} alt={idea.title} $filter={facultyFilter} />
         <AvatarLabel $size={size}>{idea.title.slice(0, 24)}</AvatarLabel>
         {idea.createdAt && (
           <DateLabel $size={size}>{formatRelativeDate(idea.createdAt)}</DateLabel>

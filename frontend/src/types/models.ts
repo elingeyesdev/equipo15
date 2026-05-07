@@ -17,7 +17,7 @@ export interface UserProfile {
   nickname?: string;
   phone?: string;
   studentCode?: string;
-  facultyId?: number;
+  facultyId?: string | number | null;
   career?: string;
   specialty?: string;
   status?: 'ACTIVE' | 'SOFT_BLOCK' | 'SUSPENDED';
@@ -45,12 +45,14 @@ export interface Challenge {
   publicationDate?: string | Date;
   isPrivate: boolean;
   status: ChallengeStatus;
-  facultyId?: number;
+  facultyId?: string | number | null;
+  faculty?: { id: string; name: string } | null;
 
   category?: string;
   badge?: string;
   ideasCount?: number;
   likesCount?: number;
+  commentsCount?: number;
   logoUrl?: string;
   evaluationCriteria?: EvaluationCriterion[];
 }
