@@ -5,7 +5,8 @@ import { Pista8Theme, breakpoints } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import { ideaService } from '../../../../services/idea.service';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Trophy, Users, Star, MessageSquare, Heart, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Trophy, Users, MessageSquare, Heart, AlertTriangle, CheckCircle } from 'lucide-react';
+import MedalSvg from '../../../icons/MedalSvg';
 import { toast } from 'sonner';
 import BackButton from '../../../common/BackButton';
 
@@ -524,6 +525,12 @@ const BannerText = styled.p`
   line-height: 1.55;
 `;
 
+const StarSvg = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#FFD700" stroke="#B8860B" strokeWidth="1.5" strokeLinejoin="round"/>
+  </svg>
+);
+
 export const CompanyPodiumView = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -624,7 +631,7 @@ export const CompanyPodiumView = () => {
       <Container>
         <Header>
           <TitleRow>
-            <BackButton onClick={() => navigate('/dashboard/company/challenges')} />
+            <BackButton />
             <TitleBlock>
               <Title><Trophy /> Gestión de Podio</Title>
             </TitleBlock>
@@ -649,7 +656,7 @@ export const CompanyPodiumView = () => {
       <Container>
         <Header>
           <TitleRow>
-            <BackButton onClick={() => navigate('/dashboard/company/challenges')} />
+            <BackButton />
             <TitleBlock>
               <Title><Trophy /> Gestión de Podio</Title>
               <ChallengeName>
@@ -734,7 +741,7 @@ export const CompanyPodiumView = () => {
                 )}
                 <IdeaCard $isFinalist={isFinalist} $rank={index}>
                   <RankNumber $pos={index}>
-                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                    {index < 3 ? <MedalSvg rank={index} size={22} /> : index + 1}
                   </RankNumber>
                   <IdeaInfo>
                     <IdeaTitle>{idea.title}</IdeaTitle>
@@ -750,7 +757,7 @@ export const CompanyPodiumView = () => {
                   </Metrics>
                   {isFinalist && (
                     <MedalIcon>
-                      <Star size={22} fill="#fbbf24" stroke="#fbbf24" />
+                      <StarSvg size={24} />
                     </MedalIcon>
                   )}
                 </IdeaCard>

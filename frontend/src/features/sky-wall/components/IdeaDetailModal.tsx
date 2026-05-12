@@ -4,7 +4,7 @@ import styled, { keyframes } from 'styled-components';
 import type { PlaneIdea } from '../types';
 import LikeButton from './LikeButton';
 import FavoriteButton from './FavoriteButton';
-import { Pista8Theme } from '../../../config/theme';
+import { Pista8Theme, breakpoints } from '../../../config/theme';
 import CommentsSection from '../../../components/comments/CommentsSection';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -29,6 +29,10 @@ const ModalOverlay = styled.div`
   justify-content: center;
   padding: 24px;
   animation: ${overlayIn} 0.22s ease-out;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    padding: 12px;
+  }
 `;
 
 const ModalContainer = styled.div`
@@ -43,6 +47,11 @@ const ModalContainer = styled.div`
   display: flex;
   flex-direction: column;
   animation: ${slideUp} 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @media (max-width: ${breakpoints.mobile}) {
+    border-radius: 20px;
+    max-height: calc(100vh - 24px);
+  }
 
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -63,6 +72,10 @@ const ModalBanner = styled.div`
   align-items: center;
   text-align: center;
   flex-shrink: 0;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    padding: 20px 20px 16px;
+  }
 `;
 
 const BannerDots = styled.div`
@@ -158,6 +171,10 @@ const Body = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 20px;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    padding: 20px 16px 24px;
+  }
 `;
 
 const SectionBlock = styled.div`

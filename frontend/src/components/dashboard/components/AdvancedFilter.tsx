@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
+import { interactiveHover } from '../styles/CommonStyles';
 import { FACULTIES } from '../../../config/faculties';
 import type { SortMode } from '../../../features/sky-wall/types';
 
@@ -41,11 +42,7 @@ const TriggerBtn = styled.button<{ $active: boolean }>`
   transition: all 0.18s;
   position: relative;
 
-  &:hover {
-    border-color: ${Pista8Theme.primary};
-    color: ${Pista8Theme.primary};
-    background: ${Pista8Theme.primary}08;
-  }
+  ${interactiveHover}
 `;
 
 const ActiveDot = styled.span`
@@ -107,10 +104,7 @@ const Chip = styled.button<{ $active: boolean }>`
   transition: all 0.15s;
   white-space: nowrap;
 
-  &:hover {
-    border-color: ${Pista8Theme.primary};
-    color: ${p => p.$active ? 'white' : Pista8Theme.primary};
-  }
+  ${interactiveHover}
 `;
 
 const Divider = styled.hr`

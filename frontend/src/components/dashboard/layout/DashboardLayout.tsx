@@ -5,6 +5,7 @@ import { NAVIGATION_CONFIG } from './navigation.config';
 import { useAuth } from '../../../context/AuthContext';
 import * as S from '../styles/LayoutStyles';
 import { resolveDisplayName } from '../../../utils/user.utils';
+import PenaltyBanner from '../../common/PenaltyBanner';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -37,6 +38,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <S.Page>
+        <PenaltyBanner />
         <S.Header>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <svg viewBox="0 0 280 72" xmlns="http://www.w3.org/2000/svg" width="110" height="28">

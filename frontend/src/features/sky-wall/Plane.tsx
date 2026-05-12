@@ -28,6 +28,12 @@ const ringSpin = keyframes`
   to   { transform: translate(-50%, -50%) rotate(360deg); }
 `;
 
+const highlightPulse = keyframes`
+  0%   { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7), 0 0 20px rgba(255, 215, 0, 0.4); }
+  50%  { box-shadow: 0 0 0 18px rgba(255, 215, 0, 0), 0 0 35px rgba(255, 215, 0, 0.6); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7), 0 0 20px rgba(255, 215, 0, 0.4); }
+`;
+
 const badgePop = keyframes`
   0%   { transform: translateX(-50%) scale(0); opacity: 0; }
   60%  { transform: translateX(-50%) scale(1.15); opacity: 1; }
@@ -45,6 +51,7 @@ const PlaneWrapper = styled.div<{
   $isRacing: boolean;
   $glowIntensity: number;
   $dimmed: boolean;
+  $isHighlighted: boolean;
 }>`
   position: absolute;
   top: ${p => p.$y - p.$size / 2 + 16}px;
@@ -109,6 +116,16 @@ const PlaneWrapper = styled.div<{
       pointer-events: none;
       z-index: -1;
     }
+  `}
+
+  ${p => p.$isHighlighted && css`
+    z-index: 9999 !important;
+    border-radius: 50%;
+    animation: ${float} ${p.$floatDuration}s ease-in-out ${p.$delay}s infinite,
+               ${highlightPulse} 1.8s ease-in-out infinite !important;
+    transform: scale(${p.$scale * 1.2}) !important;
+    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.8)) brightness(1.1) !important;
+    opacity: 1 !important;
   `}
 
   &:hover {
@@ -189,6 +206,7 @@ interface PlaneProps {
   challengeFacultyId?: number | string | null;
   glowIntensity?: number;
   dimmed?: boolean;
+  isHighlighted?: boolean;
   onClick?: () => void;
 }
 
@@ -246,7 +264,7 @@ const getFacultyFilter = (facultyId?: number | string, facultyName?: string): st
 const BASE_Z_INDEX = 10;
 
 const Plane = memo(
-  ({ idea, canvasWidth, phase, glowIntensity = 0, dimmed = false, onClick }: PlaneProps) => {
+  ({ idea, canvasWidth, phase, glowIntensity = 0, dimmed = false, isHighlighted = false, onClick }: PlaneProps) => {
     const size = useMemo(() => computeSize(idea.likesCount), [idea.likesCount]);
     const scale = useMemo(() => computeScale(idea.likesCount), [idea.likesCount]);
     const floatDuration = useMemo(() => computeFloatDuration(idea.likesCount), [idea.likesCount]);
@@ -274,6 +292,7 @@ const Plane = memo(
         $isRacing={isRacing}
         $glowIntensity={glowIntensity}
         $dimmed={dimmed}
+        $isHighlighted={isHighlighted}
         onClick={onClick}
       >
         <PlaneImage src={planeImg} alt={idea.title} $filter={facultyFilter} />
@@ -282,6 +301,7 @@ const Plane = memo(
           <DateLabel $size={size}>{formatRelativeDate(idea.createdAt)}</DateLabel>
         )}
         {glowIntensity > 0 && <NewBadge $intensity={glowIntensity}>NUEVA</NewBadge>}
+        {isHighlighted && <NewBadge $intensity={1}>✦ SELECCIONADA</NewBadge>}
       </PlaneWrapper>
     );
   },
@@ -292,7 +312,8 @@ const Plane = memo(
     prev.phase === next.phase &&
     prev.canvasWidth === next.canvasWidth &&
     prev.glowIntensity === next.glowIntensity &&
-    prev.dimmed === next.dimmed,
+    prev.dimmed === next.dimmed &&
+    prev.isHighlighted === next.isHighlighted,
 );
 
 Plane.displayName = 'Plane';

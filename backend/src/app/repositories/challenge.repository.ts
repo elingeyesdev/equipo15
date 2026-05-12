@@ -249,6 +249,13 @@ export class ChallengeRepository {
           title: true,
           likesCount: true,
           commentsCount: true,
+          author: {
+            select: {
+              nickname: true,
+              displayName: true,
+              email: true,
+            },
+          },
         },
       }),
     ]);
@@ -272,13 +279,17 @@ export class ChallengeRepository {
           avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(resolvedName)}&background=random`,
         };
       }),
-      topIdeas: topIdeas.map((i) => ({
-        id: i.id,
-        title: i.title,
-        likesCount: i.likesCount || 0,
-        commentsCount: i.commentsCount || 0,
-        impact: (i.likesCount || 0) + (i.commentsCount || 0),
-      })),
+      topIdeas: topIdeas.map((i) => {
+        const authorName = i.author?.nickname || i.author?.displayName || i.author?.email?.split('@')[0] || 'Participante';
+        return {
+          id: i.id,
+          title: i.title,
+          likesCount: i.likesCount || 0,
+          commentsCount: i.commentsCount || 0,
+          impact: (i.likesCount || 0) + (i.commentsCount || 0),
+          authorName,
+        };
+      }),
     };
   }
 

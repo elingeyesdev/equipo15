@@ -51,24 +51,11 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <S.PanelTitle>Retos activos</S.PanelTitle>
           {selectedChallengeId && onClearSelection && (
-            <button
+            <S.ClearBtn
               onClick={(e) => { e.stopPropagation(); onClearSelection(); }}
-              style={{
-                background: '#f1f3f5',
-                border: '1px solid #e9ecef',
-                borderRadius: '6px',
-                padding: '2px 8px',
-                fontSize: '10px',
-                fontWeight: 700,
-                color: '#495057',
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#e9ecef'; e.currentTarget.style.color = '#FE410A'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#f1f3f5'; e.currentTarget.style.color = '#495057'; }}
             >
               LIMPIAR
-            </button>
+            </S.ClearBtn>
           )}
         </div>
         <S.FilterWrap>

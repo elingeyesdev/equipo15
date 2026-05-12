@@ -1,4 +1,5 @@
 import { createGlobalStyle } from 'styled-components';
+import { breakpoints } from '../config/theme';
 
 export const GlobalStyles = createGlobalStyle`
   :root {
@@ -26,13 +27,24 @@ export const GlobalStyles = createGlobalStyle`
     color: var(--p8-ink);
     -webkit-font-smoothing: antialiased;
     letter-spacing: -0.01em;
+    font-size: clamp(14px, 1.6vw, 16px);
   }
 
   button, input, textarea, select {
     font-family: inherit;
   }
 
+  button {
+    min-height: 36px;
+  }
+
   #root {
     min-height: 100vh;
+  }
+
+  @media (max-width: ${breakpoints.small}) {
+    body {
+      font-size: 14px;
+    }
   }
 `;

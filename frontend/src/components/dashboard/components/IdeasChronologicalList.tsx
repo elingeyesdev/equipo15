@@ -1,10 +1,13 @@
 import React from 'react';
-import IdeationGuidePanel from './IdeationGuidePanel';
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
+import { Heart, MessageSquare } from 'lucide-react';
+import IdeationGuidePanel from './IdeationGuidePanel';
 import { Pista8Theme, breakpoints } from '../../../config/theme';
+import { interactiveHover, premiumTooltip } from '../styles/CommonStyles';
 import type { RawIdea, PlaneIdea, SortMode } from '../../../features/sky-wall/types';
 import { resolveDisplayName } from '../../../utils/user.utils';
+import { useAuth } from '../../../context/AuthContext';
 
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -50,15 +53,6 @@ const Title = styled.h3`
   text-transform: uppercase;
   color: ${Pista8Theme.secondary};
   margin: 0;
-`;
-
-const Counter = styled.span`
-  font-size: 11px;
-  font-weight: 700;
-  color: #a8b0b8;
-  background: #f1f3f5;
-  padding: 2px 8px;
-  border-radius: 20px;
 `;
 
 const ViewAllBtn = styled.button`
@@ -189,10 +183,11 @@ const CardTitle = styled.p`
 `;
 
 const CardAuthor = styled.p`
-  font-size: 11px;
-  font-weight: 500;
-  color: #a8b0b8;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4b5563;
   margin: 0 0 10px;
+  opacity: 0.9;
 `;
 
 const CardStats = styled.div`
@@ -200,16 +195,31 @@ const CardStats = styled.div`
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-top: auto;
 `;
 
-const StatChip = styled.span`
+const StatItem = styled.div<{ $tooltipText: string }>`
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #6b7280;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  
+  ${interactiveHover}
+  ${premiumTooltip}
+
+  svg { 
+    opacity: 0.8;
+  }
+`;
+
+const StatValue = styled.span`
+  font-size: 12px;
+  font-weight: 800;
+  color: #4b5563;
 `;
 
 const DateLabel = styled.span`
@@ -274,16 +284,12 @@ const ExpandedBadge = styled.div<{ $rank: number }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  font-weight: 900;
+  font-size: 11px;
+  font-weight: 800;
   background: #f1f3f5;
   color: #9ca3af;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 `;
-
-
-
-
 
 /* ─── Loading Spinner ─── */
 const SpinnerWrap = styled.div`
@@ -328,14 +334,20 @@ const formatRelative = (dateStr?: string): string => {
   return `${Math.floor(days / 7)}sem`;
 };
 
-const rawToPlane = (idea: RawIdea, index: number): PlaneIdea => ({
+const rawToPlane = (idea: RawIdea, index: number, userProfile?: any): PlaneIdea => {
+  const isCurrentUser = userProfile && idea.authorId === userProfile.id;
+  const authorName = idea.isAnonymous
+    ? 'Anónimo'
+    : isCurrentUser && userProfile
+      ? resolveDisplayName(userProfile as any)
+      : resolveDisplayName(idea.author);
+
+  return {
   id: idea.id ?? idea._id ?? String(index),
   title: idea.title,
   challengeId: idea.challengeId,
   challengeTitle: idea.challengeTitle,
-  authorName: idea.isAnonymous
-    ? 'Anónimo'
-    : resolveDisplayName(idea.author),
+  authorName,
   likesCount: idea.likesCount ?? 0,
   commentsCount: idea.commentsCount ?? 0,
   laneY: 0,
@@ -350,7 +362,8 @@ const rawToPlane = (idea: RawIdea, index: number): PlaneIdea => ({
   authorRealName: idea.author?.displayName,
   authorStudentCode: idea.author?.studentCode,
   authorPhone: idea.author?.phone,
-});
+  };
+};
 
 /* ─── Component ─── */
 interface IdeasChronologicalListProps {
@@ -370,6 +383,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
   showAll,
   onToggleShowAll,
 }) => {
+  const { userProfile } = useAuth();
   const [localIdeas, setLocalIdeas] = React.useState(ideas);
 
   React.useEffect(() => {
@@ -424,7 +438,6 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
       <Header>
         <HeaderLeft>
           <Title>{sortLabel}</Title>
-          <Counter>Top 3</Counter>
         </HeaderLeft>
         {ideas.length > 3 && !showAll && (
           <ViewAllBtn onClick={onToggleShowAll}>
@@ -444,16 +457,19 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
       {/* ─── Top 3 Horizontal Cards ─── */}
       <TopGrid $isOnlyTop3={!showAll}>
         {top3.map((idea, i) => {
+          const isCurrentUser = userProfile && idea.authorId === userProfile.id;
           const authorName = idea.isAnonymous
             ? 'Anónimo'
-            : resolveDisplayName(idea.author);
+            : isCurrentUser && userProfile
+              ? resolveDisplayName(userProfile as any)
+              : resolveDisplayName(idea.author);
 
           return (
             <TopCard
               key={idea.id ?? idea._id ?? i}
               $rank={i}
               $idx={i}
-              onClick={() => onSelectIdea?.(rawToPlane(idea, i))}
+              onClick={() => onSelectIdea?.(rawToPlane(idea, i, userProfile))}
             >
               <MedalBadge $rank={i}>{medalStyles[i]?.label}</MedalBadge>
 
@@ -461,18 +477,14 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
               <CardAuthor>por {authorName}</CardAuthor>
 
               <CardStats>
-                <StatChip>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                  </svg>
-                  {idea.likesCount ?? 0}
-                </StatChip>
-                <StatChip>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  </svg>
-                  {idea.commentsCount ?? 0}
-                </StatChip>
+                <StatItem $tooltipText="Likes totales">
+                  <Heart size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
+                  <StatValue>{idea.likesCount ?? 0}</StatValue>
+                </StatItem>
+                <StatItem $tooltipText="Comentarios">
+                  <MessageSquare size={14} />
+                  <StatValue>{idea.commentsCount ?? 0}</StatValue>
+                </StatItem>
                 <DateLabel>{formatRelative(idea.createdAt)}</DateLabel>
               </CardStats>
             </TopCard>
@@ -485,9 +497,12 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
         <ExpandedGrid layout>
           {rest.map((idea, i) => {
             const idx = i + 3;
+            const isCurrentUser = userProfile && idea.authorId === userProfile.id;
             const authorName = idea.isAnonymous
               ? 'Anónimo'
-              : resolveDisplayName(idea.author);
+              : isCurrentUser && userProfile
+                ? resolveDisplayName(userProfile as any)
+                : resolveDisplayName(idea.author);
 
             return (
               <ExpandedCard
@@ -495,7 +510,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
                 key={idea.id ?? idea._id ?? idx}
                 $rank={idx}
                 $idx={i}
-                onClick={() => onSelectIdea?.(rawToPlane(idea, idx))}
+                onClick={() => onSelectIdea?.(rawToPlane(idea, idx, userProfile))}
               >
                 <ExpandedBadge $rank={idx}>#{idx + 1}</ExpandedBadge>
                 
@@ -503,18 +518,14 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
                 <CardAuthor>por {authorName}</CardAuthor>
 
                 <CardStats>
-                  <StatChip>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                    </svg>
-                    {idea.likesCount ?? 0}
-                  </StatChip>
-                  <StatChip>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    </svg>
-                    {idea.commentsCount ?? 0}
-                  </StatChip>
+                  <StatItem $tooltipText="Likes totales">
+                    <Heart size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
+                    <StatValue>{idea.likesCount ?? 0}</StatValue>
+                  </StatItem>
+                  <StatItem $tooltipText="Comentarios">
+                    <MessageSquare size={14} />
+                    <StatValue>{idea.commentsCount ?? 0}</StatValue>
+                  </StatItem>
                 </CardStats>
 
                 <DateLabel>{formatRelative(idea.createdAt)}</DateLabel>

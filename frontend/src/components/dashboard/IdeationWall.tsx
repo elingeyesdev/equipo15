@@ -19,6 +19,7 @@ import type { RawIdea, PlaneIdea } from '../../features/sky-wall/types';
 import type { Challenge } from '../../types/models';
 import { resolveDisplayName } from '../../utils/user.utils';
 import InnovationStepsPanel from './components/InnovationStepsPanel';
+import PenaltyBanner from '../common/PenaltyBanner';
 
 import { useDashboardState } from './hooks/useDashboardState';
 import { useIdeationForm } from './hooks/useIdeationForm';
@@ -36,12 +37,29 @@ const IdeationWall = () => {
   const [listLoading, setListLoading] = useState(false);
   const [selectedListIdea, setSelectedListIdea] = useState<PlaneIdea | null>(null);
   const [showAllIdeas, setShowAllIdeas] = useState(false);
+  const [highlightedIdeaId, setHighlightedIdeaId] = useState<string | null>(null);
   const [advFilter, setAdvFilter] = useState<AdvancedFilterState>({
     sortOrder: 'newest',
     topLimit: null,
     facultyId: null,
     onlyFavorites: false,
   });
+
+  const handleSelectIdea = (idea: any) => {
+    // If idea comes from the chronological list, it's already a PlaneIdea — open modal directly
+    if (idea.laneY !== undefined) {
+      setSelectedListIdea(idea);
+      return;
+    }
+
+    // If idea comes from PodiumSection/StatsPanel, highlight the plane in the mural
+    const ideaId = idea.id || idea._id;
+    setHighlightedIdeaId(ideaId);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Auto-clear highlight after 6 seconds
+    setTimeout(() => setHighlightedIdeaId(null), 6000);
+  };
 
   const handleIdeasLoaded = (ideas: RawIdea[]) => {
     setWallIdeas(ideas);
@@ -164,6 +182,9 @@ const IdeationWall = () => {
       <Sidebar open={ds.sidebarOpen} onClose={() => ds.setSidebarOpen(false)} />
 
       <S.Page>
+        <div style={{ marginBottom: '16px' }}>
+          <PenaltyBanner />
+        </div>
         <S.Header>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <svg viewBox="0 0 280 72" xmlns="http://www.w3.org/2000/svg" width="110" height="28">
@@ -236,6 +257,7 @@ const IdeationWall = () => {
           onlyFavorites={advFilter.onlyFavorites}
           topLimit={advFilter.topLimit}
           facultyId={advFilter.facultyId}
+          highlightedIdeaId={highlightedIdeaId}
         />
 
         {!showAllIdeas ? (
@@ -247,7 +269,7 @@ const IdeationWall = () => {
                     ideas={displayedWallIdeas}
                     sortOrder={ds.sortOrder}
                     isLoading={listLoading}
-                    onSelectIdea={setSelectedListIdea}
+                    onSelectIdea={handleSelectIdea}
                     showAll={showAllIdeas}
                     onToggleShowAll={() => setShowAllIdeas(!showAllIdeas)}
                   />
@@ -313,6 +335,7 @@ const IdeationWall = () => {
               <StatsPanel
                 selectedChallenge={ds.selectedChallenge}
                 challengeStats={ds.challengeStats}
+                onSelectIdea={handleSelectIdea}
               />
             </S.FullWidthContainer>
           </>
@@ -324,7 +347,7 @@ const IdeationWall = () => {
                   ideas={displayedWallIdeas}
                   sortOrder={ds.sortOrder}
                   isLoading={listLoading}
-                  onSelectIdea={setSelectedListIdea}
+                  onSelectIdea={handleSelectIdea}
                   showAll={showAllIdeas}
                   onToggleShowAll={() => setShowAllIdeas(!showAllIdeas)}
                 />
@@ -352,6 +375,7 @@ const IdeationWall = () => {
                 <StatsPanel
                   selectedChallenge={ds.selectedChallenge}
                   challengeStats={ds.challengeStats}
+                  onSelectIdea={handleSelectIdea}
                 />
               </motion.div>
             </S.SplitGrid>

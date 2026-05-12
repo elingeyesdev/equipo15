@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Pista8Theme } from '../../../config/theme';
+import { Pista8Theme, breakpoints } from '../../../config/theme';
 
 export const Overlay = styled.div<{ open: boolean }>`
   position: fixed;
@@ -19,7 +19,7 @@ export const Sidebar = styled.aside<{ open: boolean }>`
   height: 100vh;
   width: 300px;
   background: ${Pista8Theme.secondary};
-  z-index: 50;
+  z-index: 10000;
   display: flex;
   flex-direction: column;
   padding: 36px 28px 40px;
@@ -27,6 +27,12 @@ export const Sidebar = styled.aside<{ open: boolean }>`
   transition: transform 0.32s cubic-bezier(.22,.68,0,1.1), visibility 0.32s;
   visibility: ${p => p.open ? 'visible' : 'hidden'};
   pointer-events: ${p => p.open ? 'auto' : 'none'};
+  box-shadow: -20px 0 50px rgba(0,0,0,0.2);
+
+  @media (max-width: ${breakpoints.small}) {
+    width: 100%;
+    padding: 24px 20px;
+  }
 `;
 
 export const SidebarTop = styled.div`

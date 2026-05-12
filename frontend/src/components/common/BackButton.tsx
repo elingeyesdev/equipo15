@@ -1,16 +1,27 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 import { Pista8Theme } from '../../config/theme';
 
 interface BackButtonProps {
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 const BackButton: React.FC<BackButtonProps> = ({ onClick }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+      return;
+    }
+    navigate(-1);
+  };
+
   return (
     <StyledWrapper>
       <div className="styled-wrapper">
-        <button className="button" onClick={onClick} aria-label="Volver atrás">
+        <button className="button" onClick={handleClick} aria-label="Volver atrás">
           <div className="button-box">
             <span className="button-elem">
               <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="arrow-icon">

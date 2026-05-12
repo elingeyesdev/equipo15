@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
-import { fadeUp } from './CommonStyles';
+import { fadeUp, premiumTooltip } from './CommonStyles';
 
 export const LeftPanel = styled.div`
   background: ${Pista8Theme.white};
@@ -29,6 +29,25 @@ export const PanelTitle = styled.h2`
   color: ${Pista8Theme.secondary};
   margin: 0;
   letter-spacing: -0.2px;
+`;
+
+export const ClearBtn = styled.button`
+  font-size: 10px;
+  font-weight: 800;
+  color: ${Pista8Theme.white};
+  background: ${Pista8Theme.primary};
+  border: none;
+  border-radius: 6px;
+  padding: 4px 9px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px ${Pista8Theme.primary}40;
+  }
 `;
 
 export const PanelCount = styled.span`
@@ -138,7 +157,6 @@ export const ChallengeCard = styled.div<{ $active: boolean }>`
   box-shadow: ${p => p.$active 
     ? `0 12px 32px ${Pista8Theme.primary}25` 
     : '0 8px 24px rgba(0,0,0,0.04)'};
-  overflow: hidden;
 
   &:hover {
     border-color: ${p => p.$active ? Pista8Theme.primary : 'rgba(72,80,84,0.18)'};
@@ -209,8 +227,8 @@ export const StatusBadge = styled.span<{ expired?: boolean }>`
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: ${Pista8Theme.white};
-  background: ${p => p.expired ? Pista8Theme.error : Pista8Theme.primary};
+  color: ${p => p.expired ? Pista8Theme.error : Pista8Theme.primary};
+  background: ${p => p.expired ? `${Pista8Theme.error}15` : `${Pista8Theme.primary}15`};
   padding: 4px 9px;
   border-radius: 6px;
 `;
@@ -244,10 +262,10 @@ export const MetaDot = styled.span`
   flex-shrink: 0;
 `;
 
-export const ClosingBadge = styled.span<{ urgent?: boolean }>`
+export const ClosingBadge = styled.span<{ $urgent?: boolean }>`
   font-size: 11px;
   font-weight: 700;
-  color: ${p => p.urgent ? Pista8Theme.primary : 'rgba(72,80,84,0.45)'};
+  color: ${p => p.$urgent ? Pista8Theme.primary : 'rgba(72,80,84,0.45)'};
 `;
 
 
@@ -263,7 +281,7 @@ export const StatsRow = styled.div`
   gap: 12px;
 `;
 
-export const StatChip = styled.span`
+export const StatChip = styled.span<{ $tooltipText?: string }>`
   display: flex;
   align-items: center;
   gap: 5px;
@@ -271,6 +289,19 @@ export const StatChip = styled.span`
   font-weight: 700;
   color: rgba(72, 80, 84, 0.5);
   transition: color 0.15s;
+  ${premiumTooltip}
+
+  &::after {
+    left: -8px;
+    transform: translateY(5px);
+  }
+  &::before {
+    left: 8px;
+    transform: translateY(5px);
+  }
+  &:hover::after, &:hover::before {
+    transform: translateY(0);
+  }
 `;
 
 export const RespondButton = styled.button<{ disabled?: boolean }>`

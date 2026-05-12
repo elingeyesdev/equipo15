@@ -15,7 +15,7 @@ const Wrapper = styled.div`
 const Option = styled.button<{ $active: boolean }>`
   padding: 6px 14px;
   border-radius: 8px;
-  border: none;
+  border: 1.5px solid transparent;
   font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
@@ -27,8 +27,9 @@ const Option = styled.button<{ $active: boolean }>`
   box-shadow: ${p =>
     p.$active ? '0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)' : 'none'};
 
-  &:hover {
-    color: ${p => (p.$active ? Pista8Theme.primary : '#374151')};
+  &:hover:not(:disabled) {
+    color: ${p => (p.$active ? Pista8Theme.primary : Pista8Theme.primary)};
+    background: ${p => (p.$active ? '#fff' : `${Pista8Theme.primary}08`)};
   }
 `;
 

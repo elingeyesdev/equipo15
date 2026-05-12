@@ -64,6 +64,10 @@ export const StatsSummary = styled.div`
   gap: 8px;
   position: relative;
   z-index: 1;
+
+  @media (max-width: ${breakpoints.small}) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 export const SummaryCard = styled.div`
@@ -92,7 +96,7 @@ export const SummaryCard = styled.div`
 
   &:hover {
     background: #fafafa;
-    border-color: rgba(0,0,0,0.1);
+    border-color: ${Pista8Theme.primary}40;
     transform: translateY(-1px);
 
     &::after {
@@ -351,7 +355,8 @@ export const PodiumItem = styled.div<{ $isFirst: boolean }>`
   &:hover {
     background: ${p => p.$isFirst
     ? `linear-gradient(135deg, ${Pista8Theme.primary}1a 0%, rgba(254,65,10,0.05) 100%)`
-    : '#fafafa'};
+    : `${Pista8Theme.primary}08`};
+    border-color: ${Pista8Theme.primary}40;
   }
 `;
 
