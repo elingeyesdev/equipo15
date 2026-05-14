@@ -9,9 +9,6 @@ import { IdeaRepository } from './idea.repository';
 import { ChallengeRepository } from '../challenge/challenge.repository';
 import { UserRepository } from '../user/user.repository';
 import { Idea } from '@prisma/client';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { ProjectDetails } from '../../database/schemas/project-details.schema';
 import { CreateIdeaDto } from './dtos/create-idea.dto';
 import { CreateDraftIdeaDto } from './dtos/create-draft-idea.dto';
 import { UpdateIdeaDto } from './dtos/update-idea.dto';
@@ -36,8 +33,6 @@ export class IdeaService {
     private readonly ideaRepository: IdeaRepository,
     private readonly challengeRepository: ChallengeRepository,
     private readonly userRepository: UserRepository,
-    @InjectModel(ProjectDetails.name)
-    private projectDetailsModel: Model<ProjectDetails>,
     private readonly eventBus: EventBus,
     private readonly redisService: RedisService,
     private readonly moderationService: ModerationService,
@@ -83,27 +78,6 @@ export class IdeaService {
     );
   }
 
-  private async persistProjectDetails(data: {
-    projectId: string;
-    problem?: string;
-    solution?: string;
-    tags?: string[];
-    multimediaLinks?: string[];
-  }): Promise<void> {
-    try {
-      await this.projectDetailsModel.create({
-        projectId: data.projectId,
-        description: `${data.problem ?? ''}\n${data.solution ?? ''}`.trim(),
-        tags: data.tags || [],
-        multimediaLinks: data.multimediaLinks || [],
-      });
-    } catch (error) {
-      this.logger.warn(
-        `No se pudo guardar ProjectDetails para idea ${data.projectId}: ${(error as Error).message}`,
-      );
-    }
-  }
-
   async create(
     createIdeaDto: CreateIdeaDto,
     firebaseUid: string,
@@ -138,14 +112,6 @@ export class IdeaService {
       isAnonymous: createIdeaDto.isAnonymous ?? false,
       authorId,
       challengeId: createIdeaDto.challengeId,
-    });
-
-    await this.persistProjectDetails({
-      projectId: createdIdea.id,
-      problem: createIdeaDto.problem,
-      solution: createIdeaDto.solution,
-      tags: createIdeaDto.tags,
-      multimediaLinks: createIdeaDto.multimediaLinks,
     });
 
     this.logger.log(
@@ -201,13 +167,6 @@ export class IdeaService {
       status: 'draft',
     };
     const createdDraft = await this.ideaRepository.create(draftPayload);
-
-    await this.persistProjectDetails({
-      projectId: createdDraft.id,
-      problem: createIdeaDraftDto.problem,
-      solution: createIdeaDraftDto.solution,
-      tags: createIdeaDraftDto.tags,
-    });
 
     this.logger.log(
       `Borrador de idea creado (Híbrido): "${createdDraft.title}"`,
