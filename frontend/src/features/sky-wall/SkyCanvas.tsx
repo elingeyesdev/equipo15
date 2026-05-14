@@ -7,7 +7,6 @@ import RaceOverlay from './RaceOverlay';
 import PodiumScreen from './PodiumScreen';
 import IdeasLoader from './IdeasLoader';
 import IdeaDetailModal from './components/IdeaDetailModal';
-import { useAuth } from '../../context/AuthContext';
 import { useWallSocket } from './useWallSocket';
 import { computeCanvasHeight, sortIdeas, computeGlowIntensity } from './flight.engine';
 import { ideaService } from '../../services/idea.service';
@@ -159,7 +158,6 @@ interface SkyCanvasProps {
 
 interface SkyCanvasSceneProps {
   initialIdeas: RawIdea[];
-  token?: string;
   isLoading?: boolean;
   progress?: number;
   challengeId?: string;
@@ -175,13 +173,12 @@ interface SkyCanvasSceneProps {
   highlightedIdeaId?: string | null;
 }
 
-const SkyCanvasScene = memo(({ initialIdeas, token, isLoading = false, progress = 0, challengeId, challengeTitle, challengeFacultyId, isDashboardLoading = false, search, sort, challengeStatus, onlyFavorites = false, topLimit, facultyId, highlightedIdeaId }: SkyCanvasSceneProps) => {
+const SkyCanvasScene = memo(({ initialIdeas, isLoading = false, progress = 0, challengeId, challengeTitle, challengeFacultyId, isDashboardLoading = false, search, sort, challengeStatus, onlyFavorites = false, topLimit, facultyId, highlightedIdeaId }: SkyCanvasSceneProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState(800);
   const [showPodium, setShowPodium] = useState(false);
   const [selectedIdea, setSelectedIdea] = useState<PlaneIdea | null>(null);
   const { ideas, phase: socketPhase } = useWallSocket(
-    token,
     initialIdeas,
     challengeTitle,
   );
@@ -305,24 +302,9 @@ SkyCanvasScene.displayName = 'SkyCanvasScene';
 
 
 const SkyCanvas = memo(({ challengeId, challengeTitle, challengeFacultyId, isDashboardLoading, search, sort, challengeStatus, onIdeasLoaded, onlyFavorites = false, topLimit, facultyId, highlightedIdeaId }: SkyCanvasProps) => {
-  const [token, setToken] = useState<string>();
   const [publicIdeas, setPublicIdeas] = useState<RawIdea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const { user } = useAuth();
-
-  useEffect(() => {
-    if (!user) return;
-
-    let active = true;
-    user.getIdToken().then((nextToken: string) => {
-      if (active) setToken(nextToken);
-    }).catch(console.error);
-
-    return () => {
-      active = false;
-    };
-  }, [user]);
 
   useEffect(() => {
     let active = true;
@@ -395,7 +377,7 @@ const SkyCanvas = memo(({ challengeId, challengeTitle, challengeFacultyId, isDas
     };
   }, [challengeId, search, sort]);
 
-  return <SkyCanvasScene initialIdeas={publicIdeas} token={token} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeTitle={challengeTitle} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} search={search} sort={sort} challengeStatus={challengeStatus} onlyFavorites={onlyFavorites} topLimit={topLimit} facultyId={facultyId} highlightedIdeaId={highlightedIdeaId} />;
+  return <SkyCanvasScene initialIdeas={publicIdeas} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeTitle={challengeTitle} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} search={search} sort={sort} challengeStatus={challengeStatus} onlyFavorites={onlyFavorites} topLimit={topLimit} facultyId={facultyId} highlightedIdeaId={highlightedIdeaId} />;
 });
 
 SkyCanvas.displayName = 'SkyCanvas';

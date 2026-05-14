@@ -4,6 +4,7 @@ import { Pista8Theme } from '../../../config/theme';
 import { useAuth } from '../../../context/AuthContext';
 import { ideaService } from '../../../services/idea.service';
 import { toast } from 'sonner';
+import { wallEvents } from '../../../hooks/useWallEvents';
 
 const pop = keyframes`
   0%   { transform: scale(1); }
@@ -108,21 +109,13 @@ export const FavoriteButton = ({ ideaId, hasFavorited }: FavoriteButtonProps) =>
     const nextFavoriteState = !isFavorite;
     setIsFavorite(nextFavoriteState);
     setIsUpdating(true);
-    window.dispatchEvent(
-      new CustomEvent('pista8:favorite_changed', {
-        detail: { ideaId, isFavorite: nextFavoriteState },
-      }),
-    );
+    wallEvents.emit('favorite_changed', { ideaId, isFavorite: nextFavoriteState });
 
     try {
       await ideaService.favoriteIdea(ideaId);
     } catch {
       setIsFavorite(!nextFavoriteState);
-      window.dispatchEvent(
-        new CustomEvent('pista8:favorite_changed', {
-          detail: { ideaId, isFavorite: !nextFavoriteState },
-        }),
-      );
+      wallEvents.emit('favorite_changed', { ideaId, isFavorite: !nextFavoriteState });
       toast.error('No pudimos actualizar tu favorito. Intenta de nuevo.');
     } finally {
       setIsUpdating(false);

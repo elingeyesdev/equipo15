@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { FieldConfig } from '../components/form/FieldFactory';
+import type { FieldConfig } from '../features/dashboard/FieldFactory';
 
 type FormValue = string | number | boolean | null;
 

@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, HttpAdapterHost } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
@@ -6,9 +6,10 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import helmet from 'helmet';
 import { PrismaClientExceptionFilter } from './common/filters/prisma-client-exception.filter';
-import { HttpAdapterHost } from '@nestjs/core';
 import { CORS_ORIGINS } from './common/cors';
+import { validateEnv } from './config/env.validation';
 
+validateEnv(process.env);
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,7 +23,6 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
-
 
   app.useGlobalInterceptors(new TransformInterceptor());
 

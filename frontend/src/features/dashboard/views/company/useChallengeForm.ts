@@ -1,0 +1,314 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { toast } from 'sonner';
+import type { Challenge, ChallengeStatus, EvaluationCriterion } from '../../../../types/models';
+import axiosInstance from '../../../../api/axiosConfig';
+
+/* ─── Types ─── */
+export interface ChallengeFormData {
+  title: string;
+  problemDescription: string;
+  companyContext: string;
+  participationRules: string;
+  startDate: string;
+  endDate: string;
+  isPrivate: boolean;
+  status: ChallengeStatus;
+  logoUrl: string;
+  evaluationCriteria: EvaluationCriterion[];
+  facultyId: string | number | null;
+}
+
+export interface Errors {
+  title?: string;
+  problemDescription?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+/* ─── Constants ─── */
+export const LIMITS = { title: 80, problemDescription: 500, companyContext: 500, participationRules: 500 };
+
+export const DEFAULT_CRITERIA: EvaluationCriterion[] = [
+  { id: 'desirability', name: 'Deseabilidad', enabled: false, weight: 33 },
+  { id: 'feasibility',  name: 'Factibilidad',  enabled: false, weight: 33 },
+  { id: 'viability',   name: 'Viabilidad',    enabled: false, weight: 34 },
+];
+
+export const emptyForm: ChallengeFormData = {
+  title: '', problemDescription: '', companyContext: '',
+  participationRules: '', startDate: '', endDate: '',
+  isPrivate: false, status: 'Borrador', logoUrl: '',
+  evaluationCriteria: DEFAULT_CRITERIA,
+  facultyId: null,
+};
+
+export const CUSTOM_NAME_RE = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 -]+$/;
+export const MAX_WORDS = 10;
+
+/* ─── Image helpers ─── */
+export const compressToWebP = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 600;
+        const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width  = img.width  * ratio;
+        canvas.height = img.height * ratio;
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/webp', 0.82));
+      };
+      img.onerror = reject;
+      img.src = ev.target!.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+export const formatDate = (d?: string) => d
+  ? new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+  : '–';
+
+/* ─── Hook ─── */
+interface UseChallengeFormProps {
+  onBack: () => void;
+  onSave: (data: ChallengeFormData) => Promise<void>;
+  challenge?: Challenge | null;
+}
+
+export const useChallengeForm = ({ onBack, onSave, challenge }: UseChallengeFormProps) => {
+  const today = new Date().toISOString().split('T')[0];
+  const [form, setForm]               = useState<ChallengeFormData>(emptyForm);
+  const [initialForm, setInitialForm] = useState<ChallengeFormData>(emptyForm);
+  const [errors, setErrors]           = useState<Errors>({});
+  const [saving, setSaving]           = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [criteriaOpen, setCriteriaOpen] = useState(false);
+  const [addingCustom, setAddingCustom] = useState(false);
+  const [customName, setCustomName]     = useState('');
+  const [customError, setCustomError]   = useState('');
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [logoError, setLogoError]       = useState('');
+  const [dbFaculties, setDbFaculties]   = useState<any[]>([]);
+  const criteriaRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isEditMode = !!challenge;
+  const hasIdeas   = (challenge?.ideasCount ?? 0) > 0;
+
+  /* ─── Fetch faculties ─── */
+  useEffect(() => {
+    const fetchFacs = async () => {
+      try {
+        const res = await axiosInstance.get('/users/faculties');
+        if (res.data) {
+          const arr = Array.isArray(res.data.data) ? res.data.data : res.data;
+          setDbFaculties(Array.isArray(arr) ? arr : []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch faculties:', err);
+      }
+    };
+    fetchFacs();
+  }, []);
+
+  /* ─── Field lock logic ─── */
+  const locked = (field: 'core' | 'flexible') => {
+    if (!isEditMode) return false;
+    if (field === 'core')     return hasIdeas;
+    if (field === 'flexible') return false;
+    return false;
+  };
+
+  /* ─── Load challenge data ─── */
+  useEffect(() => {
+    const base = challenge ? {
+      title: challenge.title || '',
+      problemDescription: challenge.problemDescription || '',
+      companyContext: challenge.companyContext || '',
+      participationRules: challenge.participationRules || '',
+      startDate: challenge.startDate ? new Date(challenge.startDate).toISOString().split('T')[0] : '',
+      endDate:   challenge.endDate   ? new Date(challenge.endDate).toISOString().split('T')[0]   : '',
+      isPrivate: challenge.isPrivate || false,
+      status: challenge.status || 'Borrador',
+      logoUrl: challenge.logoUrl || '',
+      evaluationCriteria: (challenge.evaluationCriteria && challenge.evaluationCriteria.length > 0)
+        ? challenge.evaluationCriteria
+        : DEFAULT_CRITERIA,
+      facultyId: challenge.facultyId || null,
+    } as ChallengeFormData : emptyForm;
+
+    setForm(base);
+    setInitialForm(JSON.parse(JSON.stringify(base)));
+    setErrors({});
+  }, [challenge]);
+
+  /* ─── Auto-resize textareas ─── */
+  useEffect(() => {
+    document.querySelectorAll<HTMLTextAreaElement>('textarea').forEach(t => {
+      t.style.height = 'auto';
+      t.style.height = `${t.scrollHeight}px`;
+    });
+  }, [form.problemDescription, form.companyContext, form.participationRules]);
+
+  /* ─── Field updaters ─── */
+  const updateField = useCallback(<K extends keyof ChallengeFormData>(key: K, val: ChallengeFormData[K]) => {
+    setForm(prev => ({ ...prev, [key]: val }));
+    setErrors(prev => ({ ...prev, [key]: undefined }));
+  }, []);
+
+  /* ─── Logo upload ─── */
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setLogoError('Formato no soportado. Por favor sube una imagen JPG, PNG o WEBP.');
+      return;
+    }
+
+    setLogoError('');
+    try {
+      const webp = await compressToWebP(file);
+      updateField('logoUrl', webp);
+    } catch {
+      setLogoError('Hubo un error al procesar la imagen.');
+    }
+  };
+
+  /* ─── Criteria helpers ─── */
+  const updateCriterion = (id: string, patch: Partial<EvaluationCriterion>) => {
+    setForm(prev => ({
+      ...prev,
+      evaluationCriteria: prev.evaluationCriteria.map(c => c.id === id ? { ...c, ...patch } : c),
+    }));
+  };
+
+  const removeCriterion = (id: string) => {
+    setForm(prev => ({ ...prev, evaluationCriteria: prev.evaluationCriteria.filter(c => c.id !== id) }));
+  };
+
+  const validateCustomName = (name: string): string => {
+    const trimmed = name.trim();
+    if (!trimmed) return 'Escribe un nombre';
+    if (!CUSTOM_NAME_RE.test(trimmed)) return 'Solo letras, números y espacios';
+    if ((trimmed.match(/\b\w+\b/g) || []).length > MAX_WORDS) return `Máximo ${MAX_WORDS} palabras`;
+    if (/(.)\1{2,}/.test(trimmed)) return 'No puedes repetir un carácter más de 2 veces seguidas';
+    if (form.evaluationCriteria.some(c => c.name.toLowerCase() === trimmed.toLowerCase()))
+      return 'Ese criterio ya existe';
+    return '';
+  };
+
+  const addCustomCriterion = () => {
+    const err = validateCustomName(customName);
+    if (err) { setCustomError(err); return; }
+    setForm(prev => ({
+      ...prev,
+      evaluationCriteria: [...prev.evaluationCriteria, {
+        id: `custom-${Date.now()}`, name: customName.trim(),
+        enabled: true, weight: 0, isCustom: true,
+      }],
+    }));
+    setCustomName(''); setCustomError(''); setAddingCustom(false);
+  };
+
+  const totalWeight = form.evaluationCriteria
+    .filter(c => c.enabled)
+    .reduce((s, c) => s + (Number(c.weight) || 0), 0);
+
+  /* ─── Validation ─── */
+  const validate = (forDraft: boolean): boolean => {
+    const errs: Errors = {};
+    if (!form.title.trim()) errs.title = 'El título es obligatorio';
+    else if (form.title.length > LIMITS.title) errs.title = `Máximo ${LIMITS.title} caracteres`;
+    if (!forDraft) {
+      if (form.problemDescription.length > LIMITS.problemDescription)
+        errs.problemDescription = `Máximo ${LIMITS.problemDescription} caracteres`;
+      if (!form.startDate) errs.startDate = 'La fecha de inicio es obligatoria';
+      if (!form.endDate) errs.endDate = 'La fecha fin es obligatoria';
+      else if (form.startDate && form.endDate && new Date(form.endDate) <= new Date(form.startDate))
+        errs.endDate = 'La fecha fin debe ser posterior al inicio';
+    }
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  /* ─── Back / Cancel ─── */
+  const handleBack = () => {
+    if (JSON.stringify(form) !== JSON.stringify(initialForm)) { setShowConfirm(true); return; }
+    onBack();
+  };
+
+  /* ─── Save ─── */
+  const handleSave = async (status: ChallengeStatus) => {
+    const forDraft = status === 'Borrador';
+    if (!validate(forDraft)) return;
+
+    if (!forDraft) {
+      const enabledCriteria = form.evaluationCriteria.filter(c => c.enabled);
+      if (enabledCriteria.length > 0) {
+        if (enabledCriteria.some(c => c.weight === 0)) {
+          toast.error('Criterio sin valor', {
+            description: 'No puedes enviar un criterio de evaluación con 0% de peso. Asígnale un valor o desmárcalo.',
+          });
+          return;
+        }
+        if (totalWeight !== 100) {
+          toast.error('Pesos inválidos', {
+            description: `El peso total de los criterios debe sumar exactamente 100% (actual: ${totalWeight}%).`,
+          });
+          return;
+        }
+      }
+    }
+
+    setSaving(true);
+    try { await onSave({ ...form, status }); }
+    finally { setSaving(false); }
+  };
+
+  /* ─── Open criteria + scroll ─── */
+  const toggleCriteria = () => {
+    const next = !criteriaOpen;
+    setCriteriaOpen(next);
+    if (next) setTimeout(() => criteriaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  };
+
+  return {
+    form,
+    errors,
+    saving,
+    showConfirm,
+    setShowConfirm,
+    criteriaOpen,
+    addingCustom,
+    setAddingCustom,
+    customName,
+    setCustomName,
+    customError,
+    setCustomError,
+    lightboxOpen,
+    setLightboxOpen,
+    logoError,
+    dbFaculties,
+    criteriaRef,
+    fileInputRef,
+    isEditMode,
+    hasIdeas,
+    today,
+    totalWeight,
+    locked,
+    updateField,
+    handleLogoChange,
+    updateCriterion,
+    removeCriterion,
+    addCustomCriterion,
+    handleBack,
+    handleSave,
+    toggleCriteria,
+    onBack,
+  };
+};

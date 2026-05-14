@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { io } from 'socket.io-client';
-import type { Socket } from 'socket.io-client';
 import type { PlaneIdea, WallPhase, IdeaUpdatedPayload, IdeaVotedPayload, RawIdea } from './types';
 import { LANE_HEIGHT_PER_IDEA, TOP_PADDING } from './flight.engine';
 import { resolveDisplayName } from '../../utils/user.utils';
 import { FACULTIES } from '../../config/faculties';
+import { useSocket } from '../../hooks/useSocket';
+import { useWallEventListener } from '../../hooks/useWallEvents';
 
-const DEFAULT_SOCKET_URL = 'http://localhost:3000';
 const DEBOUNCE_MS = 200;
 
 const resolveAuthorFacultyName = (facultyId?: number | string, facultyName?: string) => {
@@ -52,7 +51,6 @@ interface UseWallSocketResult {
 }
 
 export const useWallSocket = (
-  token?: string,
   initialIdeas: RawIdea[] = [],
   fallbackChallengeTitle?: string,
 ): UseWallSocketResult => {
@@ -61,7 +59,7 @@ export const useWallSocket = (
   );
   const [phase, setPhase] = useState<WallPhase>('active');
   const [serverTimeOffset, setServerTimeOffset] = useState(0);
-  const socketRef = useRef<Socket | null>(null);
+  const socket = useSocket();
   const pendingUpdates = useRef<Map<string, IdeaUpdatedPayload>>(new Map());
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -86,19 +84,20 @@ export const useWallSocket = (
     setIdeas(buildPlanes(initialIdeas, fallbackChallengeTitle));
   }, [initialIdeas, fallbackChallengeTitle]);
 
+  useWallEventListener('vote_changed', useCallback(({ ideaId, hasVoted, likesCount }) => {
+    setIdeas(prev => prev.map(idea => 
+      idea.id === ideaId ? { ...idea, hasVoted, likesCount } : idea
+    ));
+  }, []));
+
+  useWallEventListener('favorite_changed', useCallback(({ ideaId, isFavorite }) => {
+    setIdeas(prev => prev.map(idea =>
+      idea.id === ideaId ? { ...idea, hasFavorited: isFavorite } : idea
+    ));
+  }, []));
+
   useEffect(() => {
-    if (!token) return;
-
-    let socketURL = import.meta.env.VITE_API_URL
-      ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
-      : DEFAULT_SOCKET_URL;
-
-    const socket = io(socketURL, {
-      reconnection: true,
-      reconnectionDelay: 1000,
-      auth: { token }
-    });
-    socketRef.current = socket;
+    if (!socket) return;
 
     socket.on('idea:updated', (payload: IdeaUpdatedPayload) => {
       pendingUpdates.current.set(payload.id, payload);
@@ -120,24 +119,6 @@ export const useWallSocket = (
           : idea
       ));
     });
-
-    const handleLocalVoteChange = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const { ideaId, hasVoted, likesCount } = customEvent.detail;
-      setIdeas(prev => prev.map(idea => 
-        idea.id === ideaId ? { ...idea, hasVoted, likesCount } : idea
-      ));
-    };
-    window.addEventListener('pista8:vote_changed', handleLocalVoteChange);
-
-    const handleLocalFavoriteChange = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const { ideaId, isFavorite } = customEvent.detail;
-      setIdeas(prev => prev.map(idea =>
-        idea.id === ideaId ? { ...idea, hasFavorited: isFavorite } : idea
-      ));
-    };
-    window.addEventListener('pista8:favorite_changed', handleLocalFavoriteChange);
 
     socket.on('idea_created', (rawIdea: RawIdea) => {
       setIdeas(prev => {
@@ -186,12 +167,16 @@ export const useWallSocket = (
     });
 
     return () => {
-      socket.disconnect();
+      socket.off('idea:updated');
+      socket.off('idea:voted');
+      socket.off('idea:unvoted');
+      socket.off('idea_created');
+      socket.off('user:profile_updated');
+      socket.off('challenge:close');
+      socket.off('timer:sync');
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
-      window.removeEventListener('pista8:vote_changed', handleLocalVoteChange);
-      window.removeEventListener('pista8:favorite_changed', handleLocalFavoriteChange);
     };
-  }, [scheduleFlush, token, fallbackChallengeTitle]);
+  }, [scheduleFlush, socket, fallbackChallengeTitle]);
 
   return { ideas, phase, serverTimeOffset };
 };

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useUser } from '../../context/UserContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface RoleGuardProps {
   allowedRoles: string[];
@@ -7,7 +7,7 @@ interface RoleGuardProps {
 }
 
 export const RoleGuard = ({ allowedRoles, children }: RoleGuardProps) => {
-  const { profile } = useUser();
+  const { userProfile: profile } = useAuth();
 
   if (!profile) return null;
 

@@ -1,17 +1,12 @@
-import axiosInstance from '../api/axiosConfig';
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
+import axiosInstance from '@/api/axiosConfig';
+import type { ApiResponse } from '@/types/api';
+import type { IdeaStatus } from '@/types/models';
 
 type PublicIdeasResponse = ApiResponse<{ data: unknown[]; total: number }>;
 
 const PUBLIC_IDEAS_CACHE_TTL_MS = 60_000;
 const publicIdeasCache = new Map<string, { timestamp: number; promise: Promise<PublicIdeasResponse> }>();
 
-export type IdeaStatus = 'draft' | 'public' | 'top5' | 'archived';
 
 export interface CreateIdeaPayload {
   title: string;

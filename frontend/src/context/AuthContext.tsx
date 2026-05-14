@@ -2,9 +2,10 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef } f
 import type { ReactNode } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { auth } from '../config/firebase';
-import { API_URL } from '../config/constants';
-import type { UserProfile } from '../types/models';
+import { auth } from '@/config/firebase';
+import axiosInstance from '@/api/axiosConfig';
+import type { UserProfile } from '@/types/models';
+import type { ApiResponse } from '@/types/api';
 
 interface AuthContextType {
   user: User | null;
@@ -34,48 +35,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     suppressAuthRef.current = value;
   }, []);
 
-  const fetchProfile = useCallback(async (firebaseUser: User): Promise<UserProfile | null> => {
+  const fetchProfile = useCallback(async (): Promise<UserProfile | null> => {
     try {
-      const token = await firebaseUser.getIdToken();
-      const res = await fetch(`${API_URL}/users/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const result = await res.json();
-        return result.data || null;
-      }
+      const response = await axiosInstance.get<ApiResponse<UserProfile>>('/users/profile');
+      return response.data?.data || null;
     } catch {
+      return null;
     }
-    return null;
   }, []);
 
   const syncProfile = useCallback(async (firebaseUser: User): Promise<UserProfile | null> => {
     try {
-      const token = await firebaseUser.getIdToken();
-      const res = await fetch(`${API_URL}/users/sync`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          firebaseUid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName || ''
-        })
+      const response = await axiosInstance.post<ApiResponse<UserProfile>>('/users/sync', {
+        firebaseUid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName || ''
       });
-      if (res.ok) {
-        const result = await res.json();
-        return result.data || null;
-      }
+      return response.data?.data || null;
     } catch {
+      return null;
     }
-    return null;
   }, []);
 
   const refetchProfile = useCallback(async () => {
     if (user) {
-      const profileData = await fetchProfile(user);
+      const profileData = await fetchProfile();
       setUserProfile(profileData);
     }
   }, [user, fetchProfile]);
@@ -90,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (currentUser) {
         setLoading(true);
         try {
-          let profile = await fetchProfile(currentUser);
+          let profile = await fetchProfile();
           if (!profile) {
             profile = await syncProfile(currentUser);
           }

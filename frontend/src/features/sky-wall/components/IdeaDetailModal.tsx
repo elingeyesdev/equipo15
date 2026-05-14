@@ -5,8 +5,10 @@ import type { PlaneIdea } from '../types';
 import LikeButton from './LikeButton';
 import FavoriteButton from './FavoriteButton';
 import { Pista8Theme, breakpoints } from '../../../config/theme';
-import CommentsSection from '../../../components/comments/CommentsSection';
+import CommentsSection from '../../comments/CommentsSection';
 import { useAuth } from '../../../context/AuthContext';
+import { useWallEventListener } from '../../../hooks/useWallEvents';
+import { commentService } from '../../../services/comment.service';
 
 const overlayIn = keyframes`
   from { opacity: 0; }
@@ -322,23 +324,21 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
     setShowFullProposal(false);
   }, [idea.id, idea.commentsCount]);
 
-  // Escuchar eventos de comentarios publicados/retirados para actualizar el contador
-  useEffect(() => {
-    const handleCommentCountChanged = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { ideaId, count } = customEvent.detail;
-      
-      if (ideaId === idea.id) {
-        setCommentsCount(count);
-      }
-    };
+  useWallEventListener('comment_count_changed', ({ ideaId, count }) => {
+    if (!ideaId || ideaId !== idea.id) return;
 
-    window.addEventListener('pista8:comment_count_changed', handleCommentCountChanged);
+    if (typeof count === 'number' && count >= 0) {
+      setCommentsCount(count);
+      return;
+    }
 
-    return () => {
-      window.removeEventListener('pista8:comment_count_changed', handleCommentCountChanged);
-    };
-  }, [idea.id]);
+    commentService
+      .getComments({ ideaId: idea.id, page: 1, limit: 1 })
+      .then((res) => setCommentsCount(res.data.total ?? commentsCount))
+      .catch(() => {
+        // ignore
+      });
+  });
 
   useEffect(() => {
     if (!isCommentsOpen) return;

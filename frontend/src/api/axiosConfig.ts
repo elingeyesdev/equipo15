@@ -19,4 +19,20 @@ instance.interceptors.request.use(
   }
 );
 
+instance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status as number | undefined;
+
+    if (status === 401) {
+      // Keep request rejection, but normalize a common auth failure message.
+      error.message = 'Sesion expirada o no autorizada.';
+    } else if (!error?.response) {
+      error.message = 'No se pudo conectar con el servidor.';
+    }
+
+    return Promise.reject(error);
+  },
+);
+
 export default instance;

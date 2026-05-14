@@ -4,29 +4,32 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
+import {
+  ALLOWED_EMAIL_DOMAINS,
+  BLOCKED_EMAIL_DOMAINS,
+  WHITELISTED_EMAILS,
+} from '../constants/email-domains';
 
 @ValidatorConstraint({ async: false })
 export class IsAllowedDomainConstraint implements ValidatorConstraintInterface {
   validate(email: string) {
     if (!email) return false;
+    const normalizedEmail = email.toLowerCase();
 
-    const blockedDomains = [
-      '@gmail.com',
-      '@hotmail.com',
-      '@outlook.com',
-      '@yahoo.com',
-    ];
-    const allowedDomains = [
-      '@univalle.edu',
-      '@est.univalle.edu',
-      '@pista8.com',
-    ];
-    const allowedEmails = ['elingeyesdev@gmail.com'];
+    if (
+      WHITELISTED_EMAILS.includes(
+        normalizedEmail as (typeof WHITELISTED_EMAILS)[number],
+      )
+    ) {
+      return true;
+    }
 
-    if (allowedEmails.includes(email)) return true;
-
-    const isAllowed = allowedDomains.some((domain) => email.endsWith(domain));
-    const isBlocked = blockedDomains.some((domain) => email.endsWith(domain));
+    const isAllowed = ALLOWED_EMAIL_DOMAINS.some((domain) =>
+      normalizedEmail.endsWith(domain),
+    );
+    const isBlocked = BLOCKED_EMAIL_DOMAINS.some((domain) =>
+      normalizedEmail.endsWith(domain),
+    );
 
     return isAllowed && !isBlocked;
   }

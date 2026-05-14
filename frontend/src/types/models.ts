@@ -20,6 +20,8 @@ export interface UserProfile {
   facultyId?: string | number | null;
   career?: string;
   specialty?: string;
+  institution?: string;
+  ageRange?: string;
   status?: 'ACTIVE' | 'SOFT_BLOCK' | 'SUSPENDED';
   penaltyExpiresAt?: string | Date;
 }

@@ -1,13 +1,19 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { HttpModule } from './app/providers/http.module';
-import { DatabaseModule } from './app/providers/database.module';
-import { FirebaseAdminModule } from './config/firebase-admin.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { DatabaseModule } from './infrastructure/database/database.module';
+import { FirebaseAdminModule } from './infrastructure/firebase/firebase-admin.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { EventsModule } from './app/gateways/events.module';
-import { HealthController } from './app/http/controllers/health.controller';
+import { EventsModule } from './infrastructure/events/events.module';
+import { RedisModule } from './infrastructure/redis/redis.module';
+import { HealthController } from './common/controllers/health.controller';
+import { EvaluationModule } from './modules/evaluation/evaluation.module';
+import { UserModule } from './modules/user/user.module';
+import { ModerationModule } from './modules/moderation/moderation.module';
+import { ChallengeModule } from './modules/challenge/challenge.module';
+import { IdeaModule } from './modules/idea/idea.module';
+import { CommentModule } from './modules/comment/comment.module';
 
 @Module({
   imports: [
@@ -16,17 +22,29 @@ import { HealthController } from './app/http/controllers/health.controller';
     }),
     DatabaseModule,
     FirebaseAdminModule,
-    HttpModule,
+    EventsModule,
+    RedisModule,
+    EvaluationModule,
+    UserModule,
+    ModerationModule,
+    ChallengeModule,
+    IdeaModule,
+    CommentModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
         limit: 300,
       },
     ]),
-    MongooseModule.forRoot(
-      process.env.MONGO_URI || 'mongodb://localhost:27017/pista8',
-    ),
-    EventsModule,
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri:
+          configService.get<string>('MONGO_URI') ||
+          'mongodb://localhost:27017/pista8',
+      }),
+    }),
   ],
   controllers: [HealthController],
   providers: [

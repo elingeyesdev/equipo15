@@ -7,7 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import * as admin from 'firebase-admin';
-import { FIREBASE_ADMIN_TOKEN } from '../../config/firebase-admin.module';
+import { FIREBASE_ADMIN_TOKEN } from '../../infrastructure/firebase/firebase-admin.module';
 import { AuthenticatedRequest } from '../types/authenticated-request.interface';
 
 @Injectable()

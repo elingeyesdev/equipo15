@@ -5,6 +5,7 @@ import { ideaService } from '../../../services/idea.service';
 import { toast } from 'sonner';
 import type { AxiosLikeError } from '../types';
 import { useAuth } from '../../../context/AuthContext';
+import { wallEvents } from '../../../hooks/useWallEvents';
 
 const pop = keyframes`
   0%   { transform: scale(1); }
@@ -183,14 +184,14 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
       setLikes(prev => {
         nextLikes = prev + 1;
         saveLocalVoted(ideaId, currentUserId);
-        window.dispatchEvent(new CustomEvent('pista8:vote_changed', { detail: { ideaId, hasVoted: true, likesCount: nextLikes } }));
+        wallEvents.emit('vote_changed', { ideaId, hasVoted: true, likesCount: nextLikes });
         return nextLikes;
       });
     } else {
       setLikes(prev => {
         nextLikes = Math.max(0, prev - 1);
         removeLocalVoted(ideaId, currentUserId);
-        window.dispatchEvent(new CustomEvent('pista8:vote_changed', { detail: { ideaId, hasVoted: false, likesCount: nextLikes } }));
+        wallEvents.emit('vote_changed', { ideaId, hasVoted: false, likesCount: nextLikes });
         return nextLikes;
       });
     }
@@ -207,14 +208,14 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
         setLikes(prev => {
           const revertedLikes = prev + 1;
           saveLocalVoted(ideaId, currentUserId);
-          window.dispatchEvent(new CustomEvent('pista8:vote_changed', { detail: { ideaId, hasVoted: true, likesCount: revertedLikes } }));
+          wallEvents.emit('vote_changed', { ideaId, hasVoted: true, likesCount: revertedLikes });
           return revertedLikes;
         });
       } else {
         setLikes(prev => {
           const revertedLikes = Math.max(0, prev - 1);
           removeLocalVoted(ideaId, currentUserId);
-          window.dispatchEvent(new CustomEvent('pista8:vote_changed', { detail: { ideaId, hasVoted: false, likesCount: revertedLikes } }));
+          wallEvents.emit('vote_changed', { ideaId, hasVoted: false, likesCount: revertedLikes });
           return revertedLikes;
         });
       }

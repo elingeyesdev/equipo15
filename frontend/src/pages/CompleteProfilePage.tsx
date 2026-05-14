@@ -1,0 +1,1 @@
+export { CompleteProfileView as default } from '../features/auth/CompleteProfileView';

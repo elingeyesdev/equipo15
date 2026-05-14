@@ -1,11 +1,6 @@
-import axiosInstance from '../api/axiosConfig';
-import type { UserProfile } from '../types/models';
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
+import axiosInstance from '@/api/axiosConfig';
+import type { UserProfile } from '@/types/models';
+import type { ApiResponse } from '@/types/api';
 
 export const userService = {
   getProfile: async (): Promise<ApiResponse<UserProfile>> => {

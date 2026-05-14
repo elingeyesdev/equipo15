@@ -1,0 +1,795 @@
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import styled, { keyframes, css } from 'styled-components';
+import { Pista8Theme, breakpoints } from '../../../../config/theme';
+import { challengeService } from '../../../../services/challenge.service';
+import { ideaService } from '../../../../services/idea.service';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Trophy, Users, MessageSquare, Heart, AlertTriangle, CheckCircle } from 'lucide-react';
+import MedalSvg from '../../../../components/icons/MedalSvg';
+import { toast } from 'sonner';
+import BackButton from '../../../../components/common/BackButton';
+
+const fadeUp = keyframes`
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const shimmer = keyframes`
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+`;
+
+const slideIn = keyframes`
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+`;
+
+const Container = styled.div`
+  animation: ${fadeUp} 0.4s ease both;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-bottom: 40px;
+`;
+
+const Header = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+`;
+
+const TitleBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const Title = styled.h2`
+  font-size: 28px;
+  font-weight: 900;
+  color: ${Pista8Theme.secondary};
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  line-height: 1.2;
+`;
+
+const ChallengeName = styled.p`
+  font-size: 15px;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 500;
+  line-height: 1.5;
+
+  strong {
+    color: ${Pista8Theme.secondary};
+    font-weight: 700;
+  }
+`;
+
+const ControlCard = styled.div`
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  padding: 20px 24px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(254, 65, 10, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+`;
+
+const ControlGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  flex-wrap: wrap;
+`;
+
+const Label = styled.label`
+  font-size: 13px;
+  font-weight: 800;
+  color: #485054;
+  white-space: nowrap;
+`;
+
+const Select = styled.select`
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1.5px solid #e5e7eb;
+  background: white;
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 160px;
+
+  &:focus {
+    border-color: ${Pista8Theme.primary};
+    box-shadow: 0 0 0 3px rgba(254, 65, 10, 0.1);
+  }
+`;
+
+const FinalizeBtn = styled.button`
+  padding: 12px 28px;
+  border-radius: 14px;
+  border: none;
+  background: ${Pista8Theme.primary};
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(254, 65, 10, 0.3);
+  }
+
+  &:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+`;
+
+const RankingList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const IdeaCard = styled.div<{ $isFinalist: boolean; $rank: number }>`
+  background: white;
+  padding: 16px 22px;
+  border-radius: 16px;
+  border: 2px solid ${p => p.$isFinalist ? 'rgba(254, 65, 10, 0.25)' : 'rgba(0,0,0,0.05)'};
+  box-shadow: ${p => p.$isFinalist ? '0 4px 18px rgba(254, 65, 10, 0.07)' : '0 1px 6px rgba(0,0,0,0.04)'};
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  transition:
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    opacity 0.35s ease,
+    filter 0.35s ease,
+    transform 0.35s ease;
+
+  ${p => !p.$isFinalist && css`
+    filter: grayscale(0.8);
+    opacity: 0.55;
+    &:hover {
+      filter: grayscale(0.3);
+      opacity: 0.8;
+    }
+  `}
+
+  &:hover {
+    transform: translateX(6px);
+    border-color: ${p => p.$isFinalist ? Pista8Theme.primary : 'rgba(0,0,0,0.12)'};
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+
+    &:hover {
+      transform: translateY(-4px);
+    }
+  }
+`;
+
+const AnimatedRow = styled.div<{ $key: string }>`
+  animation: ${slideIn} 0.3s ease both;
+`;
+
+const RankNumber = styled.div<{ $pos: number }>`
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: ${p =>
+    p.$pos === 0 ? 'linear-gradient(135deg, #FFD700, #FFA000)' :
+    p.$pos === 1 ? 'linear-gradient(135deg, #B0BEC5, #78909C)' :
+    p.$pos === 2 ? 'linear-gradient(135deg, #FFAB40, #E65100)' :
+    '#f1f3f5'};
+  color: ${p => p.$pos < 3 ? 'white' : '#6b7280'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 900;
+  flex-shrink: 0;
+  box-shadow: ${p => p.$pos < 3 ? '0 4px 10px rgba(0,0,0,0.12)' : 'none'};
+  transition: all 0.35s ease;
+`;
+
+const IdeaInfo = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+`;
+
+const IdeaTitle = styled.h4`
+  font-size: 15px;
+  font-weight: 800;
+  color: #1a1f22;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const IdeaAuthor = styled.span`
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 600;
+`;
+
+const Metrics = styled.div`
+  display: flex;
+  gap: 14px;
+  flex-shrink: 0;
+`;
+
+const Metric = styled.div<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 800;
+  color: ${p => p.$active ? Pista8Theme.primary : '#9ca3af'};
+  transition: color 0.3s ease;
+
+  svg {
+    width: 15px;
+    height: 15px;
+    transition: all 0.3s ease;
+  }
+`;
+
+const MedalIcon = styled.div`
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.35s ease;
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+`;
+
+const Modal = styled.div`
+  background: white;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 28px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: ${fadeUp} 0.3s ease both;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+`;
+
+const WarningIcon = styled.div`
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: #fff7ed;
+  color: #ea580c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+
+  svg {
+    width: 32px;
+    height: 32px;
+  }
+`;
+
+const ModalContent = styled.div`
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const ModalTitle = styled.h3`
+  font-size: 20px;
+  font-weight: 900;
+  color: #1e293b;
+  margin: 0;
+`;
+
+const ModalText = styled.p`
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+`;
+
+const ModalActions = styled.div`
+  display: flex;
+  gap: 12px;
+
+  button {
+    flex: 1;
+    padding: 14px;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+`;
+
+const CancelBtn = styled.button`
+  background: #f1f3f5;
+  color: #475569;
+  border: none;
+  &:hover { background: #e2e8f0; }
+`;
+
+const ConfirmBtn = styled.button`
+  background: ${Pista8Theme.primary};
+  color: white;
+  border: none;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(254, 65, 10, 0.3);
+  }
+  &:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+`;
+
+const SkeletonCard = styled.div`
+  height: 76px;
+  background: linear-gradient(90deg, #f1f3f5 25%, #e5e7eb 50%, #f1f3f5 75%);
+  background-size: 200% 100%;
+  animation: ${shimmer} 1.5s infinite;
+  border-radius: 16px;
+`;
+
+const PickChallengeView = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 60px 20px;
+  text-align: center;
+  align-items: center;
+`;
+
+const PickTitle = styled.h2`
+  font-size: 22px;
+  font-weight: 900;
+  color: ${Pista8Theme.secondary};
+  margin: 0;
+`;
+
+const PickText = styled.p`
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  max-width: 380px;
+  line-height: 1.6;
+`;
+
+const FinalistCountBadge = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(254, 65, 10, 0.08);
+  color: ${Pista8Theme.primary};
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid rgba(254, 65, 10, 0.15);
+  align-self: center;
+`;
+
+const EvaluationBanner = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.08), rgba(22, 163, 74, 0.04));
+  border: 1.5px solid rgba(22, 163, 74, 0.25);
+  animation: ${fadeUp} 0.4s ease both;
+`;
+
+const BannerIcon = styled.div`
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  svg { width: 22px; height: 22px; }
+`;
+
+const BannerContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const BannerTitle = styled.p`
+  font-size: 14px;
+  font-weight: 900;
+  color: #15803d;
+  margin: 0;
+`;
+
+const BannerText = styled.p`
+  font-size: 13px;
+  color: #4b7c59;
+  margin: 0;
+  line-height: 1.55;
+`;
+
+const StarSvg = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#FFD700" stroke="#B8860B" strokeWidth="1.5" strokeLinejoin="round"/>
+  </svg>
+);
+
+export const CompanyPodiumView = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const challengeId = searchParams.get('challengeId');
+
+  const [challenge, setChallenge] = useState<any>(null);
+  const [ideas, setIdeas] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [topN, setTopN] = useState<string>('5');
+  const [likesThreshold, setLikesThreshold] = useState<string>('0');
+  const [commentsThreshold, setCommentsThreshold] = useState<string>('0');
+  const [facultyDiversity, setFacultyDiversity] = useState<string>('0');
+  const [manualIds, setManualIds] = useState<Set<string>>(new Set());
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [animKey, setAnimKey] = useState(0);
+
+  const fetchData = useCallback(async () => {
+    if (!challengeId) return;
+    setLoading(true);
+    try {
+      const [challengeRes, ideasRes] = await Promise.all([
+        challengeService.getChallengeById(challengeId),
+        ideaService.getIdeasByChallenge(challengeId)
+      ]);
+      const rawIdeas = (ideasRes as any);
+      let resolvedIdeas: any[] = [];
+      if (Array.isArray(rawIdeas)) {
+        resolvedIdeas = rawIdeas;
+      } else if (Array.isArray(rawIdeas?.data?.data)) {
+        resolvedIdeas = rawIdeas.data.data;
+      } else if (Array.isArray(rawIdeas?.data)) {
+        resolvedIdeas = rawIdeas.data;
+      } else if (Array.isArray(rawIdeas?.data?.ideas)) {
+        resolvedIdeas = rawIdeas.data.ideas;
+      }
+      setChallenge((challengeRes as any).data ?? challengeRes);
+      setIdeas(resolvedIdeas);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      toast.error('No se pudo cargar la información del reto.');
+    } finally {
+      setLoading(false);
+    }
+  }, [challengeId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    setAnimKey(k => k + 1);
+  }, [topN, likesThreshold, commentsThreshold, facultyDiversity]);
+
+  const sortedIdeas = useMemo(() => {
+    const safeIdeas = Array.isArray(ideas) ? ideas : [];
+    const withInteraction = safeIdeas.map(idea => ({
+      ...idea,
+      totalInteraction: (idea.likesCount || 0) + (idea.commentsCount || 0),
+    }));
+    return withInteraction.sort((a, b) => (b.totalInteraction || 0) - (a.totalInteraction || 0));
+  }, [ideas]);
+
+  const filteredIdeas = useMemo(() => {
+    const lt = parseInt(likesThreshold, 10);
+    const ct = parseInt(commentsThreshold, 10);
+    const fd = parseInt(facultyDiversity, 10);
+    let filtered = sortedIdeas;
+
+    if (lt > 0) filtered = filtered.filter(i => (i.likesCount || 0) >= lt);
+    if (ct > 0) filtered = filtered.filter(i => (i.commentsCount || 0) >= ct);
+
+    const top = parseInt(topN, 10);
+    const topFiltered = top > 0 ? filtered.slice(0, top) : filtered;
+
+    if (fd > 0) {
+      const byFaculty: Record<string, any[]> = {};
+      sortedIdeas.forEach(i => {
+        const key = i.author?.facultyId || 'unknown';
+        if (!byFaculty[key]) byFaculty[key] = [];
+        byFaculty[key].push(i);
+      });
+      const facultyTop = Object.values(byFaculty).flatMap(list => list.slice(0, fd));
+      const combined = new Map<string, any>();
+      [...topFiltered, ...facultyTop].forEach(i => combined.set(i.id, i));
+      filtered = Array.from(combined.values());
+    }
+
+    return filtered;
+  }, [sortedIdeas, topN, likesThreshold, commentsThreshold, facultyDiversity]);
+
+  const handleFinalize = async () => {
+    if (!challengeId) return;
+    setIsFinalizing(true);
+    try {
+      const allFinalists = new Set(filteredIdeas.map(i => i.id));
+      manualIds.forEach(id => allFinalists.add(id));
+      await challengeService.finalizePodium(challengeId, {
+        category: 'social',
+        limit: allFinalists.size,
+      });
+      toast.success('¡Podio finalizado con éxito! El reto ha pasado a evaluación.');
+      navigate('/dashboard/company/challenges');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al finalizar el podio.');
+    } finally {
+      setIsFinalizing(false);
+      setShowConfirm(false);
+    }
+  };
+
+  if (!challengeId) {
+    return (
+      <PickChallengeView>
+        <WarningIcon><Trophy /></WarningIcon>
+        <PickTitle>Gestión de Podio</PickTitle>
+        <PickText>Accede a esta vista desde un reto finalizado en "Mis Retos" para gestionar su podio y finalistas.</PickText>
+        <BackButton onClick={() => navigate('/dashboard/company/challenges')} />
+      </PickChallengeView>
+    );
+  }
+
+  if (loading) {
+    return (
+      <Container>
+        <Header>
+          <TitleRow>
+            <BackButton />
+            <TitleBlock>
+              <Title><Trophy /> Gestión de Podio</Title>
+            </TitleBlock>
+          </TitleRow>
+        </Header>
+        <RankingList>
+          {[1, 2, 3, 4, 5].map(i => <SkeletonCard key={i} />)}
+        </RankingList>
+      </Container>
+    );
+  }
+
+  const isAlreadyEvaluated = challenge?.status === 'EVALUATION' || challenge?.status === 'Finalizado';
+  const canSend = (filteredIdeas.length > 0 || manualIds.size > 0) && !isAlreadyEvaluated && ideas.length > 0;
+
+  return (
+    <>
+      <Container>
+        <Header>
+          <TitleRow>
+            <BackButton />
+            <TitleBlock>
+              <Title><Trophy /> Gestión de Podio</Title>
+              <ChallengeName>
+                Reto: <strong>{challenge?.title}</strong>
+              </ChallengeName>
+            </TitleBlock>
+          </TitleRow>
+        </Header>
+
+        {isAlreadyEvaluated && (
+          <EvaluationBanner>
+            <BannerIcon><CheckCircle /></BannerIcon>
+            <BannerContent>
+              <BannerTitle>Podio Consolidado — Fase de Evaluación Activa</BannerTitle>
+              <BannerText>
+                El podio ha sido enviado. Las ideas seleccionadas ya están en manos de los jueces para su evaluación técnica. No se pueden realizar cambios.
+              </BannerText>
+            </BannerContent>
+          </EvaluationBanner>
+        )}
+
+        <ControlCard>
+          <ControlGroup>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Label>Top Popularidad:</Label>
+              <Select value={topN} onChange={(e) => setTopN(e.target.value)} disabled={isAlreadyEvaluated}>
+                <option value="0">Sin filtro</option>
+                <option value="5">Top 5</option>
+                <option value="10">Top 10</option>
+                <option value="15">Top 15</option>
+                <option value="20">Top 20</option>
+              </Select>
+              <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600, maxWidth: 180 }}>
+                Seleccionar el Top {topN === '0' ? 'N' : topN} de ideas con mayor interacción acumulada (Fuego)
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Label>Likes mín:</Label>
+              <Select value={likesThreshold} onChange={(e) => setLikesThreshold(e.target.value)} disabled={isAlreadyEvaluated}>
+                <option value="0">Sin filtro</option>
+                <option value="20">+20 likes</option>
+                <option value="50">+50 likes</option>
+                <option value="100">+100 likes</option>
+              </Select>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Label>Comentarios mín:</Label>
+              <Select value={commentsThreshold} onChange={(e) => setCommentsThreshold(e.target.value)} disabled={isAlreadyEvaluated}>
+                <option value="0">Sin filtro</option>
+                <option value="5">+5 comentarios</option>
+                <option value="10">+10 comentarios</option>
+                <option value="20">+20 comentarios</option>
+              </Select>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Label>Por Facultad:</Label>
+              <Select value={facultyDiversity} onChange={(e) => setFacultyDiversity(e.target.value)} disabled={isAlreadyEvaluated}>
+                <option value="0">Sin filtro</option>
+                <option value="3">Top 3 por facultad</option>
+                <option value="5">Top 5 por facultad</option>
+              </Select>
+            </div>
+            {filteredIdeas.length > 0 && (
+              <FinalistCountBadge>
+                {filteredIdeas.length} / {sortedIdeas.length} seleccionadas
+              </FinalistCountBadge>
+            )}
+          </ControlGroup>
+
+          <FinalizeBtn
+            onClick={() => !isAlreadyEvaluated && setShowConfirm(true)}
+            disabled={!canSend}
+            style={isAlreadyEvaluated ? {
+              background: 'linear-gradient(135deg, #16a34a, #15803d)',
+              cursor: 'not-allowed',
+              boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)'
+            } : {}}
+          >
+            {isAlreadyEvaluated ? (
+              <><CheckCircle size={18} /> Podio Enviado</>  
+            ) : (
+              <><Users size={18} /> Definir finalistas para evaluación de expertos</>
+            )}
+          </FinalizeBtn>
+        </ControlCard>
+
+        <RankingList>
+          {sortedIdeas.map((idea, index) => {
+            const isFinalist = filteredIdeas.some(fi => fi.id === idea.id) || manualIds.has(idea.id);
+            const isManuallySelected = manualIds.has(idea.id);
+
+            return (
+              <AnimatedRow key={`${animKey}-${idea.id}`} $key={`${animKey}-${index}`} style={{ animationDelay: `${index * 0.04}s` }}>
+                <IdeaCard $isFinalist={isFinalist} $rank={index}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flex: 1 }}>
+                    <input
+                      type="checkbox"
+                      checked={isFinalist}
+                      onChange={() => {
+                        const next = new Set(manualIds);
+                        if (next.has(idea.id)) next.delete(idea.id);
+                        else next.add(idea.id);
+                        setManualIds(next);
+                      }}
+                      style={{ width: 16, height: 16, accentColor: Pista8Theme.primary }}
+                      title="Incluir esta idea en la fase de evaluación."
+                    />
+                    <RankNumber $pos={index}>
+                      {index < 3 ? <MedalSvg rank={index} size={22} /> : index + 1}
+                    </RankNumber>
+                    <IdeaInfo>
+                      <IdeaTitle>{idea.title}</IdeaTitle>
+                      <IdeaAuthor>Por {idea.author?.nickname || idea.author?.displayName || 'Participante'}</IdeaAuthor>
+                    </IdeaInfo>
+                    <Metrics>
+                      <Metric $active={true}>
+                        <Heart fill={Pista8Theme.primary} /> {idea.likesCount || 0}
+                      </Metric>
+                      <Metric $active={true}>
+                        <MessageSquare fill={Pista8Theme.primary} /> {idea.commentsCount || 0}
+                      </Metric>
+                    </Metrics>
+                    {isManuallySelected && (
+                      <MedalIcon>
+                        <StarSvg size={24} />
+                      </MedalIcon>
+                    )}
+                  </label>
+                </IdeaCard>
+              </AnimatedRow>
+            );
+          })}
+        </RankingList>
+      </Container>
+
+      {showConfirm && createPortal(
+        <ModalOverlay onClick={() => setShowConfirm(false)}>
+          <Modal onClick={e => e.stopPropagation()}>
+            <WarningIcon><AlertTriangle /></WarningIcon>
+            <ModalContent>
+              <ModalTitle>¿Confirmar Podio Final?</ModalTitle>
+              <ModalText>
+                Esta acción cerrará las votaciones públicas y enviará <strong>{filteredIdeas.length + manualIds.size}</strong> ideas seleccionadas a los jueces para evaluación técnica.
+                <br /><br />
+                <strong>Esta acción es irreversible.</strong>
+              </ModalText>
+            </ModalContent>
+            <ModalActions>
+              <CancelBtn onClick={() => setShowConfirm(false)}>Cancelar</CancelBtn>
+              <ConfirmBtn onClick={handleFinalize} disabled={isFinalizing}>
+                {isFinalizing ? 'Procesando...' : 'Sí, Enviar a Jueces'}
+              </ConfirmBtn>
+            </ModalActions>
+          </Modal>
+        </ModalOverlay>,
+        document.body
+      )}
+    </>
+  );
+};

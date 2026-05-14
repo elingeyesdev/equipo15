@@ -1,10 +1,11 @@
-import axiosInstance from '../api/axiosConfig';
+import axiosInstance from '@/api/axiosConfig';
 import type {
   Challenge,
   ChallengeStatus,
   EvaluationCriterion,
   InnovationStatsResponse,
-} from '../types/models';
+} from '@/types/models';
+import type { ApiResponse } from '@/types/api';
 
 export interface ChallengePayload {
   title: string;
@@ -30,12 +31,6 @@ export interface CompanyChallengeOption {
   faculty?: { id?: string | number; name?: string } | null;
   endDate?: string;
   publicationDate?: string;
-}
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
 }
 
 const unwrapApiData = <T>(payload: T | ApiResponse<T>): T => {

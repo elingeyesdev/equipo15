@@ -10,47 +10,53 @@ import {
   EmailAuthProvider,
   updatePassword,
   verifyPasswordResetCode,
-  confirmPasswordReset
+  confirmPasswordReset,
 } from 'firebase/auth';
 import { toast } from 'sonner';
-import axiosInstance from '../api/axiosConfig';
-import { auth, googleProvider } from '../config/firebase';
+import axiosInstance from '@/api/axiosConfig';
+import { auth, googleProvider } from '@/config/firebase';
 
 const validateDomain = (email: string | null) => {
   if (!email) return false;
   const allowedDomains = ['@univalle.edu', '@est.univalle.edu', '@pista8.com'];
   const allowedEmails = ['elingeyesdev@gmail.com'];
 
-  return allowedDomains.some(domain => email.endsWith(domain)) || allowedEmails.includes(email);
+  return (
+    allowedDomains.some((domain) => email.endsWith(domain)) ||
+    allowedEmails.includes(email)
+  );
 };
 
 export const authService = {
-  register: async (email: string, pass: string, name: string) => {
+  register: async (email: string, pass: string, name: string, phone?: string) => {
     if (!validateDomain(email)) {
       toast.error('Acceso restringido a la comunidad UNIVALLE');
       throw new Error('Invalid domain');
     }
+
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(userCredential.user, { displayName: name });
+
     const token = await userCredential.user.getIdToken();
     const uid = userCredential.user.uid;
 
     await signOut(auth);
 
-    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-    await fetch(`${baseURL}/users/sync`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
+    await axiosInstance.post(
+      '/users/sync',
+      {
         firebaseUid: uid,
-        email: email,
+        email,
         displayName: name,
-        role: 'student'
-      })
-    });
+        role: 'student',
+        phone,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
   },
 
   login: async (email: string, pass: string) => {
@@ -58,12 +64,13 @@ export const authService = {
       toast.error('Acceso restringido a la comunidad UNIVALLE');
       throw new Error('Invalid domain');
     }
+
     const userCredential = await signInWithEmailAndPassword(auth, email, pass);
 
     return axiosInstance.post('/users/sync', {
       firebaseUid: userCredential.user.uid,
-      email: email,
-      displayName: userCredential.user.displayName || 'Usuario'
+      email,
+      displayName: userCredential.user.displayName || 'Usuario',
     });
   },
 
@@ -82,7 +89,7 @@ export const authService = {
         firebaseUid: result.user.uid,
         email: result.user.email,
         displayName: result.user.displayName,
-        preventCreation: true
+        preventCreation: true,
       });
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -99,7 +106,9 @@ export const authService = {
 
   sendPasswordReset: async (email: string) => {
     const actionCodeSettings = {
-      url: import.meta.env.VITE_RESET_PASSWORD_URL || `${window.location.origin}/reset-password`,
+      url:
+        import.meta.env.VITE_RESET_PASSWORD_URL ||
+        `${window.location.origin}/reset-password`,
       handleCodeInApp: true,
     };
     return sendPasswordResetEmail(auth, email, actionCodeSettings);
@@ -126,5 +135,5 @@ export const authService = {
     const credential = EmailAuthProvider.credential(user.email, oldPass);
     await reauthenticateWithCredential(user, credential);
     return updatePassword(user, newPass);
-  }
+  },
 };

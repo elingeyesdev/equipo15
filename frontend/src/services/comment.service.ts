@@ -1,12 +1,7 @@
-import axiosInstance from '../api/axiosConfig';
-import type { Comment, CommentListResponse, CreateCommentPayload } from '../types/models';
-import { getCommentValidationError, normalizeCommentInput } from '../components/comments/commentValidation';
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
+import axiosInstance from '@/api/axiosConfig';
+import type { Comment, CommentListResponse, CreateCommentPayload } from '@/types/models';
+import { getCommentValidationError, normalizeCommentInput } from '@/utils/validation/commentValidation';
+import type { ApiResponse } from '@/types/api';
 
 interface GetCommentsParams {
   ideaId: string;
@@ -124,7 +119,7 @@ export const commentService = {
     }
 
     const request = axiosInstance
-      .get<ApiResponse<CommentListResponse>>(`/comentarios?${query.toString()}`)
+      .get<ApiResponse<CommentListResponse>>(`/comments?${query.toString()}`)
       .then((response) => response.data)
       .catch((error) => {
         commentsCache.delete(cacheKey);
@@ -143,7 +138,7 @@ export const commentService = {
 
     const content = assertCommentContent(payload.content);
 
-    const response = await axiosInstance.post<ApiResponse<Comment>>('/comentarios', {
+    const response = await axiosInstance.post<ApiResponse<Comment>>('/comments', {
       ...payload,
       content,
     });
@@ -160,7 +155,7 @@ export const commentService = {
     const normalizedContent = assertCommentContent(content);
 
     const response = await axiosInstance.post<ApiResponse<Comment>>(
-      `/comentarios/${commentId}/responder`,
+      `/comments/${commentId}/reply`,
       { content: normalizedContent },
     );
     invalidateCommentsCache(ideaId);
@@ -176,7 +171,7 @@ export const commentService = {
     const normalizedContent = assertCommentContent(content);
 
     const response = await axiosInstance.patch<ApiResponse<Comment>>(
-      `/comentarios/${commentId}`,
+      `/comments/${commentId}`,
       { content: normalizedContent },
     );
     invalidateCommentsCache(ideaId);
@@ -187,7 +182,7 @@ export const commentService = {
     assertUuid(commentId, 'commentId');
 
     const response = await axiosInstance.delete<ApiResponse<{ success: boolean; removedCount: number }>>(
-      `/comentarios/${commentId}`,
+      `/comments/${commentId}`,
     );
     invalidateCommentsCache(ideaId);
     return response.data;
