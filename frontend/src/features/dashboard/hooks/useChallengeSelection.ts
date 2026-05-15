@@ -96,7 +96,6 @@ export const useChallengeSelection = () => {
         setChallenges(mapped);
       } catch (error: unknown) {
         if (active) {
-          const message = error instanceof Error ? error.message : 'Error de conexión.';
           setChallenges([]);
         }
       } finally {

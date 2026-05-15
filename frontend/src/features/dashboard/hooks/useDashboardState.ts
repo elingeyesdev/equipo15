@@ -7,7 +7,6 @@ import { useChallengeSelection } from './useChallengeSelection';
 import { useIdeationInteraction } from './useIdeationInteraction';
 
 export const useDashboardState = () => {
-  const { user } = useAuth();
 
   const [userProfile, setProfile] = useState<UserProfile | null>(null);
   const [profileError, setProfileError] = useState('');

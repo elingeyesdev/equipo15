@@ -71,6 +71,12 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
   const status = (profile?.status || 'activo').toLowerCase();
   const penaltyUntil = profile?.penaltyUntil;
 
+  const rawRole = typeof profile?.role === 'string' ? profile.role : profile?.roleInfo?.name || profile?.role;
+  const role = (rawRole || '').toString().toLowerCase();
+  const isAdmin = role === 'admin';
+  const isCompany = role === 'company';
+  const isJudge = role === 'judge';
+
   let stateConfig = {
     icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>,
     title: 'Estado de la Cuenta: Activa',
@@ -179,72 +185,82 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
         </div>
       </Section>
 
-      <Section>
-        <SectionHeader>
-          <SectionLabel>Información académica (Opcional)</SectionLabel>
-          <SectionLine />
-        </SectionHeader>
-        <p style={{ margin: '-8px 0 4px', fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>
-          Ayuda a los jueces a conocer tu contexto.
-        </p>
-        <FieldGrid>
-          <FieldFull>
-            <FormRow>
-              <FormLabel>Código Estudiantil</FormLabel>
-              <FormInput
-                type="text"
-                value={profileData.studentCode}
-                onChange={e => {
-                  const val = e.target.value.toUpperCase();
-                  if (val.length <= 10) {
-                    setProfileData({ ...profileData, studentCode: val });
-                  }
-                }}
-                placeholder="Ej: 20220150"
-                maxLength={10}
-              />
-            </FormRow>
-          </FieldFull>
-          <FieldFull>
-            <FormRow>
-              <FormLabel>Institución / Universidad</FormLabel>
-              <select
-                value={profileData.institution}
-                onChange={e => setProfileData({ ...profileData, institution: e.target.value })}
-                style={{
-                  width: '100%', padding: '11px 14px', borderRadius: 12,
-                  border: '1.5px solid rgba(72,80,84,0.1)', outline: 'none',
-                  fontSize: 14, fontWeight: 500, color: '#1a1f22',
-                  background: '#f8f9fa', cursor: 'pointer',
-                }}
-              >
-                <option value="">¿Dónde te formaste o trabajas actualmente?</option>
-                {INSTITUTIONS.map(i => <option key={i} value={i}>{i}</option>)}
-              </select>
-            </FormRow>
-          </FieldFull>
-        </FieldGrid>
-      </Section>
+      {!isAdmin && !isCompany && (
+        <Section>
+          <SectionHeader>
+            <SectionLabel>Información académica (Opcional)</SectionLabel>
+            <SectionLine />
+          </SectionHeader>
+          <p style={{ margin: '-8px 0 4px', fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>
+            Ayuda a los jueces a conocer tu contexto.
+          </p>
+          <FieldGrid>
+            {!isJudge && (
+              <FieldFull>
+                <FormRow>
+                  <FormLabel>Código Estudiantil</FormLabel>
+                  <FormInput
+                    type="text"
+                    value={profileData.studentCode}
+                    onChange={e => {
+                      const val = e.target.value.toUpperCase();
+                      if (val.length <= 10) {
+                        setProfileData({ ...profileData, studentCode: val });
+                      }
+                    }}
+                    placeholder="Ej: 20220150"
+                    maxLength={10}
+                  />
+                </FormRow>
+              </FieldFull>
+            )}
+            <FieldFull>
+              <FormRow>
+                <FormLabel>Institución / Universidad</FormLabel>
+                <select
+                  value={profileData.institution}
+                  onChange={e => setProfileData({ ...profileData, institution: e.target.value })}
+                  style={{
+                    width: '100%', padding: '11px 14px', borderRadius: 12,
+                    border: '1.5px solid rgba(72,80,84,0.1)', outline: 'none',
+                    fontSize: 14, fontWeight: 500, color: '#1a1f22',
+                    background: '#f8f9fa', cursor: 'pointer',
+                  }}
+                >
+                  <option value="">¿Dónde te formaste o trabajas actualmente?</option>
+                  {INSTITUTIONS.map(i => <option key={i} value={i}>{i}</option>)}
+                </select>
+              </FormRow>
+            </FieldFull>
+          </FieldGrid>
+        </Section>
+      )}
 
-      <div style={{ textAlign: 'center', margin: '12px 0' }}>
-        <button
-          onClick={() => setShowProfessional(!showProfessional)}
-          style={{
-            padding: '12px 24px', borderRadius: 14, border: '2px dashed rgba(254,65,10,0.3)',
-            background: showProfessional ? 'rgba(254,65,10,0.06)' : 'transparent',
-            color: Pista8Theme.primary, fontSize: 13,
-            fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s',
-            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}
-        >
-          <span style={{ fontSize: 20, fontWeight: 900, lineHeight: 1 }}>
-            {showProfessional ? '−' : '+'}
-          </span>
-          {showProfessional ? 'Ocultar Hoja de Vuelo Profesional' : 'Completar Hoja de Vuelo Profesional'}
-        </button>
-      </div>
+      {!isAdmin && !isCompany && (
+        <div style={{ textAlign: 'center', margin: '12px 0' }}>
+          <button
+            onClick={() => setShowProfessional(!showProfessional)}
+            style={(() => {
+              const base = {
+                padding: '12px 24px', borderRadius: 14, fontSize: 13,
+                fontWeight: 800, cursor: 'pointer', transition: 'all 0.12s',
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              } as React.CSSProperties;
+              if (isJudge) {
+                return { ...base, background: Pista8Theme.primary, color: '#ffffff', border: 'none' };
+              }
+              return { ...base, border: '2px dashed rgba(254,65,10,0.3)', background: showProfessional ? 'rgba(254,65,10,0.06)' : 'transparent', color: Pista8Theme.primary };
+            })()}
+          >
+            <span style={{ fontSize: 20, fontWeight: 900, lineHeight: 1 }}>
+              {showProfessional ? '−' : '+'}
+            </span>
+            {showProfessional ? 'Ocultar Hoja de Vuelo Profesional' : 'Completar Hoja de Vuelo Profesional'}
+          </button>
+        </div>
+      )}
 
-      {showProfessional && (
+      {!isAdmin && !isCompany && showProfessional && (
         <Section>
           <SectionHeader>
             <SectionLabel>Perfil Profesional</SectionLabel>
@@ -313,9 +329,7 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
         </Section>
       )}
 
-      <SaveBtn onClick={onSave} disabled={saving}>
-        {saving ? 'Guardando...' : 'Guardar Perfil'}
-      </SaveBtn>
+      {/* Se removió el botón duplicado de 'Guardar Perfil' para evitar dos botones visibles */}
     </>
   );
 };

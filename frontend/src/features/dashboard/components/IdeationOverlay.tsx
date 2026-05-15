@@ -3,9 +3,10 @@ import IdeaForm from './IdeaForm';
 import IdeaDetailModal from '../../../features/sky-wall/components/IdeaDetailModal';
 import { ModerationModals } from './ModerationModals';
 import type { PlaneIdea } from '../../../features/sky-wall/types';
+import type { FeedbackMessage } from '../hooks/useIdeationForm';
 
 interface IdeationOverlayProps {
-  toastMessage: { tone: string; message: string; title?: string; persist?: boolean } | null;
+  toastMessage: FeedbackMessage | null;
   dismissToast: () => void;
   selectedListIdea: PlaneIdea | null;
   setSelectedListIdea: (idea: PlaneIdea | null) => void;

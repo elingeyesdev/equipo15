@@ -56,8 +56,8 @@ export interface ChallengeFormFieldsProps {
   setLightboxOpen: (v: boolean) => void;
   logoError: string;
   dbFaculties: any[];
-  criteriaRef: React.RefObject<HTMLDivElement>;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  criteriaRef: React.RefObject<HTMLDivElement | null>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   isEditMode: boolean;
   hasIdeas: boolean;
   today: string;
