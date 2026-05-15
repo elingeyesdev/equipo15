@@ -4,6 +4,7 @@ import ChallengeCard from './ChallengeCard';
 import ChallengeCardSkeleton from './ChallengeCardSkeleton';
 import { getFacultySlug } from '../../../config/faculties';
 import type { Challenge } from '../../../types/models';
+import FlagIcon from '../../../components/icons/FlagIcon';
 
 interface ChallengeListProps {
   loading?: boolean;
@@ -120,8 +121,9 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
               borderRadius: '18px',
               background: 'rgba(254, 65, 10, 0.07)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '26px'
-            }}>🏁</div>
+            }}>
+              <FlagIcon width={28} height={28} color="#FE410A" />
+            </div>
             <p style={{ margin: 0, fontSize: '15px', fontWeight: 900, color: '#1a1f22' }}>
               {searchQuery.trim() ? `Sin resultados para "${searchQuery}"` : '¡La pista se está preparando!'}
             </p>

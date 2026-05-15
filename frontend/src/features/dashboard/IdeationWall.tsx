@@ -38,7 +38,7 @@ const IdeationWall = () => {
     setWallIdeas((prev) =>
       prev.map((idea) =>
         idea.id === payload.ideaId
-          ? { ...idea, hasVoted: payload.hasVoted, likesCount: payload.likesCount }
+          ? { ...idea, hasVoted: payload.hasVoted, likesCount: payload.likesCount, fireScore: payload.fireScore ?? idea.fireScore }
           : idea,
       ),
     );
@@ -66,13 +66,13 @@ const IdeationWall = () => {
 
   const handleSelectIdea = useCallback((idea: RawIdea) => {
     setSelectedListIdea(idea as PlaneIdea);
-    setHighlightedIdeaId(idea.id);
+    setHighlightedIdeaId(idea.id ?? null);
     const el = document.getElementById('ideation-wall');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, []);
 
   const handleHighlightIdea = useCallback((idea: RawIdea) => {
-    setHighlightedIdeaId(idea.id);
+    setHighlightedIdeaId(idea.id ?? null);
   }, []);
 
   const handleIdeasLoaded = useCallback((ideas: RawIdea[]) => {
@@ -90,10 +90,24 @@ const IdeationWall = () => {
       });
     };
 
+    const handleIdeaVoted = (payload: { ideaId: string, likesCount: number, fireScore?: number }) => {
+      setWallIdeas((prev) =>
+        prev.map((idea) =>
+          idea.id === payload.ideaId
+            ? { ...idea, likesCount: payload.likesCount, fireScore: payload.fireScore ?? idea.fireScore }
+            : idea
+        )
+      );
+    };
+
     socket.on('idea_created', handleIdeaCreated);
+    socket.on('idea:voted', handleIdeaVoted);
+    socket.on('idea:unvoted', handleIdeaVoted);
 
     return () => {
       socket.off('idea_created', handleIdeaCreated);
+      socket.off('idea:voted', handleIdeaVoted);
+      socket.off('idea:unvoted', handleIdeaVoted);
     };
   }, [socket]);
 

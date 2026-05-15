@@ -64,7 +64,7 @@ describe('ModerationService', () => {
   describe('applyPenalty', () => {
     it('should skip if user not found', async () => {
       userRepo.findById.mockResolvedValue(null);
-      await service.applyPenalty('user-1', 'SOFT_BLOCK', 1);
+      await (service as any).applyPenalty('user-1', 'SOFT_BLOCK', 1);
       expect(userRepo.updateStatus).not.toHaveBeenCalled();
     });
 
@@ -75,7 +75,7 @@ describe('ModerationService', () => {
         firebaseUid: 'fb-1',
         status: 'SUSPENDED',
       });
-      await service.applyPenalty('user-1', 'SOFT_BLOCK', 1);
+      await (service as any).applyPenalty('user-1', 'SOFT_BLOCK', 1);
       expect(userRepo.updateStatus).not.toHaveBeenCalled();
     });
 
@@ -86,7 +86,7 @@ describe('ModerationService', () => {
         firebaseUid: 'fb-1',
         status: 'SOFT_BLOCK',
       });
-      await service.applyPenalty('user-1', 'SOFT_BLOCK', 1);
+      await (service as any).applyPenalty('user-1', 'SOFT_BLOCK', 1);
       expect(userRepo.updateStatus).not.toHaveBeenCalled();
     });
 
@@ -97,7 +97,7 @@ describe('ModerationService', () => {
         firebaseUid: 'fb-1',
         status: 'ACTIVE',
       });
-      await service.applyPenalty('user-1', 'SOFT_BLOCK', 2);
+      await (service as any).applyPenalty('user-1', 'SOFT_BLOCK', 2);
       expect(userRepo.updateStatus).toHaveBeenCalledWith(
         'user-1',
         'SOFT_BLOCK',
@@ -117,7 +117,7 @@ describe('ModerationService', () => {
         firebaseUid: 'fb-1',
         status: 'ACTIVE',
       });
-      await service.applyPenalty('user-1', 'SUSPENDED', 24);
+      await (service as any).applyPenalty('user-1', 'SUSPENDED', 24);
       expect(userRepo.updateStatus).toHaveBeenCalledWith(
         'user-1',
         'SUSPENDED',
@@ -139,7 +139,7 @@ describe('ModerationService', () => {
         status: 'ACTIVE',
       });
       const before = new Date();
-      await service.applyPenalty('user-1', 'SOFT_BLOCK', 3);
+      await (service as any).applyPenalty('user-1', 'SOFT_BLOCK', 3);
       const passedDate = userRepo.updateStatus.mock.calls[0][2] as Date;
       const diffHours =
         (passedDate.getTime() - before.getTime()) / (1000 * 60 * 60);

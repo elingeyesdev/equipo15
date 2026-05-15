@@ -10,6 +10,7 @@ import InnovationStepsPanel from './InnovationStepsPanel';
 import PenaltyBanner from '../../../components/common/PenaltyBanner';
 import Pista8Logo from '../../../components/icons/Pista8Logo';
 import AdvancedFilter from './AdvancedFilter';
+import InfoTooltip from '../../../components/common/InfoTooltip';
 import type { AdvancedFilterState } from './AdvancedFilter';
 import type { RawIdea } from '../../../features/sky-wall/types';
 import type { Challenge } from '../../../types/models';
@@ -175,6 +176,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                 </svg>
                 Responder Reto
               </S.RespondBtn>
+              <InfoTooltip text="Envia tu idea para este reto. Detalla el problema que resuelves y tu propuesta de solucion." size={20} />
             </S.DetailActions>
           </S.ChallengeDetailCard>
 
@@ -210,9 +212,9 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
 
           {!showAllIdeas ? (
             <>
-              <S.SplitGrid as={motion.div} layout style={{ marginTop: '24px' }}>
+              <S.SplitGrid style={{ marginTop: '24px' }}>
                 {ds.sortOrder && (
-                  <motion.div layout>
+                  <div>
                     <IdeasChronologicalList
                       ideas={displayedWallIdeas}
                       sortOrder={ds.sortOrder}
@@ -221,9 +223,9 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                       showAll={showAllIdeas}
                       onToggleShowAll={() => setShowAllIdeas(!showAllIdeas)}
                     />
-                  </motion.div>
+                  </div>
                 )}
-                <motion.div layout>
+                <div>
                   <ChallengeList
                     loading={ds.loading}
                     challenges={ds.challenges}
@@ -239,7 +241,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                     userFacultyId={userProfile?.facultyId}
                     forceColumn
                   />
-                </motion.div>
+                </div>
               </S.SplitGrid>
 
               <StatsPanel
@@ -251,7 +253,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
             </>
           ) : (
             <>
-              <S.FullWidthContainer as={motion.div} layout style={{ marginTop: '24px' }}>
+              <S.FullWidthContainer style={{ marginTop: '24px' }}>
                 {ds.sortOrder && (
                   <IdeasChronologicalList
                     ideas={displayedWallIdeas}
@@ -275,8 +277,8 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                 </div>
               </S.FullWidthContainer>
 
-              <S.SplitGridEqual as={motion.div} layout style={{ marginTop: '24px' }}>
-                <motion.div layout style={{ display: 'flex', flexDirection: 'column' }}>
+              <S.SplitGridEqual style={{ marginTop: '24px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <ChallengeList
                     loading={ds.loading}
                     challenges={ds.challenges}
@@ -292,24 +294,24 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                     userFacultyId={userProfile?.facultyId}
                     forceColumn
                   />
-                </motion.div>
-                <motion.div layout style={{ display: 'flex', flexDirection: 'column' }}>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <StatsPanel
                     selectedChallenge={ds.selectedChallenge}
                     challengeStats={ds.challengeStats}
                     onSelectIdea={handleHighlightIdea}
                   />
-                </motion.div>
+                </div>
               </S.SplitGridEqual>
             </>
           )}
         </>
       ) : (
-        <S.SplitGrid as={motion.div} layout>
-          <motion.div layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+        <S.SplitGrid>
+          <div>
             <InnovationStepsPanel />
-          </motion.div>
-          <motion.div layout>
+          </div>
+          <div>
             <ChallengeList
               loading={ds.loading}
               challenges={ds.challenges}
@@ -325,7 +327,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
               userFacultyId={userProfile?.facultyId}
               forceColumn
             />
-          </motion.div>
+          </div>
         </S.SplitGrid>
       )}
     </S.Page>

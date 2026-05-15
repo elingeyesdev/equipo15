@@ -8,6 +8,7 @@ export interface PlaneIdea {
   authorName: string;
   likesCount: number;
   commentsCount: number;
+  fireScore?: number;
   laneY: number;
   floatDelay: number;
   authorFacultyId?: number | string;
@@ -30,11 +31,13 @@ export interface IdeaUpdatedPayload {
   id: string;
   likesCount: number;
   commentsCount: number;
+  fireScore?: number;
 }
 
 export interface IdeaVotedPayload {
   ideaId: string;
   likesCount: number;
+  fireScore?: number;
   challengeId: string;
 }
 
@@ -60,6 +63,7 @@ export interface RawIdea {
   author?: RawAuthor;
   likesCount?: number;
   commentsCount?: number;
+  fireScore?: number;
   isAnonymous?: boolean;
   hasVoted?: boolean;
   hasFavorited?: boolean;

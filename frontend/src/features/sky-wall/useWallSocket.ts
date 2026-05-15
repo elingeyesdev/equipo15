@@ -28,6 +28,7 @@ const buildPlanes = (
     authorName: idea.isAnonymous ? 'Anónimo' : resolveDisplayName(idea.author),
     likesCount: idea.likesCount ?? 0,
     commentsCount: idea.commentsCount ?? 0,
+    fireScore: idea.fireScore ?? 0,
     laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),
     floatDelay: (i % 5) * 0.4,
     authorFacultyId: idea.author?.facultyId,
@@ -70,7 +71,7 @@ export const useWallSocket = (
       prev.map(plane => {
         const update = batch.get(plane.id);
         if (!update) return plane;
-        return { ...plane, likesCount: update.likesCount, commentsCount: update.commentsCount };
+        return { ...plane, likesCount: update.likesCount, commentsCount: update.commentsCount, fireScore: update.fireScore ?? plane.fireScore };
       }),
     );
   }, []);
@@ -84,9 +85,9 @@ export const useWallSocket = (
     setIdeas(buildPlanes(initialIdeas, fallbackChallengeTitle));
   }, [initialIdeas, fallbackChallengeTitle]);
 
-  useWallEventListener('vote_changed', useCallback(({ ideaId, hasVoted, likesCount }) => {
+  useWallEventListener('vote_changed', useCallback(({ ideaId, hasVoted, likesCount, fireScore }) => {
     setIdeas(prev => prev.map(idea => 
-      idea.id === ideaId ? { ...idea, hasVoted, likesCount } : idea
+      idea.id === ideaId ? { ...idea, hasVoted, likesCount, fireScore: fireScore ?? idea.fireScore } : idea
     ));
   }, []));
 
@@ -107,7 +108,7 @@ export const useWallSocket = (
     socket.on('idea:voted', (payload: IdeaVotedPayload) => {
       setIdeas(prev => prev.map(idea => 
         idea.id === payload.ideaId 
-          ? { ...idea, likesCount: payload.likesCount } 
+          ? { ...idea, likesCount: payload.likesCount, fireScore: payload.fireScore ?? idea.fireScore } 
           : idea
       ));
     });
@@ -115,7 +116,7 @@ export const useWallSocket = (
     socket.on('idea:unvoted', (payload: IdeaVotedPayload) => {
       setIdeas(prev => prev.map(idea => 
         idea.id === payload.ideaId 
-          ? { ...idea, likesCount: payload.likesCount } 
+          ? { ...idea, likesCount: payload.likesCount, fireScore: payload.fireScore ?? idea.fireScore } 
           : idea
       ));
     });
@@ -132,6 +133,7 @@ export const useWallSocket = (
           authorName: rawIdea.isAnonymous ? 'Anónimo' : resolveDisplayName(rawIdea.author),
           likesCount: rawIdea.likesCount ?? 0,
           commentsCount: rawIdea.commentsCount ?? 0,
+          fireScore: rawIdea.fireScore ?? 0,
           laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),
           floatDelay: (i % 5) * 0.4,
           authorFacultyId: rawIdea.author?.facultyId,

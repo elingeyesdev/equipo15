@@ -4,6 +4,7 @@ import { computeSize, computeXPosition, computeScale, computeFloatDuration } fro
 import { Pista8Theme } from '../../config/theme';
 import { FACULTIES } from '../../config/faculties';
 import type { PlaneIdea, WallPhase } from './types';
+import { Flame } from 'lucide-react';
 import planeImg from '../../assets/logo_avion.png';
 
 const float = keyframes`
@@ -166,6 +167,26 @@ const DateLabel = styled.div<{ $size: number }>`
   pointer-events: none;
 `;
 
+const FireBadge = styled.div<{ $size: number }>`
+  position: absolute;
+  top: calc(100% + 22px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: ${p => Math.max(9, p.$size * 0.14)}px;
+  font-weight: 800;
+  color: #ef4444;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 2px 6px;
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+`;
+
 const NewBadge = styled.span<{ $intensity: number }>`
   position: absolute;
   top: calc(100% + 20px);
@@ -300,8 +321,14 @@ const Plane = memo(
         {idea.createdAt && (
           <DateLabel $size={size}>{formatRelativeDate(idea.createdAt)}</DateLabel>
         )}
-        {glowIntensity > 0 && <NewBadge $intensity={glowIntensity}>NUEVA</NewBadge>}
-        {isHighlighted && <NewBadge $intensity={1}>✦ SELECCIONADA</NewBadge>}
+        {(idea.fireScore ?? 0) > 0 && (
+          <FireBadge $size={size}>
+            <Flame size={Math.max(12, size * 0.18)} fill="#ef4444" stroke="#ef4444" />
+            {idea.fireScore}
+          </FireBadge>
+        )}
+        {glowIntensity > 0 && <NewBadge $intensity={glowIntensity} style={{ top: (idea.fireScore ?? 0) > 0 ? 'calc(100% + 44px)' : 'calc(100% + 20px)' }}>NUEVA</NewBadge>}
+        {isHighlighted && <NewBadge $intensity={1} style={{ top: (idea.fireScore ?? 0) > 0 ? 'calc(100% + 44px)' : 'calc(100% + 20px)' }}>✦ SELECCIONADA</NewBadge>}
       </PlaneWrapper>
     );
   },

@@ -61,7 +61,7 @@ export const useAuthForm = () => {
 
   const isFormValid = isLogin
     ? validateEmail(formData.email) && formData.password.length > 0
-    : validateName(formData.name) && validateEmail(formData.email) && isPasswordValid;
+    : validateName(formData.name) && validateEmail(formData.email) && isPasswordValid && formData.phone.replace(/\D/g, '').length === 8;
 
   const getNameHint = (): string | null => {
     if (isLogin || !formData.name) return null;

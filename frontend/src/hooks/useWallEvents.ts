@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 type WallEventPayloads = {
-  'vote_changed': { ideaId: string; hasVoted: boolean; likesCount: number };
+  'vote_changed': { ideaId: string; hasVoted: boolean; likesCount: number; fireScore?: number };
   'favorite_changed': { ideaId: string; isFavorite: boolean };
   'comment_count_changed': {
     ideaId: string;

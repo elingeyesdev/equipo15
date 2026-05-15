@@ -1,7 +1,7 @@
 import React from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
-import { Heart, MessageSquare } from 'lucide-react';
+import { Sparkles, MessageSquare } from 'lucide-react';
 import IdeationGuidePanel from './IdeationGuidePanel';
 import { Pista8Theme, breakpoints } from '../../../config/theme';
 import { interactiveHover, premiumTooltip } from '../styles/CommonStyles';
@@ -11,9 +11,9 @@ import { useAuth } from '../../../context/AuthContext';
 import { useWallEventListener } from '../../../hooks/useWallEvents';
 import { commentService } from '../../../services/comment.service';
 
-const slideFromLeft = keyframes`
-  from { opacity: 0; transform: translateX(-24px); }
-  to   { opacity: 1; transform: translateX(0); }
+const fadeIn = keyframes`
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
 `;
 
 const fadeUp = keyframes`
@@ -34,7 +34,7 @@ const shimmer = keyframes`
 const Wrapper = styled.div`
   margin-top: 0.5rem;
   margin-bottom: 2.5rem;
-  animation: ${slideFromLeft} 0.4s ease both;
+  animation: ${fadeIn} 0.35s ease both;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -134,7 +134,7 @@ const TopCard = styled.div<{ $rank: number; $idx: number }>`
   background: ${p => medalStyles[p.$rank]?.bg ?? 'white'};
   border: 2px solid ${p => medalStyles[p.$rank]?.border ?? 'rgba(72,80,84,0.08)'};
   box-shadow: 0 4px 16px rgba(72,80,84,0.08);
-  animation: ${slideFromLeft} 0.4s ${p => p.$idx * 0.08}s ease both;
+  animation: ${fadeIn} 0.35s ${p => p.$idx * 0.08}s ease both;
   cursor: pointer;
   transition: all 0.2s;
   overflow: hidden;
@@ -246,7 +246,7 @@ const ExpandedGrid = styled(motion.div)`
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   padding-bottom: 16px;
-  animation: ${slideFromLeft} 0.35s ease both;
+  animation: ${fadeIn} 0.35s ease both;
 
   &::-webkit-scrollbar {
     height: 8px;
@@ -274,7 +274,7 @@ const ExpandedCard = styled(motion.div)<{ $rank: number; $idx: number }>`
   flex-direction: column;
   align-items: center;
   text-align: center;
-  animation: ${slideFromLeft} 0.35s ${p => p.$idx * 0.06}s ease both;
+  animation: ${fadeIn} 0.35s ${p => p.$idx * 0.06}s ease both;
 
   &:hover {
     transform: translateY(-3px);
@@ -485,8 +485,8 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
               <CardAuthor>por {authorName}</CardAuthor>
 
               <CardStats>
-                <StatItem $tooltipText="Likes totales">
-                  <Heart size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
+                <StatItem $tooltipText="Interacciones totales">
+                  <Sparkles size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
                   <StatValue>{idea.likesCount ?? 0}</StatValue>
                 </StatItem>
                 <StatItem $tooltipText="Comentarios">
@@ -526,8 +526,8 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
                 <CardAuthor>por {authorName}</CardAuthor>
 
                 <CardStats>
-                  <StatItem $tooltipText="Likes totales">
-                    <Heart size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
+                  <StatItem $tooltipText="Interacciones totales">
+                    <Sparkles size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
                     <StatValue>{idea.likesCount ?? 0}</StatValue>
                   </StatItem>
                   <StatItem $tooltipText="Comentarios">

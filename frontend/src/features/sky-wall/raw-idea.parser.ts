@@ -42,6 +42,7 @@ const parseRawIdea = (item: Record<string, unknown>): RawIdea => ({
   author: parseAuthor(item.author),
   likesCount: typeof item.likesCount === 'number' ? item.likesCount : 0,
   commentsCount: typeof item.commentsCount === 'number' ? item.commentsCount : 0,
+  fireScore: typeof item.fireScore === 'number' ? item.fireScore : 0,
   isAnonymous: typeof item.isAnonymous === 'boolean' ? item.isAnonymous : false,
   hasVoted: typeof item.hasVoted === 'boolean' ? item.hasVoted : false,
   hasFavorited:

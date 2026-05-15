@@ -341,7 +341,7 @@ export class IdeaService {
     });
   }
 
-  async addLike(ideaId: string, firebaseUid: string): Promise<Idea | any> {
+  async addLike(ideaId: string, firebaseUid: string, rawType?: string | null): Promise<Idea | any> {
     const [userId, idea] = await Promise.all([
       this.resolveAuthorId(firebaseUid),
       this.ideaRepository.findById(ideaId),
@@ -359,48 +359,79 @@ export class IdeaService {
       });
     }
 
-    const hasVoted = await this.ideaRepository.checkUserLike(ideaId, userId);
+    const reactionMap: Record<string, 'GOOD' | 'FUTURE' | 'COMPLEX'> = {
+      good: 'GOOD',
+      future: 'FUTURE',
+      complex: 'COMPLEX',
+    };
+    const targetReaction = rawType && reactionMap[rawType] ? reactionMap[rawType] : 'GOOD';
 
-    if (hasVoted) {
-      await this.ideaRepository.removeLikeAndDecrement(ideaId, userId);
-      this.invalidateCache();
+    const previousReaction = await this.ideaRepository.checkUserLike(ideaId, userId);
 
-      this.moderationService.trackUnlike(userId).catch((err) => {
-        this.logger.error(`Error in trackUnlike for user ${userId}:`, err);
-      });
+    if (previousReaction) {
+      if (rawType === null || previousReaction === targetReaction) {
+        // Unvote
+        const updatedIdea = await this.ideaRepository.removeLikeAndDecrement(ideaId, userId, previousReaction as any);
+        this.invalidateCache();
 
-      const optimisticLikes = Math.max(0, idea.likesCount - 1);
-      this.eventBus.emitToRoom(
-        `challenge:${idea.challengeId}`,
-        'idea:unvoted',
-        {
+        this.moderationService.trackUnlike(userId).catch((err) => {
+          this.logger.error(`Error in trackUnlike for user ${userId}:`, err);
+        });
+
+        this.eventBus.emitToRoom(
+          `challenge:${idea.challengeId}`,
+          'idea:unvoted',
+          {
+            ideaId: idea.id,
+            likesCount: updatedIdea.likesCount,
+            fireScore: updatedIdea.fireScore,
+            challengeId: idea.challengeId,
+          },
+        );
+
+        return {
+          ...updatedIdea,
+          hasVoted: false,
+        };
+      } else {
+        // Switch reaction
+        const updatedIdea = await this.ideaRepository.updateLikeReaction(ideaId, userId, previousReaction as any, targetReaction);
+        this.invalidateCache();
+
+        // Broadcast to trigger UI update (likes count might stay the same, but fireScore changes)
+        this.eventBus.emitToRoom(`challenge:${idea.challengeId}`, 'idea:voted', {
           ideaId: idea.id,
-          likesCount: optimisticLikes,
+          likesCount: updatedIdea.likesCount,
+          fireScore: updatedIdea.fireScore,
           challengeId: idea.challengeId,
-        },
-      );
+        });
 
-      return {
-        ...idea,
-        likesCount: optimisticLikes,
-        hasVoted: false,
-      };
+        return {
+          ...updatedIdea,
+          hasVoted: true,
+        };
+      }
     } else {
-      await this.ideaRepository.registerLikeAndIncrement(ideaId, userId);
+      // New vote
+      if (rawType === null) return idea; // Edge case: trying to unvote something not voted
+      
+      await this.ideaRepository.registerLikeAndIncrement(ideaId, userId, targetReaction);
+      const updatedIdea = await this.ideaRepository.findById(ideaId);
       this.invalidateCache();
 
-      const optimisticLikes = idea.likesCount + 1;
-      this.eventBus.emitToRoom(`challenge:${idea.challengeId}`, 'idea:voted', {
-        ideaId: idea.id,
-        likesCount: optimisticLikes,
-        challengeId: idea.challengeId,
-      });
+      if (updatedIdea) {
+        this.eventBus.emitToRoom(`challenge:${idea.challengeId}`, 'idea:voted', {
+          ideaId: idea.id,
+          likesCount: updatedIdea.likesCount,
+          fireScore: updatedIdea.fireScore,
+          challengeId: idea.challengeId,
+        });
 
-      return {
-        ...idea,
-        likesCount: optimisticLikes,
-        hasVoted: true,
-      };
+        return {
+          ...updatedIdea,
+          hasVoted: true,
+        };
+      }
     }
   }
 

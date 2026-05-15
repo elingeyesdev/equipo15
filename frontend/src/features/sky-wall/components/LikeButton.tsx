@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import type { AxiosLikeError } from '../types';
 import { useAuth } from '../../../context/AuthContext';
 import { wallEvents } from '../../../hooks/useWallEvents';
+import { Sparkles, Lightbulb, Flame, Brain } from 'lucide-react';
 
 const pop = keyframes`
   0%   { transform: scale(1); }
@@ -14,47 +15,79 @@ const pop = keyframes`
   100% { transform: scale(1); }
 `;
 
-const Button = styled.button<{ $hasVoted: boolean }>`
-  display: flex;
+
+
+const Container = styled.div`
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: ${p => p.$hasVoted ? `${Pista8Theme.primary}12` : 'rgba(248,249,250,0.9)'};
-  color: ${p => p.$hasVoted ? Pista8Theme.primary : '#94a3b8'};
-  border: 1.5px solid ${p => p.$hasVoted ? `${Pista8Theme.primary}50` : 'rgba(72,80,84,0.1)'};
-  border-radius: 99px;
-  padding: 10px 20px;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
-  box-shadow: ${p => p.$hasVoted ? `0 0 0 3px ${Pista8Theme.primary}18` : 'none'};
-  opacity: 1;
 
-  svg {
-    transition: transform 0.18s, fill 0.18s;
-    ${p => p.$hasVoted && css`animation: ${pop} 0.35s cubic-bezier(.36,.07,.19,.97) both;`}
-  }
-
-  &:hover:not(:disabled) {
-    background: ${p => !p.$hasVoted ? `${Pista8Theme.primary}08` : ''};
-    border-color: ${p => !p.$hasVoted ? `${Pista8Theme.primary}40` : ''};
-    color: ${p => !p.$hasVoted ? Pista8Theme.primary : ''};
+  &:hover .reactions-bar {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
   }
 `;
 
-const TooltipContainer = styled.div`
-  position: relative;
-  display: inline-flex;
+const ReactionsBar = styled.div`
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: ${Pista8Theme.white};
+  border-radius: 99px;
+  padding: 6px;
+  display: flex;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(72, 80, 84, 0.08);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 50;
 
-  &:hover .custom-tooltip {
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -6px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: ${Pista8Theme.white} transparent transparent transparent;
+  }
+`;
+
+const ReactionOption = styled.button<{ $color: string }>`
+  background: ${Pista8Theme.background};
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s;
+  position: relative;
+
+  &:hover {
+    transform: scale(1.15) translateY(-2px);
+    background: ${p => p.$color}15;
+    color: ${p => p.$color};
+  }
+
+  &:hover .tooltip {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(0);
   }
 `;
 
-const TooltipText = styled.span`
+const Tooltip = styled.div`
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
@@ -78,17 +111,65 @@ const TooltipText = styled.span`
     position: absolute;
     top: 100%;
     left: 50%;
-    margin-left: -5px;
-    border-width: 5px;
+    margin-left: -4px;
+    border-width: 4px;
     border-style: solid;
     border-color: rgba(26, 31, 34, 0.95) transparent transparent transparent;
   }
 `;
 
-const Count = styled.span<{ $hasVoted: boolean }>`
+const MainButton = styled.button<{ $hasVoted: boolean; $activeColor?: string }>`
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: ${p => p.$hasVoted ? (p.$activeColor ? p.$activeColor + '15' : `${Pista8Theme.primary}12`) : 'rgba(248,249,250,0.9)'};
+  color: ${p => p.$hasVoted ? (p.$activeColor || Pista8Theme.primary) : '#94a3b8'};
+  border: 1.5px solid ${p => p.$hasVoted ? (p.$activeColor ? p.$activeColor + '40' : `${Pista8Theme.primary}50`) : 'rgba(72,80,84,0.1)'};
+  border-radius: 99px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: ${p => p.$hasVoted ? `0 0 0 3px ${p.$activeColor ? p.$activeColor + '18' : Pista8Theme.primary + '18'}` : 'none'};
+
+  svg {
+    transition: transform 0.18s, fill 0.18s;
+    ${p => p.$hasVoted && css`animation: ${pop} 0.35s cubic-bezier(.36,.07,.19,.97) both;`}
+  }
+
+  &:hover:not(:disabled) {
+    background: ${p => !p.$hasVoted ? `${Pista8Theme.primary}08` : ''};
+    border-color: ${p => !p.$hasVoted ? `${Pista8Theme.primary}40` : ''};
+    color: ${p => !p.$hasVoted ? Pista8Theme.primary : ''};
+  }
+
+  &:hover .main-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+`;
+
+const MainTooltip = styled(Tooltip)`
+  bottom: auto;
+  top: calc(100% + 12px);
+  transform: translateX(-50%) translateY(-4px);
+
+  &::after {
+    top: auto;
+    bottom: 100%;
+    margin-left: -4px;
+    border-color: transparent transparent rgba(26, 31, 34, 0.95) transparent;
+  }
+`;
+
+const Count = styled.span<{ $hasVoted: boolean; $activeColor?: string }>`
   font-size: 14px;
   font-weight: 900;
-  color: ${p => p.$hasVoted ? Pista8Theme.primary : '#a8b0b8'};
+  color: ${p => p.$hasVoted ? (p.$activeColor || Pista8Theme.primary) : '#a8b0b8'};
   letter-spacing: -0.02em;
   transition: color 0.2s;
 `;
@@ -101,33 +182,31 @@ interface LikeButtonProps {
   disabled?: boolean;
 }
 
-const getLocalVoted = (id: string, userId?: string) => {
+const getLocalReaction = (id: string, userId?: string) => {
   try {
-    const key = userId ? `pista8_voted_ideas_${userId}` : 'pista8_voted_ideas';
-    const votedIdeas = JSON.parse(localStorage.getItem(key) || '[]');
-    return votedIdeas.includes(id);
+    const key = userId ? `pista8_reactions_${userId}` : 'pista8_reactions';
+    const reactions = JSON.parse(localStorage.getItem(key) || '{}');
+    return reactions[id] || null;
   } catch {
-    return false;
+    return null;
   }
 };
 
-const saveLocalVoted = (id: string, userId?: string) => {
+const saveLocalReaction = (id: string, reactionType: string, userId?: string) => {
   try {
-    const key = userId ? `pista8_voted_ideas_${userId}` : 'pista8_voted_ideas';
-    const votedIdeas = JSON.parse(localStorage.getItem(key) || '[]');
-    if (!votedIdeas.includes(id)) {
-      votedIdeas.push(id);
-    }
-    localStorage.setItem(key, JSON.stringify(votedIdeas));
+    const key = userId ? `pista8_reactions_${userId}` : 'pista8_reactions';
+    const reactions = JSON.parse(localStorage.getItem(key) || '{}');
+    reactions[id] = reactionType;
+    localStorage.setItem(key, JSON.stringify(reactions));
   } catch { }
 };
 
-const removeLocalVoted = (id: string, userId?: string) => {
+const removeLocalReaction = (id: string, userId?: string) => {
   try {
-    const key = userId ? `pista8_voted_ideas_${userId}` : 'pista8_voted_ideas';
-    const votedIdeas = JSON.parse(localStorage.getItem(key) || '[]');
-    const updatedIdeas = votedIdeas.filter((votedId: string) => votedId !== id);
-    localStorage.setItem(key, JSON.stringify(updatedIdeas));
+    const key = userId ? `pista8_reactions_${userId}` : 'pista8_reactions';
+    const reactions = JSON.parse(localStorage.getItem(key) || '{}');
+    delete reactions[id];
+    localStorage.setItem(key, JSON.stringify(reactions));
   } catch { }
 };
 
@@ -141,11 +220,18 @@ const isForbiddenError = (error: unknown): boolean => {
   return axiosError?.response?.status === 403 || axiosError?.response?.data?.code === 'AUTOLIKE_FORBIDDEN';
 };
 
+const REACTION_CONFIG = {
+  good: { icon: Lightbulb, color: '#f59e0b', label: 'Buena idea', tooltip: 'Me interesa, esta propuesta resuelve algo real.' },
+  future: { icon: Flame, color: '#ef4444', label: 'Tiene futuro', tooltip: 'Veo mucho potencial estratégico en esta idea.' },
+  complex: { icon: Brain, color: '#64748b', label: 'Complicado', tooltip: 'Interesante, pero parece difícil de implementar.' }
+} as const;
+
 export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuthor, disabled }: LikeButtonProps) => {
   const { userProfile } = useAuth();
   const currentUserId = userProfile?.id;
   const [likes, setLikes] = useState(initialLikes);
-  const [hasVoted, setHasVoted] = useState(() => serverVoted || getLocalVoted(ideaId, currentUserId));
+  const [reaction, setReaction] = useState<string | null>(() => getLocalReaction(ideaId, currentUserId));
+  const [hasVoted, setHasVoted] = useState(() => serverVoted || !!reaction);
 
   useEffect(() => {
     setLikes(initialLikes);
@@ -154,15 +240,18 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
   useEffect(() => {
     if (serverVoted) {
       setHasVoted(true);
-      saveLocalVoted(ideaId, currentUserId);
+      if (!reaction) {
+        setReaction('good');
+        saveLocalReaction(ideaId, 'good', currentUserId);
+      }
+    } else {
+      setHasVoted(false);
+      setReaction(null);
+      removeLocalReaction(ideaId, currentUserId);
     }
   }, [serverVoted, ideaId, currentUserId]);
 
-  useEffect(() => {
-    setHasVoted(serverVoted || getLocalVoted(ideaId, currentUserId));
-  }, [currentUserId, ideaId, serverVoted]);
-
-  const handleVote = () => {
+  const executeVote = (targetReaction: string | null) => {
     const isReadOnlyPenalty = userProfile?.status === 'SOFT_BLOCK' || userProfile?.status === 'SUSPENDED';
 
     if (disabled) return;
@@ -170,56 +259,62 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
       toast.error('Tu cuenta está en modo solo lectura durante la sanción.');
       return;
     }
-
     if (isAuthor) {
       toast.info('No puedes votar por tu propia idea.');
       return;
     }
 
-    const nextVotedState = !hasVoted;
-    setHasVoted(nextVotedState);
+    const isVoting = targetReaction !== null;
+    const prevVoted = hasVoted;
+    const prevReaction = reaction;
+    const prevLikes = likes;
+
+    setHasVoted(isVoting);
+    setReaction(targetReaction);
+
     let nextLikes = likes;
 
-    if (nextVotedState) {
-      setLikes(prev => {
-        nextLikes = prev + 1;
-        saveLocalVoted(ideaId, currentUserId);
-        wallEvents.emit('vote_changed', { ideaId, hasVoted: true, likesCount: nextLikes });
-        return nextLikes;
-      });
-    } else {
-      setLikes(prev => {
-        nextLikes = Math.max(0, prev - 1);
-        removeLocalVoted(ideaId, currentUserId);
-        wallEvents.emit('vote_changed', { ideaId, hasVoted: false, likesCount: nextLikes });
-        return nextLikes;
-      });
+    if (isVoting && !prevVoted) {
+      nextLikes = likes + 1;
+      saveLocalReaction(ideaId, targetReaction, currentUserId);
+    } else if (!isVoting && prevVoted) {
+      nextLikes = Math.max(0, likes - 1);
+      removeLocalReaction(ideaId, currentUserId);
+    } else if (isVoting && prevVoted) {
+      // Just switching reaction, likes count stays the same
+      saveLocalReaction(ideaId, targetReaction, currentUserId);
     }
 
-    ideaService.voteIdea(ideaId).catch((error: unknown) => {
-      if (isForbiddenError(error)) {
-        const msg = (error as any)?.response?.data?.message || 'No puedes votar por tu propia idea.';
-        toast.error(msg);
-      } else if (!isConflictError(error)) {
-        toast.error('No pudimos procesar tu acción. Intenta de nuevo.');
-      }
-      setHasVoted(!nextVotedState);
-      if (!nextVotedState) {
-        setLikes(prev => {
-          const revertedLikes = prev + 1;
-          saveLocalVoted(ideaId, currentUserId);
-          wallEvents.emit('vote_changed', { ideaId, hasVoted: true, likesCount: revertedLikes });
-          return revertedLikes;
-        });
-      } else {
-        setLikes(prev => {
-          const revertedLikes = Math.max(0, prev - 1);
-          removeLocalVoted(ideaId, currentUserId);
-          wallEvents.emit('vote_changed', { ideaId, hasVoted: false, likesCount: revertedLikes });
-          return revertedLikes;
-        });
-      }
-    });
+    setLikes(nextLikes);
+    wallEvents.emit('vote_changed', { ideaId, hasVoted: isVoting, likesCount: nextLikes });
+
+    // Now the backend handles the reactionType correctly, including switches.
+    if (isVoting !== prevVoted || targetReaction !== prevReaction) {
+      ideaService.voteIdea(ideaId, targetReaction).catch((error: unknown) => {
+        if (isForbiddenError(error)) {
+          const msg = (error as any)?.response?.data?.message || 'No puedes votar por tu propia idea.';
+          toast.error(msg);
+        } else if (!isConflictError(error)) {
+          toast.error('No pudimos procesar tu acción. Intenta de nuevo.');
+        }
+        
+        // Revert UI on failure
+        setHasVoted(prevVoted);
+        setReaction(prevReaction);
+        setLikes(prevLikes);
+        if (prevVoted && prevReaction) saveLocalReaction(ideaId, prevReaction, currentUserId);
+        else removeLocalReaction(ideaId, currentUserId);
+        wallEvents.emit('vote_changed', { ideaId, hasVoted: prevVoted, likesCount: prevLikes });
+      });
+    }
+  };
+
+  const handleToggle = () => {
+    if (hasVoted) {
+      executeVote(null); // Unvote
+    } else {
+      executeVote('good'); // Default vote if clicking main button
+    }
   };
 
   const isSoftBlocked = userProfile?.status === 'SOFT_BLOCK' || userProfile?.status === 'SUSPENDED';
@@ -231,14 +326,40 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
       : isAuthor
         ? 'Como autor, no puedes votar por tu propia idea'
         : hasVoted
-          ? 'Quitar voto'
-          : 'Apoyar idea';
+          ? 'Quitar reacción'
+          : 'Haz clic aquí para dar tu chispa de feedback';
+
+  const activeConfig = reaction ? REACTION_CONFIG[reaction as keyof typeof REACTION_CONFIG] : undefined;
+  const ActiveIcon = activeConfig?.icon || Sparkles;
+  const activeColor = activeConfig?.color;
 
   return (
-    <TooltipContainer>
-      <Button
+    <Container>
+      {!disabled && !isAuthor && !isSoftBlocked && (
+        <ReactionsBar className="reactions-bar">
+          {(Object.entries(REACTION_CONFIG) as [keyof typeof REACTION_CONFIG, typeof REACTION_CONFIG['good']][]).map(([key, config]) => {
+            const Icon = config.icon;
+            return (
+              <ReactionOption 
+                key={key} 
+                $color={config.color}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  executeVote(key);
+                }}
+              >
+                <Icon size={18} strokeWidth={2.5} />
+                <Tooltip className="tooltip">{config.tooltip}</Tooltip>
+              </ReactionOption>
+            );
+          })}
+        </ReactionsBar>
+      )}
+
+      <MainButton
         $hasVoted={hasVoted}
-        onClick={handleVote}
+        $activeColor={activeColor}
+        onClick={handleToggle}
         disabled={disabled}
         style={
           disabled ? { cursor: 'not-allowed', opacity: 0.5, filter: 'grayscale(1)' }
@@ -247,24 +368,19 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
           : {}
         }
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-          fill={hasVoted && !isSoftBlocked ? Pista8Theme.primary : 'none'}
-          style={{ color: hasVoted && !isSoftBlocked ? Pista8Theme.primary : 'currentColor' }}
-        >
-          {isSoftBlocked ? (
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-          ) : (
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          )}
-          {isSoftBlocked && (
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          )}
-        </svg>
-        <Count $hasVoted={hasVoted && !isSoftBlocked}>{likes}</Count>
-      </Button>
-      <TooltipText className="custom-tooltip">{tooltipMessage}</TooltipText>
-    </TooltipContainer>
+        <MainTooltip className="main-tooltip">{tooltipMessage}</MainTooltip>
+        <ActiveIcon 
+          size={16} 
+          strokeWidth={2.5} 
+          color={hasVoted && !isSoftBlocked && activeColor ? activeColor : 'currentColor'}
+          fill={hasVoted && !isSoftBlocked && activeColor ? activeColor : 'none'}
+        />
+        <Count $hasVoted={hasVoted && !isSoftBlocked} $activeColor={activeColor}>
+          {likes}
+        </Count>
+      </MainButton>
+    </Container>
   );
 };
 
-export default LikeButton;
+export default LikeButton;

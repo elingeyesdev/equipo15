@@ -13,6 +13,7 @@ const AuthPage = () => {
 
   const [showNoAccountModal, setShowNoAccountModal] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   const onResetSubmitLocal = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -233,6 +234,8 @@ const AuthPage = () => {
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      onFocus={() => setPasswordFocused(true)}
+                      onBlur={() => setPasswordFocused(false)}
                     />
                     <S.EyeBtn type="button" onClick={() => setShowPass(!showPass)}>
                       {showPass ? <EyeOffIcon /> : <EyeIcon />}
@@ -240,7 +243,7 @@ const AuthPage = () => {
                   </S.InputGroup>
                 </S.FieldWrap>
 
-                {!isLogin && (
+                {!isLogin && passwordFocused && (
                   <S.ValidationList>
                     <S.ValidationItem $isValid={passwordChecks.length}>
                       {passwordChecks.length ? (

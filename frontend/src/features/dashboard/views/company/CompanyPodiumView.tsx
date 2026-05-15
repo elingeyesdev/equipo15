@@ -5,7 +5,7 @@ import { Pista8Theme, breakpoints } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import { ideaService } from '../../../../services/idea.service';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Trophy, Users, MessageSquare, Heart, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Trophy, Users, MessageSquare, Sparkles, AlertTriangle, CheckCircle } from 'lucide-react';
 import MedalSvg from '../../../../components/icons/MedalSvg';
 import { toast } from 'sonner';
 import BackButton from '../../../../components/common/BackButton';
@@ -749,7 +749,7 @@ export const CompanyPodiumView = () => {
                     </IdeaInfo>
                     <Metrics>
                       <Metric $active={true}>
-                        <Heart fill={Pista8Theme.primary} /> {idea.likesCount || 0}
+                        <Sparkles fill={Pista8Theme.primary} /> {idea.likesCount || 0}
                       </Metric>
                       <Metric $active={true}>
                         <MessageSquare fill={Pista8Theme.primary} /> {idea.commentsCount || 0}

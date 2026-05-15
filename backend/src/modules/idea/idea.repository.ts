@@ -96,6 +96,10 @@ export class IdeaRepository {
         solution: true,
         status: true,
         likesCount: true,
+        goodCount: true,
+        futureCount: true,
+        complexCount: true,
+        fireScore: true,
         commentsCount: true,
         isAnonymous: true,
         tags: true,
@@ -175,37 +179,83 @@ export class IdeaRepository {
     });
   }
 
-  async checkUserLike(ideaId: string, userId: string): Promise<boolean> {
-    const count = await this.prisma.ideaLike.count({
-      where: { ideaId, userId },
+  async checkUserLike(ideaId: string, userId: string): Promise<string | null> {
+    const like = await this.prisma.ideaLike.findUnique({
+      where: { ideaId_userId: { ideaId, userId } },
+      select: { reactionType: true },
     });
-    return count > 0;
+    return like ? like.reactionType : null;
   }
 
   async registerLikeAndIncrement(
     ideaId: string,
     userId: string,
+    reactionType: 'GOOD' | 'FUTURE' | 'COMPLEX',
   ): Promise<Idea> {
+    const fireDelta = reactionType === 'COMPLEX' ? 0.5 : 2; 
+    const countField = reactionType === 'GOOD' ? 'goodCount' : reactionType === 'FUTURE' ? 'futureCount' : 'complexCount';
+
     const [, updated] = await this.prisma.$transaction([
       this.prisma.ideaLike.create({
-        data: { ideaId, userId },
+        data: { ideaId, userId, reactionType },
       }),
       this.prisma.idea.update({
         where: { id: ideaId },
-        data: { likesCount: { increment: 1 } },
+        data: { 
+          likesCount: { increment: 1 },
+          [countField]: { increment: 1 },
+          fireScore: { increment: fireDelta }
+        },
       }),
     ]);
     return updated;
   }
 
-  async removeLikeAndDecrement(ideaId: string, userId: string): Promise<Idea> {
+  async updateLikeReaction(
+    ideaId: string,
+    userId: string,
+    oldReaction: 'GOOD' | 'FUTURE' | 'COMPLEX',
+    newReaction: 'GOOD' | 'FUTURE' | 'COMPLEX',
+  ): Promise<Idea> {
+    const oldField = oldReaction === 'GOOD' ? 'goodCount' : oldReaction === 'FUTURE' ? 'futureCount' : 'complexCount';
+    const newField = newReaction === 'GOOD' ? 'goodCount' : newReaction === 'FUTURE' ? 'futureCount' : 'complexCount';
+    
+    const oldFire = oldReaction === 'COMPLEX' ? -0.5 : 1;
+    const newFire = newReaction === 'COMPLEX' ? -0.5 : 1;
+    const fireDelta = newFire - oldFire;
+
+    const [, updated] = await this.prisma.$transaction([
+      this.prisma.ideaLike.update({
+        where: { ideaId_userId: { ideaId, userId } },
+        data: { reactionType: newReaction },
+      }),
+      this.prisma.idea.update({
+        where: { id: ideaId },
+        data: {
+          [oldField]: { decrement: 1 },
+          [newField]: { increment: 1 },
+          fireScore: { increment: fireDelta }
+        },
+      }),
+    ]);
+    return updated;
+  }
+
+  async removeLikeAndDecrement(ideaId: string, userId: string, reactionType: 'GOOD' | 'FUTURE' | 'COMPLEX'): Promise<Idea> {
+    const fireDelta = reactionType === 'COMPLEX' ? -0.5 : -2; 
+    const countField = reactionType === 'GOOD' ? 'goodCount' : reactionType === 'FUTURE' ? 'futureCount' : 'complexCount';
+
     const [, updated] = await this.prisma.$transaction([
       this.prisma.ideaLike.delete({
         where: { ideaId_userId: { ideaId, userId } },
       }),
       this.prisma.idea.update({
         where: { id: ideaId },
-        data: { likesCount: { decrement: 1 } },
+        data: { 
+          likesCount: { decrement: 1 },
+          [countField]: { decrement: 1 },
+          fireScore: { increment: fireDelta }
+        },
       }),
     ]);
     return updated;
@@ -233,7 +283,10 @@ export class IdeaRepository {
   async incrementComments(id: string): Promise<Idea> {
     return this.prisma.idea.update({
       where: { id },
-      data: { commentsCount: { increment: 1 } },
+      data: { 
+        commentsCount: { increment: 1 },
+        fireScore: { increment: 1 }
+      },
     });
   }
 }

@@ -82,8 +82,8 @@ export const ideaService = {
     return response.data;
   },
 
-  voteIdea: async (ideaId: string) => {
-    const response = await axiosInstance.post(`/ideas/${ideaId}/like`);
+  voteIdea: async (ideaId: string, reactionType?: string | null) => {
+    const response = await axiosInstance.post(`/ideas/${ideaId}/like`, { reactionType });
     return response.data;
   },
 
