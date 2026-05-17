@@ -1,9 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
 
 export const IDEA_WORD_RULES = {
-  title: { min: 5, max: 20 },
+  title: { min: 2, max: 10 },
   problem: { min: 20, max: 200 },
-  solution: { min: 30, max: 200 },
+  solution: { min: 10, max: 200 },
 } as const;
 
 export const countWords = (text: string): number =>
