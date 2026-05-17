@@ -308,14 +308,14 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <FieldGroup style={{ marginBottom: 0 }}>
                 <Label $locked={locked('core')}>Fecha inicio *</Label>
-                <InputField type="date" min={today} $locked={locked('core')} $error={!!errors.startDate}
+                <InputField type="datetime-local" min={today} $locked={locked('core')} $error={!!errors.startDate}
                   value={form.startDate} readOnly={locked('core')}
                   onChange={e => !locked('core') && updateField('startDate', e.target.value)} />
                 {errors.startDate && <ErrorText>{errors.startDate}</ErrorText>}
               </FieldGroup>
               <FieldGroup style={{ marginBottom: 0 }}>
                 <Label>Fecha cierre *</Label>
-                <InputField type="date" min={form.startDate || today} $error={!!errors.endDate}
+                <InputField type="datetime-local" min={form.startDate || today} $error={!!errors.endDate}
                   value={form.endDate}
                   onChange={e => updateField('endDate', e.target.value)} />
                 {errors.endDate && <ErrorText>{errors.endDate}</ErrorText>}
@@ -328,6 +328,53 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                 style={{ width: 18, height: 18, accentColor: Pista8Theme.primary }} />
               Reto privado
             </CheckboxRow>
+
+            {/* Audience Filter */}
+            <FieldGroup style={{ marginBottom: 0 }}>
+              <Label>Audiencia objetivo</Label>
+              <div style={{ background: '#f8f9fa', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a8b0b8', margin: '0 0 6px' }}>Rango de edad</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {['18-22', '23-27', '28-35', '36+'].map(range => {
+                      const sel = form.targetAudience.ageRanges.includes(range);
+                      return (
+                        <button key={range} type="button" onClick={() => {
+                          const next = sel
+                            ? form.targetAudience.ageRanges.filter(r => r !== range)
+                            : [...form.targetAudience.ageRanges, range];
+                          updateField('targetAudience', { ...form.targetAudience, ageRanges: next });
+                        }} style={{
+                          padding: '5px 12px', borderRadius: 999, border: `1.5px solid ${sel ? Pista8Theme.primary : 'rgba(72,80,84,0.15)'}`,
+                          background: sel ? Pista8Theme.primary : 'white', color: sel ? 'white' : '#485054',
+                          fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
+                        }}>{range} años</button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a8b0b8', margin: '0 0 6px' }}>Tipo de participante</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {['Universidades', 'Empresas'].map(pType => {
+                      const sel = form.targetAudience.participantTypes.includes(pType);
+                      return (
+                        <button key={pType} type="button" onClick={() => {
+                          const next = sel
+                            ? form.targetAudience.participantTypes.filter(t => t !== pType)
+                            : [...form.targetAudience.participantTypes, pType];
+                          updateField('targetAudience', { ...form.targetAudience, participantTypes: next });
+                        }} style={{
+                          padding: '5px 12px', borderRadius: 999, border: `1.5px solid ${sel ? Pista8Theme.primary : 'rgba(72,80,84,0.15)'}`,
+                          background: sel ? Pista8Theme.primary : 'white', color: sel ? 'white' : '#485054',
+                          fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
+                        }}>{pType}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </FieldGroup>
           </div>
         </FormGrid>
 
@@ -350,7 +397,70 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                 </p>
               )}
 
-              {form.evaluationCriteria.map(c => (
+              {/* Mandatory criteria */}
+              <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a8b0b8', margin: '0 0 6px' }}>Obligatorios</p>
+              {form.evaluationCriteria.filter(c => !c.isOptional && !c.isCustom).map(c => (
+                <CriterionRow key={c.id}>
+                  <CriterionCheckbox type="checkbox" checked={c.enabled}
+                    disabled={locked('core')}
+                    onChange={e => updateCriterion(c.id, { enabled: e.target.checked })} />
+                  <CriterionName $enabled={c.enabled} $locked={locked('core')}>{c.name}</CriterionName>
+                  {c.description && (
+                    <span title={c.description} style={{ cursor: 'help', display: 'inline-flex', alignItems: 'center', marginLeft: 2 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={Pista8Theme.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+                      </svg>
+                    </span>
+                  )}
+                  <WeightInput type="number" min={0} max={100}
+                    value={c.weight === 0 ? '' : c.weight}
+                    disabled={!c.enabled || locked('core')} placeholder="0"
+                    onChange={e => {
+                      const raw = e.target.value;
+                      if (raw === '') { updateCriterion(c.id, { weight: 0 }); return; }
+                      const v = parseInt(raw, 10);
+                      if (!isNaN(v)) updateCriterion(c.id, { weight: Math.min(100, v) });
+                    }} />
+                  <WeightUnit>%</WeightUnit>
+                </CriterionRow>
+              ))}
+
+              {/* Optional criteria */}
+              {form.evaluationCriteria.filter(c => c.isOptional).length > 0 && (
+                <div style={{ marginTop: 10 }}>
+                  <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a8b0b8', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    Opcional
+                  </p>
+                  {form.evaluationCriteria.filter(c => c.isOptional).map(c => (
+                    <CriterionRow key={c.id}>
+                      <CriterionCheckbox type="checkbox" checked={c.enabled}
+                        disabled={locked('core')}
+                        onChange={e => updateCriterion(c.id, { enabled: e.target.checked })} />
+                      <CriterionName $enabled={c.enabled} $locked={locked('core')}>{c.name}</CriterionName>
+                      {c.description && (
+                        <span title={c.description} style={{ cursor: 'help', display: 'inline-flex', alignItems: 'center', marginLeft: 2 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={Pista8Theme.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
+                          </svg>
+                        </span>
+                      )}
+                      <WeightInput type="number" min={0} max={100}
+                        value={c.weight === 0 ? '' : c.weight}
+                        disabled={!c.enabled || locked('core')} placeholder="0"
+                        onChange={e => {
+                          const raw = e.target.value;
+                          if (raw === '') { updateCriterion(c.id, { weight: 0 }); return; }
+                          const v = parseInt(raw, 10);
+                          if (!isNaN(v)) updateCriterion(c.id, { weight: Math.min(100, v) });
+                        }} />
+                      <WeightUnit>%</WeightUnit>
+                    </CriterionRow>
+                  ))}
+                </div>
+              )}
+
+              {/* Custom criteria */}
+              {form.evaluationCriteria.filter(c => c.isCustom).map(c => (
                 <CriterionRow key={c.id}>
                   <CriterionCheckbox type="checkbox" checked={c.enabled}
                     disabled={locked('core')}
@@ -358,21 +468,15 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                   <CriterionName $enabled={c.enabled} $locked={locked('core')}>{c.name}</CriterionName>
                   <WeightInput type="number" min={0} max={100}
                     value={c.weight === 0 ? '' : c.weight}
-                    disabled={!c.enabled || locked('core')}
-                    placeholder="0"
+                    disabled={!c.enabled || locked('core')} placeholder="0"
                     onChange={e => {
                       const raw = e.target.value;
-                      if (raw === '') {
-                        updateCriterion(c.id, { weight: 0 });
-                        return;
-                      }
+                      if (raw === '') { updateCriterion(c.id, { weight: 0 }); return; }
                       const v = parseInt(raw, 10);
-                      if (!isNaN(v)) {
-                        updateCriterion(c.id, { weight: Math.min(100, v) });
-                      }
+                      if (!isNaN(v)) updateCriterion(c.id, { weight: Math.min(100, v) });
                     }} />
                   <WeightUnit>%</WeightUnit>
-                  {c.isCustom && !locked('core') && (
+                  {!locked('core') && (
                     <RemoveBtn type="button" onClick={() => removeCriterion(c.id)}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -385,12 +489,8 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               {/* Total weight bar */}
               {form.evaluationCriteria.some(c => c.enabled) && (
                 <TotalWeightBar $total={totalWeight}>
-                  <span style={{ fontSize: 12, fontWeight: 700, flex: 1, color: '#485054' }}>
-                    Total asignado
-                  </span>
-                  <span style={{ fontSize: 13, fontWeight: 900, color: totalWeight > 100 ? '#ef4444' : totalWeight === 100 ? '#22c55e' : '#485054' }}>
-                    {totalWeight}%
-                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 700, flex: 1, color: '#485054' }}>Total asignado</span>
+                  <span style={{ fontSize: 13, fontWeight: 900, color: totalWeight > 100 ? '#ef4444' : totalWeight === 100 ? '#22c55e' : '#485054' }}>{totalWeight}%</span>
                   {totalWeight > 100 && <ErrorText>Supera el 100%</ErrorText>}
                   {totalWeight === 100 && <span style={{ fontSize: 11, color: '#22c55e', fontWeight: 700 }}>✓ Perfecto</span>}
                 </TotalWeightBar>
@@ -469,6 +569,20 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             {form.isPrivate ? 'Reto privado' : 'Reto público'}
           </PreviewTypeBadge>
         </div>
+
+        {(form.targetAudience.ageRanges.length > 0 || form.targetAudience.participantTypes.length > 0) && (
+          <PreviewSection>
+            <PreviewSectionLabel>Audiencia objetivo</PreviewSectionLabel>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
+              {form.targetAudience.ageRanges.map(r => (
+                <span key={r} style={{ fontSize: 10, fontWeight: 700, background: `${Pista8Theme.primary}15`, color: Pista8Theme.primary, padding: '3px 10px', borderRadius: 6 }}>{r} años</span>
+              ))}
+              {form.targetAudience.participantTypes.map(t => (
+                <span key={t} style={{ fontSize: 10, fontWeight: 700, background: `${Pista8Theme.primary}15`, color: Pista8Theme.primary, padding: '3px 10px', borderRadius: 6 }}>{t}</span>
+              ))}
+            </div>
+          </PreviewSection>
+        )}
 
         {form.problemDescription && (
           <PreviewSection>

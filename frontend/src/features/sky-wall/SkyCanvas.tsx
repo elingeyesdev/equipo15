@@ -154,6 +154,8 @@ interface SkyCanvasProps {
   topLimit?: number | null;
   facultyId?: number | string | null;
   highlightedIdeaId?: string | null;
+  onlyMyIdeas?: boolean;
+  currentUserId?: string;
 }
 
 interface SkyCanvasSceneProps {
@@ -171,9 +173,11 @@ interface SkyCanvasSceneProps {
   topLimit?: number | null;
   facultyId?: number | string | null;
   highlightedIdeaId?: string | null;
+  onlyMyIdeas?: boolean;
+  currentUserId?: string;
 }
 
-const SkyCanvasScene = memo(({ initialIdeas, isLoading = false, progress = 0, challengeId, challengeTitle, challengeFacultyId, isDashboardLoading = false, search, sort, challengeStatus, onlyFavorites = false, topLimit, facultyId, highlightedIdeaId }: SkyCanvasSceneProps) => {
+const SkyCanvasScene = memo(({ initialIdeas, isLoading = false, progress = 0, challengeId, challengeTitle, challengeFacultyId, isDashboardLoading = false, search, sort, challengeStatus, onlyFavorites = false, topLimit, facultyId, highlightedIdeaId, onlyMyIdeas = false, currentUserId }: SkyCanvasSceneProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState(800);
   const [showPodium, setShowPodium] = useState(false);
@@ -191,15 +195,16 @@ const SkyCanvasScene = memo(({ initialIdeas, isLoading = false, progress = 0, ch
     let filteredIdeas = onlyFavorites
       ? ideas.filter((idea) => Boolean(idea.hasFavorited))
       : [...ideas];
-    // Apply faculty filter
+    if (onlyMyIdeas && currentUserId) {
+      filteredIdeas = filteredIdeas.filter(idea => idea.authorId === currentUserId);
+    }
     if (facultyId) {
       filteredIdeas = filteredIdeas.filter(idea => idea.authorFacultyId === facultyId);
     }
     const base = sort ? sortIdeas(filteredIdeas, sort) : filteredIdeas;
-    // Apply top limit
     const limited = topLimit ? base.slice(0, topLimit) : base;
     return limited.map(i => ({ ...i, challengeStatus }));
-  }, [ideas, sort, challengeStatus, onlyFavorites, topLimit, facultyId]);
+  }, [ideas, sort, challengeStatus, onlyFavorites, topLimit, facultyId, onlyMyIdeas, currentUserId]);
 
   const currentSelectedIdea = useMemo(() => {
     if (!selectedIdea) return null;
@@ -301,7 +306,7 @@ SkyCanvasScene.displayName = 'SkyCanvasScene';
 
 
 
-const SkyCanvas = memo(({ challengeId, challengeTitle, challengeFacultyId, isDashboardLoading, search, sort, challengeStatus, onIdeasLoaded, onlyFavorites = false, topLimit, facultyId, highlightedIdeaId }: SkyCanvasProps) => {
+const SkyCanvas = memo(({ challengeId, challengeTitle, challengeFacultyId, isDashboardLoading, search, sort, challengeStatus, onIdeasLoaded, onlyFavorites = false, topLimit, facultyId, highlightedIdeaId, onlyMyIdeas, currentUserId }: SkyCanvasProps) => {
   const [publicIdeas, setPublicIdeas] = useState<RawIdea[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -377,7 +382,7 @@ const SkyCanvas = memo(({ challengeId, challengeTitle, challengeFacultyId, isDas
     };
   }, [challengeId, search, sort]);
 
-  return <SkyCanvasScene initialIdeas={publicIdeas} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeTitle={challengeTitle} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} search={search} sort={sort} challengeStatus={challengeStatus} onlyFavorites={onlyFavorites} topLimit={topLimit} facultyId={facultyId} highlightedIdeaId={highlightedIdeaId} />;
+  return <SkyCanvasScene initialIdeas={publicIdeas} isLoading={isLoading} progress={progress} challengeId={challengeId} challengeTitle={challengeTitle} challengeFacultyId={challengeFacultyId} isDashboardLoading={isDashboardLoading} search={search} sort={sort} challengeStatus={challengeStatus} onlyFavorites={onlyFavorites} topLimit={topLimit} facultyId={facultyId} highlightedIdeaId={highlightedIdeaId} onlyMyIdeas={onlyMyIdeas} currentUserId={currentUserId} />;
 });
 
 SkyCanvas.displayName = 'SkyCanvas';

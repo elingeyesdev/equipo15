@@ -75,6 +75,7 @@ model Challenge {
   podiumSize         Int?
   logoUrl            String?   @db.Text
   evaluationCriteria Json?
+  targetAudience     Json?
   author             User      @relation("AuthorChallenges", fields: [authorId], references: [id])
   authorId           String
   ideas              Idea[]

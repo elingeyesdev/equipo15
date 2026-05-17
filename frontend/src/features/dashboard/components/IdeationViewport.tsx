@@ -36,7 +36,7 @@ const formatDate = (d?: string | Date) => {
   if (!d) return '—';
   const date = new Date(d);
   if (isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' });
+  return date.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
 const CalendarSvg = () => (
@@ -207,6 +207,8 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
             topLimit={advFilter.topLimit}
             facultyId={advFilter.facultyId}
             highlightedIdeaId={highlightedIdeaId}
+            onlyMyIdeas={advFilter.onlyMyIdeas}
+            currentUserId={(userProfile as any)?.id}
           />
           </div>
 
