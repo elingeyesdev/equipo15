@@ -29,11 +29,13 @@ export interface UserProfile {
 export type ChallengeStatus = 'Borrador' | 'Activo' | 'Finalizado' | 'En Evaluación';
 
 export interface EvaluationCriterion {
-  id: string;           // 'desirability' | 'feasibility' | 'viability' | custom uuid
+  id: string;           // 'desirability' | 'feasibility' | 'alignment' | 'viability' | 'speed' | 'scalability' | custom uuid
   name: string;
+  description?: string;
   enabled: boolean;
   weight: number;       // 1-100
   isCustom?: boolean;
+  isOptional?: boolean;
 }
 
 export interface Challenge {

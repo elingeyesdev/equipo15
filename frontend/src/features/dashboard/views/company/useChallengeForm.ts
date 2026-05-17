@@ -4,6 +4,11 @@ import type { Challenge, ChallengeStatus, EvaluationCriterion } from '../../../.
 import axiosInstance from '../../../../api/axiosConfig';
 
 /* ─── Types ─── */
+export interface TargetAudience {
+  ageRanges: string[];
+  participantTypes: string[];
+}
+
 export interface ChallengeFormData {
   title: string;
   problemDescription: string;
@@ -16,6 +21,7 @@ export interface ChallengeFormData {
   logoUrl: string;
   evaluationCriteria: EvaluationCriterion[];
   facultyId: string | number | null;
+  targetAudience: TargetAudience;
 }
 
 export interface Errors {
@@ -29,9 +35,14 @@ export interface Errors {
 export const LIMITS = { title: 80, problemDescription: 500, companyContext: 500, participationRules: 500 };
 
 export const DEFAULT_CRITERIA: EvaluationCriterion[] = [
-  { id: 'desirability', name: 'Deseabilidad', enabled: false, weight: 33 },
-  { id: 'feasibility',  name: 'Factibilidad',  enabled: false, weight: 33 },
-  { id: 'viability',   name: 'Viabilidad',    enabled: false, weight: 34 },
+  // Obligatorios
+  { id: 'desirability', name: 'Deseabilidad', description: 'Valor real para personas o negocio', enabled: false, weight: 33, isOptional: false },
+  { id: 'feasibility',  name: 'Factibilidad', description: 'Posibilidad real de implementar', enabled: false, weight: 33, isOptional: false },
+  { id: 'alignment',    name: 'Alineación',   description: 'Coherencia con el reto y la estrategia', enabled: false, weight: 34, isOptional: false },
+  // Opcionales
+  { id: 'viability',    name: 'Viabilidad',    description: 'Sostenibilidad en el tiempo y en recursos', enabled: false, weight: 0, isOptional: true },
+  { id: 'speed',        name: 'Rapidez',       description: 'Velocidad estimada de implementación', enabled: false, weight: 0, isOptional: true },
+  { id: 'scalability',  name: 'Escalabilidad', description: 'Potencial de crecimiento más allá del piloto', enabled: false, weight: 0, isOptional: true },
 ];
 
 export const emptyForm: ChallengeFormData = {
@@ -40,6 +51,7 @@ export const emptyForm: ChallengeFormData = {
   isPrivate: false, status: 'Borrador', logoUrl: '',
   evaluationCriteria: DEFAULT_CRITERIA,
   facultyId: null,
+  targetAudience: { ageRanges: [], participantTypes: [] },
 };
 
 export const CUSTOM_NAME_RE = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 -]+$/;
@@ -67,9 +79,12 @@ export const compressToWebP = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
-export const formatDate = (d?: string) => d
-  ? new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
-  : '–';
+export const formatDate = (d?: string) => {
+  if (!d) return '–';
+  const date = new Date(d);
+  if (isNaN(date.getTime())) return '–';
+  return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
 
 /* ─── Hook ─── */
 interface UseChallengeFormProps {
@@ -79,7 +94,8 @@ interface UseChallengeFormProps {
 }
 
 export const useChallengeForm = ({ onBack, onSave, challenge }: UseChallengeFormProps) => {
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}T${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const [form, setForm]               = useState<ChallengeFormData>(emptyForm);
   const [initialForm, setInitialForm] = useState<ChallengeFormData>(emptyForm);
   const [errors, setErrors]           = useState<Errors>({});
@@ -124,13 +140,19 @@ export const useChallengeForm = ({ onBack, onSave, challenge }: UseChallengeForm
 
   /* ─── Load challenge data ─── */
   useEffect(() => {
+    const toDatetimeLocal = (d?: string | Date) => {
+      if (!d) return '';
+      const date = new Date(d);
+      if (isNaN(date.getTime())) return '';
+      return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}T${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+    };
     const base = challenge ? {
       title: challenge.title || '',
       problemDescription: challenge.problemDescription || '',
       companyContext: challenge.companyContext || '',
       participationRules: challenge.participationRules || '',
-      startDate: challenge.startDate ? new Date(challenge.startDate).toISOString().split('T')[0] : '',
-      endDate:   challenge.endDate   ? new Date(challenge.endDate).toISOString().split('T')[0]   : '',
+      startDate: toDatetimeLocal(challenge.startDate),
+      endDate: toDatetimeLocal(challenge.endDate),
       isPrivate: challenge.isPrivate || false,
       status: challenge.status || 'Borrador',
       logoUrl: challenge.logoUrl || '',
@@ -138,6 +160,7 @@ export const useChallengeForm = ({ onBack, onSave, challenge }: UseChallengeForm
         ? challenge.evaluationCriteria
         : DEFAULT_CRITERIA,
       facultyId: challenge.facultyId || null,
+      targetAudience: (challenge as any).targetAudience || { ageRanges: [], participantTypes: [] },
     } as ChallengeFormData : emptyForm;
 
     setForm(base);
