@@ -158,6 +158,7 @@ export const LockedBadge = styled.span`
 `;
 
 export const InputField = styled.input<{ $error?: boolean; $locked?: boolean }>`
+  width: 100%; box-sizing: border-box;
   padding: 14px 18px; border-radius: 14px;
   border: 2px solid ${p => p.$error ? Pista8Theme.error : p.$locked ? '#f1f3f5' : '#eef0f2'};
   font-size: 14px; font-weight: 500; color: ${p => p.$locked ? '#9ca3af' : '#1a1f22'};
@@ -172,6 +173,7 @@ export const InputField = styled.input<{ $error?: boolean; $locked?: boolean }>`
 `;
 
 export const TextAreaField = styled.textarea<{ $error?: boolean; $locked?: boolean }>`
+  width: 100%; box-sizing: border-box;
   padding: 14px 18px; border-radius: 14px;
   border: 2px solid ${p => p.$error ? Pista8Theme.error : p.$locked ? '#f1f3f5' : '#eef0f2'};
   font-size: 14px; font-weight: 500; color: ${p => p.$locked ? '#9ca3af' : '#1a1f22'};

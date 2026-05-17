@@ -5,6 +5,7 @@ import type { ChallengeStatus } from '../../../../types/models';
 import type { ChallengeFormData, Errors } from './useChallengeForm';
 import { LIMITS, formatDate } from './useChallengeForm';
 import BackButton from '../../../../components/common/BackButton';
+import InfoTooltip from '../../../../components/common/InfoTooltip';
 import {
   Wrapper, TopRow, FormTitle, FormCard, PreviewCard,
   PreviewLabel, PreviewTitle, PreviewSection, PreviewSectionLabel,
@@ -108,7 +109,10 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
   handleSave,
   toggleCriteria,
   onBack,
-}) => (
+}) => {
+  const [showOptionals, setShowOptionals] = React.useState(false);
+
+  return (
   <>
     {lightboxOpen && form.logoUrl && (
       <LightboxOverlay src={form.logoUrl} onClose={() => setLightboxOpen(false)} />
@@ -406,10 +410,8 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                     onChange={e => updateCriterion(c.id, { enabled: e.target.checked })} />
                   <CriterionName $enabled={c.enabled} $locked={locked('core')}>{c.name}</CriterionName>
                   {c.description && (
-                    <span title={c.description} style={{ cursor: 'help', display: 'inline-flex', alignItems: 'center', marginLeft: 2 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={Pista8Theme.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
-                      </svg>
+                    <span style={{ marginLeft: 2, display: 'inline-flex', alignItems: 'center' }}>
+                      <InfoTooltip text={c.description} size={16} />
                     </span>
                   )}
                   <WeightInput type="number" min={0} max={100}
@@ -428,20 +430,25 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               {/* Optional criteria */}
               {form.evaluationCriteria.filter(c => c.isOptional).length > 0 && (
                 <div style={{ marginTop: 10 }}>
-                  <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a8b0b8', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <button type="button" onClick={() => setShowOptionals(!showOptionals)} style={{ 
+                    display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', 
+                    cursor: 'pointer', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', 
+                    textTransform: 'uppercase', color: '#a8b0b8', padding: 0, marginBottom: 6,
+                  }}>
                     Opcional
-                  </p>
-                  {form.evaluationCriteria.filter(c => c.isOptional).map(c => (
+                    <span style={{ fontSize: 16, fontWeight: 900, color: Pista8Theme.primary, lineHeight: 1 }}>
+                      {showOptionals ? '−' : '+'}
+                    </span>
+                  </button>
+                  {showOptionals && form.evaluationCriteria.filter(c => c.isOptional).map(c => (
                     <CriterionRow key={c.id}>
                       <CriterionCheckbox type="checkbox" checked={c.enabled}
                         disabled={locked('core')}
                         onChange={e => updateCriterion(c.id, { enabled: e.target.checked })} />
                       <CriterionName $enabled={c.enabled} $locked={locked('core')}>{c.name}</CriterionName>
                       {c.description && (
-                        <span title={c.description} style={{ cursor: 'help', display: 'inline-flex', alignItems: 'center', marginLeft: 2 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={Pista8Theme.primary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" />
-                          </svg>
+                        <span style={{ marginLeft: 2, display: 'inline-flex', alignItems: 'center' }}>
+                          <InfoTooltip text={c.description} size={16} />
                         </span>
                       )}
                       <WeightInput type="number" min={0} max={100}
@@ -549,11 +556,20 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
         <PreviewTitle>{form.title || 'Título del reto...'}</PreviewTitle>
 
-        {form.facultyId && (
-          <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 800, color: Pista8Theme.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 12, marginTop: -4 }}>
-            {getFacultyName(form.facultyId)}
-          </div>
-        )}
+        <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 800, color: Pista8Theme.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 12, marginTop: -4 }}>
+          {(() => {
+            if (!form.facultyId) return 'Todas las Facultades';
+            
+            // Try to find in dbFaculties first
+            const dbFac = dbFaculties?.find((f: any) => f.id === form.facultyId);
+            if (dbFac) {
+              return dbFac.name.startsWith('Facultad') ? dbFac.name : `Facultad de ${dbFac.name}`;
+            }
+            
+            // Fallback to config
+            return getFacultyName(form.facultyId) || 'Facultad';
+          })()}
+        </div>
 
         {(form.startDate || form.endDate) && (
           <PreviewDateRow>
@@ -627,4 +643,5 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
       </PreviewCard>
     </Wrapper>
   </>
-);
+  );
+};

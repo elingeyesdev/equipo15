@@ -82,4 +82,7 @@ export class CreateChallengeDto {
 
   @IsOptional()
   evaluationCriteria?: any;
+
+  @IsOptional()
+  targetAudience?: any;
 }
