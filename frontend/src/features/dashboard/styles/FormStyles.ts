@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 import { fadeUp, FEEDBACK_PALETTE } from './CommonStyles';
 
@@ -143,12 +143,39 @@ export const Label = styled.label`
   color: ${Pista8Theme.secondary};
 `;
 
+const flagPulse = keyframes`
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 0 0 rgba(254,65,10,0.14);
+  }
+  50% {
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: 0 0 0 5px rgba(254,65,10,0.06);
+  }
+`;
+
 export const TooltipWrap = styled.span`
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
   margin-left: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(254,65,10,0.08);
+  border: 1px solid rgba(254,65,10,0.22);
+  animation: ${flagPulse} 2.2s ease-in-out infinite;
   vertical-align: middle;
-  svg { display: block; }
+  svg {
+    display: block;
+    transition: transform 180ms ease, filter 180ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    svg { transition: none; }
+  }
 `;
 
 export const TooltipBubble = styled.span`
@@ -195,6 +222,17 @@ export const TooltipHost = styled.span`
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1);
   }
+
+  &:hover ${TooltipWrap}, &:focus-within ${TooltipWrap} {
+    background: rgba(254,65,10,0.14);
+    border-color: rgba(254,65,10,0.42);
+  }
+
+  &:hover ${TooltipWrap} svg, &:focus-within ${TooltipWrap} svg {
+    transform: scale(1.12) rotate(-8deg);
+    filter: drop-shadow(0 2px 6px rgba(254,65,10,0.35));
+  }
+
   &:hover .info-badge, &:focus-within .info-badge {
     transform: translateY(-2px) scale(1.02);
   }
