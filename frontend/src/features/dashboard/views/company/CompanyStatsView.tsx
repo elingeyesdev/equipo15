@@ -34,8 +34,8 @@ const colors = {
   textMain: '#1a1f22',
   textMuted: '#6b7280',
   axis: '#7f8791',
-  likes: '#2DBE6C',
-  comments: '#485054',
+  likes: Pista8Theme.primary,
+  comments: '#ff8f6e',
   bars: ['#FE410A', '#FF6A3D', '#FF8F6E', '#485054', '#7A838A', '#A8AEB2', '#C4C9CC', '#D9DEE1'],
 };
 
@@ -100,19 +100,9 @@ const Subheading = styled.p`
   font-size: 13px;
 `;
 
-const StatusPill = styled.span<{ $mock: boolean }>`
-  padding: 7px 12px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-  background: ${({ $mock }) => ($mock ? '#fff4e6' : '#ecfdf3')};
-  color: ${({ $mock }) => ($mock ? '#b45309' : '#147f3f')};
-  border: 1px solid ${({ $mock }) => ($mock ? '#facc8d' : '#9de5b4')};
-`;
-
 const KpiGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 20px;
 
@@ -125,12 +115,19 @@ const KpiGrid = styled.div`
   }
 `;
 
-const KpiCard = styled.article`
+const KpiCard = styled.article<{ $compact?: boolean }>`
   background: ${colors.card};
   border: 1px solid ${colors.border};
   border-radius: 14px;
   padding: 16px;
   box-shadow: 0 8px 20px rgba(72, 80, 84, 0.06);
+  max-width: ${({ $compact }) => ($compact ? '210px' : 'none')};
+  justify-self: ${({ $compact }) => ($compact ? 'start' : 'stretch')};
+
+  @media (max-width: ${breakpoints.tablet}) {
+    max-width: none;
+    justify-self: stretch;
+  }
 `;
 
 const KpiLabel = styled.p`
@@ -491,6 +488,16 @@ export const CompanyStatsView = () => {
     [stats?.interactionsByDay],
   );
 
+  const totalLikes = useMemo(
+    () => (stats?.interactionsByDay ?? []).reduce((acc, item) => acc + (item.likes || 0), 0),
+    [stats?.interactionsByDay],
+  );
+
+  const totalComments = useMemo(
+    () => (stats?.interactionsByDay ?? []).reduce((acc, item) => acc + (item.comments || 0), 0),
+    [stats?.interactionsByDay],
+  );
+
   const facultySeries = useMemo(
     () => (stats?.ideasByFaculty ?? []).map((item, index) => ({ ...item, fill: colors.bars[index % colors.bars.length] })),
     [stats?.ideasByFaculty],
@@ -529,82 +536,79 @@ export const CompanyStatsView = () => {
             Vista consolidada de ideas por facultad, interacciones por dia y KPIs principales.
           </Subheading>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <ControlsColumn>
-            <RefreshButton onClick={handleRefresh} disabled={loading}>
-              {loading ? 'Actualizando...' : 'Refrescar'}
-            </RefreshButton>
-            <FiltersRow>
-              <FilterField>
-                <FilterLabel>Buscar por nombre</FilterLabel>
-                <SearchInputWrapper>
-                  <SearchInput
-                    value={challengeQuery}
-                    onChange={(event) => {
-                      setChallengeQuery(event.target.value);
-                      setShowSearchDropdown(true);
-                    }}
-                    onFocus={() => challengeQuery && setShowSearchDropdown(true)}
-                    onBlur={() => setTimeout(() => setShowSearchDropdown(false), 150)}
-                    placeholder="Escribe el nombre del reto"
-                    disabled={loading}
-                  />
-                  {challengeQuery && (
-                    <ClearSearchButton
-                      onClick={() => {
-                        setChallengeQuery('');
-                        setShowSearchDropdown(false);
-                      }}
-                      type="button"
-                      aria-label="Limpiar búsqueda"
-                      title="Limpiar búsqueda"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </ClearSearchButton>
-                  )}
-                  {challengeQuery && (
-                    <SearchDropdown $isOpen={showSearchDropdown}>
-                      {filteredChallengeOptions.length > 0 ? (
-                        filteredChallengeOptions.map((challenge) => (
-                          <SearchResultItem
-                            key={challenge.id}
-                            onClick={() => handleSelectChallenge(challenge.id)}
-                          >
-                            <span className="challenge-title">{challenge.title}</span>
-                            <span className="challenge-status">
-                              {getChallengeFacultyLabel(challenge)} · Estado: {challenge.status}
-                            </span>
-                          </SearchResultItem>
-                        ))
-                      ) : (
-                        <SearchEmptyResult>No se encontraron retos con ese nombre</SearchEmptyResult>
-                      )}
-                    </SearchDropdown>
-                  )}
-                </SearchInputWrapper>
-              </FilterField>
-              <FilterField>
-                <FilterLabel>Seleccionar reto</FilterLabel>
-                <ChallengeSelect
-                  value={selectedChallengeId}
-                  onChange={(event) => setSelectedChallengeId(event.target.value)}
+        <ControlsColumn>
+          <RefreshButton onClick={handleRefresh} disabled={loading}>
+            {loading ? 'Actualizando...' : 'Refrescar'}
+          </RefreshButton>
+          <FiltersRow>
+            <FilterField>
+              <FilterLabel>Buscar por nombre</FilterLabel>
+              <SearchInputWrapper>
+                <SearchInput
+                  value={challengeQuery}
+                  onChange={(event) => {
+                    setChallengeQuery(event.target.value);
+                    setShowSearchDropdown(true);
+                  }}
+                  onFocus={() => challengeQuery && setShowSearchDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowSearchDropdown(false), 150)}
+                  placeholder="Escribe el nombre del reto"
                   disabled={loading}
-                >
-                  <option value="all">Todos los retos</option>
-                  {challengeOptionsForSelect.map((challenge) => (
-                    <option key={challenge.id} value={challenge.id}>
-                      {challenge.title} · {getChallengeFacultyLabel(challenge)} · {challenge.status}
-                    </option>
-                  ))}
-                </ChallengeSelect>
-              </FilterField>
-            </FiltersRow>
-          </ControlsColumn>
-          <StatusPill $mock={usingMock}>{usingMock ? 'Modo mock' : 'Datos en vivo'}</StatusPill>
-        </div>
+                />
+                {challengeQuery && (
+                  <ClearSearchButton
+                    onClick={() => {
+                      setChallengeQuery('');
+                      setShowSearchDropdown(false);
+                    }}
+                    type="button"
+                    aria-label="Limpiar búsqueda"
+                    title="Limpiar búsqueda"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </ClearSearchButton>
+                )}
+                {challengeQuery && (
+                  <SearchDropdown $isOpen={showSearchDropdown}>
+                    {filteredChallengeOptions.length > 0 ? (
+                      filteredChallengeOptions.map((challenge) => (
+                        <SearchResultItem
+                          key={challenge.id}
+                          onClick={() => handleSelectChallenge(challenge.id)}
+                        >
+                          <span className="challenge-title">{challenge.title}</span>
+                          <span className="challenge-status">
+                            {getChallengeFacultyLabel(challenge)} · Estado: {challenge.status}
+                          </span>
+                        </SearchResultItem>
+                      ))
+                    ) : (
+                      <SearchEmptyResult>No se encontraron retos con ese nombre</SearchEmptyResult>
+                    )}
+                  </SearchDropdown>
+                )}
+              </SearchInputWrapper>
+            </FilterField>
+            <FilterField>
+              <FilterLabel>Seleccionar reto</FilterLabel>
+              <ChallengeSelect
+                value={selectedChallengeId}
+                onChange={(event) => setSelectedChallengeId(event.target.value)}
+                disabled={loading}
+              >
+                <option value="all">Todos los retos</option>
+                {challengeOptionsForSelect.map((challenge) => (
+                  <option key={challenge.id} value={challenge.id}>
+                    {challenge.title} · {getChallengeFacultyLabel(challenge)} · {challenge.status}
+                  </option>
+                ))}
+              </ChallengeSelect>
+            </FilterField>
+          </FiltersRow>
+        </ControlsColumn>
       </Header>
 
       {error && (
@@ -617,16 +621,22 @@ export const CompanyStatsView = () => {
       )}
 
       <KpiGrid>
-        <KpiCard>
+        <KpiCard $compact>
           <KpiLabel>Total de ideas</KpiLabel>
           <KpiValue>{stats.kpis.totalIdeas}</KpiValue>
           <KpiHint>Ideas publicas recibidas en tus retos.</KpiHint>
         </KpiCard>
 
         <KpiCard>
-          <KpiLabel>Total de votos</KpiLabel>
-          <KpiValue>{stats.kpis.totalVotes}</KpiValue>
-          <KpiHint>Votos acumulados sobre ideas publicas.</KpiHint>
+          <KpiLabel>Total Likes</KpiLabel>
+          <KpiValue>{totalLikes}</KpiValue>
+          <KpiHint>Likes acumulados en ideas publicas.</KpiHint>
+        </KpiCard>
+
+        <KpiCard>
+          <KpiLabel>Total Comentarios</KpiLabel>
+          <KpiValue>{totalComments}</KpiValue>
+          <KpiHint>Comentarios acumulados en ideas publicas.</KpiHint>
         </KpiCard>
 
         <KpiCard>
