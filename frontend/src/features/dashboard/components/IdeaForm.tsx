@@ -4,7 +4,9 @@ import * as S from '../styles/FormStyles';
 import * as FM from '../styles/FeedbackAndMiscStyles';
 import { FEEDBACK_GLYPH } from '../styles/CommonStyles';
 import { useIdeationForm } from '../hooks/useIdeationForm';
+import { IMPACT_AREA_OPTIONS, IMPROVEMENT_TYPE_OPTIONS, EFFORT_LEVEL_OPTIONS } from '../constants/ideaClassificationOptions';
 import type { ConsentKey } from '../hooks/useIdeationForm';
+import FlagIcon from '../../../components/icons/FlagIcon';
 
 interface IdeaFormProps {
   open: boolean;
@@ -91,10 +93,13 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
   if (!open) return null;
 
   const checklist = [
-    { label: 'Reto asignado', done: !!challenge },
-    { label: 'Nombre de la idea (5-20 palabras)', done: form.isTitleValid },
-    { label: 'Solución propuesta (30-200 palabras)', done: form.isSolutionValid },
-    { label: 'Consentimientos', done: Object.values(form.consents).every(Boolean) },
+    { id: 'challengeField', label: 'Reto asignado', done: !!challenge },
+    { id: 'ideaNameField', label: 'Nombre de la idea (2-10 palabras)', done: form.isTitleValid },
+    { id: 'ideaSolutionField', label: 'Solución propuesta (10-200 palabras)', done: form.isSolutionValid },
+    { id: 'impactAreaField', label: 'Área de impacto', done: Boolean(form.impactArea) },
+    { id: 'improvementTypeField', label: 'Tipo de mejora', done: Boolean(form.improvementType) },
+    { id: 'effortLevelField', label: 'Nivel de esfuerzo', done: Boolean(form.effortLevel) },
+    { id: 'consentsField', label: 'Consentimientos', done: Object.values(form.consents).every(Boolean) },
   ];
 
   const consentItems: Array<{ key: ConsentKey; title: string; desc: string }> = [
@@ -137,6 +142,16 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
     }
   };
 
+  const scrollToField = (id?: string) => {
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const input = el.querySelector('input, textarea, [tabindex]') as HTMLElement | null;
+      if (input) input.focus();
+    }
+  };
+
   const modalContent = (
     <>
       <S.ModalBackdrop onClick={onClose} />
@@ -162,7 +177,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 <S.MetaFoot>{isGuest ? 'Participando como invitado (Guest)' : 'Sesión autenticada'}</S.MetaFoot>
               </S.MetaCard>
 
-            <S.MetaCard $invalid={Boolean(form.formErrors.challenge)}>
+              <S.MetaCard id="challengeField" $invalid={Boolean(form.formErrors.challenge)}>
                 <S.MetaLabel>Reto que respondes</S.MetaLabel>
                 <S.MetaValue>{challenge?.title || 'Selecciona un reto'}</S.MetaValue>
                 {challenge && <S.MetaBadge>{challenge.category}</S.MetaBadge>}
@@ -197,8 +212,14 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
               <S.Checklist>
                 {checklist.map(item => (
                   <S.ChecklistItem key={item.label}>
-                    <S.StatusDot done={item.done} />
-                    <S.ChecklistLabel>{item.label}</S.ChecklistLabel>
+                    <button
+                      type="button"
+                      onClick={() => scrollToField(item.id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', width: '100%', border: 'none', background: 'transparent', padding: 0, textAlign: 'left' }}
+                    >
+                      <S.StatusDot done={item.done} />
+                      <S.ChecklistLabel>{item.label}</S.ChecklistLabel>
+                    </button>
                   </S.ChecklistItem>
                 ))}
               </S.Checklist>
@@ -215,9 +236,17 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 </S.FeedbackBanner>
               )}
 
-              <S.Field>
+              <S.Field id="ideaNameField">
                 <S.FieldHeader>
-                  <S.Label>Nombre y/o info básica de la idea</S.Label>
+                  <S.Label>
+                    Nombre y/o info básica de la idea
+                    <S.TooltipHost tabIndex={0} aria-label="Descripción del título">
+                      <S.TooltipWrap>
+                        <FlagIcon width={16} height={16} color="#FE410A" />
+                        <S.TooltipBubble>Un titular breve y descriptivo (2-10 palabras) que resuma la idea.</S.TooltipBubble>
+                      </S.TooltipWrap>
+                    </S.TooltipHost>
+                  </S.Label>
                   <S.CharCounter>{form.titleWords} palabras ({form.minTitleWords}-{form.maxTitleWords})</S.CharCounter>
                 </S.FieldHeader>
                 <S.Tip>Usa un titular memorable de máximo {maxIdeaName} caracteres.</S.Tip>
@@ -235,9 +264,17 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 {form.formErrors.ideaName && <S.FieldError>{form.formErrors.ideaName}</S.FieldError>}
               </S.Field>
 
-              <S.Field>
+              <S.Field id="ideaSolutionField">
                 <S.FieldHeader>
-                  <S.Label>La Propuesta</S.Label>
+                  <S.Label>
+                    La Propuesta
+                    <S.TooltipHost tabIndex={0} aria-label="Descripción de la propuesta">
+                      <S.TooltipWrap>
+                        <FlagIcon width={16} height={16} color="#FE410A" />
+                        <S.TooltipBubble>Describe cómo funciona tu solución, recursos necesarios y el cambio que generará. Mínimo {form.minSolutionWords} palabras.</S.TooltipBubble>
+                      </S.TooltipWrap>
+                    </S.TooltipHost>
+                  </S.Label>
                   <S.CharCounter>{form.solutionWords} palabras ({form.minSolutionWords}-{form.maxSolutionWords})</S.CharCounter>
                 </S.FieldHeader>
                 <S.Tip>
@@ -258,7 +295,121 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 {form.formErrors.ideaSolution && <S.FieldError>{form.formErrors.ideaSolution}</S.FieldError>}
               </S.Field>
 
-              <S.Field>
+              <S.Field id="impactAreaField">
+                <S.FieldHeader>
+                  <S.Label>
+                    ¿Dónde tendría más impacto tu idea?
+                    <S.TooltipHost tabIndex={0} aria-label="Descripción del área de impacto">
+                      <S.TooltipWrap>
+                        <FlagIcon width={16} height={16} color="#FE410A" />
+                        <S.TooltipBubble>Selecciona el área que se beneficiaría más (p.ej. Productividad, Costos, Clientes).</S.TooltipBubble>
+                      </S.TooltipWrap>
+                    </S.TooltipHost>
+                  </S.Label>
+                </S.FieldHeader>
+                <S.Tip>Selecciona el área donde tu propuesta generaría el mayor valor.</S.Tip>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12 }}>
+                  {IMPACT_AREA_OPTIONS.map(option => (
+                    <label key={option.value} style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 12, padding: 12, borderRadius: 14,
+                      border: form.impactArea === option.value ? '2px solid #FE410A' : '1.5px solid rgba(72,80,84,0.12)',
+                      background: form.impactArea === option.value ? 'rgba(254,65,10,0.04)' : 'transparent',
+                      cursor: 'pointer', transition: 'all 0.15s'
+                    }}>
+                      <input
+                        type="radio"
+                        name="impactArea"
+                        value={option.value}
+                        checked={form.impactArea === option.value}
+                        onChange={e => form.setImpactArea(e.target.value as any)}
+                        style={{ marginTop: 4, cursor: 'pointer', accentColor: '#FE410A' }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1f22', marginBottom: 2 }}>{option.label}</div>
+                        <div style={{ fontSize: 12, color: '#a8b0b8', lineHeight: 1.5 }}>{option.description}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </S.Field>
+
+              <S.Field id="improvementTypeField">
+                <S.FieldHeader>
+                  <S.Label>
+                    ¿Qué tanto podría mejorar esta idea lo que hacemos hoy?
+                    <S.TooltipHost tabIndex={0} aria-label="Descripción del tipo de mejora">
+                      <S.TooltipWrap>
+                        <FlagIcon width={16} height={16} color="#FE410A" />
+                        <S.TooltipBubble>Indica si la idea optimiza procesos, amplía capacidades o transforma la forma de trabajo.</S.TooltipBubble>
+                      </S.TooltipWrap>
+                    </S.TooltipHost>
+                  </S.Label>
+                </S.FieldHeader>
+                <S.Tip>Elige el nivel de transformación que propone tu idea.</S.Tip>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12 }}>
+                  {IMPROVEMENT_TYPE_OPTIONS.map(option => (
+                    <label key={option.value} style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 12, padding: 12, borderRadius: 14,
+                      border: form.improvementType === option.value ? '2px solid #FE410A' : '1.5px solid rgba(72,80,84,0.12)',
+                      background: form.improvementType === option.value ? 'rgba(254,65,10,0.04)' : 'transparent',
+                      cursor: 'pointer', transition: 'all 0.15s'
+                    }}>
+                      <input
+                        type="radio"
+                        name="improvementType"
+                        value={option.value}
+                        checked={form.improvementType === option.value}
+                        onChange={e => form.setImprovementType(e.target.value as any)}
+                        style={{ marginTop: 4, cursor: 'pointer', accentColor: '#FE410A' }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1f22', marginBottom: 2 }}>{option.label}</div>
+                        <div style={{ fontSize: 12, color: '#a8b0b8', lineHeight: 1.5 }}>{option.description}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </S.Field>
+
+              <S.Field id="effortLevelField">
+                <S.FieldHeader>
+                  <S.Label>
+                    ¿Qué nivel de esfuerzo requiere poner esta idea en marcha?
+                    <S.TooltipHost tabIndex={0} aria-label="Descripción del nivel de esfuerzo">
+                      <S.TooltipWrap>
+                        <FlagIcon width={16} height={16} color="#FE410A" />
+                        <S.TooltipBubble>Selecciona si la implementación es fácil, requiere coordinación, desarrollo o una transformación mayor.</S.TooltipBubble>
+                      </S.TooltipWrap>
+                    </S.TooltipHost>
+                  </S.Label>
+                </S.FieldHeader>
+                <S.Tip>Define la complejidad de implementación de tu propuesta.</S.Tip>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12 }}>
+                  {EFFORT_LEVEL_OPTIONS.map(option => (
+                    <label key={option.value} style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 12, padding: 12, borderRadius: 14,
+                      border: form.effortLevel === option.value ? '2px solid #FE410A' : '1.5px solid rgba(72,80,84,0.12)',
+                      background: form.effortLevel === option.value ? 'rgba(254,65,10,0.04)' : 'transparent',
+                      cursor: 'pointer', transition: 'all 0.15s'
+                    }}>
+                      <input
+                        type="radio"
+                        name="effortLevel"
+                        value={option.value}
+                        checked={form.effortLevel === option.value}
+                        onChange={e => form.setEffortLevel(e.target.value as any)}
+                        style={{ marginTop: 4, cursor: 'pointer', accentColor: '#FE410A' }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1f22', marginBottom: 2 }}>{option.label}</div>
+                        <div style={{ fontSize: 12, color: '#a8b0b8', lineHeight: 1.5 }}>{option.description}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </S.Field>
+
+              <S.Field id="tagsField">
                 <S.FieldHeader>
                   <S.Label>Etiquetas</S.Label>
                   <S.TagCounter>{form.tags.length}/{maxTags}</S.TagCounter>
@@ -283,7 +434,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 </S.TagInputWrap>
               </S.Field>
 
-              <S.Field>
+              <S.Field id="consentsField">
                 <S.Label>Consentimientos y condiciones</S.Label>
                 <S.Tip>Marca cada casilla para habilitar el envío.</S.Tip>
                 <S.ConsentList $invalid={Boolean(form.formErrors.consents) && form.consentsTouched}>

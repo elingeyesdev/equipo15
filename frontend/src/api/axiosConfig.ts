@@ -22,6 +22,13 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Log full error to console in dev to aid debugging
+    try {
+      // eslint-disable-next-line no-console
+      console.error('Axios response error:', error);
+    } catch (e) {
+      // ignore
+    }
     const status = error?.response?.status as number | undefined;
 
     if (status === 401) {

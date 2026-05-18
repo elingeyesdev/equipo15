@@ -58,11 +58,29 @@ export class UserRepository {
     createData: any,
     updateData: any,
   ): Promise<User> {
-    return this.prisma.user.upsert({
-      where: { firebaseUid },
-      update: updateData,
-      create: createData,
-    });
+    try {
+      return await this.prisma.user.upsert({
+        where: { firebaseUid },
+        update: updateData,
+        create: createData,
+      });
+    } catch (err: any) {
+      // Handle unique constraint on email: try to find existing user by email
+      // and attach the firebaseUid instead of failing the request.
+      if (err?.code === 'P2002' && createData?.email) {
+        const existing = await this.prisma.user.findUnique({
+          where: { email: createData.email },
+        });
+        if (existing) {
+          const merged = {
+            ...(updateData || {}),
+            firebaseUid,
+          } as any;
+          return this.prisma.user.update({ where: { id: existing.id }, data: merged });
+        }
+      }
+      throw err;
+    }
   }
   async updateStatus(
     id: string,

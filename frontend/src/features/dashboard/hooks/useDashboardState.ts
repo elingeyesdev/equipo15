@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { userService } from '../../../services/user.service';
 import type { UserProfile } from '../../../types/models';
 import type { Challenge } from '../../../types/models';
-import { useAuth } from '../../../context/AuthContext';
+
 import { useChallengeSelection } from './useChallengeSelection';
 import { useIdeationInteraction } from './useIdeationInteraction';
 
@@ -56,3 +56,4 @@ export const useDashboardState = () => {
     handleOpenForm, handleCloseForm,
   };
 };
+

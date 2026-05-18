@@ -7,6 +7,30 @@ import {
   IsEnum,
 } from 'class-validator';
 
+export enum ImpactAreaEnum {
+  PRODUCTIVITY = 'PRODUCTIVITY',
+  COSTS = 'COSTS',
+  CUSTOMERS = 'CUSTOMERS',
+  TEAM = 'TEAM',
+  GROWTH = 'GROWTH',
+  SUSTAINABILITY = 'SUSTAINABILITY',
+  SOCIAL_IMPACT = 'SOCIAL_IMPACT',
+}
+
+export enum ImprovementTypeEnum {
+  OPTIMIZES = 'OPTIMIZES',
+  ENHANCES = 'ENHANCES',
+  EXPANDS = 'EXPANDS',
+  TRANSFORMS = 'TRANSFORMS',
+}
+
+export enum EffortLevelEnum {
+  EASY = 'EASY',
+  COORDINATION = 'COORDINATION',
+  DEVELOPMENT = 'DEVELOPMENT',
+  TRANSFORMATION = 'TRANSFORMATION',
+}
+
 export class CreateIdeaDto {
   @IsString()
   @IsNotEmpty({ message: 'El título no puede estar vacío.' })
@@ -41,4 +65,16 @@ export class CreateIdeaDto {
   @IsString({ each: true })
   @IsOptional()
   multimediaLinks?: string[];
+
+  @IsEnum(ImpactAreaEnum)
+  @IsOptional()
+  impactArea?: ImpactAreaEnum;
+
+  @IsEnum(ImprovementTypeEnum)
+  @IsOptional()
+  improvementType?: ImprovementTypeEnum;
+
+  @IsEnum(EffortLevelEnum)
+  @IsOptional()
+  effortLevel?: EffortLevelEnum;
 }

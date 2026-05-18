@@ -1,6 +1,7 @@
 export const IDEA_WORD_RULES = {
   title: { min: 2, max: 10 },
-  problem: { min: 20, max: 200 },
+  // Allow proposals to be between 10 and 200 words (was 20 min previously)
+  problem: { min: 10, max: 200 },
   solution: { min: 10, max: 200 },
 } as const;
 

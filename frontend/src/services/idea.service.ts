@@ -16,6 +16,9 @@ export interface CreateIdeaPayload {
   tags?: string[];
   status?: IdeaStatus;
   isAnonymous?: boolean;
+  impactArea?: 'PRODUCTIVITY' | 'COSTS' | 'CUSTOMERS' | 'TEAM' | 'GROWTH' | 'SUSTAINABILITY' | 'SOCIAL_IMPACT';
+  improvementType?: 'OPTIMIZES' | 'ENHANCES' | 'EXPANDS' | 'TRANSFORMS';
+  effortLevel?: 'EASY' | 'COORDINATION' | 'DEVELOPMENT' | 'TRANSFORMATION';
 }
 
 export interface CreateDraftIdeaPayload {
@@ -25,6 +28,9 @@ export interface CreateDraftIdeaPayload {
   challengeId?: string;
   tags?: string[];
   isAnonymous?: boolean;
+  impactArea?: 'PRODUCTIVITY' | 'COSTS' | 'CUSTOMERS' | 'TEAM' | 'GROWTH' | 'SUSTAINABILITY' | 'SOCIAL_IMPACT';
+  improvementType?: 'OPTIMIZES' | 'ENHANCES' | 'EXPANDS' | 'TRANSFORMS';
+  effortLevel?: 'EASY' | 'COORDINATION' | 'DEVELOPMENT' | 'TRANSFORMATION';
 }
 
 export interface UpdateIdeaPayload {

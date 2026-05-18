@@ -26,6 +26,30 @@ enum ReactionType {
   COMPLEX
 }
 
+enum ImpactArea {
+  PRODUCTIVITY
+  COSTS
+  CUSTOMERS
+  TEAM
+  GROWTH
+  SUSTAINABILITY
+  SOCIAL_IMPACT
+}
+
+enum ImprovementType {
+  OPTIMIZES
+  ENHANCES
+  EXPANDS
+  TRANSFORMS
+}
+
+enum EffortLevel {
+  EASY
+  COORDINATION
+  DEVELOPMENT
+  TRANSFORMATION
+}
+
 model User {
   id                        String         @id @default(uuid())
   firebaseUid               String         @unique
@@ -85,32 +109,35 @@ model Challenge {
 }
 
 model Idea {
-  id             String         @id @default(uuid())
-  title          String
-  problem        String         @db.Text
-  solution       String         @db.Text
-  status         String         @default("draft")
+  id               String           @id @default(uuid())
+  title            String
+  problem          String           @db.Text
+  solution         String           @db.Text
+  status           String           @default("draft")
   /// finalScore = Σ (criterio.weight/100 * evaluationScore.score) promediado entre jueces
-  finalScore     Float          @default(0)
-  likesCount     Int            @default(0)
-  goodCount      Int            @default(0)
-  futureCount    Int            @default(0)
-  complexCount   Int            @default(0)
-  fireScore      Float          @default(0)
-  commentsCount  Int            @default(0)
-  favoritesCount Int            @default(0)
-  isAnonymous    Boolean        @default(false)
-  tags           String[]       @default([])
-  author         User           @relation(fields: [authorId], references: [id])
-  authorId       String
-  challenge      Challenge      @relation(fields: [challengeId], references: [id])
-  challengeId    String
-  evaluations    Evaluation[]
-  comments       Comment[]
-  ideaLikes      IdeaLike[]
-  ideaFavorites  IdeaFavorite[]
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  finalScore       Float            @default(0)
+  likesCount       Int              @default(0)
+  goodCount        Int              @default(0)
+  futureCount      Int              @default(0)
+  complexCount     Int              @default(0)
+  fireScore        Float            @default(0)
+  commentsCount    Int              @default(0)
+  favoritesCount   Int              @default(0)
+  isAnonymous      Boolean          @default(false)
+  tags             String[]         @default([])
+  impactArea       ImpactArea?
+  improvementType  ImprovementType?
+  effortLevel      EffortLevel?
+  author           User             @relation(fields: [authorId], references: [id])
+  authorId         String
+  challenge        Challenge        @relation(fields: [challengeId], references: [id])
+  challengeId      String
+  evaluations      Evaluation[]
+  comments         Comment[]
+  ideaLikes        IdeaLike[]
+  ideaFavorites    IdeaFavorite[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   @@index([challengeId])
   @@index([authorId])

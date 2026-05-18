@@ -10,12 +10,18 @@ import {
 } from '../helpers/ideaValidation';
 
 export type ConsentKey = 'terms' | 'usage' | 'originality';
+export type ImpactArea = 'PRODUCTIVITY' | 'COSTS' | 'CUSTOMERS' | 'TEAM' | 'GROWTH' | 'SUSTAINABILITY' | 'SOCIAL_IMPACT';
+export type ImprovementType = 'OPTIMIZES' | 'ENHANCES' | 'EXPANDS' | 'TRANSFORMS';
+export type EffortLevel = 'EASY' | 'COORDINATION' | 'DEVELOPMENT' | 'TRANSFORMATION';
 export type FormErrorKey =
   | 'challenge'
   | 'ideaName'
   | 'ideaProblem'
   | 'ideaSolution'
-  | 'consents';
+  | 'consents'
+  | 'impactArea'
+  | 'improvementType'
+  | 'effortLevel';
 export type FormErrors = Partial<Record<FormErrorKey, string>>;
 export type FeedbackTone = 'success' | 'error' | 'info' | 'critical';
 
@@ -96,6 +102,9 @@ export const useIdeationForm = (
   const [ideaName, setIdeaName] = useState('');
   const [ideaProblem, setIdeaProblem] = useState('');
   const [ideaSolution, setIdeaSolution] = useState('');
+  const [impactArea, setImpactArea] = useState<ImpactArea | ''>('');
+  const [improvementType, setImprovementType] = useState<ImprovementType | ''>('');
+  const [effortLevel, setEffortLevel] = useState<EffortLevel | ''>('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [consents, setConsents] = useState<Record<ConsentKey, boolean>>({
@@ -133,6 +142,9 @@ export const useIdeationForm = (
     setIdeaName('');
     setIdeaProblem('');
     setIdeaSolution('');
+    setImpactArea('');
+    setImprovementType('');
+    setEffortLevel('');
     setTags([]);
     setTagInput('');
     setConsents({ terms: false, usage: false, originality: false });
@@ -177,6 +189,15 @@ export const useIdeationForm = (
     if (field === 'consents' && !allConsentsAccepted) {
       return 'Acepta los tres consentimientos (ejemplo: si “App para Bienestar Estudiantil” llega al laboratorio, debemos poder prototiparla citándote).';
     }
+    if (field === 'impactArea' && !impactArea) {
+      return 'Selecciona el área de impacto de tu idea.';
+    }
+    if (field === 'improvementType' && !improvementType) {
+      return 'Selecciona el tipo de mejora que propone tu idea.';
+    }
+    if (field === 'effortLevel' && !effortLevel) {
+      return 'Selecciona el nivel de esfuerzo requerido para implementar la idea.';
+    }
     return undefined;
   };
 
@@ -198,7 +219,7 @@ export const useIdeationForm = (
   const validatePublicSubmission = (formChallenge: Challenge | null): FormErrors => {
     const errors: FormErrors = {};
     (
-      ['challenge', 'ideaName', 'ideaSolution', 'consents'] as FormErrorKey[]
+      ['challenge', 'ideaName', 'ideaSolution', 'consents', 'impactArea', 'improvementType', 'effortLevel'] as FormErrorKey[]
     ).forEach(field => {
       const errorMessage = getFieldError(field, formChallenge);
       if (errorMessage) errors[field] = errorMessage;
@@ -306,6 +327,9 @@ export const useIdeationForm = (
           tags: normalizedTags(),
           challengeId: formChallenge?.id,
           isAnonymous: isGuest,
+          impactArea: impactArea || undefined,
+          improvementType: improvementType || undefined,
+          effortLevel: effortLevel || undefined,
         };
         await ideaService.saveDraftIdea(payload);
         showToast({
@@ -325,6 +349,9 @@ export const useIdeationForm = (
           status: targetStatus,
           challengeId: formChallenge.id,
           isAnonymous: isGuest,
+          impactArea: impactArea || undefined,
+          improvementType: improvementType || undefined,
+          effortLevel: effortLevel || undefined,
         });
 
         // Toast de éxito eliminado
@@ -357,6 +384,12 @@ export const useIdeationForm = (
     setIdeaProblem,
     ideaSolution,
     setIdeaSolution,
+    impactArea,
+    setImpactArea,
+    improvementType,
+    setImprovementType,
+    effortLevel,
+    setEffortLevel,
     titleWords,
     problemWords,
     solutionWords,

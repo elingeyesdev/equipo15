@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsArray, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsBoolean, IsEnum } from 'class-validator';
+import { ImpactAreaEnum, ImprovementTypeEnum, EffortLevelEnum } from './create-idea.dto';
 
 export class CreateDraftIdeaDto {
   @IsString()
@@ -25,4 +26,16 @@ export class CreateDraftIdeaDto {
   @IsBoolean()
   @IsOptional()
   isAnonymous?: boolean;
+
+  @IsEnum(ImpactAreaEnum)
+  @IsOptional()
+  impactArea?: ImpactAreaEnum;
+
+  @IsEnum(ImprovementTypeEnum)
+  @IsOptional()
+  improvementType?: ImprovementTypeEnum;
+
+  @IsEnum(EffortLevelEnum)
+  @IsOptional()
+  effortLevel?: EffortLevelEnum;
 }
