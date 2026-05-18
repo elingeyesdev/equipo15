@@ -276,14 +276,6 @@ const Metric = styled.div<{ $active: boolean }>`
   }
 `;
 
-const MedalIcon = styled.div`
-  color: #fbbf24;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.35s ease;
-`;
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -478,11 +470,7 @@ const BannerText = styled.p`
   line-height: 1.55;
 `;
 
-const StarSvg = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#FFD700" stroke="#B8860B" strokeWidth="1.5" strokeLinejoin="round"/>
-  </svg>
-);
+
 
 export const CompanyPodiumView = () => {
   const [searchParams] = useSearchParams();
@@ -492,11 +480,8 @@ export const CompanyPodiumView = () => {
   const [challenge, setChallenge] = useState<any>(null);
   const [ideas, setIdeas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [topN, setTopN] = useState<string>('5');
-  const [likesThreshold, setLikesThreshold] = useState<string>('0');
-  const [commentsThreshold, setCommentsThreshold] = useState<string>('0');
-  const [facultyDiversity, setFacultyDiversity] = useState<string>('0');
-  const [manualIds, setManualIds] = useState<Set<string>>(new Set());
+  const [cutLimit, setCutLimit] = useState<string>('0');
+  const [metric, setMetric] = useState<string>('fireScore');
   const [showConfirm, setShowConfirm] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [animKey, setAnimKey] = useState(0);
@@ -536,51 +521,28 @@ export const CompanyPodiumView = () => {
 
   useEffect(() => {
     setAnimKey(k => k + 1);
-  }, [topN, likesThreshold, commentsThreshold, facultyDiversity]);
+  }, [cutLimit, metric]);
 
   const sortedIdeas = useMemo(() => {
     const safeIdeas = Array.isArray(ideas) ? ideas : [];
-    const withInteraction = safeIdeas.map(idea => ({
-      ...idea,
-      totalInteraction: (idea.likesCount || 0) + (idea.commentsCount || 0),
-    }));
-    return withInteraction.sort((a, b) => (b.totalInteraction || 0) - (a.totalInteraction || 0));
-  }, [ideas]);
+    return [...safeIdeas].sort((a, b) => {
+      if (metric === 'fireScore') {
+        return (b.fireScore || b.likesCount || 0) - (a.fireScore || a.likesCount || 0);
+      }
+      return (b.commentsCount || 0) - (a.commentsCount || 0);
+    });
+  }, [ideas, metric]);
 
   const filteredIdeas = useMemo(() => {
-    const lt = parseInt(likesThreshold, 10);
-    const ct = parseInt(commentsThreshold, 10);
-    const fd = parseInt(facultyDiversity, 10);
-    let filtered = sortedIdeas;
-
-    if (lt > 0) filtered = filtered.filter(i => (i.likesCount || 0) >= lt);
-    if (ct > 0) filtered = filtered.filter(i => (i.commentsCount || 0) >= ct);
-
-    const top = parseInt(topN, 10);
-    const topFiltered = top > 0 ? filtered.slice(0, top) : filtered;
-
-    if (fd > 0) {
-      const byFaculty: Record<string, any[]> = {};
-      sortedIdeas.forEach(i => {
-        const key = i.author?.facultyId || 'unknown';
-        if (!byFaculty[key]) byFaculty[key] = [];
-        byFaculty[key].push(i);
-      });
-      const facultyTop = Object.values(byFaculty).flatMap(list => list.slice(0, fd));
-      const combined = new Map<string, any>();
-      [...topFiltered, ...facultyTop].forEach(i => combined.set(i.id, i));
-      filtered = Array.from(combined.values());
-    }
-
-    return filtered;
-  }, [sortedIdeas, topN, likesThreshold, commentsThreshold, facultyDiversity]);
+    const limit = parseInt(cutLimit, 10);
+    return limit > 0 ? sortedIdeas.slice(0, limit) : sortedIdeas;
+  }, [sortedIdeas, cutLimit]);
 
   const handleFinalize = async () => {
     if (!challengeId) return;
     setIsFinalizing(true);
     try {
       const allFinalists = new Set(filteredIdeas.map(i => i.id));
-      manualIds.forEach(id => allFinalists.add(id));
       await challengeService.finalizePodium(challengeId, {
         category: 'social',
         limit: allFinalists.size,
@@ -625,7 +587,7 @@ export const CompanyPodiumView = () => {
   }
 
   const isAlreadyEvaluated = challenge?.status === 'EVALUATION' || challenge?.status === 'Finalizado';
-  const canSend = (filteredIdeas.length > 0 || manualIds.size > 0) && !isAlreadyEvaluated && ideas.length > 0;
+  const canSend = filteredIdeas.length > 0 && !isAlreadyEvaluated && ideas.length > 0;
 
   return (
     <>
@@ -657,42 +619,20 @@ export const CompanyPodiumView = () => {
         <ControlCard>
           <ControlGroup>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Label>Top Popularidad:</Label>
-              <Select value={topN} onChange={(e) => setTopN(e.target.value)} disabled={isAlreadyEvaluated}>
-                <option value="0">Sin filtro</option>
+              <Label>Cantidad de Corte:</Label>
+              <Select value={cutLimit} onChange={(e) => setCutLimit(e.target.value)} disabled={isAlreadyEvaluated}>
+                <option value="0">Todos</option>
                 <option value="5">Top 5</option>
                 <option value="10">Top 10</option>
                 <option value="15">Top 15</option>
                 <option value="20">Top 20</option>
               </Select>
-              <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600, maxWidth: 180 }}>
-                Seleccionar el Top {topN === '0' ? 'N' : topN} de ideas con mayor interacción acumulada (Fuego)
-              </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Label>Likes mín:</Label>
-              <Select value={likesThreshold} onChange={(e) => setLikesThreshold(e.target.value)} disabled={isAlreadyEvaluated}>
-                <option value="0">Sin filtro</option>
-                <option value="20">+20 likes</option>
-                <option value="50">+50 likes</option>
-                <option value="100">+100 likes</option>
-              </Select>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Label>Comentarios mín:</Label>
-              <Select value={commentsThreshold} onChange={(e) => setCommentsThreshold(e.target.value)} disabled={isAlreadyEvaluated}>
-                <option value="0">Sin filtro</option>
-                <option value="5">+5 comentarios</option>
-                <option value="10">+10 comentarios</option>
-                <option value="20">+20 comentarios</option>
-              </Select>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Label>Por Facultad:</Label>
-              <Select value={facultyDiversity} onChange={(e) => setFacultyDiversity(e.target.value)} disabled={isAlreadyEvaluated}>
-                <option value="0">Sin filtro</option>
-                <option value="3">Top 3 por facultad</option>
-                <option value="5">Top 5 por facultad</option>
+              <Label>Criterio de Interacción:</Label>
+              <Select value={metric} onChange={(e) => setMetric(e.target.value)} disabled={isAlreadyEvaluated}>
+                <option value="fireScore">Mayor interacción social (Destellos ✨)</option>
+                <option value="comments">Más comentarios / Retroalimentación</option>
               </Select>
             </div>
             {filteredIdeas.length > 0 && (
@@ -712,34 +652,19 @@ export const CompanyPodiumView = () => {
             } : {}}
           >
             {isAlreadyEvaluated ? (
-              <><CheckCircle size={18} /> Podio Enviado</>  
+              <><CheckCircle size={18} /> Lote de Finalistas Enviado</>  
             ) : (
-              <><Users size={18} /> Definir finalistas para evaluación de expertos</>
+              <><Users size={18} /> Enviar Lote de Finalistas a Jueces</>
             )}
           </FinalizeBtn>
         </ControlCard>
 
         <RankingList>
-          {sortedIdeas.map((idea, index) => {
-            const isFinalist = filteredIdeas.some(fi => fi.id === idea.id) || manualIds.has(idea.id);
-            const isManuallySelected = manualIds.has(idea.id);
-
+          {filteredIdeas.map((idea, index) => {
             return (
               <AnimatedRow key={`${animKey}-${idea.id}`} $key={`${animKey}-${index}`} style={{ animationDelay: `${index * 0.04}s` }}>
-                <IdeaCard $isFinalist={isFinalist} $rank={index}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flex: 1 }}>
-                    <input
-                      type="checkbox"
-                      checked={isFinalist}
-                      onChange={() => {
-                        const next = new Set(manualIds);
-                        if (next.has(idea.id)) next.delete(idea.id);
-                        else next.add(idea.id);
-                        setManualIds(next);
-                      }}
-                      style={{ width: 16, height: 16, accentColor: Pista8Theme.primary }}
-                      title="Incluir esta idea en la fase de evaluación."
-                    />
+                <IdeaCard $isFinalist={cutLimit !== '0'} $rank={index}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
                     <RankNumber $pos={index}>
                       {index < 3 ? <MedalSvg rank={index} size={22} /> : index + 1}
                     </RankNumber>
@@ -748,19 +673,14 @@ export const CompanyPodiumView = () => {
                       <IdeaAuthor>Por {idea.author?.nickname || idea.author?.displayName || 'Participante'}</IdeaAuthor>
                     </IdeaInfo>
                     <Metrics>
-                      <Metric $active={true}>
-                        <Sparkles fill={Pista8Theme.primary} /> {idea.likesCount || 0}
+                      <Metric $active={metric === 'fireScore'}>
+                        <Sparkles fill={metric === 'fireScore' ? Pista8Theme.primary : 'none'} /> {idea.likesCount || 0}
                       </Metric>
-                      <Metric $active={true}>
-                        <MessageSquare fill={Pista8Theme.primary} /> {idea.commentsCount || 0}
+                      <Metric $active={metric === 'comments'}>
+                        <MessageSquare fill={metric === 'comments' ? Pista8Theme.primary : 'none'} /> {idea.commentsCount || 0}
                       </Metric>
                     </Metrics>
-                    {isManuallySelected && (
-                      <MedalIcon>
-                        <StarSvg size={24} />
-                      </MedalIcon>
-                    )}
-                  </label>
+                  </div>
                 </IdeaCard>
               </AnimatedRow>
             );
@@ -775,7 +695,7 @@ export const CompanyPodiumView = () => {
             <ModalContent>
               <ModalTitle>¿Confirmar Podio Final?</ModalTitle>
               <ModalText>
-                Esta acción cerrará las votaciones públicas y enviará <strong>{filteredIdeas.length + manualIds.size}</strong> ideas seleccionadas a los jueces para evaluación técnica.
+                Esta acción cerrará las votaciones públicas y enviará <strong>{filteredIdeas.length}</strong> ideas seleccionadas a los jueces para evaluación técnica.
                 <br /><br />
                 <strong>Esta acción es irreversible.</strong>
               </ModalText>

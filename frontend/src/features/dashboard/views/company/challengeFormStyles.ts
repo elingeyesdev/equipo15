@@ -131,9 +131,9 @@ export const SectionTitle = styled.div`
 `;
 
 export const FormGrid = styled.div`
-  display: grid; grid-template-columns: 1fr 1fr;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 28px 32px;
-  @media (max-width: 900px) { grid-template-columns: 1fr; }
+  @media (max-width: 900px) { grid-template-columns: minmax(0, 1fr); }
 `;
 
 export const FullSpan = styled.div`

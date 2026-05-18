@@ -309,18 +309,20 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             </FieldGroup>
 
             {/* Dates */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <FieldGroup style={{ marginBottom: 0 }}>
+            <div style={{ display: 'flex', gap: 12, width: '100%' }}>
+              <FieldGroup style={{ marginBottom: 0, flex: 1, minWidth: 0 }}>
                 <Label $locked={locked('core')}>Fecha inicio *</Label>
                 <InputField type="datetime-local" min={today} $locked={locked('core')} $error={!!errors.startDate}
                   value={form.startDate} readOnly={locked('core')}
+                  style={{ minWidth: 0, padding: '14px 10px', fontSize: 13 }}
                   onChange={e => !locked('core') && updateField('startDate', e.target.value)} />
                 {errors.startDate && <ErrorText>{errors.startDate}</ErrorText>}
               </FieldGroup>
-              <FieldGroup style={{ marginBottom: 0 }}>
+              <FieldGroup style={{ marginBottom: 0, flex: 1, minWidth: 0 }}>
                 <Label>Fecha cierre *</Label>
                 <InputField type="datetime-local" min={form.startDate || today} $error={!!errors.endDate}
                   value={form.endDate}
+                  style={{ minWidth: 0, padding: '14px 10px', fontSize: 13 }}
                   onChange={e => updateField('endDate', e.target.value)} />
                 {errors.endDate && <ErrorText>{errors.endDate}</ErrorText>}
               </FieldGroup>
