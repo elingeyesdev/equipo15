@@ -404,7 +404,6 @@ export const CompanyStatsView = () => {
   const [stats, setStats] = useState<InnovationStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [usingMock, setUsingMock] = useState(false);
   const [selectedChallengeId, setSelectedChallengeId] = useState<string>('all');
   const [challengeOptions, setChallengeOptions] = useState<CompanyChallengeOption[]>([]);
   const [challengeQuery, setChallengeQuery] = useState('');
@@ -428,17 +427,14 @@ export const CompanyStatsView = () => {
       const useMockByFlag = String(import.meta.env.VITE_USE_INNOVATION_STATS_MOCK || '').toLowerCase() === 'true';
       if (useMockByFlag) {
         setStats(MOCK_INNOVATION_STATS);
-        setUsingMock(true);
         return;
       }
 
       const response = await challengeService.getInnovationStats(challengeId);
       setStats(response);
-      setUsingMock(false);
     } catch (err) {
       console.error('Error cargando innovation stats:', err);
       setStats(MOCK_INNOVATION_STATS);
-      setUsingMock(true);
       setError('No se pudieron cargar estadísticas en vivo. Se muestran datos mock.');
     } finally {
       setLoading(false);

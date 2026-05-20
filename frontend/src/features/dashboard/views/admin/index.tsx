@@ -1,10 +1,5 @@
 
-export const AdminStatsView = () => (
-  <div>
-    <h2>Resumen Global</h2>
-    <p>KPIs de toda la plataforma (Users, Retos, Interacción).</p>
-  </div>
-);
+export { AdminStatsView } from './AdminStatsView';
 
 export const AdminClientsView = () => (
   <div>

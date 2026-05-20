@@ -164,3 +164,24 @@ export interface Idea {
   createdAt: string | Date;
   updatedAt: string | Date;
 }
+
+export interface ChallengeAnalytics {
+  all: number;
+  active: number;
+}
+
+export interface ChallengePerformance {
+  id: string;
+  title: string;
+  companyName: string;
+  status: string;
+  totalInteractions: number;
+  averageScore: number | null;
+}
+
+export interface GlobalAnalytics {
+  totalCompanies: number;
+  totalChallenges: ChallengeAnalytics;
+  totalIdeas: number;
+  challengesPerformance: ChallengePerformance[];
+}

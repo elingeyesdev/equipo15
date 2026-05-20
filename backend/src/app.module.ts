@@ -14,6 +14,7 @@ import { ModerationModule } from './modules/moderation/moderation.module';
 import { ChallengeModule } from './modules/challenge/challenge.module';
 import { IdeaModule } from './modules/idea/idea.module';
 import { CommentModule } from './modules/comment/comment.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CommentModule } from './modules/comment/comment.module';
     ChallengeModule,
     IdeaModule,
     CommentModule,
+    AdminModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
