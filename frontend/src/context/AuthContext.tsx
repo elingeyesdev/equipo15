@@ -6,6 +6,12 @@ import { auth } from '@/config/firebase';
 import axiosInstance from '@/api/axiosConfig';
 import type { UserProfile } from '@/types/models';
 import type { ApiResponse } from '@/types/api';
+import {
+  clearStoredImpersonationToken,
+  getStoredImpersonationSession,
+  setStoredImpersonationToken,
+} from '@/utils/impersonation-session';
+import type { ImpersonationSession } from '@/types/models';
 
 interface AuthContextType {
   user: User | null;
@@ -14,6 +20,9 @@ interface AuthContextType {
   setProfile: (profile: UserProfile | null) => void;
   refetchProfile: () => Promise<void>;
   setSuppressAuth: (value: boolean) => void;
+  impersonationSession: ImpersonationSession | null;
+  setImpersonationToken: (token: string | null) => void;
+  clearImpersonationSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -22,7 +31,10 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   setProfile: () => { },
   refetchProfile: async () => { },
-  setSuppressAuth: () => { }
+  setSuppressAuth: () => { },
+  impersonationSession: null,
+  setImpersonationToken: () => { },
+  clearImpersonationSession: async () => { },
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -30,6 +42,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const suppressAuthRef = useRef(false);
+  const [impersonationSession, setImpersonationSession] = useState<ImpersonationSession | null>(
+    () => getStoredImpersonationSession(),
+  );
 
   const setSuppressAuth = useCallback((value: boolean) => {
     suppressAuthRef.current = value;
@@ -63,6 +78,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUserProfile(profileData);
     }
   }, [user, fetchProfile]);
+
+  const setImpersonationToken = useCallback((token: string | null) => {
+    if (!token) {
+      clearStoredImpersonationToken();
+      setImpersonationSession(null);
+      return;
+    }
+
+    const session = setStoredImpersonationToken(token);
+    setImpersonationSession(session);
+  }, []);
+
+  const clearImpersonationSession = useCallback(async () => {
+    clearStoredImpersonationToken();
+    setImpersonationSession(null);
+    await refetchProfile();
+  }, [refetchProfile]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -100,6 +132,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, [fetchProfile, syncProfile]);
 
+  useEffect(() => {
+    if (user && impersonationSession) {
+      void refetchProfile();
+    }
+  }, [user, impersonationSession, refetchProfile]);
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -107,7 +145,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       loading,
       setProfile: setUserProfile,
       refetchProfile,
-      setSuppressAuth
+      setSuppressAuth,
+      impersonationSession,
+      setImpersonationToken,
+      clearImpersonationSession,
     }}>
       {children}
     </AuthContext.Provider>

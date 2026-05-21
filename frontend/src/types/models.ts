@@ -24,6 +24,11 @@ export interface UserProfile {
   ageRange?: string;
   status?: 'ACTIVE' | 'SOFT_BLOCK' | 'SUSPENDED';
   penaltyExpiresAt?: string | Date;
+  sessionMode?: 'LIVE' | 'READ_ONLY';
+  impersonationCompanyId?: string;
+  impersonationCompanyName?: string;
+  originalAdminUid?: string;
+  impersonationReadOnly?: boolean;
 }
 
 export type ChallengeStatus = 'Borrador' | 'Activo' | 'Finalizado' | 'En Evaluación';
@@ -184,4 +189,23 @@ export interface GlobalAnalytics {
   totalChallenges: ChallengeAnalytics;
   totalIdeas: number;
   challengesPerformance: ChallengePerformance[];
+}
+
+export interface CompanySupportItem {
+  id: string;
+  firebaseUid: string;
+  email: string;
+  displayName: string;
+  status: 'ACTIVE' | 'SOFT_BLOCK' | 'SUSPENDED';
+  facultyName?: string | null;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
+export interface ImpersonationSession {
+  token: string;
+  expiresAt: string;
+  readOnly: true;
+  sessionMode: 'READ_ONLY';
+  company: CompanySupportItem;
 }

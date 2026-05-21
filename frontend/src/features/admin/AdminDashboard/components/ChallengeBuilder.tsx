@@ -5,6 +5,7 @@ import { FACULTIES, getFacultySlug } from '../../../../config/faculties';
 
 interface ChallengeBuilderProps {
   userProfile: any;
+  readOnlyMode: boolean;
   showForm: boolean;
   setShowForm: (b: boolean) => void;
   isPreview: boolean;
@@ -23,7 +24,7 @@ interface ChallengeBuilderProps {
 }
 
 const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
-  userProfile, showForm, setShowForm, isPreview, setIsPreview, formData, setFormData,
+  userProfile, readOnlyMode, showForm, setShowForm, isPreview, setIsPreview, formData, setFormData,
   togglePrivacy, handleStartDateChange, copyToClipboard, copyStatus, formErrors,
   submitted, setSubmitted, handleSaveChallenge, saving
 }) => {
@@ -36,20 +37,44 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
             <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
           </svg>
         </S.EmptyIcon>
-        <S.EmptyLabel>No hay retos activos todavía. Iniciá uno para el Sprint 1.</S.EmptyLabel>
-        <S.PrimaryBtn onClick={() => setShowForm(true)}>Crear Nuevo Reto</S.PrimaryBtn>
+        <S.EmptyLabel>
+          {readOnlyMode
+            ? 'Estás en modo lectura ahora. Las funciones de crear y editar permanecen bloqueadas.'
+            : 'No hay retos activos todavía. Iniciá uno para el Sprint 1.'}
+        </S.EmptyLabel>
+        <S.PrimaryBtn
+          onClick={() => setShowForm(true)}
+          disabled={readOnlyMode}
+          title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Crear Nuevo Reto'}
+        >
+          Crear Nuevo Reto
+        </S.PrimaryBtn>
       </S.EmptyState>
     );
   }
 
+  const modeHint = readOnlyMode
+    ? 'Estás en modo lectura ahora: no puedes crear ni editar retos durante esta sesión.'
+    : null;
+
   return (
     <S.Builder>
       <S.BuilderNav>
-        <S.TabBtn active={!isPreview} onClick={() => setIsPreview(false)}>Editor</S.TabBtn>
-        <S.TabBtn active={isPreview} onClick={() => setIsPreview(true)}>Vista Previa</S.TabBtn>
+        <S.TabBtn active={!isPreview} onClick={() => setIsPreview(false)} disabled={readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Editor'}>
+          Editor
+        </S.TabBtn>
+        <S.TabBtn active={isPreview} onClick={() => setIsPreview(true)} disabled={readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Vista Previa'}>
+          Vista Previa
+        </S.TabBtn>
       </S.BuilderNav>
 
       <S.BuilderBody>
+        {modeHint && (
+          <S.EmptyState style={{ minHeight: 'unset', padding: '18px 20px', marginBottom: '20px', alignItems: 'flex-start', width: '100%' }}>
+            <S.EmptyLabel style={{ textAlign: 'left' }}>{modeHint}</S.EmptyLabel>
+          </S.EmptyState>
+        )}
+
         {isPreview ? (
           <S.PreviewCard>
             <S.PreviewHead>
@@ -94,6 +119,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                 <S.Input 
                   placeholder="Ej: Rediseñar el sistema de becas..."
                   value={formData.title}
+                    disabled={readOnlyMode}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
                 />
                 {submitted && formErrors.title && <S.ErrorText>{formErrors.title}</S.ErrorText>}
@@ -103,6 +129,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                 <S.FieldLabel>Asignar a Facultad</S.FieldLabel>
                 <S.Select 
                   value={formData.facultyId}
+                    disabled={readOnlyMode}
                   onChange={(e) => setFormData({...formData, facultyId: Number(e.target.value)})}
                 >
                   <option value="0">Todas las Facultades</option>
@@ -119,6 +146,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                 placeholder="Describe el problema que los participantes deben resolver..."
                 rows={4}
                 value={formData.description}
+                  disabled={readOnlyMode}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
               />
               {submitted && formErrors.description && <S.ErrorText>{formErrors.description}</S.ErrorText>}
@@ -131,6 +159,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                   placeholder="Cuéntanos un poco sobre tu empresa o el área del reto..."
                   rows={4}
                   value={formData.companyContext}
+                  disabled={readOnlyMode}
                   onChange={(e) => setFormData({...formData, companyContext: e.target.value})}
                 />
                 {submitted && formErrors.companyContext && <S.ErrorText>{formErrors.companyContext}</S.ErrorText>}
@@ -142,6 +171,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                   placeholder="Ej: Solo estudiantes de 5to semestre, grupos de 3 personas, etc."
                   rows={4}
                   value={formData.participationRules}
+                  disabled={readOnlyMode}
                   onChange={(e) => setFormData({...formData, participationRules: e.target.value})}
                 />
                 {submitted && formErrors.participationRules && <S.ErrorText>{formErrors.participationRules}</S.ErrorText>}
@@ -152,13 +182,18 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
               <div>
                 <S.FieldLabel style={{ color: Pista8Theme.secondary }}>Visibilidad del Reto</S.FieldLabel>
                 <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#a8b0b8' }}>
-                  {formData.isPrivate ? 'Solo accesible con invitación.' : 'Visible para todos los estudiantes.'}
+                  {readOnlyMode
+                    ? 'Bloqueado en modo lectura.'
+                    : formData.isPrivate
+                      ? 'Solo accesible con invitación.'
+                      : 'Visible para todos los estudiantes.'}
                 </p>
               </div>
               <input 
                 type="checkbox" 
                 style={{ width: '20px', height: '20px', cursor: 'pointer' }}
                 checked={formData.isPrivate}
+                disabled={readOnlyMode}
                 onChange={togglePrivacy}
               />
             </S.PrivacyToggleRow>
@@ -170,8 +205,9 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                   <S.Input 
                     readOnly 
                     value={`${window.location.origin}/dashboard/reto/${formData.token}`}
+                    disabled={readOnlyMode}
                   />
-                  <S.CopyBtn onClick={copyToClipboard}>
+                  <S.CopyBtn onClick={copyToClipboard} disabled={readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Copiar'}>
                     {copyStatus ? '¡Copiado!' : 'Copiar'}
                   </S.CopyBtn>
                 </div>
@@ -181,7 +217,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
             <S.DateRow>
               <S.FormGroup style={{ marginBottom: 0 }}>
                 <S.FieldLabel>Fecha de Inicio del Reto</S.FieldLabel>
-                <S.Input type="date" value={formData.startDate} min={today} onChange={handleStartDateChange} />
+                <S.Input type="date" value={formData.startDate} min={today} disabled={readOnlyMode} onChange={handleStartDateChange} />
                 {submitted && formErrors.startDate && <S.ErrorText>{formErrors.startDate}</S.ErrorText>}
               </S.FormGroup>
               <S.FormGroup style={{ marginBottom: 0 }}>
@@ -189,6 +225,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                 <S.Input 
                   type="date" 
                   value={formData.endDate} 
+                  disabled={readOnlyMode}
                   onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                 />
                 {submitted && formErrors.dates && <S.ErrorText>{formErrors.dates}</S.ErrorText>}
@@ -196,20 +233,22 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
             </S.DateRow>
 
             <S.FormActions>
-              <S.GhostBtn type="button" onClick={() => { setSubmitted(false); setShowForm(false); }} disabled={saving}>
+              <S.GhostBtn type="button" onClick={() => { setSubmitted(false); setShowForm(false); }} disabled={saving || readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Cancelar'}>
                 Cancelar
               </S.GhostBtn>
               <S.DraftBtn 
                 type="button" 
                 onClick={() => handleSaveChallenge('Borrador')} 
-                disabled={saving || !formData.title}
+                disabled={saving || readOnlyMode || !formData.title}
+                title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Borrador'}
               >
                 {saving ? 'Guardando...' : 'Guardar Borrador'}
               </S.DraftBtn>
               <S.PrimaryBtn 
                 type="button" 
                 onClick={() => handleSaveChallenge('Activo')} 
-                disabled={saving}
+                disabled={saving || readOnlyMode}
+                title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Publicar Reto'}
               >
                 {saving ? 'Publicando...' : 'Publicar Reto'}
               </S.PrimaryBtn>

@@ -28,7 +28,7 @@ export const NAVIGATION_CONFIG: NavItem[] = [
   { name: 'Gestión Clientes', icon: Building, path: '/dashboard/admin/clients', roles: ['ADMIN'] },
   { name: 'Config. Accesos', icon: Mail, path: '/dashboard/admin/access', roles: ['ADMIN'] },
   { name: 'Control Usuarios', icon: ShieldCheck, path: '/dashboard/admin/users', roles: ['ADMIN'] },
-  { name: 'Soporte', icon: Eye, path: '/dashboard/admin/support', roles: ['ADMIN'], isComingSoon: true },
+  { name: 'Soporte', icon: Eye, path: '/dashboard/admin/support', roles: ['ADMIN'] },
 
   { name: 'Resultados', icon: BarChart3, path: '/dashboard/company/stats', roles: ['COMPANY'] },
   { name: 'Mis Retos', icon: FileEdit, path: '/dashboard/company/challenges', roles: ['COMPANY'] },

@@ -39,6 +39,82 @@ export const Header = styled.header`
   }
 `;
 
+export const SupportBanner = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 1.25rem;
+  padding: 14px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(254, 65, 10, 0.18);
+  background: linear-gradient(135deg, rgba(254, 65, 10, 0.12), rgba(255, 255, 255, 0.92));
+  box-shadow: 0 10px 30px rgba(72, 80, 84, 0.08);
+
+  @media (max-width: ${breakpoints.mobile}) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+`;
+
+export const SupportBannerCopy = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+export const SupportBannerBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: ${Pista8Theme.primary};
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+`;
+
+export const SupportBannerTitle = styled.p`
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: ${Pista8Theme.secondary};
+`;
+
+export const SupportBannerText = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: #5b6470;
+  line-height: 1.5;
+`;
+
+export const SupportBannerActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+`;
+
+export const SupportBannerButton = styled.button`
+  border: 1px solid rgba(254, 65, 10, 0.22);
+  background: ${Pista8Theme.primary};
+  color: white;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 10px 20px rgba(254, 65, 10, 0.18);
+    transform: translateY(-1px);
+  }
+`;
+
 export const WelcomeZone = styled.div``;
 
 export const Greeting = styled.h1`

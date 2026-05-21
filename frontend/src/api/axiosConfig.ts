@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { auth } from '../config/firebase';
+import { getStoredImpersonationToken } from '@/utils/impersonation-session';
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
@@ -7,6 +8,12 @@ const instance = axios.create({
 
 instance.interceptors.request.use(
   async (config) => {
+    const impersonationToken = getStoredImpersonationToken();
+    if (impersonationToken) {
+      config.headers.Authorization = `Bearer ${impersonationToken}`;
+      return config;
+    }
+
     const user = auth.currentUser;
     if (user) {
       const token = await user.getIdToken();
@@ -29,6 +36,7 @@ instance.interceptors.response.use(
     } catch (e) {
       // ignore
     }
+
     const status = error?.response?.status as number | undefined;
 
     if (status === 401) {

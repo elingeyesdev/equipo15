@@ -9,8 +9,9 @@ import ChallengeBuilder from './components/ChallengeBuilder';
 import { useAdminDashboard } from './hooks/useAdminDashboard';
 
 export const AdminDashboard = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, impersonationSession } = useAuth();
   const ds = useAdminDashboard();
+  const readOnlyMode = Boolean(impersonationSession);
 
   return (
     <S.Root>
@@ -34,6 +35,7 @@ export const AdminDashboard = () => {
           {ds.activeTab === 'challenges' && (
             <ChallengeBuilder 
               userProfile={userProfile}
+              readOnlyMode={readOnlyMode}
               showForm={ds.showForm}
               setShowForm={ds.setShowForm}
               isPreview={ds.isPreview}

@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UserService } from './user.service';
+import type { UserResponse } from './user.service';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
 import type { AuthenticatedRequest } from '../../common/types/authenticated-request.interface';
@@ -20,11 +21,29 @@ import type { AuthenticatedRequest } from '../../common/types/authenticated-requ
 export class UsersController {
   constructor(private readonly userService: UserService) {}
 
+  private applySessionContext(
+    profile: UserResponse | null,
+    req: AuthenticatedRequest,
+  ): UserResponse | null {
+    if (!profile || !req.user.impersonationReadOnly) {
+      return profile;
+    }
+
+    return {
+      ...profile,
+      status: 'SOFT_BLOCK',
+      sessionMode: 'READ_ONLY',
+      impersonationCompanyId: req.user.companyId,
+      impersonationCompanyName: req.user.companyName,
+      originalAdminUid: req.user.originalAdminUid,
+    } as UserResponse;
+  }
+
   @Get('me')
   @ApiOperation({ summary: 'Get current authorized user' })
   async getMe(@Request() req: AuthenticatedRequest) {
     const { user } = req;
-    return this.userService.findOrCreate({
+    const profile = await this.userService.findOrCreate({
       firebaseUid: user.uid,
       email: user.email || '',
       displayName:
@@ -36,6 +55,8 @@ export class UsersController {
         (user as { picture?: string }).picture ||
         (user as { photoURL?: string }).photoURL,
     });
+
+    return this.applySessionContext(profile, req);
   }
 
   @Get('profile')

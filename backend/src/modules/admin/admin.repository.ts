@@ -6,6 +6,43 @@ import { ChallengeStatus } from '../../common/enums/challenge-status.enum';
 export class AdminRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async getCompanies() {
+    return this.prisma.user.findMany({
+      where: { role: 'COMPANY' },
+      select: {
+        id: true,
+        firebaseUid: true,
+        email: true,
+        displayName: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        faculty: {
+          select: { name: true },
+        },
+      },
+      orderBy: { displayName: 'asc' },
+    });
+  }
+
+  async findCompanyById(id: string) {
+    return this.prisma.user.findFirst({
+      where: { id, role: 'COMPANY' },
+      select: {
+        id: true,
+        firebaseUid: true,
+        email: true,
+        displayName: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        faculty: {
+          select: { name: true },
+        },
+      },
+    });
+  }
+
   async getGlobalAnalytics() {
     const [totalCompanies, totalChallenges, activeChallenges, totalIdeas, rawChallenges] =
       await Promise.all([

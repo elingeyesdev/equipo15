@@ -91,9 +91,10 @@ interface UseChallengeFormProps {
   onBack: () => void;
   onSave: (data: ChallengeFormData) => Promise<void>;
   challenge?: Challenge | null;
+  readOnlyMode?: boolean;
 }
 
-export const useChallengeForm = ({ onBack, onSave, challenge }: UseChallengeFormProps) => {
+export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = false }: UseChallengeFormProps) => {
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}T${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const [form, setForm]               = useState<ChallengeFormData>(emptyForm);
@@ -132,6 +133,7 @@ export const useChallengeForm = ({ onBack, onSave, challenge }: UseChallengeForm
 
   /* ─── Field lock logic ─── */
   const locked = (field: 'core' | 'flexible') => {
+    if (readOnlyMode) return true;
     if (!isEditMode) return false;
     if (field === 'core')     return hasIdeas;
     if (field === 'flexible') return false;
@@ -178,12 +180,14 @@ export const useChallengeForm = ({ onBack, onSave, challenge }: UseChallengeForm
 
   /* ─── Field updaters ─── */
   const updateField = useCallback(<K extends keyof ChallengeFormData>(key: K, val: ChallengeFormData[K]) => {
+    if (readOnlyMode) return;
     setForm(prev => ({ ...prev, [key]: val }));
     setErrors(prev => ({ ...prev, [key]: undefined }));
-  }, []);
+  }, [readOnlyMode]);
 
   /* ─── Logo upload ─── */
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnlyMode) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -204,6 +208,7 @@ export const useChallengeForm = ({ onBack, onSave, challenge }: UseChallengeForm
 
   /* ─── Criteria helpers ─── */
   const updateCriterion = (id: string, patch: Partial<EvaluationCriterion>) => {
+    if (readOnlyMode) return;
     setForm(prev => ({
       ...prev,
       evaluationCriteria: prev.evaluationCriteria.map(c => c.id === id ? { ...c, ...patch } : c),
@@ -211,6 +216,7 @@ export const useChallengeForm = ({ onBack, onSave, challenge }: UseChallengeForm
   };
 
   const removeCriterion = (id: string) => {
+    if (readOnlyMode) return;
     setForm(prev => ({ ...prev, evaluationCriteria: prev.evaluationCriteria.filter(c => c.id !== id) }));
   };
 
@@ -226,6 +232,7 @@ export const useChallengeForm = ({ onBack, onSave, challenge }: UseChallengeForm
   };
 
   const addCustomCriterion = () => {
+    if (readOnlyMode) return;
     const err = validateCustomName(customName);
     if (err) { setCustomError(err); return; }
     setForm(prev => ({
@@ -267,6 +274,10 @@ export const useChallengeForm = ({ onBack, onSave, challenge }: UseChallengeForm
 
   /* ─── Save ─── */
   const handleSave = async (status: ChallengeStatus) => {
+    if (readOnlyMode) {
+      toast.info('Estás en modo lectura ahora. No puedes guardar cambios.');
+      return;
+    }
     const forDraft = status === 'Borrador';
     if (!validate(forDraft)) return;
 
@@ -295,6 +306,7 @@ export const useChallengeForm = ({ onBack, onSave, challenge }: UseChallengeForm
 
   /* ─── Open criteria + scroll ─── */
   const toggleCriteria = () => {
+    if (readOnlyMode) return;
     const next = !criteriaOpen;
     setCriteriaOpen(next);
     if (next) setTimeout(() => criteriaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);

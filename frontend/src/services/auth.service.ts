@@ -15,6 +15,7 @@ import {
 import { toast } from 'sonner';
 import axiosInstance from '@/api/axiosConfig';
 import { auth, googleProvider } from '@/config/firebase';
+import { clearStoredImpersonationToken } from '@/utils/impersonation-session';
 
 const validateDomain = (email: string | null) => {
   if (!email) return false;
@@ -102,7 +103,10 @@ export const authService = {
     }
   },
 
-  logout: () => signOut(auth),
+  logout: async () => {
+    clearStoredImpersonationToken();
+    await signOut(auth);
+  },
 
   sendPasswordReset: async (email: string) => {
     const actionCodeSettings = {

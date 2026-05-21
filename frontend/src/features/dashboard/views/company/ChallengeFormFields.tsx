@@ -44,6 +44,7 @@ export interface ChallengeFormFieldsProps {
   form: ChallengeFormData;
   errors: Errors;
   saving: boolean;
+  readOnlyMode: boolean;
   showConfirm: boolean;
   setShowConfirm: (v: boolean) => void;
   criteriaOpen: boolean;
@@ -109,11 +110,24 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
   handleSave,
   toggleCriteria,
   onBack,
+  readOnlyMode,
 }) => {
   const [showOptionals, setShowOptionals] = React.useState(false);
 
   return (
   <>
+    {readOnlyMode && (
+      <ConfirmBanner style={{ marginBottom: 20, borderColor: '#f59e0b', background: 'linear-gradient(180deg, rgba(245,158,11,0.12), rgba(254,65,10,0.06))' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#92400e' }}>
+          Estás en modo lectura ahora. No puedes crear ni editar retos durante esta sesión.
+        </span>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#a16207', fontSize: 12, fontWeight: 800 }}>
+          <span style={{ width: 8, height: 8, borderRadius: 999, background: '#f59e0b', display: 'inline-block' }} />
+          Solo lectura
+        </div>
+      </ConfirmBanner>
+    )}
+
     {lightboxOpen && form.logoUrl && (
       <LightboxOverlay src={form.logoUrl} onClose={() => setLightboxOpen(false)} />
     )}
@@ -151,7 +165,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
           <FullSpan>
             <FieldGroup>
               <Label>Logo del reto</Label>
-              <LogoUploadArea $hasImage={!!form.logoUrl} onClick={() => fileInputRef.current?.click()}>
+              <LogoUploadArea $hasImage={!!form.logoUrl} onClick={() => !readOnlyMode && fileInputRef.current?.click()} style={{ cursor: readOnlyMode ? 'not-allowed' : 'pointer', opacity: readOnlyMode ? 0.92 : 1 }}>
                 {form.logoUrl
                   ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
@@ -191,7 +205,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                     </>
                   )
                 }
-                {form.logoUrl && (
+                {form.logoUrl && !readOnlyMode && (
                   <Btn style={{ padding: '8px 14px', fontSize: 12, flexShrink: 0 }}
                     onClick={e => { e.stopPropagation(); updateField('logoUrl', ''); }}>
                     Quitar
@@ -259,11 +273,13 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
           {/* Participation Rules (Left Column) */}
           <FieldGroup style={{ display: 'flex', flexDirection: 'column' }}>
-            <Label>Reglas de participación</Label>
+            <Label $locked={readOnlyMode}>Reglas de participación{readOnlyMode && <LockedBadge>No editable</LockedBadge>}</Label>
             <TextAreaField placeholder="Reglas o restricciones para las ideas..."
               value={form.participationRules}
               style={{ flex: 1, resize: 'none' }}
-              onChange={e => updateField('participationRules', e.target.value)} />
+              readOnly={readOnlyMode}
+              $locked={readOnlyMode}
+              onChange={e => !readOnlyMode && updateField('participationRules', e.target.value)} />
             <CharCount $over={form.participationRules.length > LIMITS.participationRules}>
               {form.participationRules.length}/{LIMITS.participationRules}
             </CharCount>
@@ -319,18 +335,21 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                 {errors.startDate && <ErrorText>{errors.startDate}</ErrorText>}
               </FieldGroup>
               <FieldGroup style={{ marginBottom: 0, flex: 1, minWidth: 0 }}>
-                <Label>Fecha cierre *</Label>
+                <Label $locked={readOnlyMode}>Fecha cierre *{readOnlyMode && <LockedBadge>No editable</LockedBadge>}</Label>
                 <InputField type="datetime-local" min={form.startDate || today} $error={!!errors.endDate}
                   value={form.endDate}
+                  readOnly={readOnlyMode}
+                  $locked={readOnlyMode}
                   style={{ minWidth: 0, padding: '14px 10px', fontSize: 13 }}
-                  onChange={e => updateField('endDate', e.target.value)} />
+                  onChange={e => !readOnlyMode && updateField('endDate', e.target.value)} />
                 {errors.endDate && <ErrorText>{errors.endDate}</ErrorText>}
               </FieldGroup>
             </div>
 
-            <CheckboxRow style={{ marginTop: 2, padding: '14px', border: '1.5px solid rgba(72,80,84,0.18)', borderRadius: 12 }}>
+              <CheckboxRow $locked={readOnlyMode} style={{ marginTop: 2, padding: '14px', border: '1.5px solid rgba(72,80,84,0.18)', borderRadius: 12 }}>
               <input type="checkbox" checked={form.isPrivate}
-                onChange={e => updateField('isPrivate', e.target.checked)}
+                disabled={readOnlyMode}
+                onChange={e => !readOnlyMode && updateField('isPrivate', e.target.checked)}
                 style={{ width: 18, height: 18, accentColor: Pista8Theme.primary }} />
               Reto privado
             </CheckboxRow>
@@ -388,7 +407,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
         {/* ─── Criteria ─── */}
         <div ref={criteriaRef}>
-          <CriteriaToggleBtn $open={criteriaOpen} onClick={toggleCriteria} type="button">
+          <CriteriaToggleBtn $open={criteriaOpen} onClick={() => !readOnlyMode && toggleCriteria()} type="button" disabled={readOnlyMode} style={{ cursor: readOnlyMode ? 'not-allowed' : 'pointer', opacity: readOnlyMode ? 0.85 : 1 }}>
             <span>Criterios de Evaluación</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <polyline points="6 9 12 15 18 9" />
@@ -506,15 +525,15 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               )}
 
               {/* Add custom criterion */}
-              {!locked('core') && (
+              {!locked('core') && !readOnlyMode && (
                 addingCustom ? (
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <CustomCriterionInput autoFocus placeholder="Nombre del criterio (máx. 10 palabras)"
                       value={customName}
                       onChange={e => { setCustomName(e.target.value); setCustomError(''); }}
                       onKeyDown={e => e.key === 'Enter' && addCustomCriterion()} />
-                    <Btn $primary style={{ padding: '10px 16px', fontSize: 12 }} onClick={addCustomCriterion}>Añadir</Btn>
-                    <Btn style={{ padding: '10px 14px', fontSize: 12 }} onClick={() => { setAddingCustom(false); setCustomName(''); setCustomError(''); }}>
+                    <Btn $primary style={{ padding: '10px 16px', fontSize: 12 }} onClick={addCustomCriterion} disabled={readOnlyMode}>Añadir</Btn>
+                    <Btn style={{ padding: '10px 14px', fontSize: 12 }} onClick={() => { setAddingCustom(false); setCustomName(''); setCustomError(''); }} disabled={readOnlyMode}>
                       Cancelar
                     </Btn>
                     {customError && <ErrorText>{customError}</ErrorText>}
@@ -534,13 +553,13 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
         {/* ─── Action Buttons ─── */}
         <BtnRow>
-          <Btn type="button" onClick={handleBack}>Cancelar</Btn>
+          <Btn type="button" onClick={handleBack} disabled={readOnlyMode}>Cancelar</Btn>
           {!isEditMode && (
-            <Btn $outline disabled={saving} onClick={() => handleSave('Borrador')}>
+            <Btn $outline disabled={saving || readOnlyMode} onClick={() => handleSave('Borrador')}>
               Guardar borrador
             </Btn>
           )}
-          <Btn $primary disabled={saving} onClick={() => handleSave('Activo')}>
+          <Btn $primary disabled={saving || readOnlyMode} onClick={() => handleSave('Activo')}>
             {saving ? 'Guardando...' : isEditMode ? 'Guardar cambios' : 'Publicar reto'}
           </Btn>
         </BtnRow>

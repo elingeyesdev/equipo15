@@ -15,7 +15,7 @@ interface DashboardLayoutProps {
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
-  const { userProfile } = useAuth();
+  const { userProfile, impersonationSession, clearImpersonationSession } = useAuth();
 
   const pageTitle = useMemo(() => {
     const matchedItem = NAVIGATION_CONFIG.find((item) =>
@@ -40,6 +40,24 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       
       <S.Page>
         <PenaltyBanner />
+        {impersonationSession && (
+          <S.SupportBanner>
+            <S.SupportBannerCopy>
+              <S.SupportBannerBadge>Modo espejo</S.SupportBannerBadge>
+              <S.SupportBannerTitle>
+                Estás viendo la plataforma como {impersonationSession.company.displayName}
+              </S.SupportBannerTitle>
+              <S.SupportBannerText>
+                La sesión está bloqueada para escritura. Puedes revisar información y volver a tu cuenta de admin cuando termines.
+              </S.SupportBannerText>
+            </S.SupportBannerCopy>
+            <S.SupportBannerActions>
+              <S.SupportBannerButton type="button" onClick={() => void clearImpersonationSession()}>
+                Salir del modo espejo
+              </S.SupportBannerButton>
+            </S.SupportBannerActions>
+          </S.SupportBanner>
+        )}
         <S.Header>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <Pista8Logo fill="#1a1f22" accent="#FE410A" />

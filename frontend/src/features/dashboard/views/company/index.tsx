@@ -6,6 +6,7 @@ import { Pista8Theme } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import type { ChallengePayload } from '../../../../services/challenge.service';
 import type { Challenge, ChallengeStatus } from '../../../../types/models';
+import { useAuth } from '../../../../context/AuthContext';
 import ChallengeFormView from './ChallengeFormModal';
 import { CompanyStatsView } from './CompanyStatsView';
 import { CompanyPodiumView } from './CompanyPodiumView';
@@ -52,6 +53,36 @@ const TopBar = styled.div`
   gap: 12px;
 `;
 
+const ReadOnlyBanner = styled.div`
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.12), rgba(254, 65, 10, 0.05));
+  color: #7c4a13;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+`;
+
+const ReadOnlyBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.16);
+  color: #a16207;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+`;
+
 const Title = styled.h2`
   font-size: 22px;
   font-weight: 900;
@@ -77,6 +108,13 @@ const CreateBtn = styled.button`
     box-shadow: 0 6px 20px rgba(254,65,10,0.3);
   }
   &:active { transform: translateY(0); }
+  &:disabled {
+    background: rgba(72,80,84,0.12);
+    color: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
 `;
 
 const FilterRow = styled.div`
@@ -207,6 +245,30 @@ const CardActions = styled.div`
   border-top: 1px solid rgba(72,80,84,0.06);
 `;
 
+const ViewBtn = styled.button`
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(254,65,10,0.18);
+  background: rgba(254,65,10,0.06);
+  color: ${Pista8Theme.primary};
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: rgba(254,65,10,0.3);
+    background: rgba(254,65,10,0.1);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+`;
+
 const ActionBtn = styled.button<{ $danger?: boolean; $tooltipText?: string }>`
   padding: 8px 16px;
   border-radius: 10px;
@@ -268,6 +330,112 @@ const LoadingShimmer = styled.div`
   }
 `;
 
+const ViewModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.66);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+`;
+
+const ViewModal = styled.div`
+  width: 100%;
+  max-width: 620px;
+  background: white;
+  border-radius: 28px;
+  border: 1px solid rgba(72, 80, 84, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  animation: ${fadeUp} 0.25s ease both;
+`;
+
+const ViewModalHeader = styled.div`
+  padding: 22px 24px 18px;
+  background: linear-gradient(180deg, rgba(254, 65, 10, 0.06), rgba(254, 65, 10, 0.01));
+  border-bottom: 1px solid rgba(72, 80, 84, 0.06);
+`;
+
+const ViewModalBody = styled.div`
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+`;
+
+const ViewGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const ViewStat = styled.div`
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fafbfc;
+  border: 1px solid rgba(72, 80, 84, 0.08);
+`;
+
+const ViewStatLabel = styled.p`
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9ca3af;
+`;
+
+const ViewStatValue = styled.p`
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #1a1f22;
+  line-height: 1.45;
+`;
+
+const ViewModalTitle = styled.h3`
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 900;
+  color: #1a1f22;
+`;
+
+const ViewModalText = styled.p`
+  margin: 0;
+  font-size: 14px;
+  color: #5b6470;
+  line-height: 1.65;
+  white-space: pre-wrap;
+`;
+
+const ViewModalFooter = styled.div`
+  padding: 0 24px 24px;
+`;
+
+const CloseBtn = styled.button`
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: none;
+  background: #f1f3f5;
+  color: #485054;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.18s;
+
+  &:hover {
+    background: #e5e7eb;
+  }
+`;
+
 /* ─── Helpers ─── */
 const formatDate = (d?: string | Date) => {
   if (!d) return '—';
@@ -292,12 +460,15 @@ type FilterValue = 'all' | ChallengeStatus;
 
 export const CompanyChallengesView = () => {
   const navigate = useNavigate();
+  const { impersonationSession } = useAuth();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterValue>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
   const [copyChallenge, setCopyChallenge] = useState<Challenge | null>(null);
+  const [viewChallenge, setViewChallenge] = useState<Challenge | null>(null);
+  const readOnlyMode = Boolean(impersonationSession);
 
   const fetchChallenges = useCallback(async () => {
     setLoading(true);
@@ -338,6 +509,9 @@ export const CompanyChallengesView = () => {
   };
 
   const handleEdit = (challenge: Challenge) => {
+    if (readOnlyMode) {
+      return;
+    }
     const canEdit = !challenge.ideasCount || challenge.ideasCount === 0;
     if (!canEdit) {
       alert('Este reto ya tiene ideas asociadas y no puede ser editado.');
@@ -348,6 +522,9 @@ export const CompanyChallengesView = () => {
   };
 
   const handleCreate = () => {
+    if (readOnlyMode) {
+      return;
+    }
     setEditingChallenge(null);
     setModalOpen(true);
   };
@@ -355,6 +532,10 @@ export const CompanyChallengesView = () => {
   const handleFormBack = () => {
     setModalOpen(false);
     setEditingChallenge(null);
+  };
+
+  const handleViewChallenge = (challenge: Challenge) => {
+    setViewChallenge(challenge);
   };
 
   const filters: { value: FilterValue; label: string }[] = [
@@ -375,6 +556,7 @@ export const CompanyChallengesView = () => {
             handleFormBack();
           }}
           challenge={editingChallenge}
+          readOnlyMode={readOnlyMode}
         />
       </Container>
     );
@@ -382,9 +564,16 @@ export const CompanyChallengesView = () => {
 
   return (
     <Container>
+      {readOnlyMode && (
+        <ReadOnlyBanner>
+          <ReadOnlyBadge>Modo lectura</ReadOnlyBadge>
+          Estás en modo lectura ahora: crear o editar retos está bloqueado mientras dure esta sesión.
+        </ReadOnlyBanner>
+      )}
+
       <TopBar>
         <Title>Mis Retos</Title>
-        <CreateBtn onClick={handleCreate}>
+        <CreateBtn onClick={handleCreate} disabled={readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Crear Reto'}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
@@ -422,7 +611,7 @@ export const CompanyChallengesView = () => {
             {filter === 'all' ? 'Crea tu primer reto para que los participantes comiencen a enviar ideas.' : 'Intenta con otro filtro.'}
           </EmptyText>
           {filter === 'all' && (
-            <CreateBtn onClick={handleCreate} style={{ margin: '0 auto' }}>
+            <CreateBtn onClick={handleCreate} disabled={readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Crear primer reto'} style={{ margin: '0 auto' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
@@ -493,12 +682,15 @@ export const CompanyChallengesView = () => {
                 </CardMeta>
 
                 <CardActions>
+                  <ViewBtn type="button" onClick={() => handleViewChallenge(challenge)}>
+                    Ver Reto
+                  </ViewBtn>
                   <ActionBtn
                     onClick={() => handleEdit(challenge)}
-                    disabled={!canEdit}
-                    $tooltipText={canEdit ? 'Editar reto' : 'Edición bloqueada'}
+                    disabled={!canEdit || readOnlyMode}
+                    $tooltipText={readOnlyMode ? 'Estás en modo lectura ahora' : canEdit ? 'Editar reto' : 'Edición bloqueada'}
                   >
-                    {canEdit ? 'Editar' : 'Edición bloqueada'}
+                    {readOnlyMode ? 'Modo lectura' : canEdit ? 'Editar' : 'Edición bloqueada'}
                   </ActionBtn>
                   {(displayStatus === 'Finalizado' || displayStatus === 'En Evaluación' || displayStatus === 'EVALUATION') && (
                     <ActionBtn onClick={() => navigate(`/dashboard/company/podium?challengeId=${challenge.id}`)}>
@@ -549,6 +741,72 @@ export const CompanyChallengesView = () => {
             </button>
           </div>
         </div>,
+        document.body
+      )}
+
+      {viewChallenge && createPortal(
+        <ViewModalOverlay onClick={() => setViewChallenge(null)}>
+          <ViewModal onClick={(event) => event.stopPropagation()}>
+            <ViewModalHeader>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <ReadOnlyBadge style={{ background: 'rgba(254,65,10,0.12)', color: Pista8Theme.primary }}>Vista previa</ReadOnlyBadge>
+                {viewChallenge.isPrivate && (
+                  <ReadOnlyBadge style={{ background: 'rgba(245,158,11,0.16)', color: '#a16207' }}>Privado</ReadOnlyBadge>
+                )}
+              </div>
+              <ViewModalTitle>{viewChallenge.title}</ViewModalTitle>
+              <ViewModalText>
+                {viewChallenge.problemDescription || 'Sin descripción registrada para este reto.'}
+              </ViewModalText>
+            </ViewModalHeader>
+
+            <ViewModalBody>
+              <ViewGrid>
+                <ViewStat>
+                  <ViewStatLabel>Estado</ViewStatLabel>
+                  <ViewStatValue>{deriveDisplayStatus(viewChallenge)}</ViewStatValue>
+                </ViewStat>
+                <ViewStat>
+                  <ViewStatLabel>Facultad</ViewStatLabel>
+                  <ViewStatValue>{(viewChallenge as any).facultyName || 'Sin facultad'}</ViewStatValue>
+                </ViewStat>
+                <ViewStat>
+                  <ViewStatLabel>Ideas</ViewStatLabel>
+                  <ViewStatValue>{viewChallenge.ideasCount ?? 0} idea{(viewChallenge.ideasCount ?? 0) === 1 ? '' : 's'}</ViewStatValue>
+                </ViewStat>
+                <ViewStat>
+                  <ViewStatLabel>Vigencia</ViewStatLabel>
+                  <ViewStatValue>{formatDate(viewChallenge.startDate)} — {formatDate(viewChallenge.endDate)}</ViewStatValue>
+                </ViewStat>
+              </ViewGrid>
+
+              {viewChallenge.companyContext && (
+                <ViewStat>
+                  <ViewStatLabel>Contexto de la empresa</ViewStatLabel>
+                  <ViewStatValue style={{ fontWeight: 600, color: '#5b6470' }}>{viewChallenge.companyContext}</ViewStatValue>
+                </ViewStat>
+              )}
+
+              {viewChallenge.participationRules && (
+                <ViewStat>
+                  <ViewStatLabel>Reglas de participación</ViewStatLabel>
+                  <ViewStatValue style={{ fontWeight: 600, color: '#5b6470' }}>{viewChallenge.participationRules}</ViewStatValue>
+                </ViewStat>
+              )}
+
+              <ViewStat>
+                <ViewStatLabel>Modo de acceso</ViewStatLabel>
+                <ViewStatValue style={{ color: '#a16207' }}>
+                  {readOnlyMode ? 'Estás en modo lectura ahora' : 'Acceso normal'}
+                </ViewStatValue>
+              </ViewStat>
+            </ViewModalBody>
+
+            <ViewModalFooter>
+              <CloseBtn type="button" onClick={() => setViewChallenge(null)}>Cerrar</CloseBtn>
+            </ViewModalFooter>
+          </ViewModal>
+        </ViewModalOverlay>,
         document.body
       )}
     </Container>
