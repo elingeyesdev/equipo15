@@ -7,7 +7,7 @@ export class AdminRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async getCompanies() {
-    return this.prisma.user.findMany({
+    const companies = await this.prisma.user.findMany({
       where: { role: 'COMPANY' },
       select: {
         id: true,
@@ -17,11 +17,27 @@ export class AdminRepository {
         status: true,
         createdAt: true,
         updatedAt: true,
-        faculty: {
-          select: { name: true },
+        challenges: {
+          select: { status: true, endDate: true },
         },
       },
       orderBy: { displayName: 'asc' },
+    });
+
+    return companies.map((company) => {
+      let activeChallenges = 0;
+      let closedChallenges = 0;
+
+      for (const ch of company.challenges) {
+        if (ch.status === 'Activo' || ch.status === 'En Evaluación') {
+          activeChallenges++;
+        } else if (ch.status === 'Finalizado') {
+          closedChallenges++;
+        }
+      }
+
+      const { challenges: _, ...rest } = company;
+      return { ...rest, activeChallenges, closedChallenges };
     });
   }
 

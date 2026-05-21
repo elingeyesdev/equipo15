@@ -45,7 +45,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
         <S.PrimaryBtn
           onClick={() => setShowForm(true)}
           disabled={readOnlyMode}
-          title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Crear Nuevo Reto'}
+          $tooltipText={readOnlyMode ? 'Estás en modo lectura ahora' : 'Crear Nuevo Reto'}
         >
           Crear Nuevo Reto
         </S.PrimaryBtn>
@@ -60,10 +60,10 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
   return (
     <S.Builder>
       <S.BuilderNav>
-        <S.TabBtn active={!isPreview} onClick={() => setIsPreview(false)} disabled={readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Editor'}>
+        <S.TabBtn active={!isPreview} onClick={() => setIsPreview(false)} disabled={readOnlyMode} $tooltipText={readOnlyMode ? 'Estás en modo lectura ahora' : 'Editor'}>
           Editor
         </S.TabBtn>
-        <S.TabBtn active={isPreview} onClick={() => setIsPreview(true)} disabled={readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Vista Previa'}>
+        <S.TabBtn active={isPreview} onClick={() => setIsPreview(true)} disabled={readOnlyMode} $tooltipText={readOnlyMode ? 'Estás en modo lectura ahora' : 'Vista Previa'}>
           Vista Previa
         </S.TabBtn>
       </S.BuilderNav>
@@ -207,7 +207,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                     value={`${window.location.origin}/dashboard/reto/${formData.token}`}
                     disabled={readOnlyMode}
                   />
-                  <S.CopyBtn onClick={copyToClipboard} disabled={readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Copiar'}>
+                  <S.CopyBtn onClick={copyToClipboard} disabled={readOnlyMode} $tooltipText={readOnlyMode ? 'Estás en modo lectura ahora' : 'Copiar'}>
                     {copyStatus ? '¡Copiado!' : 'Copiar'}
                   </S.CopyBtn>
                 </div>
@@ -233,14 +233,14 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
             </S.DateRow>
 
             <S.FormActions>
-              <S.GhostBtn type="button" onClick={() => { setSubmitted(false); setShowForm(false); }} disabled={saving || readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Cancelar'}>
+              <S.GhostBtn type="button" onClick={() => { setSubmitted(false); setShowForm(false); }} disabled={saving || readOnlyMode} $tooltipText={readOnlyMode ? 'Estás en modo lectura ahora' : 'Cancelar'}>
                 Cancelar
               </S.GhostBtn>
               <S.DraftBtn 
                 type="button" 
                 onClick={() => handleSaveChallenge('Borrador')} 
                 disabled={saving || readOnlyMode || !formData.title}
-                title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Borrador'}
+                $tooltipText={readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Borrador'}
               >
                 {saving ? 'Guardando...' : 'Guardar Borrador'}
               </S.DraftBtn>
@@ -248,7 +248,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                 type="button" 
                 onClick={() => handleSaveChallenge('Activo')} 
                 disabled={saving || readOnlyMode}
-                title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Publicar Reto'}
+                $tooltipText={readOnlyMode ? 'Estás en modo lectura ahora' : 'Publicar Reto'}
               >
                 {saving ? 'Publicando...' : 'Publicar Reto'}
               </S.PrimaryBtn>

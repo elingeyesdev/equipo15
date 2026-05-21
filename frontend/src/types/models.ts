@@ -197,7 +197,8 @@ export interface CompanySupportItem {
   email: string;
   displayName: string;
   status: 'ACTIVE' | 'SOFT_BLOCK' | 'SUSPENDED';
-  facultyName?: string | null;
+  activeChallenges: number;
+  closedChallenges: number;
   createdAt?: string | Date;
   updatedAt?: string | Date;
 }

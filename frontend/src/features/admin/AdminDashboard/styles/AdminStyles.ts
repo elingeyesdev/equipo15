@@ -1,5 +1,6 @@
 import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../../config/theme';
+import { premiumTooltip } from '../../styles/CommonStyles';
 
 export const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(14px); }
@@ -176,7 +177,7 @@ export const EmptyLabel = styled.p`
   text-align: center;
 `;
 
-export const PrimaryBtn = styled.button`
+export const PrimaryBtn = styled.button<{ $tooltipText?: string }>`
   padding: 0 24px;
   height: 48px;
   background: ${Pista8Theme.primary};
@@ -192,6 +193,7 @@ export const PrimaryBtn = styled.button`
   justify-content: center;
   &:hover { background: transparent; color: ${Pista8Theme.primary}; box-shadow: 0 4px 12px ${Pista8Theme.primary}20; }
   &:disabled { background: rgba(72,80,84,0.1); border-color: transparent; color: #b8c0c8; cursor: default; }
+  ${premiumTooltip}
 `;
 
 export const Builder = styled.div`
@@ -208,7 +210,7 @@ export const BuilderNav = styled.div`
   padding: 0 24px;
 `;
 
-export const TabBtn = styled.button<{ active?: boolean }>`
+export const TabBtn = styled.button<{ active?: boolean; $tooltipText?: string }>`
   padding: 18px 0;
   margin-right: 32px;
   border: none;
@@ -220,6 +222,7 @@ export const TabBtn = styled.button<{ active?: boolean }>`
   border-bottom: 2px solid ${p => p.active ? Pista8Theme.primary : 'transparent'};
   transition: all 0.18s;
   &:hover { color: ${Pista8Theme.secondary}; }
+  ${premiumTooltip}
 `;
 
 export const BuilderBody = styled.div`
@@ -347,7 +350,7 @@ export const ShareLinkSection = styled.div`
   animation: ${fadeUp} 0.3s ease both;
 `;
 
-export const CopyBtn = styled.button`
+export const CopyBtn = styled.button<{ $tooltipText?: string }>`
   padding: 0 16px;
   height: 48px;
   border-radius: 12px;
@@ -362,6 +365,7 @@ export const CopyBtn = styled.button`
   gap: 8px;
   transition: all 0.2s;
   &:hover { border-color: ${Pista8Theme.primary}; color: ${Pista8Theme.primary}; background: ${Pista8Theme.primary}05; }
+  ${premiumTooltip}
 `;
 
 export const FormActions = styled.div`
@@ -374,7 +378,7 @@ export const FormActions = styled.div`
   max-width: 750px;
 `;
 
-export const GhostBtn = styled.button`
+export const GhostBtn = styled.button<{ $tooltipText?: string }>`
   padding: 0 24px;
   height: 48px;
   border-radius: 12px;
@@ -389,9 +393,10 @@ export const GhostBtn = styled.button`
   align-items: center;
   justify-content: center;
   &:hover { border-color: rgba(72,80,84,0.4); color: ${Pista8Theme.secondary}; background: rgba(72,80,84,0.04); }
+  ${premiumTooltip}
 `;
 
-export const DraftBtn = styled.button`
+export const DraftBtn = styled.button<{ $tooltipText?: string }>`
   padding: 0 24px;
   height: 48px;
   border-radius: 12px;
@@ -407,6 +412,7 @@ export const DraftBtn = styled.button`
   justify-content: center;
   &:hover { background: ${Pista8Theme.secondary}; color: white; }
   &:disabled { opacity: 0.35; cursor: default; }
+  ${premiumTooltip}
 `;
 
 export const PreviewCard = styled.div`

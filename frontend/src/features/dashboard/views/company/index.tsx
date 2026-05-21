@@ -90,7 +90,7 @@ const Title = styled.h2`
   margin: 0;
 `;
 
-const CreateBtn = styled.button`
+const CreateBtn = styled.button<{ $tooltipText?: string }>`
   padding: 12px 28px;
   border-radius: 14px;
   border: none;
@@ -115,6 +115,7 @@ const CreateBtn = styled.button`
     box-shadow: none;
     transform: none;
   }
+  ${premiumTooltip}
 `;
 
 const FilterRow = styled.div`
@@ -573,7 +574,7 @@ export const CompanyChallengesView = () => {
 
       <TopBar>
         <Title>Mis Retos</Title>
-        <CreateBtn onClick={handleCreate} disabled={readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Crear Reto'}>
+        <CreateBtn onClick={handleCreate} disabled={readOnlyMode} $tooltipText={readOnlyMode ? 'Estás en modo lectura ahora' : 'Crear Reto'}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
@@ -611,7 +612,7 @@ export const CompanyChallengesView = () => {
             {filter === 'all' ? 'Crea tu primer reto para que los participantes comiencen a enviar ideas.' : 'Intenta con otro filtro.'}
           </EmptyText>
           {filter === 'all' && (
-            <CreateBtn onClick={handleCreate} disabled={readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Crear primer reto'} style={{ margin: '0 auto' }}>
+            <CreateBtn onClick={handleCreate} disabled={readOnlyMode} $tooltipText={readOnlyMode ? 'Estás en modo lectura ahora' : 'Crear primer reto'} style={{ margin: '0 auto' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />

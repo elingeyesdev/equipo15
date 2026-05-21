@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../../../context/AuthContext';
 import { adminService } from '../../../../services/admin.service';
 import type { CompanySupportItem } from '../../../../types/models';
+import { premiumTooltip } from '../../styles/CommonStyles';
 
 export { AdminStatsView } from './AdminStatsView';
 
@@ -89,7 +90,7 @@ const Description = styled.p`
   max-width: 760px;
 `;
 
-const SearchInput = styled.input`
+const SearchInput = styled.input<{ $tooltipText?: string }>`
   min-width: 280px;
   padding: 12px 14px;
   border-radius: 14px;
@@ -100,6 +101,7 @@ const SearchInput = styled.input`
     border-color: #fe410a;
     box-shadow: 0 0 0 3px rgba(254, 65, 10, 0.12);
   }
+  ${premiumTooltip}
 `;
 
 const TableWrap = styled.div`
@@ -112,29 +114,46 @@ const Table = styled.table`
 `;
 
 const TH = styled.th`
-  padding: 14px 24px;
+  padding: 16px 24px;
   text-align: center;
-  font-size: 11px;
-  letter-spacing: 0.14em;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
   text-transform: uppercase;
-  color: #8b949d;
-  border-bottom: 1px solid rgba(72, 80, 84, 0.06);
+  letter-spacing: 0.05em;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+`;
+
+const TR = styled.tr`
+  transition: background 0.2s ease;
+  
+  &:hover {
+    background: #f8fafc;
+  }
+  
+  &:last-child td {
+    border-bottom: none;
+  }
 `;
 
 const TD = styled.td`
-  padding: 18px 24px;
-  border-bottom: 1px solid rgba(72, 80, 84, 0.06);
+  padding: 16px 24px;
+  border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
+  text-align: center;
 `;
 
 const RowTitle = styled.div`
-  font-weight: 800;
-  color: #1a1f22;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 14px;
 `;
 
 const RowSub = styled.div`
+  font-weight: 500;
+  color: #64748b;
   font-size: 13px;
-  color: #7a828d;
   margin-top: 4px;
 `;
 
@@ -142,18 +161,17 @@ const StatusPill = styled.span<{ $tone: 'green' | 'amber' | 'slate' }>`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
   text-transform: uppercase;
   ${({ $tone }) => $tone === 'green' && `background: rgba(34,197,94,0.12); color: #15803d;`}
   ${({ $tone }) => $tone === 'amber' && `background: rgba(245,158,11,0.14); color: #b45309;`}
   ${({ $tone }) => $tone === 'slate' && `background: rgba(100,116,139,0.12); color: #475569;`}
 `;
 
-const ActionBtn = styled.button<{ $variant?: 'solid' | 'ghost' }>`
+const ActionBtn = styled.button<{ $variant?: 'solid' | 'ghost'; $tooltipText?: string }>`
   border-radius: 12px;
   padding: 10px 14px;
   border: 1px solid rgba(254, 65, 10, 0.18);
@@ -183,6 +201,7 @@ const ActionBtn = styled.button<{ $variant?: 'solid' | 'ghost' }>`
     box-shadow: none;
     opacity: 0.55;
   }
+  ${premiumTooltip}
 `;
 
 const EmptyState = styled.div`
@@ -230,26 +249,37 @@ const formatDate = (value?: string | Date) => {
   }).format(date);
 };
 
+const MetricCell = styled.span`
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 14px;
+`;
+
 const CompanyRow = ({ company, onImpersonate }: { company: CompanySupportItem; onImpersonate: (company: CompanySupportItem) => void }) => {
   const tone = company.status === 'ACTIVE' ? 'green' : company.status === 'SOFT_BLOCK' ? 'amber' : 'slate';
 
   return (
-    <tr>
+    <TR>
       <TD>
         <RowTitle>{company.displayName}</RowTitle>
         <RowSub>{company.email}</RowSub>
       </TD>
-      <TD>{company.facultyName || 'Sin facultad'}</TD>
       <TD>
         <StatusPill $tone={tone}>{company.status}</StatusPill>
       </TD>
+      <TD>
+        <MetricCell>{company.activeChallenges}</MetricCell>
+      </TD>
+      <TD>
+        <MetricCell>{company.closedChallenges}</MetricCell>
+      </TD>
       <TD>{formatDate(company.updatedAt)}</TD>
       <TD>
-        <ActionBtn type="button" onClick={() => onImpersonate(company)} title="Abrir sesión espejo en modo lectura">
+        <ActionBtn type="button" onClick={() => onImpersonate(company)} $tooltipText="Abrir sesión espejo en modo lectura">
           Ver como empresa
         </ActionBtn>
       </TD>
-    </tr>
+    </TR>
   );
 };
 
@@ -279,7 +309,7 @@ export const AdminClientsView = () => {
 
   const filteredCompanies = useMemo(
     () => companies.filter((company) => {
-      const haystack = `${company.displayName} ${company.email} ${company.facultyName || ''}`.toLowerCase();
+      const haystack = `${company.displayName} ${company.email}`.toLowerCase();
       return haystack.includes(search.toLowerCase());
     }),
     [companies, search],
@@ -320,18 +350,17 @@ export const AdminClientsView = () => {
       <Panel>
         <PanelHeader>
           <TitleBlock>
-            <Eyebrow>Clientes</Eyebrow>
-            <Title>Panel de monitoreo global y control de clientes</Title>
+            <Title>Directorio de Clientes</Title>
             <Description>
-              Lista de empresas habilitadas para abrir una sesión espejo. El acceso se abre en modo lectura para inspección y soporte.
+              Lista de empresas habilitadas para auditar sus métricas y abrir sesiones espejo de soporte en modo lectura.
             </Description>
           </TitleBlock>
           <SearchInput
             type="search"
-            placeholder="Buscar empresa o facultad"
+            placeholder="Buscar empresa o contacto"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            title={impersonationSession ? 'Estás en modo lectura ahora' : 'Buscar empresa o facultad'}
+            $tooltipText={impersonationSession ? 'Estás en modo lectura ahora' : 'Buscar empresa o contacto'}
           />
         </PanelHeader>
 
@@ -340,23 +369,24 @@ export const AdminClientsView = () => {
             <thead>
               <tr>
                 <TH>Empresa</TH>
-                <TH>Facultad</TH>
                 <TH>Estado</TH>
-                <TH>Última actualización</TH>
+                <TH>Retos activos</TH>
+                <TH>Retos cerrados</TH>
+                <TH>Última actividad</TH>
                 <TH>Acción</TH>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <TD colSpan={5}>
+                  <TD colSpan={6}>
                     <EmptyState>Cargando empresas...</EmptyState>
                   </TD>
                 </tr>
               )}
               {!loading && filteredCompanies.length === 0 && (
                 <tr>
-                  <TD colSpan={5}>
+                  <TD colSpan={6}>
                     <EmptyState>No se encontraron empresas con ese criterio.</EmptyState>
                   </TD>
                 </tr>
@@ -369,7 +399,7 @@ export const AdminClientsView = () => {
         </TableWrap>
 
         {userProfile?.role === 'admin' && !loading && (
-          <EmptyState style={{ textAlign: 'left', padding: '18px 24px 24px' }}>
+          <EmptyState style={{ textAlign: 'center', padding: '18px 24px 24px' }}>
             Puedes abrir una sesión de soporte y el sistema te trasladará al panel de la empresa manteniendo el bloqueo de escritura.
           </EmptyState>
         )}
