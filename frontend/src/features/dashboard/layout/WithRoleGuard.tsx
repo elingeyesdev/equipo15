@@ -23,8 +23,11 @@ export const WithRoleGuard: React.FC<WithRoleGuardProps> = ({ children, allowedR
   const userRole = (userProfile.roleInfo?.name || userProfile.role || '').toUpperCase();
 
   if (!allowedRoles.includes(userRole)) {
-    if (userRole === 'ADMIN' || userRole === 'COMPANY') {
-      return <Navigate to="/dashboard" replace />;
+    if (userRole === 'ADMIN') {
+      return <Navigate to="/dashboard/admin/clients" replace />;
+    }
+    if (userRole === 'COMPANY') {
+      return <Navigate to="/dashboard/company/stats" replace />;
     }
     if (userRole === 'JUDGE') {
       return <Navigate to="/dashboard/judge/inbox" replace />;

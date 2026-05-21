@@ -1,6 +1,9 @@
 import axios from 'axios';
 import { auth } from '../config/firebase';
-import { getStoredImpersonationToken } from '@/utils/impersonation-session';
+import {
+  clearStoredImpersonationToken,
+  getStoredImpersonationSession,
+} from '@/utils/impersonation-session';
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
@@ -8,9 +11,9 @@ const instance = axios.create({
 
 instance.interceptors.request.use(
   async (config) => {
-    const impersonationToken = getStoredImpersonationToken();
-    if (impersonationToken) {
-      config.headers.Authorization = `Bearer ${impersonationToken}`;
+    const impersonationSession = getStoredImpersonationSession();
+    if (impersonationSession?.token) {
+      config.headers.Authorization = `Bearer ${impersonationSession.token}`;
       return config;
     }
 
@@ -38,6 +41,11 @@ instance.interceptors.response.use(
     }
 
     const status = error?.response?.status as number | undefined;
+    const backendMessage = String(error?.response?.data?.message || '').toLowerCase();
+
+    if (status === 401 && backendMessage.includes('token de impersonación expirado')) {
+      clearStoredImpersonationToken();
+    }
 
     if (status === 401) {
       // Keep request rejection, but normalize a common auth failure message.

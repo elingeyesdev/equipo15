@@ -38,6 +38,7 @@ interface PasswordData {
 
 interface ProfileRoleSectionsProps {
   profile: UserProfile;
+  readOnlyMode: boolean;
   isGoogleLinked: boolean;
   onLinkGoogle: () => Promise<void>;
   showPassChange: boolean;
@@ -70,6 +71,7 @@ const EyeOffIcon = () => (
 
 export const ProfileRoleSections: React.FC<ProfileRoleSectionsProps> = ({
   profile,
+  readOnlyMode,
   isGoogleLinked,
   onLinkGoogle,
   showPassChange,
@@ -257,7 +259,7 @@ export const ProfileRoleSections: React.FC<ProfileRoleSectionsProps> = ({
       <Divider />
 
       <LogoutWrap>
-        <LogoutButton />
+        <LogoutButton disabled={readOnlyMode} />
       </LogoutWrap>
     </>
   );

@@ -1,6 +1,6 @@
 import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../../config/theme';
-import { premiumTooltip } from '../../styles/CommonStyles';
+import { premiumTooltip } from '../../../dashboard/styles/CommonStyles';
 
 export const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(14px); }

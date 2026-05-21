@@ -346,18 +346,23 @@ const ViewModalOverlay = styled.div`
 const ViewModal = styled.div`
   width: 100%;
   max-width: 620px;
+  max-height: min(88vh, 760px);
   background: white;
   border-radius: 28px;
   border: 1px solid rgba(72, 80, 84, 0.08);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.22);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   animation: ${fadeUp} 0.25s ease both;
 `;
 
 const ViewModalHeader = styled.div`
+  position: relative;
   padding: 22px 24px 18px;
   background: linear-gradient(180deg, rgba(254, 65, 10, 0.06), rgba(254, 65, 10, 0.01));
   border-bottom: 1px solid rgba(72, 80, 84, 0.06);
+  text-align: center;
 `;
 
 const ViewModalBody = styled.div`
@@ -365,6 +370,14 @@ const ViewModalBody = styled.div`
   display: flex;
   flex-direction: column;
   gap: 18px;
+  text-align: center;
+  overflow-y: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
 `;
 
 const ViewGrid = styled.div`
@@ -382,6 +395,7 @@ const ViewStat = styled.div`
   border-radius: 16px;
   background: #fafbfc;
   border: 1px solid rgba(72, 80, 84, 0.08);
+  text-align: center;
 `;
 
 const ViewStatLabel = styled.p`
@@ -418,10 +432,37 @@ const ViewModalText = styled.p`
 
 const ViewModalFooter = styled.div`
   padding: 0 24px 24px;
+  display: flex;
+  justify-content: center;
+`;
+
+const ModalCloseX = styled.button`
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(72,80,84,0.12);
+  background: white;
+  color: #5b6470;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+
+  &:hover {
+    color: ${Pista8Theme.primary};
+    border-color: rgba(254,65,10,0.26);
+    background: #fff7ed;
+  }
 `;
 
 const CloseBtn = styled.button`
-  width: 100%;
+  width: min(280px, 100%);
   padding: 12px 16px;
   border-radius: 14px;
   border: none;
@@ -686,13 +727,11 @@ export const CompanyChallengesView = () => {
                   <ViewBtn type="button" onClick={() => handleViewChallenge(challenge)}>
                     Ver Reto
                   </ViewBtn>
-                  <ActionBtn
-                    onClick={() => handleEdit(challenge)}
-                    disabled={!canEdit || readOnlyMode}
-                    $tooltipText={readOnlyMode ? 'Estás en modo lectura ahora' : canEdit ? 'Editar reto' : 'Edición bloqueada'}
-                  >
-                    {readOnlyMode ? 'Modo lectura' : canEdit ? 'Editar' : 'Edición bloqueada'}
-                  </ActionBtn>
+                  {canEdit && !readOnlyMode && (
+                    <ActionBtn onClick={() => handleEdit(challenge)} $tooltipText="Editar reto">
+                      Editar
+                    </ActionBtn>
+                  )}
                   {(displayStatus === 'Finalizado' || displayStatus === 'En Evaluación' || displayStatus === 'EVALUATION') && (
                     <ActionBtn onClick={() => navigate(`/dashboard/company/podium?challengeId=${challenge.id}`)}>
                       Gestionar Podio
@@ -749,7 +788,8 @@ export const CompanyChallengesView = () => {
         <ViewModalOverlay onClick={() => setViewChallenge(null)}>
           <ViewModal onClick={(event) => event.stopPropagation()}>
             <ViewModalHeader>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <ModalCloseX type="button" onClick={() => setViewChallenge(null)} aria-label="Cerrar modal">×</ModalCloseX>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10 }}>
                 <ReadOnlyBadge style={{ background: 'rgba(254,65,10,0.12)', color: Pista8Theme.primary }}>Vista previa</ReadOnlyBadge>
                 {viewChallenge.isPrivate && (
                   <ReadOnlyBadge style={{ background: 'rgba(245,158,11,0.16)', color: '#a16207' }}>Privado</ReadOnlyBadge>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { NAVIGATION_CONFIG } from './navigation.config';
 import { useAuth } from '../../../context/AuthContext';
@@ -15,7 +15,13 @@ interface DashboardLayoutProps {
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { userProfile, impersonationSession, clearImpersonationSession } = useAuth();
+
+  const handleExitMirrorMode = async () => {
+    await clearImpersonationSession();
+    navigate('/dashboard/admin/clients', { replace: true });
+  };
 
   const pageTitle = useMemo(() => {
     const matchedItem = NAVIGATION_CONFIG.find((item) =>
@@ -52,7 +58,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
               </S.SupportBannerText>
             </S.SupportBannerCopy>
             <S.SupportBannerActions>
-              <S.SupportBannerButton type="button" onClick={() => void clearImpersonationSession()}>
+              <S.SupportBannerButton type="button" onClick={() => void handleExitMirrorMode()}>
                 Salir del modo espejo
               </S.SupportBannerButton>
             </S.SupportBannerActions>

@@ -26,7 +26,7 @@ const DashboardIndexRedirect = () => {
   if (!userProfile) return null;
   const role = (userProfile.roleInfo?.name || userProfile.role || '').toUpperCase();
 
-  if (role === 'ADMIN') return <Navigate to="/dashboard/admin/stats" replace />;
+  if (role === 'ADMIN') return <Navigate to="/dashboard/admin/clients" replace />;
   if (role === 'COMPANY') return <Navigate to="/dashboard/company/stats" replace />;
   if (role === 'JUDGE') return <Navigate to="/dashboard/judge/inbox" replace />;
 

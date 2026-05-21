@@ -5,6 +5,7 @@ import { Pista8Theme, breakpoints } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import { ideaService } from '../../../../services/idea.service';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../../context/AuthContext';
 import { Trophy, Users, MessageSquare, Sparkles, AlertTriangle, CheckCircle } from 'lucide-react';
 import MedalSvg from '../../../../components/icons/MedalSvg';
 import { toast } from 'sonner';
@@ -473,6 +474,7 @@ const BannerText = styled.p`
 
 
 export const CompanyPodiumView = () => {
+  const { impersonationSession } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const challengeId = searchParams.get('challengeId');
@@ -539,7 +541,7 @@ export const CompanyPodiumView = () => {
   }, [sortedIdeas, cutLimit]);
 
   const handleFinalize = async () => {
-    if (!challengeId) return;
+    if (!challengeId || readOnlyMode) return;
     setIsFinalizing(true);
     try {
       const allFinalists = new Set(filteredIdeas.map(i => i.id));
@@ -587,7 +589,8 @@ export const CompanyPodiumView = () => {
   }
 
   const isAlreadyEvaluated = challenge?.status === 'EVALUATION' || challenge?.status === 'Finalizado';
-  const canSend = filteredIdeas.length > 0 && !isAlreadyEvaluated && ideas.length > 0;
+  const readOnlyMode = Boolean(impersonationSession);
+  const canSend = filteredIdeas.length > 0 && !isAlreadyEvaluated && !readOnlyMode && ideas.length > 0;
 
   return (
     <>
@@ -620,7 +623,7 @@ export const CompanyPodiumView = () => {
           <ControlGroup>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Label>Cantidad de Corte:</Label>
-              <Select value={cutLimit} onChange={(e) => setCutLimit(e.target.value)} disabled={isAlreadyEvaluated}>
+              <Select value={cutLimit} onChange={(e) => setCutLimit(e.target.value)} disabled={isAlreadyEvaluated || readOnlyMode}>
                 <option value="0">Todos</option>
                 <option value="5">Top 5</option>
                 <option value="10">Top 10</option>
@@ -630,7 +633,7 @@ export const CompanyPodiumView = () => {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Label>Criterio de Interacción:</Label>
-              <Select value={metric} onChange={(e) => setMetric(e.target.value)} disabled={isAlreadyEvaluated}>
+              <Select value={metric} onChange={(e) => setMetric(e.target.value)} disabled={isAlreadyEvaluated || readOnlyMode}>
                 <option value="fireScore">Mayor interacción social (Destellos ✨)</option>
                 <option value="comments">Más comentarios / Retroalimentación</option>
               </Select>
@@ -643,7 +646,7 @@ export const CompanyPodiumView = () => {
           </ControlGroup>
 
           <FinalizeBtn
-            onClick={() => !isAlreadyEvaluated && setShowConfirm(true)}
+            onClick={() => !isAlreadyEvaluated && !readOnlyMode && setShowConfirm(true)}
             disabled={!canSend}
             style={isAlreadyEvaluated ? {
               background: 'linear-gradient(135deg, #16a34a, #15803d)',
@@ -654,7 +657,7 @@ export const CompanyPodiumView = () => {
             {isAlreadyEvaluated ? (
               <><CheckCircle size={18} /> Lote de Finalistas Enviado</>  
             ) : (
-              <><Users size={18} /> Enviar Lote de Finalistas a Jueces</>
+              <><Users size={18} /> {readOnlyMode ? 'Estás en modo lectura ahora' : 'Enviar Lote de Finalistas a Jueces'}</>
             )}
           </FinalizeBtn>
         </ControlCard>
@@ -688,7 +691,7 @@ export const CompanyPodiumView = () => {
         </RankingList>
       </Container>
 
-      {showConfirm && createPortal(
+      {showConfirm && !readOnlyMode && createPortal(
         <ModalOverlay onClick={() => setShowConfirm(false)}>
           <Modal onClick={e => e.stopPropagation()}>
             <WarningIcon><AlertTriangle /></WarningIcon>

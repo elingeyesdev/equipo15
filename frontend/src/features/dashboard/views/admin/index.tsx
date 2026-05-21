@@ -423,7 +423,13 @@ export const AdminUsersView = () => (
 );
 
 export const AdminSupportView = () => {
+  const navigate = useNavigate();
   const { impersonationSession, clearImpersonationSession } = useAuth();
+
+  const handleExitMirrorMode = async () => {
+    await clearImpersonationSession();
+    navigate('/dashboard/admin/clients', { replace: true });
+  };
 
   return (
     <ViewShell>
@@ -458,7 +464,7 @@ export const AdminSupportView = () => {
               </SupportCardText>
               {impersonationSession && (
                 <div style={{ marginTop: 16 }}>
-                  <ActionBtn type="button" $variant="ghost" onClick={() => void clearImpersonationSession()}>
+                  <ActionBtn type="button" $variant="ghost" onClick={() => void handleExitMirrorMode()}>
                     Salir del modo espejo
                   </ActionBtn>
                 </div>

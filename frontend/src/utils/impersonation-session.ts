@@ -48,6 +48,8 @@ export const decodeImpersonationToken = (token: string): ImpersonationSession =>
       email: payload.email,
       displayName: payload.companyName,
       status: 'ACTIVE',
+      activeChallenges: 0,
+      closedChallenges: 0,
     },
   };
 };
@@ -62,7 +64,15 @@ export const getStoredImpersonationSession = (): ImpersonationSession | null => 
   }
 
   try {
-    return decodeImpersonationToken(token);
+    const session = decodeImpersonationToken(token);
+    const expiresAtMs = new Date(session.expiresAt).getTime();
+
+    if (!Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now()) {
+      getStorage()?.removeItem(IMPERSONATION_STORAGE_KEY);
+      return null;
+    }
+
+    return session;
   } catch {
     getStorage()?.removeItem(IMPERSONATION_STORAGE_KEY);
     return null;

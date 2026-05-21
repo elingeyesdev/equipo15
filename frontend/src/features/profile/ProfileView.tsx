@@ -19,7 +19,7 @@ const PROFILE_CONFIGS: Record<string, { badge: string; showCode: boolean; bioPla
 
 export const ProfileView: React.FC = () => {
   const navigate = useNavigate();
-  const { user, userProfile: profile, refetchProfile } = useAuth();
+  const { user, userProfile: profile, refetchProfile, impersonationSession } = useAuth();
   const [profileData, setProfileData] = useState({
     bio: profile?.bio || '',
     nickname: profile?.nickname || '',
@@ -44,8 +44,13 @@ export const ProfileView: React.FC = () => {
 
   const roleConfig = PROFILE_CONFIGS[profile.role || 'student'];
   const isGoogleLinked = user.providerData.some(p => p.providerId === 'google.com');
+  const readOnlyMode = Boolean(impersonationSession);
 
   const handleSaveProfile = async () => {
+    if (readOnlyMode) {
+      toast.info('Estás en modo lectura ahora. No puedes guardar cambios de perfil.');
+      return;
+    }
     setSaving(true);
     try {
       await userService.updateProfile(profileData as any);
@@ -112,6 +117,7 @@ export const ProfileView: React.FC = () => {
             profileData={profileData as any}
             setProfileData={setProfileData}
             saving={saving}
+            readOnlyMode={readOnlyMode}
             onSave={handleSaveProfile}
             countWords={countWords}
             profile={profile}
@@ -119,6 +125,7 @@ export const ProfileView: React.FC = () => {
 
           <ProfileRoleSections
             profile={profile}
+            readOnlyMode={readOnlyMode}
             isGoogleLinked={isGoogleLinked}
             onLinkGoogle={handleLinkGoogle}
             showPassChange={showPassChange}

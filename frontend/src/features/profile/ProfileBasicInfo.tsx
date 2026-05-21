@@ -34,6 +34,7 @@ interface ProfileBasicInfoProps {
   profileData: BasicInfoData;
   setProfileData: React.Dispatch<React.SetStateAction<BasicInfoData>>;
   saving: boolean;
+  readOnlyMode: boolean;
   onSave: () => Promise<void>;
   countWords: (text: string) => number;
   profile?: any;
@@ -43,6 +44,7 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
   profileData,
   setProfileData,
   saving,
+  readOnlyMode,
   onSave,
   countWords,
   profile,
@@ -179,8 +181,8 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
             </div>
           </div>
 
-          <SaveBtn onClick={onSave} disabled={saving} style={{ alignSelf: 'center', marginTop: 0 }}>
-            {saving ? 'Guardando...' : 'Guardar Perfil'}
+          <SaveBtn onClick={onSave} disabled={saving || readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Perfil'} style={{ alignSelf: 'center', marginTop: 0 }}>
+            {saving ? 'Guardando...' : readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Perfil'}
           </SaveBtn>
         </div>
       </Section>
