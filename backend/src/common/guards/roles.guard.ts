@@ -5,14 +5,21 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserService } from '../../modules/user/user.service';
+import { UserRepository } from '../../modules/user/user.repository';
 import type { AuthenticatedRequest } from '../types/authenticated-request.interface';
+
+const ROLE_MAP: Record<string, string> = {
+  ADMIN: 'admin',
+  COMPANY: 'company',
+  JUDGE: 'judge',
+  USER: 'student',
+};
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly userService: UserService,
+    private readonly userRepository: UserRepository,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -28,12 +35,14 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const firebaseUser = request.user;
 
-    const user = await this.userService.findByUid(firebaseUser.uid);
-    const roleName = user?.role ?? user?.roleName;
+    const user = await this.userRepository.findByUid(firebaseUser.uid);
+    const prismaRole = String(user?.role ?? '');
+    const roleName = (ROLE_MAP[prismaRole] ?? prismaRole).toLowerCase();
+    const allowedRoles = requiredRoles.map((role) => role.toLowerCase());
 
-    if (!user || !roleName || !requiredRoles.includes(roleName)) {
+    if (!user || !roleName || !allowedRoles.includes(roleName)) {
       throw new ForbiddenException(
-        'Acceso Restringido: Solo las empresas vinculadas pueden lanzar y gestionar retos en Pista 8.',
+        'Acceso Restringido: No tienes permisos para esta sección.',
       );
     }
 

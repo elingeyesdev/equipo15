@@ -4,6 +4,7 @@ import { DashboardLayout } from './DashboardLayout';
 import { WithRoleGuard } from './WithRoleGuard';
 import { useAuth } from '../../../context/AuthContext';
 import { DashboardSkeleton } from './DashboardSkeleton';
+import AccessConfigPage from '../../admin/AccessConfigPage';
 
 const AdminStatsView = lazy(() => import('../views/admin').then(m => ({ default: m.AdminStatsView })));
 const AdminClientsView = lazy(() => import('../views/admin').then(m => ({ default: m.AdminClientsView })));
@@ -41,6 +42,8 @@ export const DashboardRoutes = () => {
           <Route path="admin/stats" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminStatsView /></WithRoleGuard>} />
           <Route path="admin/clients" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminClientsView /></WithRoleGuard>} />
           <Route path="admin/access" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminAccessView /></WithRoleGuard>} />
+          <Route path="admin/whitelist" element={<WithRoleGuard allowedRoles={['ADMIN']}><AccessConfigPage /></WithRoleGuard>} />
+          <Route path="admin/access-config" element={<WithRoleGuard allowedRoles={['ADMIN']}><AccessConfigPage /></WithRoleGuard>} />
           <Route path="admin/users" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminUsersView /></WithRoleGuard>} />
           <Route path="admin/support" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminSupportView /></WithRoleGuard>} />
 
@@ -56,6 +59,10 @@ export const DashboardRoutes = () => {
 
           <Route path="/" element={<DashboardIndexRedirect />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          {import.meta.env.DEV && (
+            // Development helper route to open the whitelist manager without role guards
+            <Route path="dev/whitelist" element={<AccessConfigPage />} />
+          )}
         </Routes>
       </Suspense>
     </DashboardLayout>

@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import * as S from '../styles/AdminStyles';
 import { Pista8Theme } from '../../../../config/theme';
 import { FACULTIES, getFacultySlug } from '../../../../config/faculties';
+import { facultiesService, formatFacultyLabel } from '@/services/faculties.service';
+import type { FacultyCatalogItem } from '@/types/models';
 
 interface ChallengeBuilderProps {
   userProfile: any;
@@ -28,6 +30,16 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
   togglePrivacy, handleStartDateChange, copyToClipboard, copyStatus, formErrors,
   submitted, setSubmitted, handleSaveChallenge, saving
 }) => {
+  const [apiFaculties, setApiFaculties] = useState<FacultyCatalogItem[]>([]);
+
+  useEffect(() => {
+    void facultiesService.getActiveFaculties().then(setApiFaculties).catch(() => setApiFaculties([]));
+  }, []);
+
+  const facultyOptions = apiFaculties.length > 0
+    ? apiFaculties.filter((f) => f.name.toLowerCase() !== 'todas')
+    : null;
+
   const today = new Date().toISOString().split('T')[0];
   if (!showForm) {
     return (
@@ -128,14 +140,24 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
               <S.FormGroup>
                 <S.FieldLabel>Asignar a Facultad</S.FieldLabel>
                 <S.Select 
-                  value={formData.facultyId}
+                  value={formData.facultyId ?? 0}
                     disabled={readOnlyMode}
-                  onChange={(e) => setFormData({...formData, facultyId: Number(e.target.value)})}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setFormData({
+                      ...formData,
+                      facultyId: next === '0' ? 0 : next,
+                    });
+                  }}
                 >
                   <option value="0">Todas las Facultades</option>
-                  {FACULTIES.map(f => (
-                    <option key={f.id} value={f.id}>{f.name}</option>
-                  ))}
+                  {facultyOptions
+                    ? facultyOptions.map((f) => (
+                        <option key={f.id} value={f.id}>{formatFacultyLabel(f.name)}</option>
+                      ))
+                    : FACULTIES.map((f) => (
+                        <option key={f.id} value={f.id}>{f.name}</option>
+                      ))}
                 </S.Select>
               </S.FormGroup>
             </S.TwoColumnRow>

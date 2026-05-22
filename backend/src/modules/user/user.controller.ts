@@ -6,6 +6,10 @@ import {
   UseGuards,
   Request,
   Post,
+  Put,
+  Param,
+  Delete,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UserService } from './user.service';
@@ -13,13 +17,30 @@ import type { UserResponse } from './user.service';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
 import type { AuthenticatedRequest } from '../../common/types/authenticated-request.interface';
+import { AdminService } from '../admin/admin.service';
+import { CreateFacultyDto } from '../admin/dto/create-faculty.dto';
+import { UpdateFacultyDto } from '../admin/dto/update-faculty.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
 @UseGuards(FirebaseAuthGuard)
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly adminService: AdminService,
+  ) {}
+
+  private async assertAdmin(req: AuthenticatedRequest) {
+    const profile = await this.userService.findByUid(req.user.uid);
+    const role = String(profile?.role ?? profile?.roleName ?? '').toLowerCase();
+
+    if (role !== 'admin') {
+      throw new ForbiddenException(
+        'Acceso Restringido: Se requiere rol de administrador.',
+      );
+    }
+  }
 
   private applySessionContext(
     profile: UserResponse | null,
@@ -114,8 +135,52 @@ export class UsersController {
   }
 
   @Get('faculties')
-  @ApiOperation({ summary: 'Get all faculties' })
-  async getFaculties() {
-    return this.userService.getAllFaculties();
+  @ApiOperation({ summary: 'Get faculties (active for users, full catalog for admin)' })
+  async getFaculties(@Request() req: AuthenticatedRequest) {
+    const profile = await this.userService.findByUid(req.user.uid);
+    const isAdmin = String(profile?.role ?? profile?.roleName ?? '').toLowerCase() === 'admin';
+    return this.userService.getAllFaculties(!isAdmin);
+  }
+
+  @Post('faculties')
+  @ApiOperation({ summary: 'Create faculty (admin)' })
+  async createFaculty(
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: CreateFacultyDto,
+  ) {
+    await this.assertAdmin(req);
+    return this.adminService.createFaculty(dto);
+  }
+
+  @Put('faculties/:id')
+  @ApiOperation({ summary: 'Update faculty name (admin)' })
+  async updateFacultyCatalog(
+    @Request() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() dto: UpdateFacultyDto,
+  ) {
+    await this.assertAdmin(req);
+    return this.adminService.updateFaculty(id, dto);
+  }
+
+  @Patch('faculties/:id/status')
+  @ApiOperation({ summary: 'Toggle faculty status (admin)' })
+  async updateFacultyCatalogStatus(
+    @Request() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() body: { isActive: boolean },
+  ) {
+    await this.assertAdmin(req);
+    return this.adminService.updateFacultyStatus(id, body.isActive);
+  }
+
+  @Delete('faculties/:id')
+  @ApiOperation({ summary: 'Delete faculty (admin)' })
+  async removeFacultyCatalog(
+    @Request() req: AuthenticatedRequest,
+    @Param('id') id: string,
+  ) {
+    await this.assertAdmin(req);
+    return this.adminService.removeFaculty(id);
   }
 }

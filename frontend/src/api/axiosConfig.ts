@@ -13,14 +13,26 @@ instance.interceptors.request.use(
   async (config) => {
     const impersonationSession = getStoredImpersonationSession();
     if (impersonationSession?.token) {
-      config.headers.Authorization = `Bearer ${impersonationSession.token}`;
-      return config;
+      // If the request already sets an Authorization header (e.g. explicit Firebase ID Token
+      // for a sync/registration POST), do not overwrite it with the impersonation token.
+      const hasAuthHeader = !!(
+        (config.headers && (config.headers.Authorization || config.headers.authorization))
+      );
+      if (!hasAuthHeader) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${impersonationSession.token}`;
+        return config;
+      }
     }
 
     const user = auth.currentUser;
     if (user) {
       const token = await user.getIdToken();
-      config.headers.Authorization = `Bearer ${token}`;
+      // Only set Firebase token if there's no existing Authorization header
+      if (!config.headers || !(config.headers.Authorization || config.headers.authorization)) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },

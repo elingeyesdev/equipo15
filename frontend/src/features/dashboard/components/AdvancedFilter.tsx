@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 import { interactiveHover, premiumTooltip } from '../styles/CommonStyles';
 import { FACULTIES } from '../../../config/faculties';
+import { useActiveFaculties } from '../../../hooks/useActiveFaculties';
 import type { SortMode } from '../../../features/sky-wall/types';
 
 export type TopLimit = 5 | 10 | 20 | null;
@@ -10,7 +11,7 @@ export type TopLimit = 5 | 10 | 20 | null;
 export interface AdvancedFilterState {
   sortOrder: SortMode | null;
   topLimit: TopLimit;
-  facultyId: number | null;
+  facultyId: string | number | null;
   onlyFavorites: boolean;
   onlyMyIdeas: boolean;
 }
@@ -151,6 +152,10 @@ const TOP_OPTIONS: { label: string; value: TopLimit }[] = [
 ];
 
 const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabled }) => {
+  const { faculties: apiFaculties } = useActiveFaculties();
+  const facultyOptions = apiFaculties.length > 0
+    ? apiFaculties.filter((f) => f.name.toLowerCase() !== 'todas')
+    : FACULTIES.map((f) => ({ id: f.id, name: f.slug }));
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -177,8 +182,8 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabl
   if (value.onlyFavorites) summaryParts.push('Favoritos');
   if (value.onlyMyIdeas) summaryParts.push('Mis Ideas');
   if (value.facultyId) {
-    const fac = FACULTIES.find(f => f.id === value.facultyId);
-    if (fac) summaryParts.push(fac.slug);
+    const fac = facultyOptions.find((f) => String(f.id) === String(value.facultyId));
+    if (fac) summaryParts.push('name' in fac && typeof fac.name === 'string' ? fac.name : String(fac.id));
   }
 
   return (
@@ -250,14 +255,18 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabl
               >
                 Todas
               </Chip>
-              {FACULTIES.map(f => (
+              {facultyOptions.map((f) => (
                 <Chip
                   key={f.id}
-                  $active={value.facultyId === f.id}
-                  onClick={() => update({ facultyId: value.facultyId === f.id ? null : f.id })}
+                  $active={String(value.facultyId) === String(f.id)}
+                  onClick={() =>
+                    update({
+                      facultyId: String(value.facultyId) === String(f.id) ? null : f.id,
+                    })
+                  }
                   type="button"
                 >
-                  {f.slug}
+                  {f.name}
                 </Chip>
               ))}
             </ChipRow>

@@ -225,3 +225,14 @@ model Faculty {
   @@unique([name, institutionId])
   @@map("faculties")
 }
+
+model AllowedDomain {
+  id        String   @id @default(uuid())
+  domain    String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("allowed_domains")
+  @@index([domain])
+}

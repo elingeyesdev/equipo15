@@ -4,17 +4,19 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
-import {
-  ALLOWED_EMAIL_DOMAINS,
-  BLOCKED_EMAIL_DOMAINS,
-  WHITELISTED_EMAILS,
-} from '../constants/email-domains';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../infrastructure/database/prisma.service';
+import { WHITELISTED_EMAILS, BLOCKED_EMAIL_DOMAINS } from '../constants/email-domains';
+import { extractEmailDomain, normalizeEmail } from '../utils/email-domain.util';
 
-@ValidatorConstraint({ async: false })
+@ValidatorConstraint({ async: true })
+@Injectable()
 export class IsAllowedDomainConstraint implements ValidatorConstraintInterface {
-  validate(email: string) {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async validate(email: string) {
     if (!email) return false;
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
 
     if (
       WHITELISTED_EMAILS.includes(
@@ -24,18 +26,27 @@ export class IsAllowedDomainConstraint implements ValidatorConstraintInterface {
       return true;
     }
 
-    const isAllowed = ALLOWED_EMAIL_DOMAINS.some((domain) =>
-      normalizedEmail.endsWith(domain),
-    );
-    const isBlocked = BLOCKED_EMAIL_DOMAINS.some((domain) =>
-      normalizedEmail.endsWith(domain),
-    );
+    const domain = extractEmailDomain(normalizedEmail);
+    if (!domain) return false;
 
-    return isAllowed && !isBlocked;
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true },
+    });
+
+    if (existingUser) {
+      return true;
+    }
+
+    const isBlocked = BLOCKED_EMAIL_DOMAINS.some((b) => domain.endsWith(b.replace('@', '')) || normalizedEmail.endsWith(b));
+    if (isBlocked) return false;
+
+    const found = await this.prisma.allowedDomain.findFirst({ where: { domain, isActive: true } });
+    return !!found;
   }
 
   defaultMessage() {
-    return 'El correo debe ser @univalle.edu, @est.univalle.edu o de administración oficial.';
+    return 'El correo debe pertenecer a un dominio autorizado.';
   }
 }
 

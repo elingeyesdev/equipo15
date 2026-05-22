@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AdminRepository } from './admin.repository';
 import { createImpersonationToken } from './impersonation-token.util';
+import { CreateAllowedDomainDto } from './dto/create-allowed-domain.dto';
 
 @Injectable()
 export class AdminService {
@@ -51,5 +52,22 @@ export class AdminService {
       readOnly: true,
       sessionMode: 'READ_ONLY' as const,
     };
+  }
+
+  async getAllowedDomains() {
+    return this.adminRepository.getAllowedDomains();
+  }
+
+  async addAllowedDomain(dto: CreateAllowedDomainDto) {
+    // repository handles unique constraint errors
+    return this.adminRepository.createAllowedDomain(dto.domain.toLowerCase());
+  }
+
+  async updateAllowedDomainStatus(id: string, isActive: boolean) {
+    return this.adminRepository.updateAllowedDomainStatus(id, isActive);
+  }
+
+  async removeAllowedDomain(id: string) {
+    return this.adminRepository.deleteAllowedDomain(id);
   }
 }

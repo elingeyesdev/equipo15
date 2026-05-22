@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { User } from '@prisma/client';
+import { WHITELISTED_EMAILS, BLOCKED_EMAIL_DOMAINS } from '../../common/constants/email-domains';
+import { extractEmailDomain, normalizeEmail } from '../../common/utils/email-domain.util';
 
 @Injectable()
 export class UserRepository {
@@ -103,5 +105,31 @@ export class UserRepository {
     return this.prisma.faculty.findMany({
       orderBy: { name: 'asc' },
     });
+  }
+
+  async isEmailAllowed(email: string): Promise<boolean> {
+    if (!email) return false;
+    const normalized = normalizeEmail(email);
+
+    if (
+      WHITELISTED_EMAILS.includes(
+        normalized as (typeof WHITELISTED_EMAILS)[number],
+      )
+    ) {
+      return true;
+    }
+
+    const domain = extractEmailDomain(normalized);
+    if (!domain) return false;
+
+    // Check explicit allowed domains first — these should override the blocked list
+    const found = await this.prisma.allowedDomain.findFirst({ where: { domain, isActive: true } });
+    if (found) return true;
+
+    // Then check blocked domains (public providers)
+    const isBlocked = BLOCKED_EMAIL_DOMAINS.some((b) => normalized.endsWith(b));
+    if (isBlocked) return false;
+
+    return false;
   }
 }

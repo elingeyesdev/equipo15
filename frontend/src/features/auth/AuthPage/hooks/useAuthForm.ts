@@ -93,6 +93,14 @@ export const useAuthForm = () => {
       case 'auth/user-not-found': return 'No existe una cuenta con este correo.';
       case 'auth/popup-closed-by-user': return 'El login de Google fue cancelado.';
       case 'auth/network-request-failed': return 'Error de red. Verifica tu conexión.';
+      case '403':
+      case 'ERR_BAD_REQUEST':
+        return (
+          error?.response?.data?.message ||
+          (error?.response?.status === 403
+            ? 'Tu correo no pertenece a un dominio autorizado.'
+            : 'No fue posible autorizar tu acceso.')
+        );
       default: return error?.message || 'Ocurrió un error inesperado. Intenta de nuevo.';
     }
   };

@@ -4,6 +4,7 @@ import * as S from './styles/AdminStyles';
 
 import AdminSidebar from './components/AdminSidebar';
 import ChallengeBuilder from './components/ChallengeBuilder';
+import AccessConfigPage from '../AccessConfigPage';
 
 
 import { useAdminDashboard } from './hooks/useAdminDashboard';
@@ -59,6 +60,10 @@ export const AdminDashboard = () => {
                 <S.EmptyLabel>El módulo de estadísticas estará disponible en el Sprint 2.</S.EmptyLabel>
              </S.EmptyState>
           )}
+
+           {ds.activeTab === 'whitelist' && (
+            <AccessConfigPage />
+           )}
         </S.Canvas>
       </S.Main>
     </S.Root>

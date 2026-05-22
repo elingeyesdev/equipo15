@@ -342,7 +342,7 @@ export class ChallengeService {
 
     if (!isNaN(numericId) && numericId >= 1 && numericId <= 6) {
       // It's a legacy numeric ID — resolve to UUID
-      const faculties = await this.userService.getAllFaculties();
+      const faculties = await this.userService.getAllFaculties(false);
       const targetName = LEGACY_MAP[numericId]?.toLowerCase();
       this.logger.log(
         `Resolving legacy faculty ID ${facultyId} → name "${targetName}"`,
@@ -366,7 +366,7 @@ export class ChallengeService {
 
     // It's already a UUID string — verify it exists
     if (typeof facultyId === 'string' && facultyId.length > 10) {
-      const faculties = await this.userService.getAllFaculties();
+      const faculties = await this.userService.getAllFaculties(false);
       const exists = faculties.find((f) => f.id === facultyId);
       if (exists) {
         this.logger.log(`Faculty UUID verified: ${exists.name} (${exists.id})`);

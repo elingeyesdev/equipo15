@@ -1,7 +1,6 @@
 import {
   Activity,
   Building,
-  Mail,
   ShieldCheck,
   Eye,
   BarChart3,
@@ -26,7 +25,7 @@ export interface NavItem {
 export const NAVIGATION_CONFIG: NavItem[] = [
   { name: 'Resumen Global', icon: Activity, path: '/dashboard/admin/stats', roles: ['ADMIN'] },
   { name: 'Gestión Clientes', icon: Building, path: '/dashboard/admin/clients', roles: ['ADMIN'] },
-  { name: 'Config. Accesos', icon: Mail, path: '/dashboard/admin/access', roles: ['ADMIN'] },
+  { name: 'Accesos y registros', icon: ShieldCheck, path: '/dashboard/admin/whitelist', roles: ['ADMIN'] },
   { name: 'Control Usuarios', icon: ShieldCheck, path: '/dashboard/admin/users', roles: ['ADMIN'] },
   { name: 'Soporte', icon: Eye, path: '/dashboard/admin/support', roles: ['ADMIN'] },
 

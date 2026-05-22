@@ -210,3 +210,20 @@ export interface ImpersonationSession {
   sessionMode: 'READ_ONLY';
   company: CompanySupportItem;
 }
+
+export interface AllowedDomain {
+  id: string;
+  domain: string;
+  isActive: boolean;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
+export interface FacultyCatalogItem {
+  id: string;
+  name: string;
+  isActive: boolean;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+

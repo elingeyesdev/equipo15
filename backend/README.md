@@ -355,3 +355,13 @@ Documentacion Swagger disponible en: `http://localhost:3000/docs`
 - Roberto Rodriguez Giorgetti
 
 *Proyecto de Sistemas II - UNIVALLE 2026*
+
+## Endpoints añadidos (Whitelist de dominios)
+
+Se agregaron endpoints administrativos para gestionar dominios autorizados:
+
+- `GET /admin/whitelist` : Lista dominios permitidos.
+- `POST /admin/whitelist` : Crea un dominio permitido. Body: `{ "domain": "univalle.edu" }`.
+- `DELETE /admin/whitelist/:id` : Elimina un dominio permitido por `id`.
+
+La validación de registro utiliza la tabla `allowed_domains` para autorizar correos durante la sincronización/registro.

@@ -13,7 +13,7 @@ export const userService = {
     return response.data;
   },
 
-  updateFaculty: async (facultyId: number): Promise<ApiResponse<UserProfile>> => {
+  updateFaculty: async (facultyId: string | number): Promise<ApiResponse<UserProfile>> => {
     const response = await axiosInstance.patch<ApiResponse<UserProfile>>('/users/faculty', { facultyId });
     return response.data;
   }

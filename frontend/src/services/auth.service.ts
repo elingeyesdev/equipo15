@@ -4,6 +4,7 @@ import {
   signInWithPopup,
   signOut,
   updateProfile,
+  deleteUser,
   sendPasswordResetEmail,
   linkWithPopup,
   reauthenticateWithCredential,
@@ -12,78 +13,62 @@ import {
   verifyPasswordResetCode,
   confirmPasswordReset,
 } from 'firebase/auth';
-import { toast } from 'sonner';
 import axiosInstance from '@/api/axiosConfig';
 import { auth, googleProvider } from '@/config/firebase';
 import { clearStoredImpersonationToken } from '@/utils/impersonation-session';
 
-const validateDomain = (email: string | null) => {
-  if (!email) return false;
-  const allowedDomains = ['@univalle.edu', '@est.univalle.edu', '@pista8.com'];
-  const allowedEmails = ['elingeyesdev@gmail.com'];
-
-  return (
-    allowedDomains.some((domain) => email.endsWith(domain)) ||
-    allowedEmails.includes(email)
-  );
-};
-
 export const authService = {
   register: async (email: string, pass: string, name: string, phone?: string) => {
-    if (!validateDomain(email)) {
-      toast.error('Acceso restringido a la comunidad UNIVALLE');
-      throw new Error('Invalid domain');
-    }
+    let userCredential: Awaited<ReturnType<typeof createUserWithEmailAndPassword>>;
 
-    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-    await updateProfile(userCredential.user, { displayName: name });
+    try {
+      userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      await updateProfile(userCredential.user, { displayName: name });
 
-    const token = await userCredential.user.getIdToken();
-    const uid = userCredential.user.uid;
+      const token = await userCredential.user.getIdToken();
+      const uid = userCredential.user.uid;
 
-    await signOut(auth);
+      await signOut(auth);
 
-    await axiosInstance.post(
-      '/users/sync',
-      {
-        firebaseUid: uid,
-        email,
-        displayName: name,
-        role: 'student',
-        phone,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      await axiosInstance.post(
+        '/users/sync',
+        {
+          firebaseUid: uid,
+          email,
+          displayName: name,
+          role: 'student',
+          phone,
         },
-      },
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+    } catch (error) {
+      await deleteUser(userCredential.user).catch(() => undefined);
+      await signOut(auth);
+      throw error;
+    }
   },
 
   login: async (email: string, pass: string) => {
-    if (!validateDomain(email)) {
-      toast.error('Acceso restringido a la comunidad UNIVALLE');
-      throw new Error('Invalid domain');
-    }
-
     const userCredential = await signInWithEmailAndPassword(auth, email, pass);
 
-    return axiosInstance.post('/users/sync', {
-      firebaseUid: userCredential.user.uid,
-      email,
-      displayName: userCredential.user.displayName || 'Usuario',
-    });
+    try {
+      return await axiosInstance.post('/users/sync', {
+        firebaseUid: userCredential.user.uid,
+        email,
+        displayName: userCredential.user.displayName || 'Usuario',
+      });
+    } catch (error) {
+      await signOut(auth);
+      throw error;
+    }
   },
 
   loginWithGoogle: async () => {
     const result = await signInWithPopup(auth, googleProvider);
-    const email = result.user.email;
-
-    if (!validateDomain(email)) {
-      await signOut(auth);
-      toast.error('Acceso restringido a la comunidad UNIVALLE');
-      throw new Error('Invalid domain');
-    }
 
     try {
       return await axiosInstance.post('/users/sync', {
@@ -98,6 +83,9 @@ export const authService = {
         const customError = new Error('USER_NOT_FOUND');
         (customError as any).code = 'auth/user-not-found-in-db';
         throw customError;
+      }
+      if (error.response?.status === 403) {
+        await signOut(auth);
       }
       throw error;
     }

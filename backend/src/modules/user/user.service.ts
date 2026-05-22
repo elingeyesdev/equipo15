@@ -12,6 +12,10 @@ import {
   isAuthorizedEmail,
 } from './utils/user-metadata.util';
 import { EventsGateway } from '../../infrastructure/events/events.gateway';
+import {
+  extractEmailDomain,
+  normalizeEmail,
+} from '../../common/utils/email-domain.util';
 
 export interface UserResponse extends User {
   roleName: string;
@@ -50,46 +54,64 @@ export class UserService {
     preventCreation = false,
   ): Promise<UserResponse | null> {
     const { firebaseUid, email } = createUserDto;
+    const normalizedEmail = email ? normalizeEmail(email) : '';
 
     let user = await this.userRepository.findByUid(firebaseUid);
 
-    if (!user && email) {
-      user = await this.userRepository.findByEmail(email);
+    if (!user && normalizedEmail) {
+      user = await this.userRepository.findByEmail(normalizedEmail);
       if (user) {
-        await this.userRepository.updateByEmail(email, { firebaseUid });
+        await this.userRepository.updateByEmail(normalizedEmail, { firebaseUid });
       }
     }
 
-    if (user && !forceUpdate) {
+    if (user) {
       user = await this.clearExpiredPenalties(user);
+
+      if (forceUpdate) {
+        const refreshed = await this.userRepository.updateByUid(firebaseUid, {
+          displayName: createUserDto.displayName,
+          avatarUrl: createUserDto.avatarUrl,
+        });
+        return this.formatUserResponse(refreshed ?? user);
+      }
+
       return this.formatUserResponse(user);
     }
 
-    if (!user && preventCreation) {
+    if (preventCreation) {
       throw new NotFoundException('No existe cuenta asociada a este correo.');
     }
 
-    if (!email) {
+    if (!normalizedEmail) {
       return null;
     }
 
-    if (!isAuthorizedEmail(email)) {
+    const allowed = await this.userRepository.isEmailAllowed(normalizedEmail);
+    if (!allowed) {
+      const domain = extractEmailDomain(normalizedEmail);
+      const domainPaused =
+        domain &&
+        (await this.userRepository.isDomainListedButInactive(domain));
+
       throw new ForbiddenException(
-        'Acceso restringido a cuentas institucionales autorizadas.',
+        domainPaused
+          ? 'Los registros con este dominio están pausados. Si ya tenías cuenta, inicia sesión con el mismo correo con el que te registraste.'
+          : 'Acceso restringido a cuentas institucionales autorizadas.',
       );
     }
 
-    const role = getRoleFromEmail(email);
+    const role = getRoleFromEmail(normalizedEmail);
 
     const userData: any = {
       firebaseUid,
-      email,
+      email: normalizedEmail,
       displayName: createUserDto.displayName,
       avatarUrl: createUserDto.avatarUrl,
       role,
     };
 
-    const detectedFacultyId = extractFacultyFromEmail(email);
+    const detectedFacultyId = extractFacultyFromEmail(normalizedEmail);
     if (detectedFacultyId !== null) {
       const mappedId = await this.mapLegacyFacultyId(detectedFacultyId);
       if (mappedId) {
@@ -223,7 +245,7 @@ export class UserService {
 
     if (isNaN(numericId)) {
       if (typeof legacyId === 'string' && legacyId.length > 10) {
-        const faculties = await this.userRepository.getAllFaculties();
+        const faculties = await this.userRepository.getAllFaculties(false);
         const exists = faculties.find((f) => f.id === legacyId);
         if (exists) return exists.id;
       }
@@ -241,7 +263,7 @@ export class UserService {
 
     const targetName = facultyMapping[numericId]?.toLowerCase();
     if (targetName) {
-      const faculties = await this.userRepository.getAllFaculties();
+      const faculties = await this.userRepository.getAllFaculties(false);
       const matched = faculties.find(
         (f) =>
           f.name.toLowerCase().includes(targetName) ||
@@ -252,7 +274,7 @@ export class UserService {
     return null;
   }
 
-  async getAllFaculties() {
-    return this.userRepository.getAllFaculties();
+  async getAllFaculties(onlyActive = true) {
+    return this.userRepository.getAllFaculties(onlyActive);
   }
 }

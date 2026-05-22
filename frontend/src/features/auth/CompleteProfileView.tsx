@@ -3,8 +3,9 @@ import styled, { keyframes, css } from 'styled-components';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { Pista8Theme } from '../../config/theme';
-import { FACULTIES } from '../../config/faculties';
 import { userService } from '../../services/user.service';
+import { useActiveFaculties } from '../../hooks/useActiveFaculties';
+import { formatFacultyLabel } from '../../services/faculties.service';
 
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(18px); }
@@ -172,6 +173,7 @@ const Divider = styled.div`
 
 export const CompleteProfileView = ({ onComplete }: { onComplete: () => void }) => {
   const { user } = useAuth();
+  const { faculties, loading: facultiesLoading } = useActiveFaculties();
   const [selectedFaculty, setSelectedFaculty] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
@@ -180,7 +182,7 @@ export const CompleteProfileView = ({ onComplete }: { onComplete: () => void }) 
     setLoading(true);
 
     try {
-      await userService.updateFaculty(Number(selectedFaculty));
+      await userService.updateFaculty(selectedFaculty);
       toast.success('Facultad guardada exitosamente');
       onComplete();
     } catch {
@@ -212,10 +214,16 @@ export const CompleteProfileView = ({ onComplete }: { onComplete: () => void }) 
             value={selectedFaculty}
             onChange={e => setSelectedFaculty(e.target.value)}
           >
-            <option value="" disabled>Selecciona tu facultad...</option>
-            {FACULTIES.map(fac => (
-              <option key={fac.id} value={fac.id}>{fac.name}</option>
-            ))}
+            <option value="" disabled>
+              {facultiesLoading ? 'Cargando facultades…' : 'Selecciona tu facultad...'}
+            </option>
+            {faculties
+              .filter((fac) => fac.name.toLowerCase() !== 'todas')
+              .map((fac) => (
+                <option key={fac.id} value={fac.id}>
+                  {formatFacultyLabel(fac.name)}
+                </option>
+              ))}
           </Select>
         </SelectWrap>
 

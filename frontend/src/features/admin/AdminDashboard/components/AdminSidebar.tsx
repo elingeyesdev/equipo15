@@ -20,6 +20,15 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
     setIsPreview(false);
   };
 
+  const isAdmin = Boolean(
+    userProfile && (
+      (userProfile.role || '').toString().toLowerCase() === 'admin' ||
+      (userProfile.roleName || '').toString().toLowerCase() === 'admin' ||
+      (userProfile.roleInfo?.name || '').toString().toLowerCase() === 'admin' ||
+      (userProfile.roleId?.name || '').toString().toLowerCase() === 'admin'
+    ),
+  );
+
   return (
     <S.Sidebar>
       <div style={{ flex: 1 }}>
@@ -62,6 +71,16 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             </svg>
             Estadísticas
           </S.NavBtn>
+          {isAdmin && (
+            <S.NavBtn active={activeTab === 'whitelist'} onClick={() => { setActiveTab('whitelist'); resetVews(); }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 7h18" />
+                <path d="M3 12h18" />
+                <path d="M3 17h18" />
+              </svg>
+              Dominios autorizados
+            </S.NavBtn>
+          )}
         </S.SidebarNav>
       </div>
 

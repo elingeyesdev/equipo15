@@ -143,4 +143,24 @@ export class AdminRepository {
       challengesPerformance,
     };
   }
+
+  // Allowed domains (whitelist)
+  async getAllowedDomains() {
+    return this.prisma.allowedDomain.findMany({ orderBy: { domain: 'asc' } });
+  }
+
+  async createAllowedDomain(domain: string) {
+    return this.prisma.allowedDomain.create({ data: { domain, isActive: true } });
+  }
+
+  async deleteAllowedDomain(id: string) {
+    return this.prisma.allowedDomain.delete({ where: { id } });
+  }
+
+  async updateAllowedDomainStatus(id: string, isActive: boolean) {
+    return this.prisma.allowedDomain.update({
+      where: { id },
+      data: { isActive },
+    });
+  }
 }
