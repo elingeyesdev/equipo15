@@ -163,4 +163,129 @@ export class AdminRepository {
       data: { isActive },
     });
   }
+
+  // ─── Faculty Management ────────────────────────────────────────────────────
+
+  async createFaculty(data: { name: string }) {
+    return this.prisma.faculty.create({ data });
+  }
+
+  async updateFaculty(id: string, data: { name: string }) {
+    return this.prisma.faculty.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async updateFacultyStatus(id: string, isActive: boolean) {
+    return this.prisma.faculty.update({
+      where: { id },
+      data: { isActive },
+    });
+  }
+
+  async removeFaculty(id: string) {
+    return this.prisma.faculty.delete({
+      where: { id },
+    });
+  }
+
+  // ─── User Search & Role Management (E2.3) ──────────────────────────────────
+
+  async searchUsers(
+    query?: string,
+    roleFilter?: string,
+    page = 1,
+    limit = 20,
+  ) {
+    const where: any = {};
+
+    // ILIKE search on email and displayName
+    if (query && query.trim().length > 0) {
+      where.OR = [
+        { email: { contains: query.trim(), mode: 'insensitive' } },
+        { displayName: { contains: query.trim(), mode: 'insensitive' } },
+      ];
+    }
+
+    // Optional role filter
+    if (roleFilter && ['ADMIN', 'COMPANY', 'JUDGE', 'USER'].includes(roleFilter.toUpperCase())) {
+      where.role = roleFilter.toUpperCase();
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          firebaseUid: true,
+          email: true,
+          displayName: true,
+          avatarUrl: true,
+          role: true,
+          status: true,
+          faculty: { select: { id: true, name: true } },
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { displayName: 'asc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    return { users, total, page, limit };
+  }
+
+  async updateUserRole(userId: string, newRole: 'ADMIN' | 'COMPANY' | 'JUDGE' | 'USER') {
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Verify user exists and capture current role
+      const existingUser = await tx.user.findUnique({
+        where: { id: userId },
+        select: { id: true, role: true, displayName: true, email: true },
+      });
+
+      if (!existingUser) {
+        return null; // Service layer will throw NotFoundException
+      }
+
+      const previousRole = existingUser.role;
+
+      // 2. Skip if role is the same
+      if (previousRole === newRole) {
+        return {
+          user: existingUser,
+          previousRole,
+          newRole,
+          changed: false,
+        };
+      }
+
+      // 3. Atomic role update within the same transaction
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: { role: newRole },
+        select: {
+          id: true,
+          email: true,
+          displayName: true,
+          role: true,
+          status: true,
+          avatarUrl: true,
+          faculty: { select: { id: true, name: true } },
+          updatedAt: true,
+        },
+      });
+
+      return {
+        user: updatedUser,
+        previousRole,
+        newRole,
+        changed: true,
+      };
+    });
+  }
 }

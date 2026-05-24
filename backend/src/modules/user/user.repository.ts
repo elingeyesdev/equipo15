@@ -101,10 +101,18 @@ export class UserRepository {
     });
   }
 
-  async getAllFaculties() {
+  async getAllFaculties(onlyActive?: boolean) {
     return this.prisma.faculty.findMany({
+      where: onlyActive ? { isActive: true } : undefined,
       orderBy: { name: 'asc' },
     });
+  }
+
+  async isDomainListedButInactive(domain: string): Promise<boolean> {
+    const found = await this.prisma.allowedDomain.findFirst({
+      where: { domain, isActive: false },
+    });
+    return !!found;
   }
 
   async isEmailAllowed(email: string): Promise<boolean> {

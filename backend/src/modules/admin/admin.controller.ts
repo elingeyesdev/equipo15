@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Request, UseGuards, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Query, Request, UseGuards, Patch } from '@nestjs/common';
 import { Body, Delete } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
@@ -8,6 +8,7 @@ import { AdminService } from './admin.service';
 import { GlobalAnalyticsResponseDto } from './dto/global-analytics-response.dto';
 import { CreateAllowedDomainDto } from './dto/create-allowed-domain.dto';
 import { AllowedDomainResponseDto } from './dto/allowed-domain-response.dto';
+import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import type { AuthenticatedRequest } from '../../common/types/authenticated-request.interface';
 
 @ApiTags('Admin')
@@ -112,4 +113,36 @@ export class AdminController {
   async removeAllowedDomainLegacy(@Param('id') id: string) {
     return this.adminService.removeAllowedDomain(id);
   }
+
+  // ─── User Search & Role Management (E2.3) ──────────────────────────────────
+
+  @Get('users')
+  @ApiOperation({ summary: 'Search users by name or email with optional role filter' })
+  @ApiResponse({ status: 200, description: 'Paginated list of users matching the search criteria' })
+  async searchUsers(
+    @Query('search') search?: string,
+    @Query('role') role?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.adminService.searchUsers(
+      search,
+      role,
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 20,
+    );
+  }
+
+  @Put('users/:id/role')
+  @ApiOperation({ summary: 'Update user role (transactional mutation)' })
+  @ApiResponse({ status: 200, description: 'User role updated successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid role value' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async updateUserRole(
+    @Param('id') userId: string,
+    @Body() dto: UpdateUserRoleDto,
+  ) {
+    return this.adminService.updateUserRole(userId, dto.role);
+  }
 }
+

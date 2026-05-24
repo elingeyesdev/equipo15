@@ -1,10 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { AdminRepository } from './admin.repository';
 import { createImpersonationToken } from './impersonation-token.util';
 import { CreateAllowedDomainDto } from './dto/create-allowed-domain.dto';
+import type { UserRoleEnum } from './dto/update-user-role.dto';
 
 @Injectable()
 export class AdminService {
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(private readonly adminRepository: AdminRepository) {}
 
   async getGlobalAnalytics() {
@@ -70,4 +73,49 @@ export class AdminService {
   async removeAllowedDomain(id: string) {
     return this.adminRepository.deleteAllowedDomain(id);
   }
+
+  // ─── Faculty Management ────────────────────────────────────────────────────
+
+  async createFaculty(dto: { name: string }) {
+    return this.adminRepository.createFaculty(dto);
+  }
+
+  async updateFaculty(id: string, dto: { name: string }) {
+    return this.adminRepository.updateFaculty(id, dto);
+  }
+
+  async updateFacultyStatus(id: string, isActive: boolean) {
+    return this.adminRepository.updateFacultyStatus(id, isActive);
+  }
+
+  async removeFaculty(id: string) {
+    return this.adminRepository.removeFaculty(id);
+  }
+
+  // ─── User Search & Role Management (E2.3) ──────────────────────────────────
+
+  async searchUsers(query?: string, roleFilter?: string, page = 1, limit = 20) {
+    return this.adminRepository.searchUsers(query, roleFilter, page, limit);
+  }
+
+  async updateUserRole(userId: string, newRole: UserRoleEnum) {
+    const result = await this.adminRepository.updateUserRole(userId, newRole);
+
+    if (!result) {
+      throw new NotFoundException(`Usuario con id "${userId}" no encontrado.`);
+    }
+
+    if (result.changed) {
+      this.logger.log(
+        `[ROLE_CHANGE] Usuario "${result.user.email}" (${userId}): ${result.previousRole} → ${result.newRole}`,
+      );
+    } else {
+      this.logger.log(
+        `[ROLE_CHANGE_NOOP] Usuario "${result.user.email}" (${userId}): ya tenía rol ${result.newRole}`,
+      );
+    }
+
+    return result.user;
+  }
 }
+

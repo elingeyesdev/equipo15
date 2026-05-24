@@ -415,12 +415,282 @@ export const AdminAccessView = () => (
   </div>
 );
 
-export const AdminUsersView = () => (
-  <div>
-    <h2>Control Usuarios</h2>
-    <p>Gestión de personas: Buscador de usuarios para asignar o revocar roles específicos (Admin, Juez, Company).</p>
-  </div>
-);
+export const AdminUsersView = () => {
+  const [users, setUsers] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const [confirmModal, setConfirmModal] = useState<{ userId: string; userName: string; newRole: string } | null>(null);
+  const [updating, setUpdating] = useState(false);
+  const limit = 15;
+
+  const ROLE_OPTIONS = [
+    { value: '', label: 'Todos' },
+    { value: 'ADMIN', label: 'Admin' },
+    { value: 'COMPANY', label: 'Empresa' },
+    { value: 'JUDGE', label: 'Juez' },
+    { value: 'USER', label: 'Estudiante' },
+  ];
+
+  const ROLE_LABELS: Record<string, string> = {
+    ADMIN: 'Admin',
+    COMPANY: 'Empresa',
+    JUDGE: 'Juez',
+    USER: 'Estudiante',
+  };
+
+  const ROLE_TONES: Record<string, 'green' | 'amber' | 'slate'> = {
+    ADMIN: 'amber',
+    COMPANY: 'green',
+    JUDGE: 'slate',
+    USER: 'green',
+  };
+
+  // Debounce: wait 350ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Fetch users when debounced search, role filter, or page changes
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      try {
+        const result = await adminService.searchUsers(debouncedSearch, roleFilter, page, limit);
+        setUsers(result.users);
+        setTotal(result.total);
+      } catch (error) {
+        toast.error('Error al buscar usuarios.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void fetchUsers();
+  }, [debouncedSearch, roleFilter, page]);
+
+  const totalPages = Math.ceil(total / limit);
+
+  const handleRoleChange = (userId: string, userName: string, newRole: string) => {
+    setConfirmModal({ userId, userName, newRole });
+  };
+
+  const confirmRoleChange = async () => {
+    if (!confirmModal) return;
+    setUpdating(true);
+    try {
+      await adminService.updateUserRole(confirmModal.userId, confirmModal.newRole);
+      toast.success(`Rol de ${confirmModal.userName} actualizado a ${ROLE_LABELS[confirmModal.newRole] || confirmModal.newRole}.`);
+      // Refresh list
+      setUsers(prev => prev.map(u =>
+        u.id === confirmModal.userId ? { ...u, role: confirmModal.newRole } : u,
+      ));
+    } catch (error) {
+      toast.error('Error al actualizar el rol.');
+    } finally {
+      setUpdating(false);
+      setConfirmModal(null);
+    }
+  };
+
+  return (
+    <ViewShell>
+      {/* Confirmation modal */}
+      {confirmModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
+        }}>
+          <div style={{
+            background: 'white', borderRadius: 24, padding: '32px 36px', maxWidth: 440,
+            boxShadow: '0 24px 80px rgba(0,0,0,0.18)', textAlign: 'center',
+          }}>
+            <h3 style={{ margin: '0 0 12px', fontSize: 18, fontWeight: 900, color: '#1a1f22' }}>
+              Confirmar cambio de rol
+            </h3>
+            <p style={{ margin: '0 0 24px', color: '#5b6470', lineHeight: 1.6 }}>
+              Cambiar el rol de <strong>{confirmModal.userName}</strong> a{' '}
+              <strong style={{ color: '#fe410a' }}>{ROLE_LABELS[confirmModal.newRole] || confirmModal.newRole}</strong>.
+              Esta accion es inmediata.
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <ActionBtn type="button" $variant="ghost" onClick={() => setConfirmModal(null)} disabled={updating}>
+                Cancelar
+              </ActionBtn>
+              <ActionBtn type="button" onClick={() => void confirmRoleChange()} disabled={updating}>
+                {updating ? 'Guardando...' : 'Confirmar'}
+              </ActionBtn>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Panel>
+        <PanelHeader>
+          <TitleBlock>
+            <Title>Control de Usuarios</Title>
+            <Description>
+              Busca usuarios por nombre o correo y asigna o revoca roles del sistema.
+            </Description>
+          </TitleBlock>
+          <SearchInput
+            type="search"
+            placeholder="Buscar por nombre o correo..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </PanelHeader>
+
+        {/* Role filter chips */}
+        <div style={{ padding: '0 24px 16px', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {ROLE_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { setRoleFilter(opt.value); setPage(1); }}
+              style={{
+                padding: '7px 16px', borderRadius: 999, border: 'none',
+                fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+                background: roleFilter === opt.value ? '#fe410a' : '#f1f5f9',
+                color: roleFilter === opt.value ? 'white' : '#475569',
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+          {total > 0 && (
+            <span style={{
+              marginLeft: 'auto', fontSize: 12, fontWeight: 600, color: '#94a3b8',
+              display: 'flex', alignItems: 'center',
+            }}>
+              {total} usuario{total !== 1 ? 's' : ''} encontrado{total !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+
+        <TableWrap>
+          <Table>
+            <thead>
+              <tr>
+                <TH style={{ textAlign: 'left' }}>Usuario</TH>
+                <TH>Facultad</TH>
+                <TH>Rol actual</TH>
+                <TH>Cambiar rol</TH>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr>
+                  <TD colSpan={4}>
+                    <EmptyState>Buscando usuarios...</EmptyState>
+                  </TD>
+                </tr>
+              )}
+              {!loading && users.length === 0 && (
+                <tr>
+                  <TD colSpan={4}>
+                    <EmptyState>
+                      {debouncedSearch
+                        ? `No se encontraron usuarios que coincidan con "${debouncedSearch}".`
+                        : 'No hay usuarios registrados.'}
+                    </EmptyState>
+                  </TD>
+                </tr>
+              )}
+              {!loading && users.map(user => (
+                <TR key={user.id}>
+                  <TD style={{ textAlign: 'left' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{
+                        width: 38, height: 38, borderRadius: 12, overflow: 'hidden',
+                        background: '#f1f5f9', flexShrink: 0, display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {user.avatarUrl
+                          ? <img src={user.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : <span style={{ fontSize: 16, fontWeight: 800, color: '#94a3b8' }}>
+                              {user.displayName?.[0]?.toUpperCase() || '?'}
+                            </span>
+                        }
+                      </div>
+                      <div>
+                        <RowTitle>{user.displayName}</RowTitle>
+                        <RowSub>{user.email}</RowSub>
+                      </div>
+                    </div>
+                  </TD>
+                  <TD>
+                    <span style={{ fontSize: 13, color: '#64748b' }}>
+                      {user.faculty?.name || 'Sin facultad'}
+                    </span>
+                  </TD>
+                  <TD>
+                    <StatusPill $tone={ROLE_TONES[user.role] || 'slate'}>
+                      {ROLE_LABELS[user.role] || user.role}
+                    </StatusPill>
+                  </TD>
+                  <TD>
+                    <select
+                      value={user.role}
+                      onChange={e => handleRoleChange(user.id, user.displayName, e.target.value)}
+                      style={{
+                        padding: '8px 12px', borderRadius: 10,
+                        border: '1.5px solid #e2e8f0', fontSize: 13, fontWeight: 600,
+                        color: '#1e293b', background: 'white', cursor: 'pointer',
+                        outline: 'none', transition: 'border-color 0.2s',
+                      }}
+                    >
+                      <option value="ADMIN">Admin</option>
+                      <option value="COMPANY">Empresa</option>
+                      <option value="JUDGE">Juez</option>
+                      <option value="USER">Estudiante</option>
+                    </select>
+                  </TD>
+                </TR>
+              ))}
+            </tbody>
+          </Table>
+        </TableWrap>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div style={{
+            padding: '16px 24px', display: 'flex', justifyContent: 'center',
+            alignItems: 'center', gap: 12, borderTop: '1px solid #f1f5f9',
+          }}>
+            <ActionBtn
+              type="button"
+              $variant="ghost"
+              disabled={page <= 1}
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              style={{ padding: '8px 16px', fontSize: 12 }}
+            >
+              Anterior
+            </ActionBtn>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#475569' }}>
+              Pagina {page} de {totalPages}
+            </span>
+            <ActionBtn
+              type="button"
+              $variant="ghost"
+              disabled={page >= totalPages}
+              onClick={() => setPage(p => p + 1)}
+              style={{ padding: '8px 16px', fontSize: 12 }}
+            >
+              Siguiente
+            </ActionBtn>
+          </div>
+        )}
+      </Panel>
+    </ViewShell>
+  );
+};
 
 export const AdminSupportView = () => {
   const navigate = useNavigate();

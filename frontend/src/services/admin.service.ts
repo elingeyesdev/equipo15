@@ -152,5 +152,28 @@ export const adminService = {
       return unwrapApiData(response.data);
     }
   },
+
+  // ─── User Search & Role Management (E2.3) ──────────────────────────────────
+
+  async searchUsers(
+    search?: string,
+    role?: string,
+    page = 1,
+    limit = 20,
+  ): Promise<{ users: any[]; total: number; page: number; limit: number }> {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (role) params.set('role', role);
+    params.set('page', String(page));
+    params.set('limit', String(limit));
+
+    const response = await axiosInstance.get(`/admin/users?${params.toString()}`);
+    return unwrapApiData(response.data);
+  },
+
+  async updateUserRole(userId: string, role: string): Promise<any> {
+    const response = await axiosInstance.put(`/admin/users/${userId}/role`, { role });
+    return unwrapApiData(response.data);
+  },
 };
 

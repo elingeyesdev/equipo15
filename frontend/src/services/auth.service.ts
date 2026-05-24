@@ -46,7 +46,9 @@ export const authService = {
         },
       );
     } catch (error) {
-      await deleteUser(userCredential.user).catch(() => undefined);
+      if (userCredential?.user) {
+        await deleteUser(userCredential.user).catch(() => undefined);
+      }
       await signOut(auth);
       throw error;
     }
