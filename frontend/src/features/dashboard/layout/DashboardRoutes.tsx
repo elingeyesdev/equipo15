@@ -18,6 +18,9 @@ const CompanyCriteriaView = lazy(() => import('../views/company').then(m => ({ d
 const CompanyPodiumView = lazy(() => import('../views/company').then(m => ({ default: m.CompanyPodiumView })));
 const CompanyJudgesView = lazy(() => import('../views/company').then(m => ({ default: m.CompanyJudgesView })));
 
+const ChallengeVinculacionView = lazy(() => import('../views/company/ChallengeVinculacionView').then(m => ({ default: m.ChallengeVinculacionView })));
+import { ChallengeOwnerGuard } from './ChallengeOwnerGuard';
+
 const JudgeInboxView = lazy(() => import('../views/judge').then(m => ({ default: m.JudgeInboxView })));
 const JudgeEvaluationView = lazy(() => import('../views/judge').then(m => ({ default: m.JudgeEvaluationView })));
 const JudgeHistoryView = lazy(() => import('../views/judge').then(m => ({ default: m.JudgeHistoryView })));
@@ -49,6 +52,7 @@ export const DashboardRoutes = () => {
 
           <Route path="company/stats" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyStatsView /></WithRoleGuard>} />
           <Route path="company/challenges" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyChallengesView /></WithRoleGuard>} />
+          <Route path="company/challenges/:challengeId/vinculacion" element={<ChallengeOwnerGuard><ChallengeVinculacionView /></ChallengeOwnerGuard>} />
           <Route path="company/criteria" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyCriteriaView /></WithRoleGuard>} />
           <Route path="company/podium" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyPodiumView /></WithRoleGuard>} />
           <Route path="company/judges" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyJudgesView /></WithRoleGuard>} />
