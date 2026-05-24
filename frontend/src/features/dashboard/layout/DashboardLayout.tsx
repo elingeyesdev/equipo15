@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { NAVIGATION_CONFIG } from './navigation.config';
@@ -30,7 +31,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
     return matchedItem ? matchedItem.name : 'Dashboard';
   }, [location.pathname]);
 
-  const resolvedName = resolveDisplayName(userProfile as any);
+  const resolvedName = resolveDisplayName(userProfile);
 
   const roleName: string = (userProfile?.roleInfo?.name || userProfile?.role || '').toLowerCase();
   const roleLabels: Record<string, string> = {
@@ -46,24 +47,35 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
       
       <S.Page>
         <PenaltyBanner />
-        {impersonationSession && (
-          <S.SupportBanner>
-            <S.SupportBannerCopy>
-              <S.SupportBannerBadge>Modo espejo</S.SupportBannerBadge>
-              <S.SupportBannerTitle>
-                Estás viendo la plataforma como {impersonationSession.company.displayName}
-              </S.SupportBannerTitle>
-              <S.SupportBannerText>
-                La sesión está bloqueada para escritura. Puedes revisar información y volver a tu cuenta de admin cuando termines.
-              </S.SupportBannerText>
-            </S.SupportBannerCopy>
-            <S.SupportBannerActions>
-              <S.SupportBannerButton type="button" onClick={() => void handleExitMirrorMode()}>
-                Salir del modo espejo
-              </S.SupportBannerButton>
-            </S.SupportBannerActions>
-          </S.SupportBanner>
-        )}
+        <AnimatePresence>
+          {impersonationSession && (
+            <motion.div
+              key="support-banner-wrapper"
+              initial={{ height: 'auto', opacity: 1 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              style={{ overflow: 'hidden' }}
+            >
+              <S.SupportBanner>
+                <S.SupportBannerCopy>
+                  <S.SupportBannerBadge>Modo espejo</S.SupportBannerBadge>
+                  <S.SupportBannerTitle>
+                    Estás viendo la plataforma como {impersonationSession.company.displayName}
+                  </S.SupportBannerTitle>
+                  <S.SupportBannerText>
+                    La sesión está bloqueada para escritura. Puedes revisar información y volver a tu cuenta de admin cuando termines.
+                  </S.SupportBannerText>
+                </S.SupportBannerCopy>
+                <S.SupportBannerActions>
+                  <S.SupportBannerButton type="button" onClick={() => void handleExitMirrorMode()}>
+                    Salir del modo espejo
+                  </S.SupportBannerButton>
+                </S.SupportBannerActions>
+              </S.SupportBanner>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <S.Header>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <Pista8Logo fill="#1a1f22" accent="#FE410A" />

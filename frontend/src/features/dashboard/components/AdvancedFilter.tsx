@@ -38,7 +38,7 @@ const TriggerBtn = styled.button<{ $active: boolean; $tooltipText?: string }>`
   border-radius: 999px;
   border: 1.5px solid ${p => p.$active ? Pista8Theme.primary : 'rgba(72,80,84,0.18)'};
   background: ${p => p.$active ? `${Pista8Theme.primary}10` : 'white'};
-  color: ${p => p.$active ? p.theme?.primary ?? Pista8Theme.primary : '#485054'};
+  color: ${p => p.$active ? Pista8Theme.primary : '#485054'};
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
