@@ -102,4 +102,9 @@ export const ideaService = {
     const response = await axiosInstance.patch(`/ideas/${ideaId}`, payload);
     return response.data;
   },
+
+  getMyIdeas: async () => {
+    const response = await axiosInstance.get('/ideas/me');
+    return response.data;
+  },
 };

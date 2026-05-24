@@ -5,6 +5,7 @@ import { Pista8Theme } from '../../config/theme';
 interface InfoTooltipProps {
   text: string;
   size?: number;
+  width?: number;
 }
 
 const tooltipReveal = keyframes`
@@ -57,12 +58,12 @@ const IconButton = styled.button<{ $size: number }>`
   }
 `;
 
-const TooltipBubble = styled.div<{ $visible: boolean }>`
+const TooltipBubble = styled.div<{ $visible: boolean; $width?: number }>`
   position: absolute;
   bottom: calc(100% + 12px);
   left: 50%;
   transform: translateX(-50%) translateY(${p => p.$visible ? '0' : '6px'});
-  width: 220px;
+  width: ${p => p.$width ?? 220}px;
   background: ${Pista8Theme.secondary};
   color: ${Pista8Theme.white};
   text-align: center;
@@ -91,7 +92,7 @@ const TooltipBubble = styled.div<{ $visible: boolean }>`
   }
 `;
 
-const InfoTooltip: React.FC<InfoTooltipProps> = ({ text, size = 24 }) => {
+const InfoTooltip: React.FC<InfoTooltipProps> = ({ text, size = 24, width }) => {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -116,7 +117,7 @@ const InfoTooltip: React.FC<InfoTooltipProps> = ({ text, size = 24 }) => {
           <line x1="12" y1="8" x2="12.01" y2="8" />
         </svg>
       </IconButton>
-      <TooltipBubble $visible={visible}>
+      <TooltipBubble $visible={visible} $width={width}>
         {text}
       </TooltipBubble>
     </Wrapper>

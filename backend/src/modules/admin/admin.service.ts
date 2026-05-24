@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { AdminRepository } from './admin.repository';
 import { createImpersonationToken } from './impersonation-token.util';
 import { CreateAllowedDomainDto } from './dto/create-allowed-domain.dto';
+import { CreateFacultyDto } from './dto/create-faculty.dto';
+import { UpdateFacultyDto } from './dto/update-faculty.dto';
 
 @Injectable()
 export class AdminService {
@@ -69,5 +71,21 @@ export class AdminService {
 
   async removeAllowedDomain(id: string) {
     return this.adminRepository.deleteAllowedDomain(id);
+  }
+
+  async createFaculty(dto: CreateFacultyDto) {
+    return this.adminRepository.createFaculty(dto.name.trim());
+  }
+
+  async updateFaculty(id: string, dto: UpdateFacultyDto) {
+    return this.adminRepository.updateFaculty(id, dto.name.trim());
+  }
+
+  async updateFacultyStatus(id: string, isActive: boolean) {
+    return this.adminRepository.updateFacultyStatus(id, isActive);
+  }
+
+  async removeFaculty(id: string) {
+    return this.adminRepository.removeFaculty(id);
   }
 }

@@ -163,4 +163,30 @@ export class AdminRepository {
       data: { isActive },
     });
   }
+
+  async createFaculty(name: string) {
+    return this.prisma.faculty.create({
+      data: { name },
+    });
+  }
+
+  async updateFaculty(id: string, name: string) {
+    return this.prisma.faculty.update({
+      where: { id },
+      data: { name },
+    });
+  }
+
+  async updateFacultyStatus(id: string, isActive: boolean) {
+    return this.prisma.faculty.update({
+      where: { id },
+      data: { isActive },
+    });
+  }
+
+  async removeFaculty(id: string) {
+    return this.prisma.faculty.delete({
+      where: { id },
+    });
+  }
 }

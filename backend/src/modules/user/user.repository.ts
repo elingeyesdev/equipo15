@@ -101,10 +101,26 @@ export class UserRepository {
     });
   }
 
-  async getAllFaculties() {
+  async getAllFaculties(onlyActive = true) {
     return this.prisma.faculty.findMany({
+      where: onlyActive ? { isActive: true } : undefined,
       orderBy: { name: 'asc' },
     });
+  }
+
+  async isDomainListedButInactive(domain: string): Promise<boolean> {
+    if (!domain) return false;
+
+    const normalized =
+      normalizeEmail(domain).split('@').pop() || domain.toLowerCase();
+    const found = await this.prisma.allowedDomain.findFirst({
+      where: {
+        domain: normalized,
+        isActive: false,
+      },
+    });
+
+    return !!found;
   }
 
   async isEmailAllowed(email: string): Promise<boolean> {
