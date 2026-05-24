@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
   Patch,
   Param,
@@ -95,6 +96,37 @@ export class ChallengesController {
   @ApiOperation({ summary: 'Get stats for a specific challenge' })
   getChallengeStats(@Param('id') id: string) {
     return this.challengeService.getChallengeStats(id);
+  }
+
+  // ─── Judge Management (E2.3) ───────────────────────────────────────────────
+
+  @Get('judges/search')
+  @UseGuards(RolesGuard)
+  @Roles('company', 'admin')
+  @ApiOperation({ summary: 'Search judges by name or email' })
+  @ApiQuery({ name: 'q', required: true, type: String })
+  searchJudges(@Query('q') query: string) {
+    return this.challengeService.searchJudges(query);
+  }
+
+  @Get(':id/judges')
+  @UseGuards(RolesGuard)
+  @Roles('company', 'admin')
+  @ApiOperation({ summary: 'Get assigned judges for a challenge' })
+  getAssignedJudges(@Param('id') id: string) {
+    return this.challengeService.getAssignedJudges(id);
+  }
+
+  @Put(':id/judges')
+  @UseGuards(RolesGuard)
+  @Roles('company')
+  @ApiOperation({ summary: 'Assign judges to a challenge' })
+  assignJudges(
+    @Param('id') id: string,
+    @Body() dto: import('./dtos/assign-judges.dto').AssignJudgesDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.challengeService.assignJudges(id, dto, req.user.uid);
   }
 
   // ─── Innovation Stats for Company Dashboard (E1.4) ───────────────────────────

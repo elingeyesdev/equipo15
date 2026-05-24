@@ -77,6 +77,7 @@ model User {
   comments                  Comment[]
   evaluations               Evaluation[]
   challenges                Challenge[]    @relation("AuthorChallenges")
+  assignedChallenges        Challenge[]    @relation("ChallengeJudges")
   accessedPrivateChallenges Challenge[]    @relation("UserAccessedPrivateChallenges")
   createdAt                 DateTime       @default(now())
   updatedAt                 DateTime       @updatedAt
@@ -103,6 +104,7 @@ model Challenge {
   author             User      @relation("AuthorChallenges", fields: [authorId], references: [id])
   authorId           String
   ideas              Idea[]
+  judges             User[]    @relation("ChallengeJudges")
   accessedByUsers    User[]    @relation("UserAccessedPrivateChallenges")
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt

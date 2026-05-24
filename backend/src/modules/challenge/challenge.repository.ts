@@ -747,4 +747,64 @@ export class ChallengeRepository {
       kpis: { totalIdeas, totalVotes, mostActiveUser, leadingFaculty },
     };
   }
+
+  // ─── Judge Management (E2.3) ───────────────────────────────────────────────
+
+  async searchJudges(query: string) {
+    return this.prisma.user.findMany({
+      where: {
+        role: UserRole.JUDGE,
+        isActive: true,
+        OR: [
+          { displayName: { contains: query, mode: 'insensitive' } },
+          { email: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        avatarUrl: true,
+      },
+      take: 10,
+    });
+  }
+
+  async getAssignedJudges(challengeId: string) {
+    const challenge = await this.prisma.challenge.findUnique({
+      where: { id: challengeId },
+      include: {
+        judges: {
+          select: {
+            id: true,
+            displayName: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+    return challenge?.judges || [];
+  }
+
+  async assignJudges(challengeId: string, judgeIds: string[]) {
+    return this.prisma.challenge.update({
+      where: { id: challengeId },
+      data: {
+        judges: {
+          set: judgeIds.map((id) => ({ id })),
+        },
+      },
+      include: {
+        judges: {
+          select: {
+            id: true,
+            displayName: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+  }
 }

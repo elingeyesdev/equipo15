@@ -227,6 +227,41 @@ export class ChallengeService {
     return this.challengeRepository.getCompanyChallenges(user.id);
   }
 
+  // ─── Judge Management (E2.3) ───────────────────────────────────────────────
+
+  async searchJudges(query: string) {
+    if (!query || query.trim().length < 2) {
+      return [];
+    }
+    return this.challengeRepository.searchJudges(query.trim());
+  }
+
+  async getAssignedJudges(challengeId: string) {
+    return this.challengeRepository.getAssignedJudges(challengeId);
+  }
+
+  async assignJudges(
+    challengeId: string,
+    dto: import('./dtos/assign-judges.dto').AssignJudgesDto,
+    firebaseUid: string,
+  ) {
+    const user = await this.userService.findByUid(firebaseUid);
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const challenge = await this.challengeRepository.findById(challengeId);
+    if (!challenge) throw new NotFoundException('Reto no encontrado');
+
+    if (challenge.authorId !== user.id && user.role !== 'ADMIN') {
+      throw new ForbiddenException('No tienes permisos para asignar jueces a este reto.');
+    }
+
+    if (dto.judgeIds.length > 5) {
+      throw new ForbiddenException('No se pueden asignar más de 5 jueces a un reto.');
+    }
+
+    return this.challengeRepository.assignJudges(challengeId, dto.judgeIds);
+  }
+
   // ─── Finalize Podium (Company Control) ──────────────────────────────────────
   async finalizePodium(
     challengeId: string,
