@@ -492,4 +492,9 @@ export class IdeaService {
       hasFavorited: true,
     };
   }
+
+  async findMyIdeas(firebaseUid: string) {
+    const authorId = await this.resolveAuthorId(firebaseUid);
+    return this.ideaRepository.findByAuthorId(authorId);
+  }
 }

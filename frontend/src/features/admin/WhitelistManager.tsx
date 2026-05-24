@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminService } from '@/services/admin.service';
 import { Pista8Theme } from '@/config/theme';
+import { premiumTooltip } from '@/features/dashboard/styles/CommonStyles';
 import type { AllowedDomain } from '@/types/models';
 
 type DomainRow = {
@@ -187,7 +188,7 @@ const ActionWrapper = styled.div`
   gap: 8px;
 `;
 
-const IconAction = styled.button<{ $size?: number; $danger?: boolean; $primary?: boolean }>`
+const IconAction = styled.button<{ $size?: number; $danger?: boolean; $primary?: boolean; $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
   width: ${({ $size }) => ($size ?? 40)}px;
   height: ${({ $size }) => ($size ?? 40)}px;
   border-radius: 10px;
@@ -202,10 +203,11 @@ const IconAction = styled.button<{ $size?: number; $danger?: boolean; $primary?:
 
   &:hover {
     transform: translateY(-4%);
-    background: ${({ $primary }) => ($primary ? Pista8Theme.primary : 'rgba(72,80,84,0.06)')};
+    background: ${({ $primary }) => ($primary ? Pista8Theme.primary : 'rgba(72, 80, 84, 0.06)')};
   }
 
   svg { display: block; }
+  ${premiumTooltip}
 `;
 
 const StatusBadge = styled.span<{ $active: boolean }>`
@@ -231,7 +233,7 @@ const BadgeDot = styled.span<{ $active: boolean }>`
   box-shadow: 0 0 0 3px ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.12)' : 'rgba(127, 135, 144, 0.12)')};
 `;
 
-const SwitchAction = styled.button<{ $active: boolean }>`
+const SwitchAction = styled.button<{ $active: boolean; $tooltipText?: string }>`
   width: 44px;
   height: 44px;
   border-radius: 12px;
@@ -252,6 +254,7 @@ const SwitchAction = styled.button<{ $active: boolean }>`
   svg {
     display: block;
   }
+  ${premiumTooltip}
 `;
 
 const IssuesBox = styled.div`
@@ -508,7 +511,7 @@ export default function WhitelistManager() {
 
           <Actions>
             <ActionWrapper>
-              <IconAction aria-label="Agregar fila" title="Agregar fila" type="button" onClick={addRow}>
+              <IconAction aria-label="Agregar fila" $tooltipText="Agregar fila" $tooltipPosition="bottom" type="button" onClick={addRow}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={Pista8Theme.secondary} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 5v14" />
                   <path d="M5 12h14" />
@@ -517,7 +520,7 @@ export default function WhitelistManager() {
             </ActionWrapper>
 
             <ActionWrapper>
-              <IconAction aria-label="Guardar dominios" title={saving ? 'Guardando dominios…' : 'Guardar dominios agregados en la lista'} type="button" onClick={saveRows} $primary>
+              <IconAction aria-label="Guardar dominios" $tooltipText={saving ? 'Guardando dominios…' : 'Guardar dominios'} $tooltipPosition="bottom" $tooltipAlign="right" type="button" onClick={saveRows} $primary>
                 {saving ? (
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M19 21H5a2 2 0 01-2-2V7a2 2 0 012-2h11l5 5v9a2 2 0 01-2 2z" />
@@ -554,7 +557,7 @@ export default function WhitelistManager() {
                   </InputWrap>
 
                   <RowAction>
-                    <IconAction aria-label={`Eliminar fila ${index + 1}`} title={`Eliminar fila ${index + 1}`} type="button" onClick={() => removeRow(row.id)} $danger>
+                    <IconAction aria-label={`Eliminar fila ${index + 1}`} $tooltipText="Quitar fila" type="button" onClick={() => removeRow(row.id)} $danger>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={Pista8Theme.secondary} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="3 6 5 6 21 6" />
                         <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
@@ -582,7 +585,7 @@ export default function WhitelistManager() {
           </div>
 
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <IconAction aria-label="Refrescar lista" title="Recargar la lista desde el servidor" type="button" onClick={loadDomains}>
+            <IconAction aria-label="Refrescar lista" $tooltipText="Recargar" $tooltipPosition="bottom" type="button" onClick={loadDomains}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={Pista8Theme.secondary} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M23 4v6h-6" />
                 <path d="M1 20v-6h6" />
@@ -621,7 +624,7 @@ export default function WhitelistManager() {
                     type="button"
                     $active={domain.isActive}
                     aria-label={domain.isActive ? `Pausar ${domain.domain}` : `Activar ${domain.domain}`}
-                    title={domain.isActive ? 'Pausar registros' : 'Habilitar registros'}
+                    $tooltipText={domain.isActive ? 'Pausar' : 'Activar'}
                     onClick={() => toggleDomainStatus(domain)}
                   >
                     {domain.isActive ? (

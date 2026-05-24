@@ -20,6 +20,7 @@ interface AdvancedFilterProps {
   value: AdvancedFilterState;
   onChange: (next: AdvancedFilterState) => void;
   disabled?: boolean;
+  onlySort?: boolean;
 }
 
 /* ─── Animations ─── */
@@ -151,7 +152,7 @@ const TOP_OPTIONS: { label: string; value: TopLimit }[] = [
   { label: 'Todos',   value: null },
 ];
 
-const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabled }) => {
+const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabled, onlySort = false }) => {
   const { faculties: apiFaculties } = useActiveFaculties();
   const facultyOptions = apiFaculties.length > 0
     ? apiFaculties.filter((f) => f.name.toLowerCase() !== 'todas')
@@ -167,23 +168,33 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabl
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const isActive = !!(value.sortOrder || value.topLimit || value.facultyId || value.onlyFavorites || value.onlyMyIdeas);
+  const isActive = onlySort
+    ? !!value.sortOrder
+    : !!(value.sortOrder || value.topLimit || value.facultyId || value.onlyFavorites || value.onlyMyIdeas);
 
   const update = (patch: Partial<AdvancedFilterState>) => onChange({ ...value, ...patch });
 
-  const reset = () => onChange({ sortOrder: 'newest', topLimit: null, facultyId: null, onlyFavorites: false, onlyMyIdeas: false });
+  const reset = () => {
+    if (onlySort) {
+      onChange({ ...value, sortOrder: 'newest' });
+    } else {
+      onChange({ sortOrder: 'newest', topLimit: null, facultyId: null, onlyFavorites: false, onlyMyIdeas: false });
+    }
+  };
 
   const summaryParts: string[] = [];
-  if (value.topLimit) summaryParts.push(`Top ${value.topLimit}`);
   if (value.sortOrder) {
     const found = SORT_OPTIONS.find(o => o.value === value.sortOrder);
     if (found) summaryParts.push(found.label);
   }
-  if (value.onlyFavorites) summaryParts.push('Favoritos');
-  if (value.onlyMyIdeas) summaryParts.push('Mis Ideas');
-  if (value.facultyId) {
-    const fac = facultyOptions.find((f) => String(f.id) === String(value.facultyId));
-    if (fac) summaryParts.push('name' in fac && typeof fac.name === 'string' ? fac.name : String(fac.id));
+  if (!onlySort) {
+    if (value.topLimit) summaryParts.push(`Top ${value.topLimit}`);
+    if (value.onlyFavorites) summaryParts.push('Favoritos');
+    if (value.onlyMyIdeas) summaryParts.push('Mis Ideas');
+    if (value.facultyId) {
+      const fac = facultyOptions.find((f) => String(f.id) === String(value.facultyId));
+      if (fac) summaryParts.push('name' in fac && typeof fac.name === 'string' ? fac.name : String(fac.id));
+    }
   }
 
   return (
@@ -223,83 +234,84 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabl
             </ChipRow>
           </Section>
 
-          <Divider />
+          {!onlySort && (
+            <>
+              <Divider />
+              {/* Top X */}
+              <Section>
+                <SectionLabel>Cantidad a mostrar</SectionLabel>
+                <ChipRow>
+                  {TOP_OPTIONS.map(o => (
+                    <Chip
+                      key={String(o.value)}
+                      $active={value.topLimit === o.value}
+                      onClick={() => update({ topLimit: value.topLimit === o.value ? null : o.value })}
+                      type="button"
+                    >
+                      {o.label}
+                    </Chip>
+                  ))}
+                </ChipRow>
+              </Section>
 
-          {/* Top X */}
-          <Section>
-            <SectionLabel>Cantidad a mostrar</SectionLabel>
-            <ChipRow>
-              {TOP_OPTIONS.map(o => (
-                <Chip
-                  key={String(o.value)}
-                  $active={value.topLimit === o.value}
-                  onClick={() => update({ topLimit: value.topLimit === o.value ? null : o.value })}
-                  type="button"
-                >
-                  {o.label}
-                </Chip>
-              ))}
-            </ChipRow>
-          </Section>
+              <Divider />
+              {/* Faculty */}
+              <Section>
+                <SectionLabel>Filtrar por Facultad</SectionLabel>
+                <ChipRow>
+                  <Chip
+                    $active={value.facultyId === null}
+                    onClick={() => update({ facultyId: null })}
+                    type="button"
+                  >
+                    Todas
+                  </Chip>
+                  {facultyOptions.map((f) => (
+                    <Chip
+                      key={f.id}
+                      $active={String(value.facultyId) === String(f.id)}
+                      onClick={() =>
+                        update({
+                          facultyId: String(value.facultyId) === String(f.id) ? null : f.id,
+                        })
+                      }
+                      type="button"
+                    >
+                      {f.name}
+                    </Chip>
+                  ))}
+                </ChipRow>
+              </Section>
 
-          <Divider />
-
-          {/* Faculty */}
-          <Section>
-            <SectionLabel>Filtrar por Facultad</SectionLabel>
-            <ChipRow>
-              <Chip
-                $active={value.facultyId === null}
-                onClick={() => update({ facultyId: null })}
-                type="button"
-              >
-                Todas
-              </Chip>
-              {facultyOptions.map((f) => (
-                <Chip
-                  key={f.id}
-                  $active={String(value.facultyId) === String(f.id)}
-                  onClick={() =>
-                    update({
-                      facultyId: String(value.facultyId) === String(f.id) ? null : f.id,
-                    })
-                  }
-                  type="button"
-                >
-                  {f.name}
-                </Chip>
-              ))}
-            </ChipRow>
-          </Section>
-
-          <Divider />
-
-          {/* Favorites */}
-          <Section>
-            <SectionLabel>Contenido</SectionLabel>
-            <ChipRow>
-              <Chip
-                $active={value.onlyFavorites}
-                onClick={() => update({ onlyFavorites: !value.onlyFavorites })}
-                type="button"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill={value.onlyFavorites ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-                Solo Favoritos
-              </Chip>
-              <Chip
-                $active={value.onlyMyIdeas}
-                onClick={() => update({ onlyMyIdeas: !value.onlyMyIdeas })}
-                type="button"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>
-                  <path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                </svg>
-                Mis Ideas
-              </Chip>
-            </ChipRow>
-          </Section>
+              <Divider />
+              {/* Content */}
+              <Section>
+                <SectionLabel>Contenido</SectionLabel>
+                <ChipRow>
+                  <Chip
+                    $active={value.onlyFavorites}
+                    onClick={() => update({ onlyFavorites: !value.onlyFavorites })}
+                    type="button"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill={value.onlyFavorites ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    Solo Favoritos
+                  </Chip>
+                  <Chip
+                    $active={value.onlyMyIdeas}
+                    onClick={() => update({ onlyMyIdeas: !value.onlyMyIdeas })}
+                    type="button"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>
+                      <path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    Mis Ideas
+                  </Chip>
+                </ChipRow>
+              </Section>
+            </>
+          )}
 
           <ResetBtn type="button" onClick={reset}>Limpiar filtros</ResetBtn>
         </Dropdown>

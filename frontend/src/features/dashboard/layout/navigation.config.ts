@@ -40,5 +40,5 @@ export const NAVIGATION_CONFIG: NavItem[] = [
 
   { name: 'Ver Retos', icon: Eye, path: '/dashboard', roles: ['STUDENT', 'USER'] },
   { name: 'Mis Favoritos', icon: Trophy, path: '/dashboard/favoritos', roles: ['STUDENT', 'USER'], isComingSoon: true },
-  { name: 'Mis Ideas', icon: FileEdit, path: '/dashboard/mis-ideas', roles: ['STUDENT', 'USER'], isComingSoon: true },
+  { name: 'Mis Ideas', icon: FileEdit, path: '/dashboard/mis-ideas', roles: ['STUDENT', 'USER'] },
 ];

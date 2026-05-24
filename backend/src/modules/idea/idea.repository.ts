@@ -289,4 +289,38 @@ export class IdeaRepository {
       },
     });
   }
+
+  async findByAuthorId(authorId: string): Promise<any[]> {
+    return this.prisma.idea.findMany({
+      where: { authorId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        problem: true,
+        solution: true,
+        status: true,
+        likesCount: true,
+        goodCount: true,
+        futureCount: true,
+        complexCount: true,
+        fireScore: true,
+        commentsCount: true,
+        isAnonymous: true,
+        tags: true,
+        createdAt: true,
+        updatedAt: true,
+        authorId: true,
+        challengeId: true,
+        finalScore: true,
+        challenge: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+          },
+        },
+      },
+    });
+  }
 }

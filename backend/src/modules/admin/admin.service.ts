@@ -3,6 +3,8 @@ import { AdminRepository } from './admin.repository';
 import { createImpersonationToken } from './impersonation-token.util';
 import { CreateAllowedDomainDto } from './dto/create-allowed-domain.dto';
 import type { UserRoleEnum } from './dto/update-user-role.dto';
+import { CreateFacultyDto } from './dto/create-faculty.dto';
+import { UpdateFacultyDto } from './dto/update-faculty.dto';
 
 @Injectable()
 export class AdminService {
@@ -76,12 +78,12 @@ export class AdminService {
 
   // ─── Faculty Management ────────────────────────────────────────────────────
 
-  async createFaculty(dto: { name: string }) {
-    return this.adminRepository.createFaculty(dto);
+  async createFaculty(dto: CreateFacultyDto) {
+    return this.adminRepository.createFaculty(dto.name.trim());
   }
 
-  async updateFaculty(id: string, dto: { name: string }) {
-    return this.adminRepository.updateFaculty(id, dto);
+  async updateFaculty(id: string, dto: UpdateFacultyDto) {
+    return this.adminRepository.updateFaculty(id, dto.name.trim());
   }
 
   async updateFacultyStatus(id: string, isActive: boolean) {
@@ -118,4 +120,3 @@ export class AdminService {
     return result.user;
   }
 }
-

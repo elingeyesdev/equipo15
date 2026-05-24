@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+
 import { Pista8Theme, breakpoints } from '../../../config/theme';
 import { fadeUp } from './CommonStyles';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { NAVIGATION_CONFIG } from './navigation.config';
 import { useAuth } from '../../../context/AuthContext';
@@ -56,7 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
 
         <S.SidebarNav>
           <S.SidebarNavItem 
-            as={RouterNavLink} 
+            as={RouterLink} 
             to="/dashboard/perfil" 
             onClick={() => onClose()}
             className={location.pathname === '/dashboard/perfil' ? 'active' : ''}
@@ -73,7 +73,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
           <S.SidebarDivider />
 
           {filteredLinks.map((item) => {
-            const isActive = location.pathname.includes(item.path);
+            const isActive = item.path === '/dashboard'
+              ? location.pathname === '/dashboard'
+              : location.pathname.startsWith(item.path);
             if (item.isComingSoon) {
               return (
                 <S.SidebarNavItem 
@@ -90,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
 
             return (
               <S.SidebarNavItem 
-                as={RouterNavLink}
+                as={RouterLink}
                 key={item.path}
                 to={item.path}
                 className={isActive ? 'active' : ''}

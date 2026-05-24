@@ -19,7 +19,7 @@ import { clearStoredImpersonationToken } from '@/utils/impersonation-session';
 
 export const authService = {
   register: async (email: string, pass: string, name: string, phone?: string) => {
-    let userCredential: Awaited<ReturnType<typeof createUserWithEmailAndPassword>>;
+    let userCredential: Awaited<ReturnType<typeof createUserWithEmailAndPassword>> | null = null;
 
     try {
       userCredential = await createUserWithEmailAndPassword(auth, email, pass);
@@ -46,7 +46,7 @@ export const authService = {
         },
       );
     } catch (error) {
-      if (userCredential?.user) {
+      if (userCredential) {
         await deleteUser(userCredential.user).catch(() => undefined);
       }
       await signOut(auth);

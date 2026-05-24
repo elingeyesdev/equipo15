@@ -51,6 +51,12 @@ export class IdeasController {
     return this.ideaService.createDraft(createDraftIdeaDto, request.user.uid);
   }
 
+  @Get('me')
+  @ApiOperation({ summary: 'Get ideas of the current authenticated user' })
+  findMyIdeas(@Req() request: AuthenticatedRequest) {
+    return this.ideaService.findMyIdeas(request.user.uid);
+  }
+
   @Get()
   @SkipThrottle()
   @ApiOperation({ summary: 'Get all ideas (optionally filter by public only)' })
@@ -110,4 +116,6 @@ export class IdeasController {
   ) {
     return this.ideaService.toggleFavorite(id, request.user.uid);
   }
+
+
 }

@@ -5,6 +5,7 @@ import { Pencil, ToggleLeft, ToggleRight, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminService } from '@/services/admin.service';
 import { Pista8Theme } from '@/config/theme';
+import { premiumTooltip } from '@/features/dashboard/styles/CommonStyles';
 import type { FacultyCatalogItem } from '@/types/models';
 
 type FacultyRow = { id: string; value: string };
@@ -55,11 +56,12 @@ const Input = styled.input`
   padding: 0 14px; font-size: 15px; font-weight: 700; color: #1f2628; outline: none;
   &:focus { border-color: #fe410a; box-shadow: 0 0 0 3px rgba(254, 65, 10, 0.12); }
 `;
-const IconAction = styled.button<{ $danger?: boolean; $primary?: boolean }>`
+const IconAction = styled.button<{ $danger?: boolean; $primary?: boolean; $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
   width: 40px; height: 40px; border-radius: 10px; border: none; cursor: pointer;
   background: ${({ $primary, $danger }) => ($primary ? Pista8Theme.primary : $danger ? '#fff2ee' : '#f4f6f7')};
   color: ${({ $primary }) => ($primary ? '#fff' : Pista8Theme.secondary)};
   display: inline-flex; align-items: center; justify-content: center;
+  ${premiumTooltip}
 `;
 const ListCard = styled.section`
   border-radius: 28px; background: white; border: 1px solid rgba(72, 80, 84, 0.08);
@@ -76,7 +78,6 @@ const DomainItem = styled.div`
   border: 1px solid rgba(72, 80, 84, 0.08);
 `;
 const DomainName = styled.div`font-size: 15px; font-weight: 900; color: #1f2628; word-break: break-word;`;
-const DomainMeta = styled.div`font-size: 12px; color: #76828a;`;
 const StatusBadge = styled.span<{ $active: boolean }>`
   display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border-radius: 999px;
   background: ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.10)' : 'rgba(72, 80, 84, 0.08)')};
@@ -87,11 +88,12 @@ const BadgeDot = styled.span<{ $active: boolean }>`
   width: 7px; height: 7px; border-radius: 50%;
   background: ${({ $active }) => ($active ? '#fe410a' : '#7f8790')};
 `;
-const SwitchAction = styled.button<{ $active: boolean }>`
+const SwitchAction = styled.button<{ $active: boolean; $tooltipText?: string }>`
   width: 44px; height: 44px; border-radius: 12px; border: 1px solid ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.18)' : 'rgba(72, 80, 84, 0.12)')};
   background: ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.08)' : '#f4f6f7')};
   color: ${({ $active }) => ($active ? '#fe410a' : '#5f6870')};
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  ${premiumTooltip}
 `;
 const IssuesBox = styled.div`
   border-radius: 18px; background: #fff5ef; border: 1px solid rgba(217, 76, 29, 0.14);
@@ -148,11 +150,12 @@ export default function FacultiesManager() {
     try {
       const list = await adminService.getFaculties();
       setFaculties(Array.isArray(list) ? list : []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
       setFaculties([]);
-      const status = error?.response?.status as number | undefined;
-      const backendMessage = error?.response?.data?.message;
+      const err = error as { response?: { status?: number; data?: { message?: string | string[] } } };
+      const status = err.response?.status;
+      const backendMessage = err.response?.data?.message;
 
       if (status === 403) {
         setLoadError(
@@ -283,10 +286,11 @@ export default function FacultiesManager() {
         description: 'El cambio se reflejará en los selectores y filtros de la plataforma.',
       });
       closeEditModal();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number; data?: { message?: string | string[] } } };
       const message =
-        error?.response?.data?.message ||
-        (error?.response?.status === 409 ? 'Esa facultad ya está registrada.' : 'No se pudo actualizar la facultad.');
+        err.response?.data?.message ||
+        (err.response?.status === 409 ? 'Esa facultad ya está registrada.' : 'No se pudo actualizar la facultad.');
       setEditError(Array.isArray(message) ? message[0] : message);
     } finally {
       setEditSaving(false);
@@ -336,16 +340,19 @@ export default function FacultiesManager() {
             <FormHint>Escribe el nombre y guarda para añadirlo al catálogo.</FormHint>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <IconAction type="button" title="Agregar fila" onClick={addRow}>
+            <IconAction type="button" $tooltipText="Agregar fila" $tooltipPosition="bottom" onClick={addRow}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={Pista8Theme.secondary} strokeWidth="2.6">
-                <path d="M12 5v14M5 12h14" />
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
               </svg>
             </IconAction>
             <IconAction
               type="button"
               $primary
               aria-label="Guardar facultades"
-              title={saving ? 'Guardando facultades…' : 'Guardar facultades agregadas en el catálogo'}
+              $tooltipText={saving ? 'Guardando facultades…' : 'Guardar facultades'}
+              $tooltipPosition="bottom"
+              $tooltipAlign="right"
               onClick={() => void saveRows()}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
@@ -371,7 +378,7 @@ export default function FacultiesManager() {
                     />
                   </InputWrap>
                   <RowAction>
-                    <IconAction type="button" $danger title="Quitar fila" onClick={() => removeRow(row.id)}>
+                    <IconAction type="button" $danger $tooltipText="Quitar fila" onClick={() => removeRow(row.id)}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={Pista8Theme.secondary} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="3 6 5 6 21 6" />
                         <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
@@ -395,7 +402,7 @@ export default function FacultiesManager() {
             <FormTitleText>Lista del catálogo</FormTitleText>
             <FormHint>{loading ? 'Cargando…' : `${faculties.length} facultad(es) registrada(s)`}</FormHint>
           </div>
-          <IconAction type="button" title="Recargar" onClick={() => void loadFaculties()}>
+          <IconAction type="button" $tooltipText="Recargar" $tooltipPosition="bottom" onClick={() => void loadFaculties()}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={Pista8Theme.secondary} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M23 4v6h-6" />
               <path d="M1 20v-6h6" />
@@ -423,14 +430,14 @@ export default function FacultiesManager() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <IconAction type="button" title="Editar" onClick={() => openEditModal(faculty)}>
+                  <IconAction type="button" $tooltipText="Editar" onClick={() => openEditModal(faculty)}>
                     <Pencil size={18} strokeWidth={2.4} />
                   </IconAction>
 
                   <SwitchAction
                     type="button"
                     $active={faculty.isActive}
-                    title={faculty.isActive ? 'Pausar' : 'Activar'}
+                    $tooltipText={faculty.isActive ? 'Pausar' : 'Activar'}
                     onClick={() => void toggleFacultyStatus(faculty)}
                   >
                     {faculty.isActive ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}

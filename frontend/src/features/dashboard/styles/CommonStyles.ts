@@ -66,16 +66,29 @@ export const FEEDBACK_GLYPH: Record<string, string> = {
   critical: '!',
 };
 
-export const premiumTooltip = css<{ $tooltipText?: string }>`
+export const premiumTooltip = css<{ $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
   position: relative;
 
   ${p => p.$tooltipText && css`
     &::after {
       content: "${p.$tooltipText}";
       position: absolute;
-      bottom: calc(100% + 10px);
-      left: 50%;
-      transform: translateX(-50%) translateY(5px);
+      ${p.$tooltipPosition === 'bottom' ? css`
+        top: calc(100% + 10px);
+        bottom: auto;
+        transform: ${p.$tooltipAlign === 'right' ? 'translateY(-5px)' : 'translateX(-50%) translateY(-5px)'};
+      ` : css`
+        bottom: calc(100% + 10px);
+        top: auto;
+        transform: ${p.$tooltipAlign === 'right' ? 'translateY(5px)' : 'translateX(-50%) translateY(5px)'};
+      `}
+      ${p.$tooltipAlign === 'right' ? css`
+        right: 0;
+        left: auto;
+      ` : css`
+        left: 50%;
+        right: auto;
+      `}
       background: #1a1f22;
       color: white;
       padding: 6px 12px;
@@ -95,11 +108,20 @@ export const premiumTooltip = css<{ $tooltipText?: string }>`
     &::before {
       content: '';
       position: absolute;
-      bottom: calc(100% + 4px);
+      ${p.$tooltipPosition === 'bottom' ? css`
+        top: calc(100% + 4px);
+        bottom: auto;
+        transform: translateX(-50%) translateY(-5px);
+        border: 6px solid transparent;
+        border-bottom-color: #1a1f22;
+      ` : css`
+        bottom: calc(100% + 4px);
+        top: auto;
+        transform: translateX(-50%) translateY(5px);
+        border: 6px solid transparent;
+        border-top-color: #1a1f22;
+      `}
       left: 50%;
-      transform: translateX(-50%) translateY(5px);
-      border: 6px solid transparent;
-      border-top-color: #1a1f22;
       opacity: 0;
       visibility: hidden;
       transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
@@ -108,7 +130,12 @@ export const premiumTooltip = css<{ $tooltipText?: string }>`
     }
 
     &:hover, &:focus-within {
-      &::after, &::before {
+      &::after {
+        opacity: 1;
+        visibility: visible;
+        transform: ${p.$tooltipAlign === 'right' ? 'translateY(0)' : 'translateX(-50%) translateY(0)'};
+      }
+      &::before {
         opacity: 1;
         visibility: visible;
         transform: translateX(-50%) translateY(0);

@@ -164,16 +164,19 @@ export class AdminRepository {
     });
   }
 
+
   // ─── Faculty Management ────────────────────────────────────────────────────
 
-  async createFaculty(data: { name: string }) {
-    return this.prisma.faculty.create({ data });
+  async createFaculty(name: string) {
+    return this.prisma.faculty.create({
+      data: { name },
+    });
   }
 
-  async updateFaculty(id: string, data: { name: string }) {
+  async updateFaculty(id: string, name: string) {
     return this.prisma.faculty.update({
       where: { id },
-      data,
+      data: { name },
     });
   }
 

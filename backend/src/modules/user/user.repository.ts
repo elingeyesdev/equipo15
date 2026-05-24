@@ -101,7 +101,7 @@ export class UserRepository {
     });
   }
 
-  async getAllFaculties(onlyActive?: boolean) {
+  async getAllFaculties(onlyActive = true) {
     return this.prisma.faculty.findMany({
       where: onlyActive ? { isActive: true } : undefined,
       orderBy: { name: 'asc' },
@@ -109,8 +109,15 @@ export class UserRepository {
   }
 
   async isDomainListedButInactive(domain: string): Promise<boolean> {
+    if (!domain) return false;
+
+    const normalized =
+      normalizeEmail(domain).split('@').pop() || domain.toLowerCase();
     const found = await this.prisma.allowedDomain.findFirst({
-      where: { domain, isActive: false },
+      where: {
+        domain: normalized,
+        isActive: false,
+      },
     });
     return !!found;
   }
