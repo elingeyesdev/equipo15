@@ -419,6 +419,8 @@ const ViewStatValue = styled.p`
   font-weight: 800;
   color: #1a1f22;
   line-height: 1.45;
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 const ViewModalTitle = styled.h3`
@@ -426,6 +428,8 @@ const ViewModalTitle = styled.h3`
   font-size: 22px;
   font-weight: 900;
   color: #1a1f22;
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 const ViewModalText = styled.p`
@@ -434,6 +438,8 @@ const ViewModalText = styled.p`
   color: #5b6470;
   line-height: 1.65;
   white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 const ViewModalFooter = styled.div`

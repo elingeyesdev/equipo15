@@ -53,6 +53,8 @@ const CardTitle = styled.h2`
   line-height: 1.25;
   flex: 1;
   min-width: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 const StatusBadge = styled.span<{ $bg: string; $color: string; $dot: string }>`
@@ -82,6 +84,8 @@ const CardDescription = styled.p`
   font-size: 13.5px;
   color: #6b7280;
   line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 const StatsRow = styled.div`

@@ -75,6 +75,8 @@ export const ModalTitle = styled.h2`
   font-weight: 800;
   margin: 0 0 10px;
   color: ${Pista8Theme.secondary};
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 export const ModalLead = styled.p`
@@ -387,6 +389,8 @@ export const MetaValue = styled.p`
   font-weight: 800;
   color: ${Pista8Theme.secondary};
   margin: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 export const MetaBadge = styled.span`
