@@ -308,6 +308,25 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabl
                     </svg>
                     Mis Ideas
                   </Chip>
+                  <Chip
+                    $active={false}
+                    onClick={() => {}}
+                    type="button"
+                    disabled
+                    style={{ opacity: 0.4, cursor: 'not-allowed' }}
+                    title="Disponible cuando los evaluadores envíen los puntajes finales"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>
+                      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7" />
+                      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7" />
+                      <path d="M4 22h16" />
+                      <path d="M10 22V10" />
+                      <path d="M14 22V10" />
+                      <path d="M8 6a6 6 0 0 1 8 0" />
+                      <path d="M6 10a8 8 0 0 0 12 0" />
+                    </svg>
+                    Podio
+                  </Chip>
                 </ChipRow>
               </Section>
             </>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import styled from 'styled-components';
+import React, { useState, useEffect } from 'react';
+import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../../../config/theme';
 import axiosInstance from '../../../../../api/axiosConfig';
 import { toast } from 'sonner';
@@ -17,95 +17,86 @@ interface Props {
 }
 
 const MAX_JUDGES = 5;
+const MIN_JUDGES = 1;
 
 export const ChallengeJudgeSelector: React.FC<Props> = ({ challengeId, readOnlyMode = false }) => {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Judge[]>([]);
-  const [selectedJudges, setSelectedJudges] = useState<Judge[]>([]);
-  const [loadingSearch, setLoadingSearch] = useState(false);
+  const [allJudges, setAllJudges] = useState<Judge[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [initialIds, setInitialIds] = useState<Set<string>>(new Set());
+  const [loadingJudges, setLoadingJudges] = useState(true);
   const [loadingSave, setLoadingSave] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
 
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  // Cargar jueces asignados al montar
+  // Fetch all judges and already-assigned judges on mount
   useEffect(() => {
-    const fetchAssigned = async () => {
+    const fetchData = async () => {
       try {
-        const { data } = await axiosInstance.get(`/challenges/${challengeId}/judges`);
-        setSelectedJudges(data);
-        setHasChanges(false);
-      } catch (error) {
-        toast.error('Error al cargar jueces asignados');
+        const [judgesRes, assignedRes] = await Promise.all([
+          axiosInstance.get('/challenges/judges/search?q='),
+          axiosInstance.get(`/challenges/${challengeId}/judges`),
+        ]);
+
+        // The backend interceptor wraps responses in { success: true, data: [...] }
+        const judgesPayload = judgesRes.data?.data || judgesRes.data;
+        const assignedPayload = assignedRes.data?.data || assignedRes.data;
+
+        // Get ALL judges (search with empty query returns all)
+        setAllJudges(Array.isArray(judgesPayload) ? judgesPayload : []);
+
+        // Get currently assigned IDs
+        const assignedData = Array.isArray(assignedPayload) ? assignedPayload : [];
+        const assignedIds = new Set<string>(assignedData.map(j => j.id));
+        setSelectedIds(assignedIds);
+        setInitialIds(new Set(assignedIds));
+      } catch {
+        toast.error('Error al cargar la lista de jueces');
+      } finally {
+        setLoadingJudges(false);
       }
     };
-    fetchAssigned();
+    fetchData();
   }, [challengeId]);
 
-  // Click outside para cerrar el dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
+  const toggleJudge = (judgeId: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(judgeId)) {
+        next.delete(judgeId);
+      } else {
+        if (next.size >= MAX_JUDGES) {
+          toast.error(`El límite máximo es de ${MAX_JUDGES} jueces por reto.`);
+          return prev;
+        }
+        next.add(judgeId);
       }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Debounce para búsqueda
-  useEffect(() => {
-    if (query.trim().length < 2) {
-      setResults([]);
-      setShowDropdown(false);
-      return;
-    }
-
-    const delayDebounce = setTimeout(async () => {
-      try {
-        setLoadingSearch(true);
-        const { data } = await axiosInstance.get(`/challenges/judges/search?q=${encodeURIComponent(query)}`);
-        setResults(data);
-        setShowDropdown(true);
-      } catch (error) {
-        toast.error('Error al buscar jueces');
-      } finally {
-        setLoadingSearch(false);
-      }
-    }, 400);
-
-    return () => clearTimeout(delayDebounce);
-  }, [query]);
-
-  const handleSelect = (judge: Judge) => {
-    if (selectedJudges.find(j => j.id === judge.id)) {
-      toast.error('Este juez ya está seleccionado');
-      return;
-    }
-    if (selectedJudges.length >= MAX_JUDGES) {
-      toast.error(`El límite máximo es de ${MAX_JUDGES} jueces por reto.`);
-      return;
-    }
-    setSelectedJudges(prev => [...prev, judge]);
-    setQuery('');
-    setShowDropdown(false);
-    setHasChanges(true);
+      return next;
+    });
   };
 
-  const handleRemove = (id: string) => {
-    setSelectedJudges(prev => prev.filter(j => j.id !== id));
-    setHasChanges(true);
-  };
+  const hasChanges = (() => {
+    if (selectedIds.size !== initialIds.size) return true;
+    for (const id of selectedIds) {
+      if (!initialIds.has(id)) return true;
+    }
+    return false;
+  })();
 
   const handleSave = async () => {
+    if (selectedIds.size < MIN_JUDGES) {
+      toast.error(`Debes seleccionar al menos ${MIN_JUDGES} juez.`);
+      return;
+    }
+    if (selectedIds.size > MAX_JUDGES) {
+      toast.error(`No se pueden asignar más de ${MAX_JUDGES} jueces.`);
+      return;
+    }
+
     try {
       setLoadingSave(true);
       await axiosInstance.put(`/challenges/${challengeId}/judges`, {
-        judgeIds: selectedJudges.map(j => j.id),
+        judgeIds: Array.from(selectedIds),
       });
+      setInitialIds(new Set(selectedIds));
       toast.success('Jueces vinculados exitosamente');
-      setHasChanges(false);
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Error al guardar la vinculación');
     } finally {
@@ -113,88 +104,64 @@ export const ChallengeJudgeSelector: React.FC<Props> = ({ challengeId, readOnlyM
     }
   };
 
-  const isMaxReached = selectedJudges.length >= MAX_JUDGES;
+  const isMaxReached = selectedIds.size >= MAX_JUDGES;
 
   return (
-    <Container ref={wrapperRef}>
+    <Container>
       <Header>
-        <Title>Vinculación de Jueces Evaluadores</Title>
-        <Counter $maxReached={isMaxReached}>
-          {selectedJudges.length} / {MAX_JUDGES} jueces permitidos
-        </Counter>
+        <TitleRow>
+          <Title>Vinculación de Jueces Evaluadores</Title>
+          <Counter $maxReached={isMaxReached} $valid={selectedIds.size >= MIN_JUDGES}>
+            {selectedIds.size} / {MAX_JUDGES} jueces seleccionados
+          </Counter>
+        </TitleRow>
+        <Subtitle>Selecciona los jueces que evaluarán las ideas de este reto (mínimo {MIN_JUDGES}, máximo {MAX_JUDGES}).</Subtitle>
       </Header>
 
-      {!readOnlyMode && (
-        <SearchContainer>
-          <SearchInputWrapper>
-            <SearchIcon>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </SearchIcon>
-            <Input
-              type="text"
-              placeholder={isMaxReached ? "Límite máximo alcanzado" : "Buscar jueces por nombre o correo..."}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              disabled={isMaxReached || loadingSave}
-              onFocus={() => {
-                if (query.length >= 2 && results.length > 0) setShowDropdown(true);
-              }}
-            />
-            {loadingSearch && <Spinner />}
-          </SearchInputWrapper>
-
-          {showDropdown && results.length > 0 && (
-            <DropdownMenu>
-              {results.map((judge) => (
-                <DropdownItem key={judge.id} onClick={() => handleSelect(judge)}>
-                  <Avatar src={judge.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(judge.displayName)}&background=random`} />
-                  <JudgeInfo>
-                    <JudgeName>{judge.displayName}</JudgeName>
-                    <JudgeEmail>{judge.email}</JudgeEmail>
-                  </JudgeInfo>
-                  {selectedJudges.some(j => j.id === judge.id) && (
-                    <SelectedIcon>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    </SelectedIcon>
-                  )}
-                </DropdownItem>
-              ))}
-            </DropdownMenu>
-          )}
-        </SearchContainer>
-      )}
-
-      {selectedJudges.length > 0 ? (
-        <SelectedList>
-          {selectedJudges.map(judge => (
-            <Tag key={judge.id}>
-              <AvatarSmall src={judge.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(judge.displayName)}&background=random`} />
-              <TagName>{judge.displayName}</TagName>
-              {!readOnlyMode && (
-                <RemoveBtn onClick={() => handleRemove(judge.id)} title="Eliminar juez">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </RemoveBtn>
-              )}
-            </Tag>
-          ))}
-        </SelectedList>
+      {loadingJudges ? (
+        <LoadingList>
+          {[0,1,2].map(i => <SkeletonRow key={i} />)}
+        </LoadingList>
+      ) : allJudges.length === 0 ? (
+        <EmptyState>No hay jueces registrados en la plataforma. Un administrador debe asignar el rol de Juez a los usuarios primero.</EmptyState>
       ) : (
-        <EmptyState>No hay jueces asignados a este reto todavía.</EmptyState>
+        <JudgeList>
+          {allJudges.map(judge => {
+            const isSelected = selectedIds.has(judge.id);
+            const isDisabled = !isSelected && isMaxReached;
+
+            return (
+              <JudgeRow
+                key={judge.id}
+                $selected={isSelected}
+                $disabled={isDisabled || readOnlyMode}
+                onClick={() => !readOnlyMode && !isDisabled && toggleJudge(judge.id)}
+              >
+                <JudgeInfo>
+                  <AvatarImg src={judge.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(judge.displayName || 'Usuario')}&background=random&size=40`} />
+                  <JudgeText>
+                    <JudgeName>{judge.displayName || 'Sin Nombre'}</JudgeName>
+                    <JudgeEmail>{judge.email}</JudgeEmail>
+                  </JudgeText>
+                </JudgeInfo>
+                <Checkbox $checked={isSelected} $disabled={isDisabled || readOnlyMode}>
+                  {isSelected && (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </Checkbox>
+              </JudgeRow>
+            );
+          })}
+        </JudgeList>
       )}
 
-      {!readOnlyMode && (
+      {!readOnlyMode && allJudges.length > 0 && (
         <Footer>
           <SaveButton
             onClick={handleSave}
-            disabled={!hasChanges || loadingSave}
+            disabled={!hasChanges || loadingSave || selectedIds.size < MIN_JUDGES}
           >
             {loadingSave ? 'Guardando...' : 'Guardar Vinculación'}
           </SaveButton>
@@ -204,7 +171,17 @@ export const ChallengeJudgeSelector: React.FC<Props> = ({ challengeId, readOnlyM
   );
 };
 
-/* ─── Estilos ─── */
+/* ─── Styles ─── */
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
+const shimmer = keyframes`
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+`;
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -213,6 +190,12 @@ const Container = styled.div`
 `;
 
 const Header = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const TitleRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -227,106 +210,75 @@ const Title = styled.h3`
   color: #1a1f22;
 `;
 
-const Counter = styled.span<{ $maxReached: boolean }>`
+const Subtitle = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: #9ca3af;
+`;
+
+const Counter = styled.span<{ $maxReached: boolean; $valid: boolean }>`
   font-size: 12px;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 20px;
-  background: ${p => p.$maxReached ? 'rgba(239, 68, 68, 0.1)' : 'rgba(72, 80, 84, 0.05)'};
-  color: ${p => p.$maxReached ? '#ef4444' : '#6b7280'};
+  background: ${p => p.$maxReached ? 'rgba(239, 68, 68, 0.1)' : p.$valid ? 'rgba(34, 197, 94, 0.1)' : 'rgba(72, 80, 84, 0.05)'};
+  color: ${p => p.$maxReached ? '#ef4444' : p.$valid ? '#16a34a' : '#6b7280'};
   transition: all 0.3s;
 `;
 
-const SearchContainer = styled.div`
-  position: relative;
-  width: 100%;
-`;
-
-const SearchInputWrapper = styled.div`
-  position: relative;
-  display: flex;
-  align-items: center;
-`;
-
-const SearchIcon = styled.div`
-  position: absolute;
-  left: 14px;
-  color: #9ca3af;
-  display: flex;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 12px 14px 12px 40px;
-  border-radius: 12px;
-  border: 1.5px solid rgba(72, 80, 84, 0.15);
-  font-size: 14px;
-  font-family: inherit;
-  color: #1a1f22;
-  transition: all 0.2s;
-
-  &:focus {
-    outline: none;
-    border-color: ${Pista8Theme.primary};
-    box-shadow: 0 0 0 3px rgba(254, 65, 10, 0.1);
-  }
-
-  &:disabled {
-    background: #f9fafb;
-    cursor: not-allowed;
-    opacity: 0.7;
-  }
-`;
-
-const DropdownMenu = styled.div`
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin-top: 8px;
-  background: white;
-  border: 1.5px solid rgba(72, 80, 84, 0.1);
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  max-height: 250px;
-  overflow-y: auto;
-  z-index: 100;
-  padding: 6px;
+const JudgeList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: rgba(72,80,84,0.15); border-radius: 3px; }
 `;
 
-const DropdownItem = styled.button`
+const JudgeRow = styled.div<{ $selected: boolean; $disabled: boolean }>`
   display: flex;
   align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 10px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid ${p => p.$selected ? Pista8Theme.primary : 'rgba(72,80,84,0.08)'};
+  background: ${p => p.$selected ? `${Pista8Theme.primary}06` : 'white'};
+  cursor: ${p => p.$disabled ? 'not-allowed' : 'pointer'};
+  opacity: ${p => p.$disabled ? 0.5 : 1};
+  transition: all 0.18s;
+  animation: ${fadeIn} 0.25s ease both;
 
   &:hover {
-    background: rgba(72, 80, 84, 0.04);
+    ${p => !p.$disabled && `
+      border-color: ${Pista8Theme.primary};
+      background: ${Pista8Theme.primary}08;
+    `}
   }
-`;
-
-const Avatar = styled.img`
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
 `;
 
 const JudgeInfo = styled.div`
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 12px;
   flex: 1;
+  min-width: 0;
+`;
+
+const AvatarImg = styled.img`
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+`;
+
+const JudgeText = styled.div`
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 `;
 
@@ -341,70 +293,28 @@ const JudgeName = styled.span`
 
 const JudgeEmail = styled.span`
   font-size: 12px;
-  color: #6b7280;
+  color: #9ca3af;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `;
 
-const SelectedIcon = styled.div`
-  color: ${Pista8Theme.primary};
-`;
-
-const SelectedList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  min-height: 40px;
-`;
-
-const Tag = styled.div`
+const Checkbox = styled.div<{ $checked: boolean; $disabled: boolean }>`
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  border: 2px solid ${p => p.$checked ? Pista8Theme.primary : 'rgba(72,80,84,0.2)'};
+  background: ${p => p.$checked ? Pista8Theme.primary : 'white'};
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  padding: 4px 10px 4px 6px;
-  border-radius: 20px;
-  animation: scaleIn 0.2s ease-out;
-
-  @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-  }
-`;
-
-const AvatarSmall = styled.img`
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-`;
-
-const TagName = styled.span`
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
-`;
-
-const RemoveBtn = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 2px;
-  margin-left: 2px;
-  color: #9ca3af;
-  border-radius: 50%;
-  display: flex;
-  transition: all 0.2s;
-
-  &:hover {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-  }
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.18s;
+  margin-left: 12px;
 `;
 
 const EmptyState = styled.div`
-  padding: 20px;
+  padding: 24px;
   text-align: center;
   color: #9ca3af;
   font-size: 13.5px;
@@ -425,7 +335,7 @@ const SaveButton = styled.button`
   color: white;
   border: none;
   border-radius: 10px;
-  padding: 10px 20px;
+  padding: 10px 24px;
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
@@ -444,17 +354,16 @@ const SaveButton = styled.button`
   }
 `;
 
-const Spinner = styled.div`
-  position: absolute;
-  right: 14px;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(72,80,84,0.1);
-  border-top-color: ${Pista8Theme.primary};
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+const LoadingList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+const SkeletonRow = styled.div`
+  height: 56px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #f1f3f5 25%, #e5e7eb 50%, #f1f3f5 75%);
+  background-size: 200% 100%;
+  animation: ${shimmer} 1.5s infinite;
 `;

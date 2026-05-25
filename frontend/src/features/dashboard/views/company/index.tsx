@@ -178,6 +178,8 @@ const CardTitle = styled.h3`
   margin: 0;
   line-height: 1.35;
   flex: 1;
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 const StatusBadge = styled.span<{ $bg: string; $color: string; $dot: string }>`
@@ -250,18 +252,18 @@ const CardActions = styled.div`
 const ViewBtn = styled.button`
   padding: 8px 16px;
   border-radius: 10px;
-  border: 1.5px solid rgba(254,65,10,0.18);
-  background: rgba(254,65,10,0.06);
-  color: ${Pista8Theme.primary};
+  border: none;
+  background: ${Pista8Theme.primary};
+  color: white;
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.15s;
 
   &:hover {
-    border-color: rgba(254,65,10,0.3);
-    background: rgba(254,65,10,0.1);
+    background: #e63a09;
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(254,65,10,0.25);
   }
 
   &:disabled {
@@ -274,21 +276,24 @@ const ViewBtn = styled.button`
 const ActionBtn = styled.button<{ $danger?: boolean; $tooltipText?: string }>`
   padding: 8px 16px;
   border-radius: 10px;
-  border: 1.5px solid ${p => p.$danger ? '#fecaca' : 'rgba(72,80,84,0.12)'};
-  background: ${p => p.$danger ? '#fef2f2' : '#fafbfc'};
-  color: ${p => p.$danger ? '#dc2626' : Pista8Theme.secondary};
+  border: none;
+  background: ${p => p.$danger ? '#fef2f2' : Pista8Theme.primary};
+  color: ${p => p.$danger ? '#dc2626' : 'white'};
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
   &:hover {
-    border-color: ${p => p.$danger ? '#ef4444' : Pista8Theme.primary};
-    color: ${p => p.$danger ? '#b91c1c' : Pista8Theme.primary};
-    background: ${p => p.$danger ? '#fee2e2' : '#fff7ed'};
+    background: ${p => p.$danger ? '#fee2e2' : '#e63a09'};
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px ${p => p.$danger ? 'rgba(220,38,38,0.15)' : 'rgba(254,65,10,0.25)'};
   }
   &:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+    transform: none;
   }
   ${premiumTooltip}
 `;
@@ -728,19 +733,6 @@ export const CompanyChallengesView = () => {
                   <ViewBtn type="button" onClick={() => handleViewChallenge(challenge)}>
                     Ver Reto
                   </ViewBtn>
-                  {displayStatus !== 'Borrador' && displayStatus !== 'DRAFT' && (
-                    <ActionBtn
-                      onClick={() => navigate(`/dashboard/company/challenges/${challenge.id}/vinculacion`)}
-                      disabled={readOnlyMode}
-                      $tooltipText={readOnlyMode ? "Estás en modo lectura ahora" : "Panel de Vinculación"}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                      </svg>
-                      Vinculación
-                    </ActionBtn>
-                  )}
                   {canEdit && !readOnlyMode && (
                     <ActionBtn onClick={() => handleEdit(challenge)} $tooltipText="Editar reto">
                       Editar
@@ -749,6 +741,23 @@ export const CompanyChallengesView = () => {
                   {(displayStatus === 'Finalizado' || displayStatus === 'En Evaluación' || displayStatus === 'EVALUATION') && (
                     <ActionBtn onClick={() => navigate(`/dashboard/company/podium?challengeId=${challenge.id}`)}>
                       Gestionar Podio
+                    </ActionBtn>
+                  )}
+                  {displayStatus !== 'Borrador' && displayStatus !== 'DRAFT' && (
+                    <ActionBtn
+                      onClick={() => navigate(`/dashboard/company/judges?challengeId=${challenge.id}`)}
+                      disabled={readOnlyMode}
+                      $tooltipText={readOnlyMode ? "Estás en modo lectura ahora" : "Vincular Jueces"}
+                      style={{ marginLeft: 'auto' }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-2.13-3.54" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        <path d="M12 15H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="8" cy="7" r="4" />
+                        <path d="M22 11l-2 2-2-2" />
+                        <path d="M20 13V8" />
+                      </svg>
                     </ActionBtn>
                   )}
                 </CardActions>
@@ -823,11 +832,11 @@ export const CompanyChallengesView = () => {
                 </ViewStat>
                 <ViewStat>
                   <ViewStatLabel>Facultad</ViewStatLabel>
-                  <ViewStatValue>{(viewChallenge as any).facultyName || 'Sin facultad'}</ViewStatValue>
+                  <ViewStatValue>{(viewChallenge as any).faculty?.name || (viewChallenge as any).facultyName || 'Todas las facultades'}</ViewStatValue>
                 </ViewStat>
                 <ViewStat>
                   <ViewStatLabel>Ideas</ViewStatLabel>
-                  <ViewStatValue>{viewChallenge.ideasCount ?? 0} idea{(viewChallenge.ideasCount ?? 0) === 1 ? '' : 's'}</ViewStatValue>
+                  <ViewStatValue>{(viewChallenge as any)._count?.ideas ?? viewChallenge.ideasCount ?? 0} idea{((viewChallenge as any)._count?.ideas ?? viewChallenge.ideasCount ?? 0) === 1 ? '' : 's'}</ViewStatValue>
                 </ViewStat>
                 <ViewStat>
                   <ViewStatLabel>Vigencia</ViewStatLabel>
@@ -848,13 +857,6 @@ export const CompanyChallengesView = () => {
                   <ViewStatValue style={{ fontWeight: 600, color: '#5b6470' }}>{viewChallenge.participationRules}</ViewStatValue>
                 </ViewStat>
               )}
-
-              <ViewStat>
-                <ViewStatLabel>Modo de acceso</ViewStatLabel>
-                <ViewStatValue style={{ color: '#a16207' }}>
-                  {readOnlyMode ? 'Estás en modo lectura ahora' : 'Acceso normal'}
-                </ViewStatValue>
-              </ViewStat>
             </ViewModalBody>
 
             <ViewModalFooter>

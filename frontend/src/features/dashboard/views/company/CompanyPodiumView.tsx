@@ -634,7 +634,7 @@ export const CompanyPodiumView = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Label>Criterio de Interacción:</Label>
               <Select value={metric} onChange={(e) => setMetric(e.target.value)} disabled={isAlreadyEvaluated || readOnlyMode}>
-                <option value="fireScore">Mayor interacción social (Destellos ✨)</option>
+                <option value="fireScore">Mayor interacción social (Destellos)</option>
                 <option value="comments">Más comentarios / Retroalimentación</option>
               </Select>
             </div>

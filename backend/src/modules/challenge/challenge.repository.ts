@@ -751,22 +751,28 @@ export class ChallengeRepository {
   // ─── Judge Management (E2.3) ───────────────────────────────────────────────
 
   async searchJudges(query: string) {
+    const where: any = {
+      role: UserRole.JUDGE,
+      isActive: true,
+    };
+
+    if (query && query.length > 0) {
+      where.OR = [
+        { displayName: { contains: query, mode: 'insensitive' } },
+        { email: { contains: query, mode: 'insensitive' } },
+      ];
+    }
+
     return this.prisma.user.findMany({
-      where: {
-        role: UserRole.JUDGE,
-        isActive: true,
-        OR: [
-          { displayName: { contains: query, mode: 'insensitive' } },
-          { email: { contains: query, mode: 'insensitive' } },
-        ],
-      },
+      where,
       select: {
         id: true,
         displayName: true,
         email: true,
         avatarUrl: true,
       },
-      take: 10,
+      take: 50,
+      orderBy: { displayName: 'asc' },
     });
   }
 

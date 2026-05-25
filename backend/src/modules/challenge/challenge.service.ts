@@ -230,10 +230,7 @@ export class ChallengeService {
   // ─── Judge Management (E2.3) ───────────────────────────────────────────────
 
   async searchJudges(query: string) {
-    if (!query || query.trim().length < 2) {
-      return [];
-    }
-    return this.challengeRepository.searchJudges(query.trim());
+    return this.challengeRepository.searchJudges(query?.trim() || '');
   }
 
   async getAssignedJudges(challengeId: string) {

@@ -155,16 +155,12 @@ export const Thead = styled.thead`
 
 export const Th = styled.th`
   padding: 14px 20px;
-  text-align: left;
+  text-align: center;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(72, 80, 84, 0.5);
-
-  &:last-child {
-    text-align: center;
-  }
 `;
 
 export const Tbody = styled.tbody``;
@@ -187,15 +183,13 @@ export const Td = styled.td`
   font-size: 14px;
   color: ${Pista8Theme.secondary};
   vertical-align: middle;
-
-  &:last-child {
-    text-align: center;
-  }
+  text-align: center;
 `;
 
 export const UserCell = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 14px;
 `;
 

@@ -80,24 +80,6 @@ export class ChallengesController {
     return this.challengeService.getGlobalStats();
   }
 
-  @Get('token/:token')
-  @ApiOperation({ summary: 'Get a private challenge by its access token' })
-  findByToken(@Param('token') token: string) {
-    return this.challengeService.findByToken(token);
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a specific challenge by ID' })
-  findOne(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
-    return this.challengeService.findOne(id, req.user.uid);
-  }
-
-  @Get(':id/stats')
-  @ApiOperation({ summary: 'Get stats for a specific challenge' })
-  getChallengeStats(@Param('id') id: string) {
-    return this.challengeService.getChallengeStats(id);
-  }
-
   // ─── Judge Management (E2.3) ───────────────────────────────────────────────
 
   @Get('judges/search')
@@ -107,26 +89,6 @@ export class ChallengesController {
   @ApiQuery({ name: 'q', required: true, type: String })
   searchJudges(@Query('q') query: string) {
     return this.challengeService.searchJudges(query);
-  }
-
-  @Get(':id/judges')
-  @UseGuards(RolesGuard)
-  @Roles('company', 'admin')
-  @ApiOperation({ summary: 'Get assigned judges for a challenge' })
-  getAssignedJudges(@Param('id') id: string) {
-    return this.challengeService.getAssignedJudges(id);
-  }
-
-  @Put(':id/judges')
-  @UseGuards(RolesGuard)
-  @Roles('company')
-  @ApiOperation({ summary: 'Assign judges to a challenge' })
-  assignJudges(
-    @Param('id') id: string,
-    @Body() dto: import('./dtos/assign-judges.dto').AssignJudgesDto,
-    @Request() req: AuthenticatedRequest,
-  ) {
-    return this.challengeService.assignJudges(id, dto, req.user.uid);
   }
 
   // ─── Innovation Stats for Company Dashboard (E1.4) ───────────────────────────
@@ -175,6 +137,44 @@ export class ChallengesController {
   })
   getCompanyChallenges(@Request() req: AuthenticatedRequest) {
     return this.challengeService.getCompanyChallenges(req.user.uid);
+  }
+
+  @Get('token/:token')
+  @ApiOperation({ summary: 'Get a private challenge by its access token' })
+  findByToken(@Param('token') token: string) {
+    return this.challengeService.findByToken(token);
+  }
+
+  @Get(':id/judges')
+  @UseGuards(RolesGuard)
+  @Roles('company', 'admin')
+  @ApiOperation({ summary: 'Get assigned judges for a challenge' })
+  getAssignedJudges(@Param('id') id: string) {
+    return this.challengeService.getAssignedJudges(id);
+  }
+
+  @Put(':id/judges')
+  @UseGuards(RolesGuard)
+  @Roles('company')
+  @ApiOperation({ summary: 'Assign judges to a challenge' })
+  assignJudges(
+    @Param('id') id: string,
+    @Body() dto: import('./dtos/assign-judges.dto').AssignJudgesDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.challengeService.assignJudges(id, dto, req.user.uid);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a specific challenge by ID' })
+  findOne(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    return this.challengeService.findOne(id, req.user.uid);
+  }
+
+  @Get(':id/stats')
+  @ApiOperation({ summary: 'Get stats for a specific challenge' })
+  getChallengeStats(@Param('id') id: string) {
+    return this.challengeService.getChallengeStats(id);
   }
 
   @Patch(':id')

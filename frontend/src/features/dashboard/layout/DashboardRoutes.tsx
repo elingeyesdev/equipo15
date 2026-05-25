@@ -16,10 +16,8 @@ const CompanyStatsView = lazy(() => import('../views/company').then(m => ({ defa
 const CompanyChallengesView = lazy(() => import('../views/company').then(m => ({ default: m.CompanyChallengesView })));
 const CompanyCriteriaView = lazy(() => import('../views/company').then(m => ({ default: m.CompanyCriteriaView })));
 const CompanyPodiumView = lazy(() => import('../views/company').then(m => ({ default: m.CompanyPodiumView })));
-const CompanyJudgesView = lazy(() => import('../views/company').then(m => ({ default: m.CompanyJudgesView })));
 
 const ChallengeVinculacionView = lazy(() => import('../views/company/ChallengeVinculacionView').then(m => ({ default: m.ChallengeVinculacionView })));
-import { ChallengeOwnerGuard } from './ChallengeOwnerGuard';
 
 const JudgeInboxView = lazy(() => import('../views/judge').then(m => ({ default: m.JudgeInboxView })));
 const JudgeEvaluationView = lazy(() => import('../views/judge').then(m => ({ default: m.JudgeEvaluationView })));
@@ -52,10 +50,9 @@ export const DashboardRoutes = () => {
 
           <Route path="company/stats" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyStatsView /></WithRoleGuard>} />
           <Route path="company/challenges" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyChallengesView /></WithRoleGuard>} />
-          <Route path="company/challenges/:challengeId/vinculacion" element={<ChallengeOwnerGuard><ChallengeVinculacionView /></ChallengeOwnerGuard>} />
           <Route path="company/criteria" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyCriteriaView /></WithRoleGuard>} />
           <Route path="company/podium" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyPodiumView /></WithRoleGuard>} />
-          <Route path="company/judges" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyJudgesView /></WithRoleGuard>} />
+          <Route path="company/judges" element={<WithRoleGuard allowedRoles={['COMPANY']}><ChallengeVinculacionView /></WithRoleGuard>} />
 
           <Route path="judge/inbox" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeInboxView /></WithRoleGuard>} />
           <Route path="judge/evaluation/:challengeId?" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeEvaluationView /></WithRoleGuard>} />
