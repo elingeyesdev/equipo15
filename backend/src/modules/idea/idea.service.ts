@@ -497,4 +497,9 @@ export class IdeaService {
     const authorId = await this.resolveAuthorId(firebaseUid);
     return this.ideaRepository.findByAuthorId(authorId);
   }
+
+  async findMyFavorites(firebaseUid: string) {
+    const userId = await this.resolveAuthorId(firebaseUid);
+    return this.ideaRepository.findFavoritedByUser(userId);
+  }
 }

@@ -1,21 +1,19 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Menu, Lightbulb, Loader2, Flame, Brain } from 'lucide-react';
+import { Menu, Bookmark, Loader2 } from 'lucide-react';
 import InfoTooltip from '@/components/common/InfoTooltip';
 import AdvancedFilter from './AdvancedFilter';
 import type { AdvancedFilterState } from './AdvancedFilter';
 import { ideaService } from '@/services/idea.service';
-import CommentsSection from '@/features/comments/CommentsSection';
 import { Sidebar } from '../layout/Sidebar';
 import { useAuth } from '@/context/AuthContext';
-import * as S from './MyIdeasStyles';
+import * as S from './MyFavoritesStyles';
 import IdeaDetailModal from '@/features/sky-wall/components/IdeaDetailModal';
 import Pista8Logo from '@/components/icons/Pista8Logo';
 import type { PlaneIdea } from '@/features/sky-wall/types';
 
-const MyIdeasView: React.FC = () => {
+const MyFavoritesView: React.FC = () => {
   const navigate = useNavigate();
   const { userProfile } = useAuth();
   const [ideas, setIdeas] = useState<PlaneIdea[]>([]);
@@ -61,15 +59,15 @@ const MyIdeasView: React.FC = () => {
   useEffect(() => {
     let active = true;
 
-    const fetchMyIdeas = async () => {
+    const fetchMyFavorites = async () => {
       try {
-        const response = await ideaService.getMyIdeas();
+        const response = await ideaService.getMyFavorites();
         if (active) {
           setIdeas(Array.isArray(response?.data) ? response.data : []);
         }
       } catch {
         if (active) {
-          toast.error('No se pudieron cargar tus ideas');
+          toast.error('No se pudieron cargar tus favoritos');
         }
       } finally {
         if (active) {
@@ -78,7 +76,7 @@ const MyIdeasView: React.FC = () => {
       }
     };
 
-    fetchMyIdeas();
+    fetchMyFavorites();
     return () => { active = false; };
   }, []);
 
@@ -98,7 +96,7 @@ const MyIdeasView: React.FC = () => {
                 Hola, {userRole} <span>{resolvedName}</span>
               </S.Title>
               <S.Subtitle>
-                Mis Ideas
+                Mis Favoritos
               </S.Subtitle>
             </S.TitleContainer>
           </div>
@@ -114,14 +112,14 @@ const MyIdeasView: React.FC = () => {
         ) : ideas.length === 0 ? (
           <S.EmptyState>
             <S.EmptyIconWrap>
-              <Lightbulb size={36} />
+              <Bookmark size={36} />
             </S.EmptyIconWrap>
-            <S.EmptyTitle>Sin ideas enviadas</S.EmptyTitle>
+            <S.EmptyTitle>Sin favoritos guardados</S.EmptyTitle>
             <S.EmptyText>
-              Aún no has compartido ninguna idea. Anímate a participar en los retos activos.
+              Aún no has guardado ninguna idea en tus favoritos. Explora el panel y guarda las que más te gusten.
             </S.EmptyText>
             <S.EmptyButton onClick={() => navigate('/dashboard')}>
-              Explorar Retos
+              Explorar Ideas
             </S.EmptyButton>
           </S.EmptyState>
         ) : (
@@ -151,7 +149,7 @@ const MyIdeasView: React.FC = () => {
                 </S.CardFooter>
               </S.Card>
             ))}
-          </S.IdeasGrid>
+            </S.IdeasGrid>
           </>
         )}
       </S.MainContent>
@@ -166,4 +164,4 @@ const MyIdeasView: React.FC = () => {
   );
 };
 
-export default MyIdeasView;
+export default MyFavoritesView;

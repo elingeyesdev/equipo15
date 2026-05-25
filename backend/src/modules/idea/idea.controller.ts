@@ -117,5 +117,9 @@ export class IdeasController {
     return this.ideaService.toggleFavorite(id, request.user.uid);
   }
 
-
+  @Get('me/favorites')
+  @ApiOperation({ summary: 'Get ideas favorited by the current user' })
+  findMyFavorites(@Req() request: AuthenticatedRequest) {
+    return this.ideaService.findMyFavorites(request.user.uid);
+  }
 }

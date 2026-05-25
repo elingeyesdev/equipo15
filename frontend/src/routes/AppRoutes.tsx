@@ -5,6 +5,7 @@ import ResetPasswordPage from '../pages/ResetPasswordPage';
 import ProfilePage from '../pages/ProfilePage';
 import CompleteProfilePage from '../pages/CompleteProfilePage';
 import MyIdeasPage from '../pages/MyIdeasPage';
+import MyFavoritesPage from '../pages/MyFavoritesPage';
 import IdeationWall from '../features/dashboard/IdeationWall';
 import { DashboardRoutes } from '../features/dashboard/layout/DashboardRoutes';
 import RunwayLoader from '../components/common/RunwayLoader';
@@ -28,6 +29,7 @@ const RoleRouter = () => {
       <Routes>
         <Route path="perfil" element={<ProfilePage />} />
         <Route path="mis-ideas" element={<MyIdeasPage />} />
+        <Route path="favoritos" element={<MyFavoritesPage />} />
         <Route path="/" element={<IdeationWall />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
@@ -63,7 +65,7 @@ const AppContent = () => {
   if (loading) return <RunwayLoader />;
 
   const from = location.state?.from || '/dashboard';
-  const redirectTo = from.includes('/perfil') ? '/dashboard' : from;
+  const redirectTo = from.includes('/perfil') || from.includes('/mis-ideas') || from.includes('/favoritos') ? '/dashboard' : from;
 
   return (
     <Routes>

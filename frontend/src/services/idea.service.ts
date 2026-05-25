@@ -98,6 +98,11 @@ export const ideaService = {
     return response.data;
   },
 
+  getMyFavorites: async () => {
+    const response = await axiosInstance.get('/ideas/me/favorites');
+    return response.data;
+  },
+
   updateIdea: async (ideaId: string, payload: UpdateIdeaPayload) => {
     const response = await axiosInstance.patch(`/ideas/${ideaId}`, payload);
     return response.data;

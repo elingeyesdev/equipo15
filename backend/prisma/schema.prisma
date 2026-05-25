@@ -73,7 +73,7 @@ model User {
   penaltyExpiresAt          DateTime?
   ideas                     Idea[]
   ideaLikes                 IdeaLike[]
-  ideaFavorites             IdeaFavorite[]
+  ideaReactions             IdeaReaction[]
   comments                  Comment[]
   evaluations               Evaluation[]
   challenges                Challenge[]    @relation("AuthorChallenges")
@@ -137,7 +137,7 @@ model Idea {
   evaluations      Evaluation[]
   comments         Comment[]
   ideaLikes        IdeaLike[]
-  ideaFavorites    IdeaFavorite[]
+  ideaReactions    IdeaReaction[]
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
@@ -200,17 +200,64 @@ model IdeaLike {
   @@index([userId])
 }
 
-model IdeaFavorite {
+model IdeaReaction {
   id        String   @id @default(uuid())
   idea      Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
   ideaId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
+  type      String   @default("FAVORITE")
   createdAt DateTime @default(now())
 
-  @@unique([ideaId, userId])
+  @@unique([ideaId, userId, type])
   @@index([ideaId])
   @@index([userId])
+  @@index([userId, type])
+  @@map("idea_reactions")
+}
+
+model Penalty {
+  id          String    @id @default(uuid())
+  userId      String
+  reason      String
+  appliedById String?
+  isAutomatic Boolean   @default(false)
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  revokedById String?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@index([userId, expiresAt])
+  @@index([userId, revokedAt])
+  @@map("penalties")
+}
+
+model Criteria {
+  id          String    @id @default(uuid())
+  challengeId String
+  name        String
+  weight      Int
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+
+  @@unique([challengeId, name])
+  @@index([challengeId])
+  @@index([challengeId, isActive])
+  @@map("criteria")
+}
+
+model EvaluationScore {
+  id           String    @id @default(uuid())
+  evaluationId String
+  criterionId  String
+  score        Int
+  createdAt    DateTime  @default(now())
+
+  @@unique([evaluationId, criterionId])
+  @@index([evaluationId])
+  @@index([criterionId])
+  @@map("evaluation_scores")
 }
 
 model Faculty {

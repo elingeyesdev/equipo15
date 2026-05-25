@@ -9,7 +9,8 @@ import {
   Users,
   Inbox,
   ClipboardCheck,
-  History
+  History,
+  Bookmark
 } from 'lucide-react';
 import type { ElementType } from 'react';
 
@@ -39,6 +40,6 @@ export const NAVIGATION_CONFIG: NavItem[] = [
   { name: 'Mis Evaluaciones', icon: History, path: '/dashboard/judge/history', roles: ['JUDGE'], isComingSoon: true },
 
   { name: 'Ver Retos', icon: Eye, path: '/dashboard', roles: ['STUDENT', 'USER'] },
-  { name: 'Mis Favoritos', icon: Trophy, path: '/dashboard/favoritos', roles: ['STUDENT', 'USER'], isComingSoon: true },
+  { name: 'Mis Favoritos', icon: Bookmark, path: '/dashboard/favoritos', roles: ['STUDENT', 'USER'] },
   { name: 'Mis Ideas', icon: FileEdit, path: '/dashboard/mis-ideas', roles: ['STUDENT', 'USER'] },
 ];

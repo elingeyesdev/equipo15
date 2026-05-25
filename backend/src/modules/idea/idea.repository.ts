@@ -124,18 +124,18 @@ export class IdeaRepository {
         ...(userId
           ? {
               ideaLikes: { where: { userId }, select: { id: true } },
-              ideaFavorites: { where: { userId }, select: { id: true } },
+              ideaReactions: { where: { userId, type: 'FAVORITE' }, select: { id: true } },
             }
           : {}),
       },
     });
 
     const enriched: IdeaWithVoteStatus[] = data.map((idea) => {
-      const { ideaLikes, ideaFavorites, ...rest } = idea as any;
+      const { ideaLikes, ideaReactions, ...rest } = idea as any;
       return {
         ...rest,
         hasVoted: Array.isArray(ideaLikes) && ideaLikes.length > 0,
-        hasFavorited: Array.isArray(ideaFavorites) && ideaFavorites.length > 0,
+        hasFavorited: Array.isArray(ideaReactions) && ideaReactions.length > 0,
       } as IdeaWithVoteStatus;
     });
 
@@ -262,21 +262,21 @@ export class IdeaRepository {
   }
 
   async checkUserFavorite(ideaId: string, userId: string): Promise<boolean> {
-    const count = await this.prisma.ideaFavorite.count({
-      where: { ideaId, userId },
+    const count = await this.prisma.ideaReaction.count({
+      where: { ideaId, userId, type: 'FAVORITE' },
     });
     return count > 0;
   }
 
   async registerFavorite(ideaId: string, userId: string): Promise<void> {
-    await this.prisma.ideaFavorite.create({
-      data: { ideaId, userId },
+    await this.prisma.ideaReaction.create({
+      data: { ideaId, userId, type: 'FAVORITE' },
     });
   }
 
   async removeFavorite(ideaId: string, userId: string): Promise<void> {
-    await this.prisma.ideaFavorite.delete({
-      where: { ideaId_userId: { ideaId, userId } },
+    await this.prisma.ideaReaction.delete({
+      where: { ideaId_userId_type: { ideaId, userId, type: 'FAVORITE' } },
     });
   }
 
@@ -321,6 +321,43 @@ export class IdeaRepository {
           },
         },
       },
+    });
+  }
+
+  async findFavoritedByUser(userId: string): Promise<Idea[]> {
+    const reactions = await this.prisma.ideaReaction.findMany({
+      where: { userId, type: 'FAVORITE' },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        idea: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                displayName: true,
+                nickname: true,
+                email: true,
+                facultyId: true,
+                faculty: { select: { name: true } },
+                phone: true,
+                studentCode: true,
+                role: true,
+              },
+            },
+            challenge: { select: { id: true, title: true, status: true } },
+            ideaLikes: { where: { userId } },
+          },
+        },
+      },
+    });
+
+    return reactions.map((reaction) => {
+      const { ideaLikes, ...ideaRest } = reaction.idea as any;
+      return {
+        ...ideaRest,
+        hasVoted: Array.isArray(ideaLikes) && ideaLikes.length > 0,
+        hasFavorited: true, // We already filtered by FAVORITE
+      };
     });
   }
 }
