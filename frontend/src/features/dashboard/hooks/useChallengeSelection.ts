@@ -7,6 +7,7 @@ import { useAuth } from '../../../context/AuthContext';
 import type { SortMode } from '../../../features/sky-wall/types';
 import { useSocket } from '../../../hooks/useSocket';
 import { useWallEventListener } from '../../../hooks/useWallEvents';
+import { toast } from 'sonner';
 
 export const useChallengeSelection = () => {
   const location = useLocation();
@@ -42,6 +43,7 @@ export const useChallengeSelection = () => {
             await challengeService.getChallengeById(pendingPrivateId);
           } catch (err) {
             console.error('Error linking private challenge:', err);
+            toast.error('No tienes acceso a este reto privado o no pertenece a tu facultad.');
           }
         }
 

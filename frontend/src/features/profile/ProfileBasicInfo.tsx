@@ -20,7 +20,7 @@ const INSTITUTIONS = ['Univalle', 'UAGRM', 'UPSA', 'Empresa Particular', 'Indepe
 const SPECIALTIES = ['Desarrollo de Software', 'Marketing Digital', 'Gestión de Negocios', 'Salud y Bienestar', 'Derecho', 'Arquitectura', 'Otro'];
 const AGE_RANGES = ['18-25 años', '26-35 años', '36-45 años', 'Más de 46 años'];
 
-interface BasicInfoData {
+export interface BasicInfoData {
   bio: string;
   nickname: string;
   phone: string;

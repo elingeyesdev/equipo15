@@ -118,7 +118,7 @@ export class ChallengeService {
 
     if (uid && challenge.isPrivate) {
       const user = await this.userService.findByUid(uid);
-      if (user && user.role === 'USER') {
+      if (user && ((user.role as any) === 'student' || user.role === 'USER')) {
         if (
           challenge.facultyId !== null &&
           challenge.facultyId !== (user as any).studentProfile?.facultyId
@@ -255,7 +255,7 @@ export class ChallengeService {
     const challenge = await this.challengeRepository.findById(challengeId);
     if (!challenge) throw new NotFoundException('Reto no encontrado');
 
-    if (challenge.authorId !== user.id && user.role !== 'ADMIN') {
+    if (challenge.authorId !== user.id && (user.role as any) !== 'admin' && user.role !== 'ADMIN') {
       throw new ForbiddenException('No tienes permisos para asignar jueces a este reto.');
     }
 

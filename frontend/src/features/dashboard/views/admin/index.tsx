@@ -211,35 +211,6 @@ const EmptyState = styled.div`
   text-align: center;
 `;
 
-const SupportGrid = styled.div`
-  display: grid;
-  gap: 18px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-
-  @media (max-width: 960px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const SupportCard = styled.div`
-  padding: 20px;
-  border-radius: 20px;
-  border: 1px solid rgba(72, 80, 84, 0.08);
-  background: linear-gradient(180deg, rgba(254, 65, 10, 0.04), white);
-`;
-
-const SupportCardTitle = styled.h3`
-  margin: 0 0 8px;
-  font-size: 16px;
-  font-weight: 900;
-  color: #1a1f22;
-`;
-
-const SupportCardText = styled.p`
-  margin: 0;
-  color: #5b6470;
-  line-height: 1.6;
-`;
 
 const formatDate = (value?: string | Date) => {
   if (!value) return 'Sin dato';

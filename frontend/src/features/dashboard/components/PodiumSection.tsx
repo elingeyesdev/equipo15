@@ -31,11 +31,12 @@ const fadeUp = keyframes`
   to   { opacity: 1; transform: translateY(0); }
 `;
 
-const Grid = styled.div<{ $count: number }>`
+const Grid = styled.div<{ $count?: number }>`
   display: grid;
   grid-template-columns: ${p =>
     p.$count === 1 ? '1fr' :
     p.$count === 2 ? '1fr 1fr' :
+    p.$count === 3 ? 'repeat(3, 1fr)' :
     'repeat(3, 1fr)'
   };
   gap: 16px;
@@ -197,7 +198,7 @@ const PodiumSection: React.FC<PodiumSectionProps> = ({ topIdeas, onSelectIdea })
 
   if (podiumEntries.length === 0) {
     return (
-      <Grid>
+      <Grid $count={1}>
         <Card $rank={1} $idx={0} style={{ gridColumn: '1 / -1', cursor: 'default' }}>
           <IdeaTitle style={{ margin: 0 }}>Aún no hay ideas en vuelo en este reto</IdeaTitle>
         </Card>

@@ -7,7 +7,7 @@ import { authService } from '@/services/auth.service';
 import BackButton from '@/components/common/BackButton';
 import { Wrapper, BackBtnWrap, Card, CardBody } from './ProfileStyles';
 import { ProfileHeader } from './ProfileHeader';
-import { ProfileBasicInfo } from './ProfileBasicInfo';
+import { ProfileBasicInfo, type BasicInfoData } from './ProfileBasicInfo';
 import { ProfileRoleSections } from './ProfileRoleSections';
 
 const PROFILE_CONFIGS: Record<string, { badge: string; showCode: boolean; bioPlaceholder: string }> = {
@@ -20,11 +20,14 @@ const PROFILE_CONFIGS: Record<string, { badge: string; showCode: boolean; bioPla
 export const ProfileView: React.FC = () => {
   const navigate = useNavigate();
   const { user, userProfile: profile, refetchProfile, impersonationSession } = useAuth();
-  const [profileData, setProfileData] = useState({
+  const [profileData, setProfileData] = useState<BasicInfoData>({
     bio: profile?.bio || '',
     nickname: profile?.nickname || '',
     phone: profile?.phone || '',
     studentCode: profile?.studentCode || profile?.studentProfile?.studentCode || '',
+    institution: profile?.institution || '',
+    specialty: profile?.specialty || '',
+    ageRange: profile?.ageRange || '',
   });
 
   const countWords = (text: string) => text.trim().split(/\s+/).filter(Boolean).length;
@@ -50,7 +53,12 @@ export const ProfileView: React.FC = () => {
     }
     setSaving(true);
     try {
-      await userService.updateProfile(profileData as any);
+      await userService.updateProfile({
+        bio: profileData.bio,
+        nickname: profileData.nickname,
+        phone: profileData.phone,
+        studentCode: profileData.studentCode,
+      });
       await refetchProfile();
       toast.success('Perfil actualizado correctamente');
     } catch (e) {

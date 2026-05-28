@@ -36,7 +36,7 @@ export const useDashboardState = () => {
 
   const handleOpenForm = (challenge: Challenge, resetForm: () => void) => {
     ix.setFormChallenge(challenge);
-    cs.setSelectedChallenge(challenge);
+    cs.selectChallenge(challenge);
     resetForm();
     ix.setFormOpen(true);
   };

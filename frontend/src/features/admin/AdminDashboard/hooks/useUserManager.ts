@@ -11,6 +11,7 @@ export interface ManagedUser {
   role: string;
   status: string;
   faculty?: { id: string; name: string } | null;
+  studentProfile?: { faculty?: { id: string; name: string } | null } | null;
   createdAt: string;
   updatedAt: string;
 }

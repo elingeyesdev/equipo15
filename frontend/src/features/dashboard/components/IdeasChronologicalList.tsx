@@ -88,14 +88,26 @@ const ViewAllBtn = styled.button`
 `;
 
 /* ─── Top 3 horizontal cards ─── */
-const TopGrid = styled.div<{ $count: number }>`
+const TopGrid = styled.div<{ $count: number; $isVertical?: boolean }>`
   display: grid;
   grid-template-columns: ${p => p.$count === 1 ? '1fr' : `repeat(${Math.min(p.$count, 3)}, 1fr)`};
   gap: 14px;
   margin-bottom: 16px;
 
+  ${p => p.$isVertical && `
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin-bottom: 0;
+  `}
+
   @media (max-width: ${breakpoints.mobile}) {
     grid-template-columns: 1fr;
+    ${p => p.$isVertical && `
+      display: grid;
+      grid-template-columns: 1fr;
+      flex: none;
+    `}
   }
 `;
 
@@ -126,7 +138,7 @@ const medalStyles: Record<number, { border: string; bg: string; gradient: string
   },
 };
 
-const TopCard = styled.div<{ $rank: number; $idx: number }>`
+const TopCard = styled.div<{ $rank: number; $idx: number; $isVertical?: boolean }>`
   position: relative;
   padding: 48px 18px 16px;
   border-radius: 18px;
@@ -142,6 +154,12 @@ const TopCard = styled.div<{ $rank: number; $idx: number }>`
   align-items: center;
   justify-content: center;
   text-align: center;
+
+  ${p => p.$isVertical && `
+    flex: 1;
+    min-height: 0;
+    padding: 32px 18px 16px;
+  `}
 
   &:hover {
     transform: translateY(-3px);
@@ -196,12 +214,12 @@ const CardAuthor = styled.p`
   opacity: 0.9;
 `;
 
-const CardStats = styled.div`
+const CardStats = styled.div<{ $isVertical?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin-top: auto;
+  margin-top: ${p => p.$isVertical ? '14px' : 'auto'};
 `;
 
 const StatItem = styled.div<{ $tooltipText: string }>`
@@ -384,6 +402,7 @@ interface IdeasChronologicalListProps {
   onSelectIdea?: (idea: PlaneIdea) => void;
   showAll: boolean;
   onToggleShowAll: () => void;
+  isVertical?: boolean;
 }
 
 const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
@@ -393,6 +412,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
   onSelectIdea,
   showAll,
   onToggleShowAll,
+  isVertical = false,
 }) => {
   const { userProfile } = useAuth();
   const [localIdeas, setLocalIdeas] = React.useState(ideas);
@@ -466,7 +486,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
       </Header>
 
       {/* ─── Top 3 Horizontal Cards ─── */}
-      <TopGrid $count={top3.length}>
+      <TopGrid $count={top3.length} $isVertical={isVertical}>
         {top3.map((idea, i) => {
           const isCurrentUser = userProfile && idea.authorId === userProfile.id;
           const authorName = idea.isAnonymous
@@ -480,6 +500,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
               key={idea.id ?? idea._id ?? i}
               $rank={i}
               $idx={i}
+              $isVertical={isVertical}
               onClick={() => onSelectIdea?.(rawToPlane(idea, i, userProfile))}
             >
               <MedalBadge $rank={i}>{medalStyles[i]?.label}</MedalBadge>
@@ -487,7 +508,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
               <CardTitle>{idea.title}</CardTitle>
               <CardAuthor>por {authorName}</CardAuthor>
 
-              <CardStats>
+              <CardStats $isVertical={isVertical}>
                 <StatItem $tooltipText="Interacciones totales">
                   <Sparkles size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
                   <StatValue>{idea.likesCount ?? 0}</StatValue>

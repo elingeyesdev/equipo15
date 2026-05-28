@@ -216,7 +216,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
             <>
               <S.SplitGrid style={{ marginTop: '24px' }}>
                 {ds.sortOrder && (
-                  <div>
+                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <IdeasChronologicalList
                       ideas={displayedWallIdeas}
                       sortOrder={ds.sortOrder}
@@ -224,6 +224,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                       onSelectIdea={handleSelectIdea}
                       showAll={showAllIdeas}
                       onToggleShowAll={() => setShowAllIdeas(!showAllIdeas)}
+                      isVertical={true}
                     />
                   </div>
                 )}
