@@ -20,7 +20,7 @@ async function main() {
     const exists = await prisma.faculty.findFirst({
       where: { name: faculty.name, institutionId: null },
     });
-    
+
     if (!exists) {
       await prisma.faculty.create({
         data: { name: faculty.name },
@@ -31,19 +31,6 @@ async function main() {
     }
   }
 
-  console.log('Nota: Los roles (ADMIN, COMPANY, JUDGE, USER) ahora son un enum en Prisma, por lo que no requieren poblamiento en base de datos.');
-  console.log('Poblando tabla AllowedDomain...');
-  const defaultDomains = ['univalle.edu', 'est.univalle.edu', 'pista8.com'];
-  for (const domain of defaultDomains) {
-    const exists = await prisma.allowedDomain.findFirst({ where: { domain } });
-    if (!exists) {
-      await prisma.allowedDomain.create({ data: { domain } });
-      console.log(`Dominio permitido creado: ${domain}`);
-    } else {
-      console.log(`Dominio ya existe: ${domain}`);
-    }
-  }
-  
   console.log('Creando usuario admin de prueba...');
   const adminEmail = 'admin@univalle.edu';
   const adminExists = await prisma.user.findUnique({ where: { email: adminEmail } });

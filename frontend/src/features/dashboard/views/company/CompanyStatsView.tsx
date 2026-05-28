@@ -13,7 +13,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { getFacultyName } from '../../../../config/faculties';
 import { Pista8Theme, breakpoints } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import type { CompanyChallengeOption } from '../../../../services/challenge.service';
@@ -123,6 +122,11 @@ const KpiCard = styled.article<{ $compact?: boolean }>`
   box-shadow: 0 8px 20px rgba(72, 80, 84, 0.06);
   max-width: ${({ $compact }) => ($compact ? '210px' : 'none')};
   justify-self: ${({ $compact }) => ($compact ? 'start' : 'stretch')};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 
   @media (max-width: ${breakpoints.tablet}) {
     max-width: none;
@@ -222,7 +226,7 @@ const ControlsColumn = styled.div`
 
 const FiltersRow = styled.div`
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
   width: 100%;
 
@@ -364,13 +368,6 @@ const SearchResultItem = styled.button`
     margin-top: 2px;
   }
 `;
-
-const getChallengeFacultyLabel = (challenge: CompanyChallengeOption) => {
-  const facultyName = challenge.facultyName ?? challenge.faculty?.name ?? null;
-  const facultyId = challenge.facultyId ?? challenge.faculty?.id ?? null;
-  const cleanedFacultyName = facultyName?.replace(/^Facultad de\s+/i, '') ?? null;
-  return getFacultyName(facultyId, cleanedFacultyName);
-};
 
 const SearchEmptyResult = styled.div`
   padding: 12px;
@@ -576,9 +573,6 @@ export const CompanyStatsView = () => {
                           onClick={() => handleSelectChallenge(challenge.id)}
                         >
                           <span className="challenge-title">{challenge.title}</span>
-                          <span className="challenge-status">
-                            {getChallengeFacultyLabel(challenge)} · Estado: {challenge.status}
-                          </span>
                         </SearchResultItem>
                       ))
                     ) : (
@@ -598,7 +592,7 @@ export const CompanyStatsView = () => {
                 <option value="all">Todos los retos</option>
                 {challengeOptionsForSelect.map((challenge) => (
                   <option key={challenge.id} value={challenge.id}>
-                    {challenge.title} · {getChallengeFacultyLabel(challenge)} · {challenge.status}
+                    {challenge.title.length > 40 ? challenge.title.slice(0, 37) + '...' : challenge.title}
                   </option>
                 ))}
               </ChallengeSelect>

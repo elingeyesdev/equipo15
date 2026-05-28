@@ -31,13 +31,17 @@ const fadeUp = keyframes`
   to   { opacity: 1; transform: translateY(0); }
 `;
 
-const Grid = styled.div`
+const Grid = styled.div<{ $count: number }>`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: ${p =>
+    p.$count === 1 ? '1fr' :
+    p.$count === 2 ? '1fr 1fr' :
+    'repeat(3, 1fr)'
+  };
   gap: 16px;
 
   @media (max-width: ${breakpoints.mobile}) {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
     gap: 12px;
   }
 `;
@@ -56,6 +60,7 @@ const Card = styled.div<{ $rank: number; $idx: number }>`
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
 
   &:hover {
@@ -205,7 +210,7 @@ const PodiumSection: React.FC<PodiumSectionProps> = ({ topIdeas, onSelectIdea })
   };
 
   return (
-    <Grid>
+    <Grid $count={podiumEntries.length}>
       {podiumEntries.map((idea, i) => {
         const isEvaluated = idea.finalScore !== undefined && idea.finalScore > 0;
         const totalInteractions = (idea.likesCount ?? 0) + (idea.commentsCount ?? 0);

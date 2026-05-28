@@ -155,11 +155,15 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
   const [liveTotalLikes, setLiveTotalLikes] = useState<number | null>(null);
   const [liveTotalComments, setLiveTotalComments] = useState<number | null>(null);
   const [liveTotalIdeas, setLiveTotalIdeas] = useState<number | null>(null);
+  const [liveTotalParticipants, setLiveTotalParticipants] = useState<number | null>(null);
+  const [newParticipantIds, setNewParticipantIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     setLiveTotalLikes(null);
     setLiveTotalComments(null);
     setLiveTotalIdeas(null);
+    setLiveTotalParticipants(null);
+    setNewParticipantIds(new Set());
   }, [selectedChallenge?.id]);
 
   useWallEventListener('vote_changed', (payload: any) => {
@@ -174,13 +178,22 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
     });
   });
 
-  useWallEventListener('idea_created', () => {
+  useWallEventListener('idea_created', (payload: any) => {
     setLiveTotalIdeas(prev => (prev ?? challengeStats?.totalIdeas ?? 0) + 1);
+
+    if (payload.authorId) {
+      const existingIds = challengeStats?.communityPulse?.map((p: any) => p.id) || [];
+      if (!existingIds.includes(payload.authorId) && !newParticipantIds.has(payload.authorId)) {
+        setNewParticipantIds(prev => new Set(prev).add(payload.authorId!));
+        setLiveTotalParticipants(prev => (prev ?? challengeStats?.totalParticipants ?? 0) + 1);
+      }
+    }
   });
 
   const totalIdeas = liveTotalIdeas ?? challengeStats?.totalIdeas ?? 0;
   const totalLikes = liveTotalLikes ?? challengeStats?.totalLikes ?? 0;
   const totalComments = liveTotalComments ?? challengeStats?.totalComments ?? 0;
+  const totalParticipants = liveTotalParticipants ?? challengeStats?.totalParticipants ?? 0;
   const topIdeas = challengeStats?.topIdeas || [];
 
   const handlePodiumClick = (idea: any) => {
@@ -204,7 +217,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
         <MetricCard icon={<Sparkles size={20} strokeWidth={2.5} />} value={totalLikes} label="Interacciones" />
         <MetricCard icon={<CommentSvg />} value={totalComments} label="Comentarios" />
         <MetricCard icon={<BulbSvg />} value={totalIdeas} label="Ideas en Vuelo" />
-        <MetricCard icon={<UsersSvg />} value={challengeStats?.totalParticipants ?? 0} label="Participantes" />
+        <MetricCard icon={<UsersSvg />} value={totalParticipants} label="Participantes" />
       </div>
 
       <PodiumSection

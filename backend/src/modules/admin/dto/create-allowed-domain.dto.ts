@@ -1,8 +1,7 @@
-import { IsString, IsNotEmpty, Matches } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 
 export class CreateAllowedDomainDto {
   @IsString()
   @IsNotEmpty()
-  @Matches(/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, { message: 'Dominio inválido' })
-  domain: string;
+  domain!: string;
 }

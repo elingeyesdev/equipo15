@@ -577,7 +577,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
         <PreviewTitle>{form.title || 'Título del reto...'}</PreviewTitle>
 
-        <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 800, color: Pista8Theme.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 12, marginTop: -4 }}>
+        <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 800, color: Pista8Theme.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 12, marginTop: -4, wordBreak: 'break-word' }}>
           {(() => {
             if (!form.facultyId) return 'Todas las Facultades';
             

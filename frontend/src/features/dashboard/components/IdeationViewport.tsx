@@ -48,9 +48,9 @@ const CalendarSvg = () => (
 const getStatusLabel = (status?: string): { label: string; active: boolean } => {
   if (!status) return { label: 'Sin estado', active: false };
   const s = status.toLowerCase();
-  if (s === 'activo' || s === 'active') return { label: 'Activo', active: true };
-  if (s === 'finalizado' || s === 'finished') return { label: 'Finalizado', active: false };
-  if (s === 'en evaluación') return { label: 'En Evaluación', active: false };
+  if (s === 'activo' || s === 'active' || s === 'published') return { label: 'Activo', active: true };
+  if (s === 'finalizado' || s === 'finished' || s === 'closed') return { label: 'Finalizado', active: false };
+  if (s === 'en evaluación' || s === 'evaluating') return { label: 'En Evaluación', active: false };
   if (s === 'borrador' || s === 'draft') return { label: 'Borrador', active: false };
   return { label: status, active: false };
 };
@@ -165,7 +165,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
               <S.DetailMeta>
                 <S.DetailMetaItem>
                   <CalendarSvg />
-                  {formatDate(ds.selectedChallenge.startDate)} — {formatDate(ds.selectedChallenge.endDate)}
+                  {formatDate(ds.selectedChallenge.startDate || ds.selectedChallenge.submissionsOpenAt)} — {formatDate(ds.selectedChallenge.endDate || ds.selectedChallenge.submissionsCloseAt)}
                 </S.DetailMetaItem>
               </S.DetailMeta>
             </S.DetailCardBody>

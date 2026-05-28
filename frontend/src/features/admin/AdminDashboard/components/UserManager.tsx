@@ -152,7 +152,7 @@ const UserManager: React.FC = () => {
                       </S.UserInfo>
                     </S.UserCell>
                   </S.Td>
-                  <S.Td>{user.faculty?.name || '—'}</S.Td>
+                  <S.Td>{user.studentProfile?.faculty?.name || '—'}</S.Td>
                   <S.Td>
                     <S.RoleBadge $role={user.role}>
                       {ROLE_LABELS[user.role] || user.role}

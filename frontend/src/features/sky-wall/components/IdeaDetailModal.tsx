@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
+import { Lightbulb, Flame, Brain } from 'lucide-react';
 import type { PlaneIdea } from '../types';
 import LikeButton from './LikeButton';
 import FavoriteButton from './FavoriteButton';
@@ -304,12 +305,44 @@ const ReadMoreButton = styled.button`
   }
 `;
 
+const StatsContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const StatPill = styled.div<{ $color: string }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #f8fafc;
+  border: 1px solid rgba(72, 80, 84, 0.08);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #485054;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+
+  svg {
+    color: ${props => props.$color};
+    fill: ${props => props.$color}18;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.04);
+  }
+`;
+
 interface IdeaDetailModalProps {
   idea: PlaneIdea;
   onClose: () => void;
+  showStats?: boolean;
 }
 
-export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
+export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetailModalProps) => {
   const { userProfile } = useAuth();
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [commentsCount, setCommentsCount] = useState(idea.commentsCount);
@@ -406,13 +439,32 @@ export const IdeaDetailModal = ({ idea, onClose }: IdeaDetailModalProps) => {
 
           <SectionBlock>
             <ActionsRow>
-              <FavoriteButton ideaId={idea.id} hasFavorited={idea.hasFavorited} />
-              <LikeButton 
-                ideaId={idea.id} 
-                initialLikes={idea.likesCount} 
-                hasVoted={idea.hasVoted}
-                isAuthor={isAuthor}
-              />
+              {showStats ? (
+                <StatsContainer>
+                  <StatPill $color="#f59e0b" title="Buena idea: Me interesa, esta propuesta resuelve algo real.">
+                    <Lightbulb size={18} />
+                    <span>{idea.goodCount ?? 0}</span>
+                  </StatPill>
+                  <StatPill $color="#ef4444" title="Tiene futuro: Veo mucho potencial estratégico en esta idea.">
+                    <Flame size={18} />
+                    <span>{idea.futureCount ?? 0}</span>
+                  </StatPill>
+                  <StatPill $color="#64748b" title="Complicado: Interesante, pero parece difícil de implementar.">
+                    <Brain size={18} />
+                    <span>{idea.complexCount ?? 0}</span>
+                  </StatPill>
+                </StatsContainer>
+              ) : (
+                <>
+                  <FavoriteButton ideaId={idea.id} hasFavorited={idea.hasFavorited} />
+                  <LikeButton 
+                    ideaId={idea.id} 
+                    initialLikes={idea.likesCount} 
+                    hasVoted={idea.hasVoted}
+                    isAuthor={isAuthor}
+                  />
+                </>
+              )}
 
               <CommentTooltipContainer>
                 <CommentToggleButton

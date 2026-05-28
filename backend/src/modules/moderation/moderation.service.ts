@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventBus } from '../../infrastructure/events/event-bus';
 import { RedisService } from '../../infrastructure/redis/redis.module';
+import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { UserRepository } from '../user/user.repository';
+import { PenaltyReason, UserStatus } from '@prisma/client';
 import {
   CURRENT_SCALE,
   MODERATION_RULES,
@@ -16,6 +18,7 @@ export class ModerationService {
   private readonly logger = new Logger(ModerationService.name);
 
   constructor(
+    private readonly prisma: PrismaService,
     private readonly userRepository: UserRepository,
     private readonly eventBus: EventBus,
     private readonly redisService: RedisService,
@@ -41,12 +44,22 @@ export class ModerationService {
     const rules = MODERATION_RULES[CURRENT_SCALE];
 
     if (unlikesLast60Min >= rules.likesThresholdPhase2) {
-      await this.applyPenalty(userId, 'SUSPENDED', rules.penaltyHoursPhase2);
+      await this.applyPenalty(
+        userId,
+        'SUSPENDED',
+        rules.penaltyHoursPhase2,
+        PenaltyReason.EXCESSIVE_LIKE_REMOVAL,
+      );
       return;
     }
 
     if (unlikesLast30Min >= rules.likesThresholdPhase1) {
-      await this.applyPenalty(userId, 'SOFT_BLOCK', rules.penaltyHoursPhase1);
+      await this.applyPenalty(
+        userId,
+        'SOFT_BLOCK',
+        rules.penaltyHoursPhase1,
+        PenaltyReason.EXCESSIVE_LIKE_REMOVAL,
+      );
       return;
     }
   }
@@ -75,6 +88,7 @@ export class ModerationService {
         userId,
         'SUSPENDED',
         (rules as any).commentPenaltyHoursPhase2,
+        PenaltyReason.COMMENT_ABUSE,
       );
       return;
     }
@@ -84,6 +98,7 @@ export class ModerationService {
         userId,
         'SOFT_BLOCK',
         (rules as any).commentPenaltyHoursPhase1,
+        PenaltyReason.COMMENT_ABUSE,
       );
       return;
     }
@@ -93,15 +108,30 @@ export class ModerationService {
     userId: string,
     status: 'SOFT_BLOCK' | 'SUSPENDED',
     hours: number,
+    reason: PenaltyReason,
   ): Promise<void> {
     const user = await this.userRepository.findById(userId);
-    if (!user || user.status === 'SUSPENDED') return;
-    if (status === 'SOFT_BLOCK' && user.status === 'SOFT_BLOCK') return;
+    if (!user || user.status === UserStatus.SUSPENDED) return;
+    if (status === 'SOFT_BLOCK' && user.status === UserStatus.SOFT_BLOCK) return;
 
     const expiresAt = new Date();
     expiresAt.setUTCHours(expiresAt.getUTCHours() + hours);
 
-    await this.userRepository.updateStatus(userId, status, expiresAt);
+    const prismaStatus = status === 'SOFT_BLOCK' ? UserStatus.SOFT_BLOCK : UserStatus.SUSPENDED;
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { status: prismaStatus },
+    });
+
+    await this.prisma.penalty.create({
+      data: {
+        userId,
+        reason,
+        isAutomatic: true,
+        expiresAt,
+      },
+    });
 
     this.logger.warn(
       `Moderation: User ${userId} (${user.email}) changed to ${status} for ${hours} hours.`,

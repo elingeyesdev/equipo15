@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EvaluationRepository } from './evaluation.repository';
-import { Evaluation } from '@prisma/client';
 
 @Injectable()
 export class EvaluationService {
@@ -8,10 +7,10 @@ export class EvaluationService {
 
   constructor(private readonly evaluationRepository: EvaluationRepository) {}
 
-  async evaluateIdea(evaluationData: any): Promise<Evaluation> {
+  async evaluateIdea(evaluationData: any): Promise<any> {
     const evaluation = await this.evaluationRepository.create(evaluationData);
     this.logger.log(
-      `Idea evaluada: ID ${evaluation.ideaId} por Juez ${evaluation.judgeId} con puntaje ${evaluation.score}`,
+      `Idea evaluada: ID ${evaluation.ideaId} por Juez ${evaluation.judgeId} con ${evaluation.scores?.length || 0} criterios evaluados`,
     );
     return evaluation;
   }

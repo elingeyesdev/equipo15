@@ -77,8 +77,8 @@ export class CommentService {
     return user.id;
   }
 
-  private ensureUserCanComment(isActive?: boolean) {
-    if (isActive === false) {
+  private ensureUserCanComment(status?: string) {
+    if (status !== 'ACTIVE') {
       throw new BadRequestException(
         'Tu cuenta está inactiva y no puede publicar comentarios.',
       );
@@ -86,7 +86,8 @@ export class CommentService {
   }
 
   private ensureIdeaAllowsComments(status: string) {
-    if (status !== 'public' && status !== 'top5') {
+    const normalized = (status || '').toUpperCase();
+    if (normalized !== 'PUBLISHED' && normalized !== 'FINALIST' && status !== 'public' && status !== 'top5') {
       throw new BadRequestException(
         'Solo se puede comentar en ideas publicadas.',
       );
@@ -175,7 +176,7 @@ export class CommentService {
       allIds.add(current);
 
       input.nodes.forEach((node) => {
-        if (node.parentCommentId === current && node.status === 'visible') {
+        if (node.parentCommentId === current && node.status === 'VISIBLE') {
           queue.push(node.id);
         }
       });
@@ -242,7 +243,7 @@ export class CommentService {
           'No puedes responder a un comentario eliminado.',
         );
       }
-      if (parentComment.status !== 'visible') {
+      if (parentComment.status !== 'VISIBLE') {
         throw new BadRequestException(
           'No puedes responder a un comentario oculto.',
         );
@@ -274,6 +275,7 @@ export class CommentService {
         ideaId: idea.id,
         commentsCount: idea.commentsCount + 1,
         delta: 1,
+        authorId,
       },
     );
 
@@ -299,7 +301,7 @@ export class CommentService {
         'No puedes responder a un comentario eliminado.',
       );
     }
-    if (parentComment.status !== 'visible') {
+    if (parentComment.status !== 'VISIBLE') {
       throw new BadRequestException(
         'No puedes responder a un comentario oculto.',
       );
@@ -336,6 +338,7 @@ export class CommentService {
         ideaId: idea.id,
         commentsCount: idea.commentsCount + 1,
         delta: 1,
+        authorId,
       },
     );
 
@@ -355,7 +358,7 @@ export class CommentService {
       throw new NotFoundException('El comentario no existe.');
     }
 
-    if (comment.status !== 'visible') {
+    if (comment.status !== 'VISIBLE') {
       throw new BadRequestException('El comentario ya no está visible.');
     }
 
@@ -369,9 +372,7 @@ export class CommentService {
       throw new NotFoundException('El reto asociado a la idea no existe.');
     }
 
-    const requesterRole =
-      (requester as unknown as { role?: { name: string } })?.role?.name ??
-      'student';
+    const requesterRole = (requester as any).role ?? 'student';
     const isAuthor = requester.id === comment.authorId;
     const isAdmin = requesterRole === 'admin';
     const isCompanyOwnerOfChallenge =
@@ -387,7 +388,7 @@ export class CommentService {
       comment.ideaId,
     );
     const visibleNodes = thread
-      .filter((node) => node.status === 'visible')
+      .filter((node) => node.status === 'VISIBLE')
       .map((node) => ({
         id: node.id,
         parentCommentId: node.parentCommentId ?? null,
@@ -413,6 +414,7 @@ export class CommentService {
         ideaId: idea.id,
         commentsCount: Math.max(0, idea.commentsCount - idsToRemove.length),
         delta: -idsToRemove.length,
+        authorId: requester.id,
       },
     );
 
@@ -446,7 +448,7 @@ export class CommentService {
       throw new NotFoundException('El comentario no existe.');
     }
 
-    if (comment.status !== 'visible') {
+    if (comment.status !== 'VISIBLE') {
       throw new BadRequestException(
         'Solo se pueden editar comentarios visibles.',
       );
@@ -546,9 +548,7 @@ export class CommentService {
         await this.userRepository.findByUid(requesterFirebaseUid);
       if (requester) {
         requesterId = requester.id;
-        requesterRole =
-          (requester as unknown as { role?: { name: string } })?.role?.name ??
-          'student';
+        requesterRole = (requester as any).role ?? 'student';
       }
     }
 

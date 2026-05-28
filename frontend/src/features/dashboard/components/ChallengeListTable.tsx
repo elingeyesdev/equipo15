@@ -9,10 +9,14 @@ interface Props {
 
 const getStatusLabel = (status: string) => {
   switch (status) {
-    case 'Activo': return 'Activo';
-    case 'Borrador': return 'Borrador';
-    case 'En Evaluación': return 'En Evaluación';
-    case 'Finalizado': return 'Finalizado';
+    case 'Activo':
+    case 'PUBLISHED': return 'Activo';
+    case 'Borrador':
+    case 'DRAFT': return 'Borrador';
+    case 'En Evaluación':
+    case 'EVALUATING': return 'En Evaluación';
+    case 'Finalizado':
+    case 'CLOSED': return 'Finalizado';
     default: return status;
   }
 };

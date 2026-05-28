@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Menu, Lightbulb, Loader2, Flame, Brain } from 'lucide-react';
+import { Menu, Lightbulb, Loader2 } from 'lucide-react';
 import InfoTooltip from '@/components/common/InfoTooltip';
 import AdvancedFilter from './AdvancedFilter';
 import type { AdvancedFilterState } from './AdvancedFilter';
 import { ideaService } from '@/services/idea.service';
-import CommentsSection from '@/features/comments/CommentsSection';
 import { Sidebar } from '../layout/Sidebar';
 import { useAuth } from '@/context/AuthContext';
 import * as S from './MyIdeasStyles';
@@ -30,7 +28,7 @@ const MyIdeasView: React.FC = () => {
     onlyMyIdeas: false,
   });
 
-  const resolvedName = userProfile?.firstName || 'Estudiante';
+  const resolvedName = userProfile?.displayName || 'Estudiante';
   const roleName = (userProfile?.roleInfo?.name || userProfile?.role || 'STUDENT').toLowerCase();
   const roleLabels: Record<string, string> = {
     student: 'estudiante',
@@ -43,13 +41,13 @@ const MyIdeasView: React.FC = () => {
   const sortedIdeas = React.useMemo(() => {
     const list = [...ideas];
     if (filter.sortOrder === 'newest') {
-      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      list.sort((a, b) => new Date(b.createdAt ?? '').getTime() - new Date(a.createdAt ?? '').getTime());
     } else if (filter.sortOrder === 'oldest') {
-      list.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      list.sort((a, b) => new Date(a.createdAt ?? '').getTime() - new Date(b.createdAt ?? '').getTime());
     } else if (filter.sortOrder === 'likes') {
       list.sort((a, b) => {
-        const scoreA = a.fireScore || (a.likesCount) || 0;
-        const scoreB = b.fireScore || (b.likesCount) || 0;
+        const scoreA = (a.likesCount) || 0;
+        const scoreB = (b.likesCount) || 0;
         return scoreB - scoreA;
       });
     } else if (filter.sortOrder === 'comments') {
@@ -137,7 +135,7 @@ const MyIdeasView: React.FC = () => {
               {sortedIdeas.map((idea) => (
                 <S.Card key={idea.id}>
                 <S.CardBadge>
-                  {idea.challenge?.title || 'Reto'}
+                  {idea.challengeTitle || 'Reto'}
                 </S.CardBadge>
                 <S.CardTitle>{idea.title}</S.CardTitle>
                 <S.CardFooter>
@@ -160,6 +158,7 @@ const MyIdeasView: React.FC = () => {
         <IdeaDetailModal
           idea={selectedIdea}
           onClose={() => setSelectedIdea(null)}
+          showStats={true}
         />
       )}
     </S.Wrapper>

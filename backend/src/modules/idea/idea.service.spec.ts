@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getModelToken } from '@nestjs/mongoose';
 import { IdeaService } from './idea.service';
 import { IdeaRepository } from './idea.repository';
 import { ChallengeRepository } from '../challenge/challenge.repository';
@@ -23,7 +22,6 @@ describe('IdeaService', () => {
         { provide: IdeaRepository, useValue: {} },
         { provide: ChallengeRepository, useValue: {} },
         { provide: UserRepository, useValue: {} },
-        { provide: getModelToken('ProjectDetails'), useValue: {} },
         { provide: EventsGateway, useValue: { server: mockSocketServer } },
         EventBus,
         {

@@ -4,7 +4,6 @@ import {
   IsOptional,
   IsNotEmpty,
   IsNumber,
-  IsBoolean,
 } from 'class-validator';
 import { IsAllowedDomain } from '../../../common/validators/is-allowed-domain.validator';
 
@@ -45,22 +44,10 @@ export class CreateUserDto {
   @IsOptional()
   avatarUrl?: string;
 
-  @IsString()
-  @IsOptional()
-  fcmToken?: string;
-
-  @IsString()
-  @IsOptional()
-  career?: string;
-
-  @IsString()
-  @IsOptional()
-  specialty?: string;
-
   @IsOptional()
   facultyId?: string | number;
 
-  @IsBoolean()
+  @IsNumber()
   @IsOptional()
-  isFacultyVerified?: boolean;
+  enrollmentYear?: number;
 }

@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { AdminRepository } from './admin.repository';
 import { createImpersonationToken } from './impersonation-token.util';
-import { CreateAllowedDomainDto } from './dto/create-allowed-domain.dto';
 import type { UserRoleEnum } from './dto/update-user-role.dto';
 import { CreateFacultyDto } from './dto/create-faculty.dto';
 import { UpdateFacultyDto } from './dto/update-faculty.dto';
+import { CreateAllowedDomainDto } from './dto/create-allowed-domain.dto';
 
 @Injectable()
 export class AdminService {
@@ -59,23 +59,6 @@ export class AdminService {
     };
   }
 
-  async getAllowedDomains() {
-    return this.adminRepository.getAllowedDomains();
-  }
-
-  async addAllowedDomain(dto: CreateAllowedDomainDto) {
-    // repository handles unique constraint errors
-    return this.adminRepository.createAllowedDomain(dto.domain.toLowerCase());
-  }
-
-  async updateAllowedDomainStatus(id: string, isActive: boolean) {
-    return this.adminRepository.updateAllowedDomainStatus(id, isActive);
-  }
-
-  async removeAllowedDomain(id: string) {
-    return this.adminRepository.deleteAllowedDomain(id);
-  }
-
   // ─── Faculty Management ────────────────────────────────────────────────────
 
   async createFaculty(dto: CreateFacultyDto) {
@@ -118,5 +101,21 @@ export class AdminService {
     }
 
     return result.user;
+  }
+
+  async getAllowedDomains() {
+    return this.adminRepository.getAllowedDomains();
+  }
+
+  async addAllowedDomain(dto: CreateAllowedDomainDto) {
+    return this.adminRepository.createAllowedDomain(dto.domain);
+  }
+
+  async updateAllowedDomainStatus(id: string, isActive: boolean) {
+    return this.adminRepository.updateAllowedDomainStatus(id, isActive);
+  }
+
+  async removeAllowedDomain(id: string) {
+    return this.adminRepository.deleteAllowedDomain(id);
   }
 }

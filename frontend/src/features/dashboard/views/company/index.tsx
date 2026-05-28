@@ -11,6 +11,9 @@ import ChallengeFormView from './ChallengeFormModal';
 import { CompanyStatsView } from './CompanyStatsView';
 import { CompanyPodiumView } from './CompanyPodiumView';
 import { premiumTooltip } from '../../styles/CommonStyles';
+import { toast } from 'sonner';
+import { extractErrorMessage } from '../../../../utils/errors';
+
 
 /* ─── Animations ─── */
 const fadeUp = keyframes`
@@ -23,17 +26,22 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
   Borrador: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
   DRAFT: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
   Activo: { label: 'Activo', bg: '#dcfce7', color: '#166534', dot: '#22c55e' },
+  PUBLISHED: { label: 'Activo', bg: '#dcfce7', color: '#166534', dot: '#22c55e' },
   'En Evaluación': { label: 'En Evaluación', bg: '#fef3c7', color: '#92400e', dot: '#f59e0b' },
+  EVALUATING: { label: 'En Evaluación', bg: '#fef3c7', color: '#92400e', dot: '#f59e0b' },
   Finalizado: { label: 'Finalizado', bg: '#fee2e2', color: '#991b1b', dot: '#ef4444' },
+  CLOSED: { label: 'Finalizado', bg: '#fee2e2', color: '#991b1b', dot: '#ef4444' },
 };
 
 /** Deriva el estado visual real considerando las fechas */
 const deriveDisplayStatus = (challenge: Challenge): string => {
   // Si ya venció la fecha de cierre → Finalizado
-  if (challenge.endDate && new Date(challenge.endDate) < new Date()) {
+  const closeDate = challenge.endDate || challenge.submissionsCloseAt;
+  if (closeDate && new Date(closeDate) < new Date()) {
     return 'Finalizado';
   }
-  return challenge.status;
+  const status = challenge.status;
+  return STATUS_CONFIG[status]?.label || status;
 };
 
 const getStatusConfig = (status: string) =>
@@ -498,17 +506,6 @@ const formatDate = (d?: string | Date) => {
   return date.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-const extractErrorMessage = (error: unknown) => {
-  if (!error || typeof error !== 'object') return 'Error al guardar el reto';
-  const err = error as {
-    response?: { data?: { message?: string | string[] } };
-    message?: string;
-  };
-  const message = err.response?.data?.message;
-  if (Array.isArray(message)) return message.join('\n');
-  return message || err.message || 'Error al guardar el reto';
-};
-
 /* ─── Component ─── */
 type FilterValue = 'all' | ChallengeStatus;
 
@@ -558,7 +555,7 @@ export const CompanyChallengesView = () => {
       setEditingChallenge(null);
       await fetchChallenges();
     } catch (err) {
-      alert(extractErrorMessage(err));
+      toast.error(extractErrorMessage(err));
     }
   };
 
@@ -568,7 +565,7 @@ export const CompanyChallengesView = () => {
     }
     const canEdit = !challenge.ideasCount || challenge.ideasCount === 0;
     if (!canEdit) {
-      alert('Este reto ya tiene ideas asociadas y no puede ser editado.');
+      toast.error('Este reto ya tiene ideas asociadas y no puede ser editado.');
       return;
     }
     setEditingChallenge(challenge);
@@ -714,7 +711,7 @@ export const CompanyChallengesView = () => {
                       <line x1="8" y1="2" x2="8" y2="6" />
                       <line x1="3" y1="10" x2="21" y2="10" />
                     </svg>
-                    {formatDate(challenge.startDate)} — {formatDate(challenge.endDate)}
+                    {formatDate(challenge.startDate || challenge.submissionsOpenAt)} — {formatDate(challenge.endDate || challenge.submissionsCloseAt)}
                   </MetaChip>
                   {challenge.ideasCount !== undefined && (
                     <MetaChip>
@@ -846,7 +843,7 @@ export const CompanyChallengesView = () => {
                 </ViewStat>
                 <ViewStat>
                   <ViewStatLabel>Vigencia</ViewStatLabel>
-                  <ViewStatValue>{formatDate(viewChallenge.startDate)} — {formatDate(viewChallenge.endDate)}</ViewStatValue>
+                  <ViewStatValue>{formatDate(viewChallenge.startDate || viewChallenge.submissionsOpenAt)} — {formatDate(viewChallenge.endDate || viewChallenge.submissionsCloseAt)}</ViewStatValue>
                 </ViewStat>
               </ViewGrid>
 

@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminService } from '@/services/admin.service';
+import { getStoredImpersonationToken } from '@/utils/impersonation-session';
 import { Pista8Theme } from '@/config/theme';
 import { premiumTooltip } from '@/features/dashboard/styles/CommonStyles';
 import type { AllowedDomain } from '@/types/models';
@@ -372,6 +373,10 @@ export default function WhitelistManager() {
   );
 
   async function loadDomains() {
+    if (getStoredImpersonationToken()) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const list = await adminService.getWhitelist();

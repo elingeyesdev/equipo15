@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRepository } from '../../modules/user/user.repository';
+import { RedisService } from '../../infrastructure/redis/redis.module';
 import type { AuthenticatedRequest } from '../types/authenticated-request.interface';
 
 const ROLE_MAP: Record<string, string> = {
@@ -15,11 +16,14 @@ const ROLE_MAP: Record<string, string> = {
   USER: 'student',
 };
 
+const ROLE_CACHE_TTL_MS = 300_000;
+
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly userRepository: UserRepository,
+    private readonly redisService: RedisService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -35,12 +39,19 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const firebaseUser = request.user;
 
-    const user = await this.userRepository.findByUid(firebaseUser.uid);
-    const prismaRole = String(user?.role ?? '');
+    const cacheKey = `role:${firebaseUser.uid}`;
+    let prismaRole = await this.redisService.get(cacheKey);
+
+    if (!prismaRole) {
+      const user = await this.userRepository.findByUid(firebaseUser.uid);
+      prismaRole = String(user?.role ?? '');
+      await this.redisService.set(cacheKey, prismaRole, ROLE_CACHE_TTL_MS);
+    }
+
     const roleName = (ROLE_MAP[prismaRole] ?? prismaRole).toLowerCase();
     const allowedRoles = requiredRoles.map((role) => role.toLowerCase());
 
-    if (!user || !roleName || !allowedRoles.includes(roleName)) {
+    if (!roleName || !allowedRoles.includes(roleName)) {
       throw new ForbiddenException(
         'Acceso Restringido: No tienes permisos para esta sección.',
       );

@@ -1,14 +1,13 @@
-import { Controller, Get, Post, Put, Param, Query, Request, UseGuards, Patch } from '@nestjs/common';
-import { Body, Delete } from '@nestjs/common';
+import { Controller, Delete, Get, Patch, Post, Put, Param, Query, Request, UseGuards } from '@nestjs/common';
+import { Body } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/guards/roles.decorator';
 import { AdminService } from './admin.service';
 import { GlobalAnalyticsResponseDto } from './dto/global-analytics-response.dto';
-import { CreateAllowedDomainDto } from './dto/create-allowed-domain.dto';
-import { AllowedDomainResponseDto } from './dto/allowed-domain-response.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { CreateAllowedDomainDto } from './dto/create-allowed-domain.dto';
 import type { AuthenticatedRequest } from '../../common/types/authenticated-request.interface';
 
 @ApiTags('Admin')
@@ -52,70 +51,6 @@ export class AdminController {
     return this.adminService.getGlobalAnalytics();
   }
 
-  @Get('whitelist-domains')
-  @ApiOperation({ summary: 'List allowed domains' })
-  @ApiResponse({ status: 200, type: [AllowedDomainResponseDto] })
-  async getAllowedDomains() {
-    return this.adminService.getAllowedDomains();
-  }
-
-  @Get('whitelist')
-  @ApiOperation({ summary: 'List allowed domains (legacy route)' })
-  @ApiResponse({ status: 200, type: [AllowedDomainResponseDto] })
-  async getAllowedDomainsLegacy() {
-    return this.adminService.getAllowedDomains();
-  }
-
-  @Post('whitelist-domains')
-  @ApiOperation({ summary: 'Add allowed domain' })
-  @ApiResponse({ status: 201, type: AllowedDomainResponseDto })
-  async addAllowedDomain(@Body() dto: CreateAllowedDomainDto) {
-    return this.adminService.addAllowedDomain(dto);
-  }
-
-  @Post('whitelist')
-  @ApiOperation({ summary: 'Add allowed domain (legacy route)' })
-  @ApiResponse({ status: 201, type: AllowedDomainResponseDto })
-  async addAllowedDomainLegacy(@Body() dto: CreateAllowedDomainDto) {
-    return this.adminService.addAllowedDomain(dto);
-  }
-
-  @Patch('whitelist-domains/:id/status')
-  @ApiOperation({ summary: 'Toggle allowed domain status' })
-  @ApiResponse({ status: 200, type: AllowedDomainResponseDto })
-  async updateAllowedDomainStatus(
-    @Param('id') id: string,
-    @Body() body: { isActive: boolean },
-  ) {
-    return this.adminService.updateAllowedDomainStatus(id, body.isActive);
-  }
-
-  @Patch('whitelist/:id/status')
-  @ApiOperation({ summary: 'Toggle allowed domain status (legacy route)' })
-  @ApiResponse({ status: 200, type: AllowedDomainResponseDto })
-  async updateAllowedDomainStatusLegacy(
-    @Param('id') id: string,
-    @Body() body: { isActive: boolean },
-  ) {
-    return this.adminService.updateAllowedDomainStatus(id, body.isActive);
-  }
-
-  @Delete('whitelist-domains/:id')
-  @ApiOperation({ summary: 'Remove allowed domain' })
-  @ApiResponse({ status: 200, type: AllowedDomainResponseDto })
-  async removeAllowedDomain(@Param('id') id: string) {
-    return this.adminService.removeAllowedDomain(id);
-  }
-
-  @Delete('whitelist/:id')
-  @ApiOperation({ summary: 'Remove allowed domain (legacy route)' })
-  @ApiResponse({ status: 200, type: AllowedDomainResponseDto })
-  async removeAllowedDomainLegacy(@Param('id') id: string) {
-    return this.adminService.removeAllowedDomain(id);
-  }
-
-  // ─── User Search & Role Management (E2.3) ──────────────────────────────────
-
   @Get('users')
   @ApiOperation({ summary: 'Search users by name or email with optional role filter' })
   @ApiResponse({ status: 200, description: 'Paginated list of users matching the search criteria' })
@@ -144,5 +79,37 @@ export class AdminController {
   ) {
     return this.adminService.updateUserRole(userId, dto.role);
   }
-}
 
+  @Get('whitelist-domains')
+  @ApiOperation({ summary: 'List all allowed email domains (whitelist)' })
+  async getWhitelistDomains() {
+    return this.adminService.getAllowedDomains();
+  }
+
+  @Get('whitelist')
+  @ApiOperation({ summary: 'List all allowed email domains (whitelist) — legacy alias' })
+  async getWhitelistDomainsLegacy() {
+    return this.adminService.getAllowedDomains();
+  }
+
+  @Post('whitelist-domains')
+  @ApiOperation({ summary: 'Add a domain to the whitelist' })
+  async addWhitelistDomain(@Body() dto: CreateAllowedDomainDto) {
+    return this.adminService.addAllowedDomain(dto);
+  }
+
+  @Patch('whitelist-domains/:id/status')
+  @ApiOperation({ summary: 'Toggle whitelist domain active/inactive' })
+  async updateWhitelistDomainStatus(
+    @Param('id') id: string,
+    @Body('isActive') isActive: boolean,
+  ) {
+    return this.adminService.updateAllowedDomainStatus(id, isActive);
+  }
+
+  @Delete('whitelist-domains/:id')
+  @ApiOperation({ summary: 'Remove a domain from the whitelist' })
+  async removeWhitelistDomain(@Param('id') id: string) {
+    return this.adminService.removeAllowedDomain(id);
+  }
+}

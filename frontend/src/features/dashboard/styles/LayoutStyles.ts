@@ -276,6 +276,7 @@ export const DetailTitle = styled.h2`
   margin: 0;
   line-height: 1.35;
   letter-spacing: -0.3px;
+  word-break: break-word;
 `;
 
 export const DetailFaculty = styled.span`
@@ -299,6 +300,8 @@ export const DetailDescription = styled.p`
   line-height: 1.75;
   margin: 0;
   max-width: 720px;
+  word-break: break-word;
+  white-space: pre-wrap;
 `;
 
 export const DetailMeta = styled.div`

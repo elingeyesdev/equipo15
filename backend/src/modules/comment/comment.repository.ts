@@ -16,7 +16,7 @@ const commentInclude = {
       displayName: true,
       nickname: true,
       avatarUrl: true,
-      facultyId: true,
+      studentProfile: { select: { facultyId: true, faculty: { select: { name: true } } } },
     },
   },
 } as const;
@@ -38,7 +38,7 @@ const commentListSelect = Prisma.validator<Prisma.CommentSelect>()({
       displayName: true,
       nickname: true,
       avatarUrl: true,
-      facultyId: true,
+      studentProfile: { select: { facultyId: true, faculty: { select: { name: true } } } },
     },
   },
 });
@@ -71,7 +71,7 @@ export class CommentRepository {
     const visibleCount = await this.prisma.comment.count({
       where: {
         id: { in: input.commentIds },
-        status: 'visible',
+        status: 'VISIBLE',
       },
     });
 
@@ -83,7 +83,7 @@ export class CommentRepository {
           id: { in: input.commentIds },
         },
         data: {
-          status: 'deleted',
+          status: 'HIDDEN',
           deletedAt: new Date(),
         },
       }),
@@ -107,7 +107,7 @@ export class CommentRepository {
         authorId: params.authorId,
         parentCommentId:
           params.parentCommentId === undefined ? null : params.parentCommentId,
-        status: 'visible',
+        status: 'VISIBLE',
         deletedAt: null,
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
@@ -126,7 +126,7 @@ export class CommentRepository {
       where: {
         ideaId: params.ideaId,
         authorId: params.authorId,
-        status: 'visible',
+        status: 'VISIBLE',
         deletedAt: null,
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
@@ -184,7 +184,7 @@ export class CommentRepository {
     const orderDirection = params.sort === 'oldest' ? 'asc' : 'desc';
     const where: Prisma.CommentWhereInput = {
       ideaId: params.ideaId,
-      status: 'visible',
+      status: 'VISIBLE',
     };
 
     if (!params.includeReplies || params.parentCommentId !== undefined) {

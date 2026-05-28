@@ -1,6 +1,10 @@
 export enum ChallengeStatus {
-  DRAFT = 'Borrador',
-  ACTIVE = 'Activo',
-  EVALUATING = 'En Evaluación',
-  FINALIZED = 'Finalizado',
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  EVALUATING = 'EVALUATING',
+  CLOSED = 'CLOSED',
+  BORRADOR = 'Borrador',
+  ACTIVO = 'Activo',
+  EN_EVALUACION = 'En Evaluación',
+  FINALIZADO = 'Finalizado',
 }

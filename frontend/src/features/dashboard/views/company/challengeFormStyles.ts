@@ -66,6 +66,7 @@ export const PreviewTitle = styled.h3`
   font-size: 18px; font-weight: 900;
   color: ${Pista8Theme.secondary}; margin: 0 0 10px;
   min-height: 28px; text-align: center;
+  word-break: break-word;
 `;
 
 export const PreviewSection = styled.div`
@@ -80,6 +81,7 @@ export const PreviewSectionLabel = styled.p`
 export const PreviewText = styled.p`
   font-size: 13px; color: #485054; line-height: 1.6; margin: 0;
   min-height: 20px; white-space: pre-wrap;
+  word-break: break-word;
 `;
 
 export const PreviewLogoWrap = styled.div`
@@ -103,6 +105,7 @@ export const PreviewCriteriaChip = styled.div`
   display: flex; align-items: center; justify-content: space-between;
   background: #f9fafb; border-radius: 10px; padding: 8px 14px;
   font-size: 12px; font-weight: 600; color: ${Pista8Theme.secondary};
+  word-break: break-word; gap: 8px;
 `;
 
 export const PreviewWeightBadge = styled.span`

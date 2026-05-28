@@ -31,6 +31,8 @@ export interface CompanyChallengeOption {
   faculty?: { id?: string | number; name?: string } | null;
   endDate?: string;
   publicationDate?: string;
+  submissionsCloseAt?: string;
+  publishedAt?: string;
 }
 
 const unwrapApiData = <T>(payload: T | ApiResponse<T>): T => {

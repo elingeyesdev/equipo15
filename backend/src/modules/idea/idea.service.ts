@@ -94,7 +94,7 @@ export class IdeaService {
 
     ensureActiveChallengeStatus(challenge.status);
 
-    if (challenge.endDate && new Date() > new Date(challenge.endDate)) {
+    if (challenge.submissionsCloseAt && new Date() > new Date(challenge.submissionsCloseAt)) {
       this.logger.warn(
         `Intento de creación de idea en reto expirado: ${challenge.title}`,
       );
@@ -103,25 +103,24 @@ export class IdeaService {
       );
     }
 
+    const mappedStatus = createIdeaDto.status === 'public' ? 'PUBLISHED' : (createIdeaDto.status === 'draft' ? 'DRAFT' : 'PUBLISHED');
+
     const createdIdea = await this.ideaRepository.create({
       title: createIdeaDto.title,
       problem: createIdeaDto.problem,
       solution: createIdeaDto.solution,
-      status: createIdeaDto.status || 'public',
-      tags: createIdeaDto.tags || [],
+      status: mappedStatus as any,
       isAnonymous: createIdeaDto.isAnonymous ?? false,
-      impactArea: createIdeaDto.impactArea || undefined,
-      improvementType: createIdeaDto.improvementType || undefined,
-      effortLevel: createIdeaDto.effortLevel || undefined,
+      multimediaLinks: createIdeaDto.multimediaLinks || undefined,
       authorId,
       challengeId: createIdeaDto.challengeId,
-    });
+    } as any);
 
     this.logger.log(
       `Nueva idea creada (Híbrida): "${createdIdea.title}" para el reto: ${challenge.title}`,
     );
     this.invalidateCache();
-    if (createdIdea.status === 'public') {
+    if (createdIdea.status === 'PUBLISHED') {
       const ideaWithRelations = await this.ideaRepository.findById(
         createdIdea.id,
       );
@@ -156,21 +155,18 @@ export class IdeaService {
       throw new BadRequestException('El reto vinculado no existe.');
     }
 
-    const draftPayload = {
+    const draftPayload: any = {
       title: createIdeaDraftDto.title || 'Borrador sin titulo',
       problem:
         createIdeaDraftDto.problem || 'Pendiente de descripcion del problema.',
       solution:
         createIdeaDraftDto.solution ||
         'Pendiente de descripcion de la solucion propuesta.',
-      tags: createIdeaDraftDto.tags || [],
       isAnonymous: createIdeaDraftDto.isAnonymous ?? false,
-      impactArea: createIdeaDraftDto.impactArea || undefined,
-      improvementType: createIdeaDraftDto.improvementType || undefined,
-      effortLevel: createIdeaDraftDto.effortLevel || undefined,
+      multimediaLinks: createIdeaDraftDto.multimediaLinks || undefined,
       authorId,
       challengeId: createIdeaDraftDto.challengeId,
-      status: 'draft',
+      status: 'DRAFT',
     };
     const createdDraft = await this.ideaRepository.create(draftPayload);
 
@@ -212,9 +208,13 @@ export class IdeaService {
       const user = await this.userRepository.findByUid(firebaseUid);
       if (user) {
         userId = user.id;
-        if (user.role?.name) {
-          userRole = user.role.name as UserRoleName;
-        }
+        const roleMap: Record<string, UserRoleName> = {
+          ADMIN: 'admin',
+          COMPANY: 'company',
+          JUDGE: 'judge',
+          USER: 'student',
+        };
+        userRole = roleMap[user.role] || 'student';
       }
     }
 
@@ -266,7 +266,7 @@ export class IdeaService {
   }
 
   async updateStatus(id: string, status: string) {
-    const updatedIdea = await this.ideaRepository.update(id, { status });
+    const updatedIdea = await this.ideaRepository.update(id, { status } as any);
     this.invalidateCache();
     this.logger.log(`Estado de idea con ID ${id} cambiado a: ${status}`);
     return updatedIdea;
@@ -332,9 +332,8 @@ export class IdeaService {
       title: nextTitle,
       problem: nextProblem,
       solution: nextSolution,
-      tags: updateIdeaDto.tags,
       isAnonymous: updateIdeaDto.isAnonymous,
-    });
+    } as any);
 
     this.invalidateCache();
     this.logger.log(`Idea ${ideaId} editada por su autor.`);
@@ -376,8 +375,7 @@ export class IdeaService {
 
     if (previousReaction) {
       if (rawType === null || previousReaction === targetReaction) {
-        // Unvote
-        const updatedIdea = await this.ideaRepository.removeLikeAndDecrement(ideaId, userId, previousReaction as any);
+        const updatedIdea = await this.ideaRepository.removeLikeAndDecrement(ideaId, userId, previousReaction);
         this.invalidateCache();
 
         this.moderationService.trackUnlike(userId).catch((err) => {
@@ -392,6 +390,7 @@ export class IdeaService {
             likesCount: updatedIdea.likesCount,
             fireScore: updatedIdea.fireScore,
             challengeId: idea.challengeId,
+            authorId: userId,
           },
         );
 
@@ -400,16 +399,15 @@ export class IdeaService {
           hasVoted: false,
         };
       } else {
-        // Switch reaction
-        const updatedIdea = await this.ideaRepository.updateLikeReaction(ideaId, userId, previousReaction as any, targetReaction);
+        const updatedIdea = await this.ideaRepository.updateLikeReaction(ideaId, userId, previousReaction, targetReaction);
         this.invalidateCache();
 
-        // Broadcast to trigger UI update (likes count might stay the same, but fireScore changes)
         this.eventBus.emitToRoom(`challenge:${idea.challengeId}`, 'idea:voted', {
           ideaId: idea.id,
           likesCount: updatedIdea.likesCount,
           fireScore: updatedIdea.fireScore,
           challengeId: idea.challengeId,
+          authorId: userId,
         });
 
         return {
@@ -418,26 +416,23 @@ export class IdeaService {
         };
       }
     } else {
-      // New vote
-      if (rawType === null) return idea; // Edge case: trying to unvote something not voted
-      
-      await this.ideaRepository.registerLikeAndIncrement(ideaId, userId, targetReaction);
-      const updatedIdea = await this.ideaRepository.findById(ideaId);
+      if (rawType === null) return { ...idea, hasVoted: false };
+
+      const updatedIdea = await this.ideaRepository.registerLikeAndIncrement(ideaId, userId, targetReaction);
       this.invalidateCache();
 
-      if (updatedIdea) {
-        this.eventBus.emitToRoom(`challenge:${idea.challengeId}`, 'idea:voted', {
-          ideaId: idea.id,
-          likesCount: updatedIdea.likesCount,
-          fireScore: updatedIdea.fireScore,
-          challengeId: idea.challengeId,
-        });
+      this.eventBus.emitToRoom(`challenge:${idea.challengeId}`, 'idea:voted', {
+        ideaId: idea.id,
+        likesCount: updatedIdea.likesCount,
+        fireScore: updatedIdea.fireScore,
+        challengeId: idea.challengeId,
+        authorId: userId,
+      });
 
-        return {
-          ...updatedIdea,
-          hasVoted: true,
-        };
-      }
+      return {
+        ...updatedIdea,
+        hasVoted: true,
+      };
     }
   }
 

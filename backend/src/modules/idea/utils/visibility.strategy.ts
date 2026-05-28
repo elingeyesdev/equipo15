@@ -19,7 +19,6 @@ export class VisibilityStrategy {
         if (challengeStatus !== 'Finalizado') {
           delete safeAuthor.displayName;
           delete safeAuthor.phone;
-          delete safeAuthor.studentCode;
           delete safeAuthor.email;
         }
         break;
@@ -30,7 +29,6 @@ export class VisibilityStrategy {
       default:
         delete safeAuthor.displayName;
         delete safeAuthor.phone;
-        delete safeAuthor.studentCode;
         delete safeAuthor.email;
         break;
     }

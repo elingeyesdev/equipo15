@@ -6,6 +6,8 @@ import { challengeService } from '../../../../services/challenge.service';
 import type { Challenge } from '../../../../types/models';
 import { ChallengeJudgeSelector } from './components/ChallengeJudgeSelector';
 import BackButton from '../../../../components/common/BackButton';
+import { Users } from 'lucide-react';
+
 
 /* ─── Animations ─── */
 const fadeUp = keyframes`
@@ -97,12 +99,14 @@ const StatsRow = styled.div`
 const StatChip = styled.div`
   background: rgba(72, 80, 84, 0.04);
   border-radius: 10px;
-  padding: 10px 14px;
+  padding: 18px 14px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  min-height: 90px;
+  gap: 4px;
 `;
 
 const StatLabel = styled.span`
@@ -114,7 +118,7 @@ const StatLabel = styled.span`
 `;
 
 const StatValue = styled.span`
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 900;
   color: #1a1f22;
 `;
@@ -160,6 +164,23 @@ const NoChallengeWrap = styled.div`
   animation: ${fadeUp} 0.4s ease both;
 `;
 
+const NoChallengeIconWrap = styled.div`
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: #fff7ed;
+  color: ${Pista8Theme.primary};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+
+  svg {
+    width: 32px;
+    height: 32px;
+  }
+`;
+
 const NoChallengeTitle = styled.h2`
   margin: 0 0 8px;
   font-size: 20px;
@@ -196,9 +217,12 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
   Borrador: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
   DRAFT: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
   Activo: { label: 'Activo', bg: '#dcfce7', color: '#166534', dot: '#22c55e' },
+  PUBLISHED: { label: 'Activo', bg: '#dcfce7', color: '#166534', dot: '#22c55e' },
   'En Evaluación': { label: 'En Evaluación', bg: '#fef3c7', color: '#92400e', dot: '#f59e0b' },
+  EVALUATING: { label: 'En Evaluación', bg: '#fef3c7', color: '#92400e', dot: '#f59e0b' },
   EVALUATION: { label: 'En Evaluación', bg: '#fef3c7', color: '#92400e', dot: '#f59e0b' },
   Finalizado: { label: 'Finalizado', bg: '#fee2e2', color: '#991b1b', dot: '#ef4444' },
+  CLOSED: { label: 'Finalizado', bg: '#fee2e2', color: '#991b1b', dot: '#ef4444' },
 };
 
 const getStatusConfig = (status: string) =>
@@ -254,6 +278,9 @@ export const ChallengeVinculacionView = () => {
     return (
       <Page>
         <NoChallengeWrap>
+          <NoChallengeIconWrap>
+            <Users />
+          </NoChallengeIconWrap>
           <NoChallengeTitle>Gestión de Jueces</NoChallengeTitle>
           <NoChallengeText>
             Selecciona un reto desde "Mis Retos" para vincular jueces evaluadores.
@@ -299,19 +326,17 @@ export const ChallengeVinculacionView = () => {
         <StatsRow>
           <StatChip>
             <StatLabel>Ideas</StatLabel>
-            <StatValue>{ideasCount}</StatValue>
+            <StatValue style={{ fontSize: 24 }}>{ideasCount}</StatValue>
           </StatChip>
           <StatChip>
             <StatLabel>Inicio</StatLabel>
-            <StatValue>{formatDate(challenge.startDate)}</StatValue>
-          </StatChip>
-          <StatChip>
-            <StatLabel>Cierre</StatLabel>
-            <StatValue>{formatDate(challenge.endDate)}</StatValue>
+            <StatValue>{formatDate(challenge.startDate || challenge.submissionsOpenAt)}</StatValue>
+            ...
+            <StatValue>{formatDate(challenge.endDate || challenge.submissionsCloseAt)}</StatValue>
           </StatChip>
           <StatChip>
             <StatLabel>Facultad</StatLabel>
-            <StatValue style={{ fontSize: 13 }}>{facultyName}</StatValue>
+            <StatValue style={{ fontSize: 17, lineHeight: 1.25 }}>{facultyName}</StatValue>
           </StatChip>
         </StatsRow>
       </ChallengeCard>

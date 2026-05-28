@@ -50,16 +50,16 @@ export class CreateChallengeDto {
 
   @IsDateString()
   @IsOptional()
-  startDate?: string;
+  publishedAt?: string;
 
   @IsDateString()
   @IsOptional()
-  @IsWithinSixMonths('startDate')
-  endDate?: string;
+  @IsWithinSixMonths('publishedAt')
+  submissionsOpenAt?: string;
 
   @IsDateString()
   @IsOptional()
-  publicationDate?: string;
+  submissionsCloseAt?: string;
 
   @IsBoolean()
   @IsOptional()
@@ -75,6 +75,18 @@ export class CreateChallengeDto {
   @IsEnum(ChallengeStatus)
   @IsOptional()
   status?: ChallengeStatus;
+
+  @IsDateString()
+  @IsOptional()
+  startDate?: string;
+
+  @IsDateString()
+  @IsOptional()
+  endDate?: string;
+
+  @IsDateString()
+  @IsOptional()
+  publicationDate?: string;
 
   @IsString()
   @IsOptional()

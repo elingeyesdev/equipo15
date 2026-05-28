@@ -135,7 +135,7 @@ const IdeationWall = () => {
       ideas = ideas.filter(idea => (idea as any).authorId === (userProfile as any)?.id || (idea.author as any)?.firebaseUid === user.uid);
     }
     if (advFilter.facultyId) {
-      ideas = ideas.filter(idea => (idea as any).authorFacultyId === advFilter.facultyId || (idea.author as any)?.facultyId === advFilter.facultyId);
+      ideas = ideas.filter(idea => (idea as any).authorFacultyId === advFilter.facultyId || (idea.author as any)?.studentProfile?.facultyId === advFilter.facultyId || (idea.author as any)?.facultyId === advFilter.facultyId);
     }
     if (advFilter.topLimit) {
       ideas = ideas.slice(0, advFilter.topLimit);

@@ -8,16 +8,24 @@ const parseAuthor = (author: unknown): RawAuthor | undefined => {
     ? record.faculty as { name?: string }
     : undefined;
 
+  const studentProfileObj = typeof record.studentProfile === 'object' && record.studentProfile !== null
+    ? record.studentProfile as { facultyId?: string; faculty?: { name?: string }; }
+    : undefined;
+
+  const facultyIdFromSP = studentProfileObj?.facultyId !== undefined ? studentProfileObj.facultyId : undefined;
+  const facultyNameFromSP = studentProfileObj?.faculty?.name;
+
   return {
     displayName: typeof record.displayName === 'string' ? record.displayName : undefined,
     nickname: typeof record.nickname === 'string' ? record.nickname : undefined,
     email: typeof record.email === 'string' ? record.email : undefined,
     facultyId: typeof record.facultyId === 'number' ? record.facultyId
       : typeof record.facultyId === 'string' ? record.facultyId
-      : undefined,
-    faculty: facultyObj?.name ? { name: facultyObj.name } : undefined,
+      : facultyIdFromSP,
+    faculty: (facultyObj?.name ? { name: facultyObj.name } : undefined) ?? (facultyNameFromSP ? { name: facultyNameFromSP } : undefined),
     phone: typeof record.phone === 'string' ? record.phone : undefined,
     studentCode: typeof record.studentCode === 'string' ? record.studentCode : undefined,
+    studentProfile: studentProfileObj,
     role: typeof record.role === 'object' && record.role !== null ? record.role as { name: string } : undefined,
   };
 };

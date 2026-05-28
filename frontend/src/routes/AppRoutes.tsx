@@ -18,7 +18,7 @@ const RoleRouter = () => {
   if (!userProfile) return <RunwayLoader />;
 
   const role = (userProfile.roleInfo?.name || userProfile.role || '').toLowerCase();
-  const hasNoFaculty = userProfile.facultyId === null || userProfile.facultyId === undefined;
+  const hasNoFaculty = !userProfile.studentProfile?.facultyId && (userProfile.facultyId === null || userProfile.facultyId === undefined);
 
   if (hasNoFaculty && role === 'student') {
     return <CompleteProfilePage onComplete={refetchProfile} />;
@@ -65,7 +65,7 @@ const AppContent = () => {
   if (loading) return <RunwayLoader />;
 
   const from = location.state?.from || '/dashboard';
-  const redirectTo = from.includes('/perfil') || from.includes('/mis-ideas') || from.includes('/favoritos') ? '/dashboard' : from;
+  const redirectTo = from.startsWith('/dashboard/') || from.includes('/perfil') ? '/dashboard' : from;
 
   return (
     <Routes>

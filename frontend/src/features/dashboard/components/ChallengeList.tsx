@@ -34,7 +34,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
   }
 
   const filtered = challenges
-    .filter(c => c.status === 'Activo' && (!c.endDate || new Date(c.endDate) >= new Date()))
+    .filter(c => (c.status === 'Activo' || c.status === 'PUBLISHED') && (!c.submissionsCloseAt || new Date(c.submissionsCloseAt) >= new Date()) && (!c.endDate || new Date(c.endDate) >= new Date()))
     .filter(c => activeFilter === 'Todos' || c.category === activeFilter)
     .filter(c => {
       if (!searchQuery.trim()) return true;

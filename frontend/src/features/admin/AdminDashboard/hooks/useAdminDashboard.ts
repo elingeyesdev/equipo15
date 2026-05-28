@@ -173,7 +173,7 @@ export const useAdminDashboard = () => {
         problemDescription: formData.description || undefined,
         companyContext: formData.companyContext || undefined,
         participationRules: formData.participationRules || undefined,
-        startDate: formData.startDate,
+        startDate: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
         publicationDate: status === 'Activo' ? new Date().toISOString() : undefined,
         isPrivate: formData.isPrivate,
         facultyId: formData.facultyId === 0 ? undefined : formData.facultyId,
@@ -184,7 +184,7 @@ export const useAdminDashboard = () => {
         payload.id = formData.token;
       }
       if (formData.endDate) {
-        payload.endDate = formData.endDate;
+        payload.endDate = new Date(formData.endDate).toISOString();
       }
       
       await challengeService.createChallenge(payload as any);

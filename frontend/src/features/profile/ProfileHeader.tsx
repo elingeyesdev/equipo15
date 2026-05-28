@@ -39,7 +39,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile, badge }) 
         <DisplayName>{resolveDisplayName(profile)}</DisplayName>
         <Email>{profile.email}</Email>
         <BannerPills>
-          {profile.facultyId && <FacultyPill>{getFacultyName(profile.facultyId, (profile as any).facultyName || (profile as any).faculty?.name)}</FacultyPill>}
+          {(profile.facultyId || profile.studentProfile?.facultyId) && <FacultyPill>{getFacultyName(profile.facultyId, profile.facultyName || profile.studentProfile?.faculty?.name || (profile as any).faculty?.name)}</FacultyPill>}
           <RolePill>{badge}</RolePill>
         </BannerPills>
       </BannerMeta>

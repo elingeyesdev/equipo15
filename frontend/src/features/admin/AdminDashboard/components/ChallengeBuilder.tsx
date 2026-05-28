@@ -119,7 +119,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
               <S.PreviewFooter>
                 <S.PreviewBadge type="privacy">{getFacultySlug(formData.facultyId)}</S.PreviewBadge>
                 <S.PreviewBadge type="privacy">{formData.isPrivate ? 'Privado' : 'Público'}</S.PreviewBadge>
-                <S.PreviewBadge type="date">Expira: {formData.endDate || '--'}</S.PreviewBadge>
+                <S.PreviewBadge type="date">Expira: {formData.submissionsCloseAt || formData.endDate || '--'}</S.PreviewBadge>
               </S.PreviewFooter>
             </S.PreviewBody>
           </S.PreviewCard>

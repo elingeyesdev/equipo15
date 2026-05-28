@@ -17,12 +17,14 @@ export interface UserProfile {
   nickname?: string;
   phone?: string;
   studentCode?: string;
+  studentProfile?: { studentCode?: string; facultyId?: string; enrollmentYear?: number; faculty?: { id: string; name: string } | null; };
+  facultyName?: string;
   facultyId?: string | number | null;
   career?: string;
   specialty?: string;
   institution?: string;
   ageRange?: string;
-  status?: 'ACTIVE' | 'SOFT_BLOCK' | 'SUSPENDED';
+  status?: 'ACTIVE' | 'SOFT_BLOCK' | 'SUSPENDED' | 'DELETED';
   penaltyExpiresAt?: string | Date;
   sessionMode?: 'LIVE' | 'READ_ONLY';
   impersonationCompanyId?: string;
@@ -31,7 +33,7 @@ export interface UserProfile {
   impersonationReadOnly?: boolean;
 }
 
-export type ChallengeStatus = 'Borrador' | 'Activo' | 'Finalizado' | 'En Evaluación';
+export type ChallengeStatus = 'Borrador' | 'Activo' | 'Finalizado' | 'En Evaluación' | 'DRAFT' | 'PUBLISHED' | 'EVALUATING' | 'CLOSED';
 
 export interface EvaluationCriterion {
   id: string;           // 'desirability' | 'feasibility' | 'alignment' | 'viability' | 'speed' | 'scalability' | custom uuid
@@ -64,6 +66,9 @@ export interface Challenge {
   commentsCount?: number;
   logoUrl?: string;
   evaluationCriteria?: EvaluationCriterion[];
+  publishedAt?: string | Date;
+  submissionsOpenAt?: string | Date;
+  submissionsCloseAt?: string | Date;
 }
 
 export interface InnovationIdeasByFacultyItem {
@@ -110,9 +115,9 @@ export interface PaginatedResponse<T> {
   };
 }
 
-export type IdeaStatus = 'draft' | 'public' | 'top5' | 'archived';
+export type IdeaStatus = 'draft' | 'public' | 'top5' | 'archived' | 'DRAFT' | 'PUBLISHED' | 'FINALIST' | 'WINNER' | 'DISQUALIFIED';
 
-export type CommentStatus = 'visible' | 'hidden' | 'deleted';
+export type CommentStatus = 'visible' | 'hidden' | 'deleted' | 'VISIBLE' | 'HIDDEN' | 'FLAGGED';
 
 export interface CommentAuthor {
   id: string;
@@ -168,6 +173,9 @@ export interface Idea {
   challengeId: string;
   createdAt: string | Date;
   updatedAt: string | Date;
+  favoritesCount?: number;
+  multimediaLinks?: string[];
+  finalScore?: number;
 }
 
 export interface ChallengeAnalytics {

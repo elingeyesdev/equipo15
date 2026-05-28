@@ -11,9 +11,7 @@ import { UpdateChallengeDto } from './dtos/update-challenge.dto';
 import { FinalizePodiumDto, RankingCategory } from './dtos/finalize-podium.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { UserService, UserResponse } from '../user/user.service';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { ProjectDetails } from '../../database/schemas/project-details.schema';
+import { PrismaService } from '../../infrastructure/database/prisma.service';
 
 @Injectable()
 export class ChallengeService {
@@ -22,8 +20,7 @@ export class ChallengeService {
   constructor(
     private readonly challengeRepository: ChallengeRepository,
     private readonly userService: UserService,
-    @InjectModel(ProjectDetails.name)
-    private readonly projectDetailsModel: Model<ProjectDetails>,
+    private readonly prisma: PrismaService,
   ) {}
 
   async getUserByUid(uid: string): Promise<UserResponse | null> {
@@ -34,17 +31,22 @@ export class ChallengeService {
     createChallengeDto: CreateChallengeDto,
     authorId: string,
   ): Promise<Challenge> {
-    const { startDate, endDate, publicationDate, ...rest } = createChallengeDto;
+    const { submissionsOpenAt, submissionsCloseAt, publishedAt, ...rest } =
+      createChallengeDto;
 
     const payload: Record<string, any> = {
       ...rest,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
-      publicationDate: publicationDate ? new Date(publicationDate) : undefined,
+      submissionsOpenAt: submissionsOpenAt
+        ? new Date(submissionsOpenAt)
+        : undefined,
+      submissionsCloseAt: submissionsCloseAt
+        ? new Date(submissionsCloseAt)
+        : undefined,
+      publishedAt: publishedAt ? new Date(publishedAt) : undefined,
     };
 
-    if (payload.status === 'Activo' && !payload.publicationDate) {
-      payload.publicationDate = new Date();
+    if (payload.status === 'PUBLISHED' && !payload.publishedAt) {
+      payload.publishedAt = new Date();
     }
 
     payload.facultyId = await this.resolveFacultyId(payload.facultyId);
@@ -78,7 +80,7 @@ export class ChallengeService {
       if (user) {
         userId = user.id;
         userRole = user.role;
-        facultyId = user.facultyId;
+        facultyId = (user as any).studentProfile?.facultyId ?? null;
       }
     }
 
@@ -119,7 +121,7 @@ export class ChallengeService {
       if (user && user.role === 'USER') {
         if (
           challenge.facultyId !== null &&
-          challenge.facultyId !== user.facultyId
+          challenge.facultyId !== (user as any).studentProfile?.facultyId
         ) {
           throw new NotFoundException(
             `El reto es privado y no pertenece a tu facultad.`,
@@ -142,21 +144,26 @@ export class ChallengeService {
   }
 
   async update(id: string, updateChallengeDto: UpdateChallengeDto) {
-    const { startDate, endDate, publicationDate, ...rest } = updateChallengeDto;
+    const { submissionsOpenAt, submissionsCloseAt, publishedAt, ...rest } =
+      updateChallengeDto;
 
     const payload: Record<string, any> = {
       ...rest,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
-      publicationDate: publicationDate ? new Date(publicationDate) : undefined,
+      submissionsOpenAt: submissionsOpenAt
+        ? new Date(submissionsOpenAt)
+        : undefined,
+      submissionsCloseAt: submissionsCloseAt
+        ? new Date(submissionsCloseAt)
+        : undefined,
+      publishedAt: publishedAt ? new Date(publishedAt) : undefined,
     };
 
     payload.facultyId = await this.resolveFacultyId(payload.facultyId);
 
-    if (payload.status === 'Activo') {
+    if (payload.status === 'PUBLISHED') {
       const existing = await this.challengeRepository.findById(id);
-      if (existing && !existing.publicationDate) {
-        payload.publicationDate = new Date();
+      if (existing && !(existing as any).publishedAt) {
+        payload.publishedAt = new Date();
       }
     }
 
@@ -183,7 +190,7 @@ export class ChallengeService {
       topFacultades,
       topLeaders,
     ] = await Promise.all([
-      this.challengeRepository.countChallengesByStatus('Activo'),
+      this.challengeRepository.countChallengesByStatus('PUBLISHED'),
       this.challengeRepository.countTotalIdeas(),
       this.challengeRepository.countStudentUsers(),
       this.challengeRepository.getFacultyStats(),
@@ -256,7 +263,11 @@ export class ChallengeService {
       throw new ForbiddenException('No se pueden asignar más de 5 jueces a un reto.');
     }
 
-    return this.challengeRepository.assignJudges(challengeId, dto.judgeIds);
+    return this.challengeRepository.assignJudges(
+      challengeId,
+      dto.judgeIds,
+      user.id,
+    );
   }
 
   // ─── Finalize Podium (Company Control) ──────────────────────────────────────
@@ -277,14 +288,12 @@ export class ChallengeService {
       );
     }
 
-    // Fetch ideas explicitly to avoid relying on relation typings
     const ideas =
       await this.challengeRepository.getIdeasByChallenge(challengeId);
     if (!Array.isArray(ideas) || ideas.length === 0) {
       throw new ForbiddenException('No hay ideas en este reto para finalizar.');
     }
 
-    // Sort ideas based on the selected category
     const sortedIdeas = [...ideas].sort((a, b) => {
       let valA = 0;
       let valB = 0;
@@ -300,7 +309,7 @@ export class ChallengeService {
         valB = b.finalScore || 0;
       }
 
-      return valB - valA; // Descending order
+      return valB - valA;
     });
 
     const totalIdeasCount = sortedIdeas.length;
@@ -308,48 +317,25 @@ export class ChallengeService {
     const finalistIdeas = sortedIdeas.slice(0, finalLimit);
     const finalistIds = finalistIdeas.map((idea) => idea.id);
 
-    // Hybrid Transaction (Compensation Pattern)
-    // Save original state for potential rollback
-    const originalStatus = challenge.status;
-    const originalPodiumSize = challenge.podiumSize;
-
-    // 1. Update Challenge Status and Podium Size in PostgreSQL
-    // Use a minimal payload and store original values for rollback
     await this.challengeRepository.update(challengeId, {
-      status: 'EVALUATION',
+      status: 'EVALUATING',
       podiumSize: finalLimit,
     } as any);
 
-    try {
-      // 2. Mark ideas as finalists in MongoDB
-      await this.projectDetailsModel.updateMany(
-        { projectId: { $in: finalistIds } },
-        { $set: { isFinalist: true } },
-      );
+    await this.prisma.idea.updateMany({
+      where: { id: { in: finalistIds } },
+      data: { status: 'FINALIST' },
+    });
 
-      this.logger.log(
-        `Reto ${challengeId} finalizado. ${finalLimit} finalistas seleccionados basándose en ${dto.category}.`,
-      );
+    this.logger.log(
+      `Reto ${challengeId} finalizado. ${finalLimit} finalistas seleccionados basándose en ${dto.category}.`,
+    );
 
-      return {
-        success: true,
-        podiumSize: finalLimit,
-        finalistCount: finalistIds.length,
-      };
-    } catch (error) {
-      // Rollback PostgreSQL update if MongoDB fails
-      this.logger.error(
-        `Error actualizando MongoDB en finalizePodium. Revirtiendo PostgreSQL...`,
-        error,
-      );
-      await this.challengeRepository.update(challengeId, {
-        status: originalStatus,
-        podiumSize: originalPodiumSize,
-      } as any);
-      throw new Error(
-        `Error al finalizar el reto: ${error instanceof Error ? error.message : 'Error interno'}`,
-      );
-    }
+    return {
+      success: true,
+      podiumSize: finalLimit,
+      finalistCount: finalistIds.length,
+    };
   }
 
   /**
@@ -368,12 +354,10 @@ export class ChallengeService {
       6: 'Arquitectura',
     };
 
-    // Check if it's a numeric value or a string that looks like a number (1-6)
     const numericId =
       typeof facultyId === 'number' ? facultyId : Number(facultyId);
 
     if (!isNaN(numericId) && numericId >= 1 && numericId <= 6) {
-      // It's a legacy numeric ID — resolve to UUID
       const faculties = await this.userService.getAllFaculties(false);
       const targetName = LEGACY_MAP[numericId]?.toLowerCase();
       this.logger.log(
@@ -396,7 +380,6 @@ export class ChallengeService {
       return null;
     }
 
-    // It's already a UUID string — verify it exists
     if (typeof facultyId === 'string' && facultyId.length > 10) {
       const faculties = await this.userService.getAllFaculties(false);
       const exists = faculties.find((f) => f.id === facultyId);

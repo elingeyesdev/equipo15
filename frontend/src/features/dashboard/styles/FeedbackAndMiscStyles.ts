@@ -150,6 +150,7 @@ export const ConfirmText = styled.p`
   font-size: 14px;
   color: rgba(72,80,84,0.75);
   line-height: 1.5;
+  word-break: break-word;
 `;
 
 export const ConfirmSummary = styled.div`
@@ -165,6 +166,7 @@ export const SummaryPill = styled.span`
   color: ${Pista8Theme.secondary};
   font-size: 12px;
   font-weight: 600;
+  word-break: break-word;
 `;
 
 export const ConfirmActions = styled.div`

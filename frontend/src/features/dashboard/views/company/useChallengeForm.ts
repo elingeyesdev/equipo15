@@ -153,8 +153,8 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
       problemDescription: challenge.problemDescription || '',
       companyContext: challenge.companyContext || '',
       participationRules: challenge.participationRules || '',
-      startDate: toDatetimeLocal(challenge.startDate),
-      endDate: toDatetimeLocal(challenge.endDate),
+      startDate: toDatetimeLocal(challenge.startDate || challenge.submissionsOpenAt),
+      endDate: toDatetimeLocal(challenge.endDate || challenge.submissionsCloseAt),
       isPrivate: challenge.isPrivate || false,
       status: challenge.status || 'Borrador',
       logoUrl: challenge.logoUrl || '',
@@ -300,7 +300,19 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     }
 
     setSaving(true);
-    try { await onSave({ ...form, status }); }
+    try {
+      const payload = { ...form, status };
+      // Convert datetime-local values to ISO 8601 for backend validation
+      if (payload.startDate) {
+        const d = new Date(payload.startDate);
+        if (!isNaN(d.getTime())) payload.startDate = d.toISOString();
+      }
+      if (payload.endDate) {
+        const d = new Date(payload.endDate);
+        if (!isNaN(d.getTime())) payload.endDate = d.toISOString();
+      }
+      await onSave(payload);
+    }
     finally { setSaving(false); }
   };
 

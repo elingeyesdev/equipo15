@@ -264,9 +264,9 @@ export const EmptyText = styled.p`
 `;
 
 export const EmptyButton = styled.button`
-  border: 1px solid ${Pista8Theme.primary};
-  background: transparent;
-  color: ${Pista8Theme.primary};
+  border: none;
+  background: ${Pista8Theme.primary};
+  color: white;
   font-size: 13.5px;
   font-weight: 800;
   padding: 12px 28px;
@@ -275,9 +275,8 @@ export const EmptyButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background: ${Pista8Theme.primary};
-    color: white;
-    box-shadow: 0 8px 24px ${Pista8Theme.primary}25;
+    background: #e63a09;
+    box-shadow: 0 8px 24px ${Pista8Theme.primary}33;
     transform: translateY(-1px);
   }
 

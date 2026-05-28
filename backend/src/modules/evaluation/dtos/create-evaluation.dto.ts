@@ -5,7 +5,21 @@ import {
   Max,
   IsOptional,
   MinLength,
+  IsArray,
+  ValidateNested,
+  ArrayMinSize,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+class EvaluationScoreDto {
+  @IsString()
+  criterionId!: string;
+
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  score!: number;
+}
 
 export class CreateEvaluationDto {
   @IsString()
@@ -14,10 +28,11 @@ export class CreateEvaluationDto {
   @IsString()
   judgeId!: string;
 
-  @IsInt()
-  @Min(1)
-  @Max(10)
-  score!: number;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @ArrayMinSize(1)
+  @Type(() => EvaluationScoreDto)
+  scores!: EvaluationScoreDto[];
 
   @IsString()
   @IsOptional()

@@ -28,7 +28,7 @@ const MyFavoritesView: React.FC = () => {
     onlyMyIdeas: false,
   });
 
-  const resolvedName = userProfile?.firstName || 'Estudiante';
+  const resolvedName = userProfile?.displayName || 'Estudiante';
   const roleName = (userProfile?.roleInfo?.name || userProfile?.role || 'STUDENT').toLowerCase();
   const roleLabels: Record<string, string> = {
     student: 'estudiante',
@@ -41,13 +41,13 @@ const MyFavoritesView: React.FC = () => {
   const sortedIdeas = React.useMemo(() => {
     const list = [...ideas];
     if (filter.sortOrder === 'newest') {
-      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      list.sort((a, b) => new Date(b.createdAt ?? '').getTime() - new Date(a.createdAt ?? '').getTime());
     } else if (filter.sortOrder === 'oldest') {
-      list.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      list.sort((a, b) => new Date(a.createdAt ?? '').getTime() - new Date(b.createdAt ?? '').getTime());
     } else if (filter.sortOrder === 'likes') {
       list.sort((a, b) => {
-        const scoreA = a.fireScore || (a.likesCount) || 0;
-        const scoreB = b.fireScore || (b.likesCount) || 0;
+        const scoreA = (a.likesCount) || 0;
+        const scoreB = (b.likesCount) || 0;
         return scoreB - scoreA;
       });
     } else if (filter.sortOrder === 'comments') {
@@ -135,7 +135,7 @@ const MyFavoritesView: React.FC = () => {
               {sortedIdeas.map((idea) => (
                 <S.Card key={idea.id}>
                 <S.CardBadge>
-                  {idea.challenge?.title || 'Reto'}
+                  {idea.challengeTitle || 'Reto'}
                 </S.CardBadge>
                 <S.CardTitle>{idea.title}</S.CardTitle>
                 <S.CardFooter>

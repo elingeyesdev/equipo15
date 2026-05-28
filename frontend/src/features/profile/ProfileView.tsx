@@ -24,10 +24,7 @@ export const ProfileView: React.FC = () => {
     bio: profile?.bio || '',
     nickname: profile?.nickname || '',
     phone: profile?.phone || '',
-    studentCode: profile?.studentCode || '',
-    institution: (profile as any)?.institution || '',
-    specialty: profile?.specialty || '',
-    ageRange: (profile as any)?.ageRange || '',
+    studentCode: profile?.studentCode || profile?.studentProfile?.studentCode || '',
   });
 
   const countWords = (text: string) => text.trim().split(/\s+/).filter(Boolean).length;

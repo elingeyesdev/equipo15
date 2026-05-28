@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { adminService } from '@/services/admin.service';
 import type { GlobalAnalytics } from '@/types/models';
+import { getStoredImpersonationToken } from '@/utils/impersonation-session';
 
 interface UseGlobalAnalyticsReturn {
   data: GlobalAnalytics | null;
@@ -16,6 +17,13 @@ export function useGlobalAnalytics(): UseGlobalAnalyticsReturn {
 
   const fetchData = useCallback(() => {
     let cancelled = false;
+
+    if (getStoredImpersonationToken()) {
+      setLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
 
     setLoading(true);
     setError(null);

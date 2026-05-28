@@ -10,7 +10,6 @@ const AdminStatsView = lazy(() => import('../views/admin').then(m => ({ default:
 const AdminClientsView = lazy(() => import('../views/admin').then(m => ({ default: m.AdminClientsView })));
 const AdminAccessView = lazy(() => import('../views/admin').then(m => ({ default: m.AdminAccessView })));
 const AdminUsersView = lazy(() => import('../views/admin').then(m => ({ default: m.AdminUsersView })));
-const AdminSupportView = lazy(() => import('../views/admin').then(m => ({ default: m.AdminSupportView })));
 
 const CompanyStatsView = lazy(() => import('../views/company').then(m => ({ default: m.CompanyStatsView })));
 const CompanyChallengesView = lazy(() => import('../views/company').then(m => ({ default: m.CompanyChallengesView })));
@@ -46,7 +45,6 @@ export const DashboardRoutes = () => {
           <Route path="admin/whitelist" element={<WithRoleGuard allowedRoles={['ADMIN']}><AccessConfigPage /></WithRoleGuard>} />
           <Route path="admin/access-config" element={<WithRoleGuard allowedRoles={['ADMIN']}><AccessConfigPage /></WithRoleGuard>} />
           <Route path="admin/users" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminUsersView /></WithRoleGuard>} />
-          <Route path="admin/support" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminSupportView /></WithRoleGuard>} />
 
           <Route path="company/stats" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyStatsView /></WithRoleGuard>} />
           <Route path="company/challenges" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyChallengesView /></WithRoleGuard>} />

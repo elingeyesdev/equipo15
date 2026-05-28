@@ -9,6 +9,9 @@ export interface PlaneIdea {
   likesCount: number;
   commentsCount: number;
   fireScore?: number;
+  goodCount?: number;
+  futureCount?: number;
+  complexCount?: number;
   laneY: number;
   floatDelay: number;
   authorFacultyId?: number | string;
@@ -47,6 +50,7 @@ export interface RawAuthor {
   email?: string;
   facultyId?: number | string;
   faculty?: { name: string };
+  studentProfile?: { facultyId?: string; faculty?: { name?: string }; };
   phone?: string;
   studentCode?: string;
   role?: { name: string };
@@ -64,6 +68,9 @@ export interface RawIdea {
   likesCount?: number;
   commentsCount?: number;
   fireScore?: number;
+  goodCount?: number;
+  futureCount?: number;
+  complexCount?: number;
   isAnonymous?: boolean;
   hasVoted?: boolean;
   hasFavorited?: boolean;

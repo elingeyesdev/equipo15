@@ -17,8 +17,8 @@ export class AdminRepository {
         status: true,
         createdAt: true,
         updatedAt: true,
-        challenges: {
-          select: { status: true, endDate: true },
+        authoredChallenges: {
+          select: { status: true, submissionsCloseAt: true },
         },
       },
       orderBy: { displayName: 'asc' },
@@ -28,15 +28,15 @@ export class AdminRepository {
       let activeChallenges = 0;
       let closedChallenges = 0;
 
-      for (const ch of company.challenges) {
-        if (ch.status === 'Activo' || ch.status === 'En Evaluación') {
+      for (const ch of company.authoredChallenges) {
+        if (ch.status === 'PUBLISHED' || ch.status === 'EVALUATING') {
           activeChallenges++;
-        } else if (ch.status === 'Finalizado') {
+        } else if (ch.status === 'CLOSED') {
           closedChallenges++;
         }
       }
 
-      const { challenges: _, ...rest } = company;
+      const { authoredChallenges: _, ...rest } = company;
       return { ...rest, activeChallenges, closedChallenges };
     });
   }
@@ -52,9 +52,6 @@ export class AdminRepository {
         status: true,
         createdAt: true,
         updatedAt: true,
-        faculty: {
-          select: { name: true },
-        },
       },
     });
   }
@@ -65,7 +62,7 @@ export class AdminRepository {
         this.prisma.user.count({ where: { role: 'COMPANY' } }),
         this.prisma.challenge.count(),
         this.prisma.challenge.count({
-          where: { status: ChallengeStatus.ACTIVE },
+          where: { status: 'PUBLISHED' },
         }),
         this.prisma.idea.count(),
         this.prisma.challenge.findMany({
@@ -73,16 +70,15 @@ export class AdminRepository {
             id: true,
             title: true,
             status: true,
-            endDate: true,
+            submissionsCloseAt: true,
             author: {
               select: {
                 displayName: true,
-                faculty: { select: { name: true } },
               }
             },
             ideas: {
               select: {
-                fireScore: true,
+                likesCount: true,
                 commentsCount: true,
                 finalScore: true,
               }
@@ -93,34 +89,27 @@ export class AdminRepository {
       ]);
 
     const challengesPerformance = rawChallenges.map(challenge => {
-      const companyName = challenge.author.displayName || challenge.author.faculty?.name || 'Compañía';
-      
+      const companyName = challenge.author.displayName || 'Compañía';
+
       let totalInteractions = 0;
       let evaluatedIdeasCount = 0;
       let sumScores = 0;
 
       for (const idea of challenge.ideas) {
-        totalInteractions += (idea.fireScore + idea.commentsCount);
+        totalInteractions += (idea.likesCount + idea.commentsCount);
         if (idea.finalScore > 0) {
           sumScores += idea.finalScore;
           evaluatedIdeasCount++;
         }
       }
 
-      const averageScore = evaluatedIdeasCount > 0 
-        ? Number((sumScores / evaluatedIdeasCount).toFixed(1)) 
+      const averageScore = evaluatedIdeasCount > 0
+        ? Number((sumScores / evaluatedIdeasCount).toFixed(1))
         : null;
 
       let displayStatus = challenge.status;
-      if (challenge.endDate && new Date(challenge.endDate) < new Date()) {
-        displayStatus = ChallengeStatus.FINALIZED;
-      } else {
-        const statusMap: Record<string, string> = {
-          DRAFT: ChallengeStatus.DRAFT,
-          ACTIVE: ChallengeStatus.ACTIVE,
-          EVALUATION: ChallengeStatus.EVALUATING,
-        };
-        displayStatus = statusMap[challenge.status] || challenge.status;
+      if (challenge.submissionsCloseAt && new Date(challenge.submissionsCloseAt) < new Date()) {
+        displayStatus = ChallengeStatus.CLOSED;
       }
 
       return {
@@ -143,27 +132,6 @@ export class AdminRepository {
       challengesPerformance,
     };
   }
-
-  // Allowed domains (whitelist)
-  async getAllowedDomains() {
-    return this.prisma.allowedDomain.findMany({ orderBy: { domain: 'asc' } });
-  }
-
-  async createAllowedDomain(domain: string) {
-    return this.prisma.allowedDomain.create({ data: { domain, isActive: true } });
-  }
-
-  async deleteAllowedDomain(id: string) {
-    return this.prisma.allowedDomain.delete({ where: { id } });
-  }
-
-  async updateAllowedDomainStatus(id: string, isActive: boolean) {
-    return this.prisma.allowedDomain.update({
-      where: { id },
-      data: { isActive },
-    });
-  }
-
 
   // ─── Faculty Management ────────────────────────────────────────────────────
 
@@ -203,7 +171,6 @@ export class AdminRepository {
   ) {
     const where: any = {};
 
-    // ILIKE search on email and displayName
     if (query && query.trim().length > 0) {
       where.OR = [
         { email: { contains: query.trim(), mode: 'insensitive' } },
@@ -211,7 +178,6 @@ export class AdminRepository {
       ];
     }
 
-    // Optional role filter
     if (roleFilter && ['ADMIN', 'COMPANY', 'JUDGE', 'USER'].includes(roleFilter.toUpperCase())) {
       where.role = roleFilter.toUpperCase();
     }
@@ -229,7 +195,7 @@ export class AdminRepository {
           avatarUrl: true,
           role: true,
           status: true,
-          faculty: { select: { id: true, name: true } },
+          studentProfile: { select: { faculty: { select: { id: true, name: true } } } },
           createdAt: true,
           updatedAt: true,
         },
@@ -245,19 +211,17 @@ export class AdminRepository {
 
   async updateUserRole(userId: string, newRole: 'ADMIN' | 'COMPANY' | 'JUDGE' | 'USER') {
     return this.prisma.$transaction(async (tx) => {
-      // 1. Verify user exists and capture current role
       const existingUser = await tx.user.findUnique({
         where: { id: userId },
         select: { id: true, role: true, displayName: true, email: true },
       });
 
       if (!existingUser) {
-        return null; // Service layer will throw NotFoundException
+        return null;
       }
 
       const previousRole = existingUser.role;
 
-      // 2. Skip if role is the same
       if (previousRole === newRole) {
         return {
           user: existingUser,
@@ -267,7 +231,6 @@ export class AdminRepository {
         };
       }
 
-      // 3. Atomic role update within the same transaction
       const updatedUser = await tx.user.update({
         where: { id: userId },
         data: { role: newRole },
@@ -278,7 +241,7 @@ export class AdminRepository {
           role: true,
           status: true,
           avatarUrl: true,
-          faculty: { select: { id: true, name: true } },
+          studentProfile: { select: { faculty: { select: { id: true, name: true } } } },
           updatedAt: true,
         },
       });
@@ -289,6 +252,31 @@ export class AdminRepository {
         newRole,
         changed: true,
       };
+    });
+  }
+
+  async getAllowedDomains() {
+    return this.prisma.allowedDomain.findMany({
+      orderBy: { domain: 'asc' },
+    });
+  }
+
+  async createAllowedDomain(domain: string) {
+    return this.prisma.allowedDomain.create({
+      data: { domain, isActive: true },
+    });
+  }
+
+  async deleteAllowedDomain(id: string) {
+    return this.prisma.allowedDomain.delete({
+      where: { id },
+    });
+  }
+
+  async updateAllowedDomainStatus(id: string, isActive: boolean) {
+    return this.prisma.allowedDomain.update({
+      where: { id },
+      data: { isActive },
     });
   }
 }

@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { UserRepository } from './user.repository';
-import { User } from '@prisma/client';
+import { User, UserStatus } from '@prisma/client';
 import { extractFacultyFromEmail } from './utils/email-parser.util';
 import {
   getRoleFromEmail,
@@ -34,7 +34,7 @@ export class UserService {
       throw new NotFoundException('Usuario no encontrado');
     }
 
-    if (user.status !== 'ACTIVE') {
+    if (user.status !== UserStatus.ACTIVE) {
       throw new ForbiddenException(
         'Tu cuenta está en modo solo lectura durante la sanción.',
       );
@@ -66,7 +66,7 @@ export class UserService {
     }
 
     if (user) {
-      user = await this.clearExpiredPenalties(user);
+      user = await this.syncUserStatus(user);
 
       if (forceUpdate) {
         const refreshed = await this.userRepository.updateByUid(firebaseUid, {
@@ -89,15 +89,8 @@ export class UserService {
 
     const allowed = await this.userRepository.isEmailAllowed(normalizedEmail);
     if (!allowed) {
-      const domain = extractEmailDomain(normalizedEmail);
-      const domainPaused =
-        domain &&
-        (await this.userRepository.isDomainListedButInactive(domain));
-
       throw new ForbiddenException(
-        domainPaused
-          ? 'Los registros con este dominio están pausados. Si ya tenías cuenta, inicia sesión con el mismo correo con el que te registraste.'
-          : 'Acceso restringido a cuentas institucionales autorizadas.',
+        'Acceso restringido a cuentas institucionales autorizadas.',
       );
     }
 
@@ -111,18 +104,21 @@ export class UserService {
       role,
     };
 
-    const detectedFacultyId = extractFacultyFromEmail(normalizedEmail);
-    if (detectedFacultyId !== null) {
-      const mappedId = await this.mapLegacyFacultyId(detectedFacultyId);
-      if (mappedId) {
-        userData.facultyId = mappedId;
-      }
-    }
-
     user = await this.userRepository.upsert(firebaseUid, userData, {
       displayName: createUserDto.displayName,
       avatarUrl: createUserDto.avatarUrl,
     });
+
+    const detectedFacultyId = extractFacultyFromEmail(normalizedEmail);
+    if (detectedFacultyId !== null && user) {
+      const mappedId = await this.mapLegacyFacultyId(detectedFacultyId);
+      if (mappedId) {
+        await this.userRepository.updateStudentProfile(user.id, {
+          facultyId: mappedId,
+        });
+        user = await this.userRepository.findByUid(firebaseUid);
+      }
+    }
 
     return this.formatUserResponse(user);
   }
@@ -143,33 +139,19 @@ export class UserService {
       ...user,
       role: mappedRole as any,
       roleName: mappedRole,
-      facultyName: user.faculty?.name || null,
+      facultyName: user.studentProfile?.faculty?.name || null,
     };
   }
 
-  private async clearExpiredPenalties(user: User | null): Promise<User | null> {
+  private async syncUserStatus(user: User | null): Promise<User | null> {
     if (!user) return null;
-
-    if (user.status !== 'ACTIVE' && user.penaltyExpiresAt) {
-      if (new Date() > new Date(user.penaltyExpiresAt)) {
-        const updated = await this.userRepository.updateStatus(
-          user.id,
-          'ACTIVE',
-          null as any,
-        );
-        return {
-          ...user,
-          status: updated.status,
-          penaltyExpiresAt: updated.penaltyExpiresAt,
-        };
-      }
-    }
-    return user;
+    await this.userRepository.syncUserStatusFromPenalties(user.id);
+    return this.userRepository.findByUid(user.firebaseUid);
   }
 
   async findByUid(firebaseUid: string): Promise<UserResponse | null> {
     let user = await this.userRepository.findByUid(firebaseUid);
-    user = await this.clearExpiredPenalties(user);
+    user = await this.syncUserStatus(user);
     return this.formatUserResponse(user);
   }
 
@@ -180,16 +162,26 @@ export class UserService {
       nickname?: string;
       phone?: string;
       studentCode?: string;
+      enrollmentYear?: number;
     },
   ): Promise<UserResponse | null> {
     await this.ensureUserCanWrite(firebaseUid);
 
+    const { studentCode, enrollmentYear, ...userData } = data;
+
     const updatedUser = await this.userRepository.updateByUid(
       firebaseUid,
-      data,
+      userData,
     );
     if (!updatedUser) {
       throw new NotFoundException('Usuario no encontrado');
+    }
+
+    if (studentCode !== undefined || enrollmentYear !== undefined) {
+      await this.userRepository.updateStudentProfile(updatedUser.id, {
+        ...(studentCode !== undefined ? { studentCode } : {}),
+        ...(enrollmentYear !== undefined ? { enrollmentYear } : {}),
+      });
     }
 
     if (data.nickname !== undefined) {
@@ -197,7 +189,6 @@ export class UserService {
         data.nickname && data.nickname.trim().length > 0
           ? data.nickname
           : updatedUser.displayName;
-      // Emit only to the affected user's room to avoid broadcasting private updates
       this.eventsGateway.server
         .to(`user:${updatedUser.firebaseUid}`)
         .emit('user:profile_updated', {
@@ -229,12 +220,16 @@ export class UserService {
       throw new BadRequestException('Facultad inválida o no encontrada.');
     }
 
-    const updatedUser = await this.userRepository.updateByUid(firebaseUid, {
-      facultyId,
-    });
-    if (!updatedUser) {
+    const user = await this.userRepository.findByUid(firebaseUid);
+    if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }
+
+    await this.userRepository.updateStudentProfile(user.id, {
+      facultyId,
+    });
+
+    const updatedUser = await this.userRepository.findByUid(firebaseUid);
     return this.formatUserResponse(updatedUser);
   }
 

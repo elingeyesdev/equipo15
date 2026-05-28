@@ -7,6 +7,26 @@ export class ChallengeRepository {
   private readonly logger = new Logger(ChallengeRepository.name);
   constructor(private readonly prisma: PrismaService) {}
 
+  private normalizeStatus(status: string): string {
+    const map: Record<string, string> = {
+      'activo': 'PUBLISHED',
+      'active': 'PUBLISHED',
+      'finalizado': 'CLOSED',
+      'cerrado': 'CLOSED',
+      'closed': 'CLOSED',
+      'en evaluación': 'EVALUATING',
+      'evaluating': 'EVALUATING',
+      'evaluation': 'EVALUATING',
+      'borrador': 'DRAFT',
+      'draft': 'DRAFT',
+      'publicado': 'PUBLISHED',
+      'published': 'PUBLISHED',
+    };
+    const validValues = ['DRAFT', 'PUBLISHED', 'EVALUATING', 'CLOSED'];
+    if (validValues.includes(status)) return status;
+    return map[status?.toLowerCase()?.trim()] || status;
+  }
+
   async findAll(
     skip?: number,
     take?: number,
@@ -18,7 +38,7 @@ export class ChallengeRepository {
   ): Promise<{ data: any[]; total: number }> {
     const where: Prisma.ChallengeWhereInput = {};
     if (status) {
-      where.status = status;
+      where.status = this.normalizeStatus(status) as any;
     }
 
     if (search && search.trim().length > 0) {
@@ -63,7 +83,7 @@ export class ChallengeRepository {
         {
           isPrivate: true,
           AND: [
-            { accessedByUsers: { some: { id: userId } } },
+            { privateAccesses: { some: { userId } } },
             { OR: facultyCondition },
           ],
         },
@@ -127,16 +147,34 @@ export class ChallengeRepository {
         delete prepared[key];
       }
     });
-    if (prepared.startDate)
-      prepared.startDate = new Date(
-        prepared.startDate as string | number | Date,
-      );
-    if (prepared.endDate)
-      prepared.endDate = new Date(prepared.endDate as string | number | Date);
-    if (prepared.publicationDate)
-      prepared.publicationDate = new Date(
-        prepared.publicationDate as string | number | Date,
-      );
+
+    // Map legacy field names to new schema
+    if ('startDate' in prepared && prepared.startDate !== undefined) {
+      prepared.submissionsOpenAt = prepared.startDate;
+      delete prepared.startDate;
+    }
+    if ('endDate' in prepared && prepared.endDate !== undefined) {
+      prepared.submissionsCloseAt = prepared.endDate;
+      delete prepared.endDate;
+    }
+    if ('publicationDate' in prepared && prepared.publicationDate !== undefined) {
+      prepared.publishedAt = prepared.publicationDate;
+      delete prepared.publicationDate;
+    }
+
+    // Normalize Spanish status values to English Prisma enum values
+    if (prepared.status) {
+      prepared.status = this.normalizeStatus(prepared.status);
+    }
+
+    // Convert date strings to Date objects
+    const dateFields = ['publishedAt', 'submissionsOpenAt', 'submissionsCloseAt'];
+    for (const field of dateFields) {
+      if (prepared[field]) {
+        prepared[field] = new Date(prepared[field] as string | number | Date);
+      }
+    }
+
     return prepared;
   }
 
@@ -188,7 +226,7 @@ export class ChallengeRepository {
 
   async countChallengesByStatus(status: string): Promise<number> {
     return this.prisma.challenge.count({
-      where: { status },
+      where: { status: this.normalizeStatus(status) as any },
     });
   }
 
@@ -213,26 +251,29 @@ export class ChallengeRepository {
   async linkPrivateChallenge(
     challengeId: string,
     userId: string,
+    grantedVia: string = 'TOKEN',
   ): Promise<void> {
-    await this.prisma.challenge.update({
-      where: { id: challengeId },
-      data: {
-        accessedByUsers: {
-          connect: { id: userId },
-        },
+    await this.prisma.privateChallengeAccess.upsert({
+      where: {
+        uq_access_per_user: { challengeId, userId },
       },
+      create: { challengeId, userId, grantedVia: grantedVia as any },
+      update: {},
     });
   }
 
   async getFacultyStats(): Promise<any[]> {
-    // Top faculties by sum of ideas' finalScore (or likesCount)
     const faculties = await this.prisma.faculty.findMany({
       include: {
-        users: {
+        studentProfiles: {
           include: {
-            ideas: {
-              where: { status: 'public' },
-              select: { finalScore: true, likesCount: true },
+            user: {
+              include: {
+                ideas: {
+                  where: { status: 'PUBLISHED' },
+                  select: { finalScore: true, likesCount: true },
+                },
+              },
             },
           },
         },
@@ -241,8 +282,8 @@ export class ChallengeRepository {
 
     const stats = faculties.map((faculty) => {
       let totalLikes = 0;
-      faculty.users.forEach((user) => {
-        user.ideas.forEach((idea) => {
+      faculty.studentProfiles.forEach((sp) => {
+        sp.user.ideas.forEach((idea) => {
           totalLikes += idea.finalScore || idea.likesCount || 0;
         });
       });
@@ -254,10 +295,10 @@ export class ChallengeRepository {
 
   async getTopLeaders(): Promise<any[]> {
     const users = await this.prisma.user.findMany({
-      where: { role: UserRole.USER },
+      where: { role: UserRole.USER, status: 'ACTIVE' },
       include: {
         ideas: {
-          where: { status: 'public' },
+          where: { status: 'PUBLISHED' },
           select: { finalScore: true, likesCount: true },
         },
       },
@@ -281,19 +322,19 @@ export class ChallengeRepository {
   async getChallengeImpactStats(challengeId: string) {
     const [agg, ideas, allAuthors, topIdeas] = await Promise.all([
       this.prisma.idea.aggregate({
-        where: { challengeId, status: 'public' },
+        where: { challengeId, status: 'PUBLISHED' },
         _count: true,
         _sum: { likesCount: true, commentsCount: true },
       }),
       this.prisma.idea.findMany({
-        where: { challengeId, status: 'public' },
+        where: { challengeId, status: 'PUBLISHED' },
         select: {
-          author: { select: { facultyId: true } },
+          author: { select: { studentProfile: { select: { facultyId: true } } } },
         },
       }),
       this.prisma.user.findMany({
         where: {
-          ideas: { some: { challengeId, status: 'public' } },
+          ideas: { some: { challengeId, status: 'PUBLISHED' } },
         },
         select: {
           id: true,
@@ -304,7 +345,7 @@ export class ChallengeRepository {
         },
       }),
       this.prisma.idea.findMany({
-        where: { challengeId, status: 'public' },
+        where: { challengeId, status: 'PUBLISHED' },
         orderBy: [{ likesCount: 'desc' }, { commentsCount: 'desc' }],
         take: 5,
         select: {
@@ -324,7 +365,7 @@ export class ChallengeRepository {
     ]);
 
     const uniqueFaculties = new Set(
-      ideas.map((i) => i.author?.facultyId).filter((f) => f != null),
+      ideas.map((i) => i.author?.studentProfile?.facultyId).filter((f) => f != null),
     );
 
     return {
@@ -365,7 +406,7 @@ export class ChallengeRepository {
       where: {
         id: challengeId,
         authorId,
-        status: { in: ['Activo', 'Finalizado'] },
+        status: { in: ['PUBLISHED', 'CLOSED'] as any },
       },
       select: { id: true },
     });
@@ -390,16 +431,16 @@ export class ChallengeRepository {
     return this.prisma.challenge.findMany({
       where: {
         authorId,
-        status: { in: ['Activo', 'Finalizado'] },
+        status: { in: ['PUBLISHED', 'CLOSED'] as any },
       },
       select: {
         id: true,
         title: true,
         status: true,
-        endDate: true,
-        publicationDate: true,
+        submissionsCloseAt: true,
+        publishedAt: true,
       },
-      orderBy: [{ publicationDate: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
     });
   }
 
@@ -407,7 +448,6 @@ export class ChallengeRepository {
     authorId: string,
     challengeIds: string[],
   ) {
-    // Fetch all faculties from DB to map UUID → name
     const allFaculties = await this.prisma.faculty.findMany({
       select: { id: true, name: true },
     });
@@ -429,7 +469,7 @@ export class ChallengeRepository {
 
     const groupedIdeasByAuthor = await this.prisma.idea.groupBy({
       by: ['authorId'],
-      where: { challengeId: { in: challengeIds }, status: 'public' },
+      where: { challengeId: { in: challengeIds }, status: 'PUBLISHED' },
       _count: { _all: true },
       _sum: { finalScore: true },
     });
@@ -440,7 +480,7 @@ export class ChallengeRepository {
           where: { id: { in: groupedAuthorIds } },
           select: {
             id: true,
-            facultyId: true,
+            studentProfile: { select: { facultyId: true } },
             displayName: true,
             nickname: true,
             email: true,
@@ -450,8 +490,8 @@ export class ChallengeRepository {
 
     const authorFacultyMap = new Map<string, string>();
     groupedAuthors.forEach((author) => {
-      if (author.facultyId != null) {
-        authorFacultyMap.set(author.id, author.facultyId);
+      if (author.studentProfile?.facultyId != null) {
+        authorFacultyMap.set(author.id, author.studentProfile.facultyId);
       }
     });
 
@@ -487,7 +527,7 @@ export class ChallengeRepository {
     const recentIdeas = await this.prisma.idea.findMany({
       where: {
         challengeId: { in: challengeIds },
-        status: 'public',
+        status: 'PUBLISHED',
         createdAt: { gte: thirtyDaysAgo },
       },
       select: {
@@ -583,7 +623,6 @@ export class ChallengeRepository {
       facultyNameMap.set(faculty.id, faculty.name);
     });
 
-    // All challenge IDs owned by this company
     const companyChallenges = await this.prisma.challenge.findMany({
       where: { authorId },
       select: { id: true },
@@ -603,10 +642,9 @@ export class ChallengeRepository {
       };
     }
 
-    // 1. Ideas and votes per faculty (Prisma groupBy) ─────────────────────────
     const groupedIdeasByAuthor = await this.prisma.idea.groupBy({
       by: ['authorId'],
-      where: { challengeId: { in: challengeIds }, status: 'public' },
+      where: { challengeId: { in: challengeIds }, status: 'PUBLISHED' },
       _count: { _all: true },
       _sum: { finalScore: true },
     });
@@ -617,7 +655,7 @@ export class ChallengeRepository {
           where: { id: { in: groupedAuthorIds } },
           select: {
             id: true,
-            facultyId: true,
+            studentProfile: { select: { facultyId: true } },
             displayName: true,
             nickname: true,
             email: true,
@@ -627,8 +665,8 @@ export class ChallengeRepository {
 
     const authorFacultyMap = new Map<string, string>();
     groupedAuthors.forEach((author) => {
-      if (author.facultyId != null) {
-        authorFacultyMap.set(author.id, author.facultyId);
+      if (author.studentProfile?.facultyId != null) {
+        authorFacultyMap.set(author.id, author.studentProfile.facultyId);
       }
     });
 
@@ -658,14 +696,13 @@ export class ChallengeRepository {
       }))
       .sort((a, b) => b.ideasCount - a.ideasCount);
 
-    // 2. Interactions by day (last 30 days) ────────────────────────────────────
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const recentIdeas = await this.prisma.idea.findMany({
       where: {
         challengeId: { in: challengeIds },
-        status: 'public',
+        status: 'PUBLISHED',
         createdAt: { gte: thirtyDaysAgo },
       },
       select: {
@@ -679,7 +716,6 @@ export class ChallengeRepository {
       string,
       { date: string; likes: number; comments: number }
     >();
-    // Pre-fill last 30 days so chart shows continuous line even on empty days
     for (let d = 0; d < 30; d++) {
       const dt = new Date();
       dt.setDate(dt.getDate() - (29 - d));
@@ -698,7 +734,6 @@ export class ChallengeRepository {
 
     const interactionsByDay = Array.from(dayMap.values());
 
-    // 3. KPIs ──────────────────────────────────────────────────────────────────
     const totalIdeas = groupedIdeasByAuthor.reduce(
       (acc, item) => acc + ((item._count as any)?._all ?? 0),
       0,
@@ -708,7 +743,6 @@ export class ChallengeRepository {
       0,
     );
 
-    // Most active user (most ideas submitted in company challenges)
     const userIdeaCount = new Map<string, { name: string; count: number }>();
     groupedIdeasByAuthor.forEach((item) => {
       const author = groupedAuthors.find(
@@ -733,7 +767,6 @@ export class ChallengeRepository {
       }
     });
 
-    // Leading faculty (most ideas)
     let leadingFaculty: {
       facultyId: string;
       facultyName: string;
@@ -753,7 +786,7 @@ export class ChallengeRepository {
   async searchJudges(query: string) {
     const where: any = {
       role: UserRole.JUDGE,
-      isActive: true,
+      status: 'ACTIVE',
     };
 
     if (query && query.length > 0) {
@@ -777,10 +810,10 @@ export class ChallengeRepository {
   }
 
   async getAssignedJudges(challengeId: string) {
-    const challenge = await this.prisma.challenge.findUnique({
-      where: { id: challengeId },
+    const judgeRecords = await this.prisma.challengeJudge.findMany({
+      where: { challengeId },
       include: {
-        judges: {
+        judge: {
           select: {
             id: true,
             displayName: true,
@@ -790,27 +823,21 @@ export class ChallengeRepository {
         },
       },
     });
-    return challenge?.judges || [];
+    return judgeRecords.map((r) => r.judge);
   }
 
-  async assignJudges(challengeId: string, judgeIds: string[]) {
-    return this.prisma.challenge.update({
-      where: { id: challengeId },
-      data: {
-        judges: {
-          set: judgeIds.map((id) => ({ id })),
-        },
-      },
-      include: {
-        judges: {
-          select: {
-            id: true,
-            displayName: true,
-            email: true,
-            avatarUrl: true,
-          },
-        },
-      },
-    });
+  async assignJudges(challengeId: string, judgeIds: string[], assignedById: string) {
+    await this.prisma.$transaction([
+      this.prisma.challengeJudge.deleteMany({ where: { challengeId } }),
+      this.prisma.challengeJudge.createMany({
+        data: judgeIds.map((judgeId) => ({
+          challengeId,
+          judgeId,
+          assignedById,
+        })),
+      }),
+    ]);
+
+    return this.getAssignedJudges(challengeId);
   }
 }

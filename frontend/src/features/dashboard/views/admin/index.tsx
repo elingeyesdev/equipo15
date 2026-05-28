@@ -6,6 +6,7 @@ import { useAuth } from '../../../../context/AuthContext';
 import { adminService } from '../../../../services/admin.service';
 import type { CompanySupportItem } from '../../../../types/models';
 import { premiumTooltip } from '../../styles/CommonStyles';
+import { getStoredImpersonationToken } from '../../../../utils/impersonation-session';
 
 export { AdminStatsView } from './AdminStatsView';
 
@@ -291,6 +292,10 @@ export const AdminClientsView = () => {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
+    if (impersonationSession || getStoredImpersonationToken()) {
+      setLoading(false);
+      return;
+    }
     const loadCompanies = async () => {
       setLoading(true);
       try {
@@ -305,7 +310,7 @@ export const AdminClientsView = () => {
     };
 
     void loadCompanies();
-  }, []);
+  }, [impersonationSession]);
 
   const filteredCompanies = useMemo(
     () => companies.filter((company) => {
@@ -416,6 +421,7 @@ export const AdminAccessView = () => (
 );
 
 export const AdminUsersView = () => {
+  const { impersonationSession } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -460,6 +466,10 @@ export const AdminUsersView = () => {
 
   // Fetch users when debounced search, role filter, or page changes
   useEffect(() => {
+    if (impersonationSession || getStoredImpersonationToken()) {
+      setLoading(false);
+      return;
+    }
     const fetchUsers = async () => {
       setLoading(true);
       try {
@@ -473,7 +483,7 @@ export const AdminUsersView = () => {
       }
     };
     void fetchUsers();
-  }, [debouncedSearch, roleFilter, page]);
+  }, [debouncedSearch, roleFilter, page, impersonationSession]);
 
   const totalPages = Math.ceil(total / limit);
 
@@ -627,7 +637,7 @@ export const AdminUsersView = () => {
                   </TD>
                   <TD>
                     <span style={{ fontSize: 13, color: '#64748b' }}>
-                      {user.faculty?.name || 'Sin facultad'}
+                      {user.studentProfile?.faculty?.name || 'Sin facultad'}
                     </span>
                   </TD>
                   <TD>
@@ -687,61 +697,6 @@ export const AdminUsersView = () => {
             </ActionBtn>
           </div>
         )}
-      </Panel>
-    </ViewShell>
-  );
-};
-
-export const AdminSupportView = () => {
-  const navigate = useNavigate();
-  const { impersonationSession, clearImpersonationSession } = useAuth();
-
-  const handleExitMirrorMode = async () => {
-    await clearImpersonationSession();
-    navigate('/dashboard/admin/clients', { replace: true });
-  };
-
-  return (
-    <ViewShell>
-      <Panel>
-        <PanelHeader>
-          <TitleBlock>
-            <Eyebrow>Soporte</Eyebrow>
-            <Title>Modo espejo y supervisión</Title>
-            <Description>
-              Desde aquí puedes revisar la empresa actualmente abierta en modo lectura y cerrar la sesión espejo cuando termines.
-            </Description>
-          </TitleBlock>
-        </PanelHeader>
-
-        <div style={{ padding: '0 24px 24px' }}>
-          <SupportGrid>
-            <SupportCard>
-              <SupportCardTitle>Sesión actual</SupportCardTitle>
-              <SupportCardText>
-                {impersonationSession
-                  ? `Activa sobre ${impersonationSession.company.displayName}. Solo lectura y sin mutaciones permitidas.`
-                  : 'No hay una sesión espejo activa en este momento.'}
-              </SupportCardText>
-            </SupportCard>
-
-            <SupportCard>
-              <SupportCardTitle>Salida segura</SupportCardTitle>
-              <SupportCardText>
-                {impersonationSession
-                  ? `La sesión expira el ${formatDate(impersonationSession.expiresAt)}. Puedes cerrarla antes con un clic.`
-                  : 'No hace falta cerrar nada; cuando actives una sesión, aparecerá aquí el control de salida.'}
-              </SupportCardText>
-              {impersonationSession && (
-                <div style={{ marginTop: 16 }}>
-                  <ActionBtn type="button" $variant="ghost" onClick={() => void handleExitMirrorMode()}>
-                    Salir del modo espejo
-                  </ActionBtn>
-                </div>
-              )}
-            </SupportCard>
-          </SupportGrid>
-        </div>
       </Panel>
     </ViewShell>
   );

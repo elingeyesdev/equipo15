@@ -412,6 +412,25 @@ const PickText = styled.p`
   line-height: 1.6;
 `;
 
+const GoBackBtn = styled.button`
+  padding: 10px 24px;
+  border: none;
+  border-radius: 10px;
+  background: ${Pista8Theme.primary};
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: #e63a09;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(254,65,10,0.25);
+  }
+`;
+
+
 const FinalistCountBadge = styled.div`
   display: inline-flex;
   align-items: center;
@@ -565,7 +584,9 @@ export const CompanyPodiumView = () => {
         <WarningIcon><Trophy /></WarningIcon>
         <PickTitle>Gestión de Podio</PickTitle>
         <PickText>Accede a esta vista desde un reto finalizado en "Mis Retos" para gestionar su podio y finalistas.</PickText>
-        <BackButton onClick={() => navigate('/dashboard/company/challenges')} />
+        <GoBackBtn onClick={() => navigate('/dashboard/company/challenges')}>
+          Ir a Mis Retos
+        </GoBackBtn>
       </PickChallengeView>
     );
   }

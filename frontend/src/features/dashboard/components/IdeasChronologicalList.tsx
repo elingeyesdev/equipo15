@@ -88,12 +88,11 @@ const ViewAllBtn = styled.button`
 `;
 
 /* ─── Top 3 horizontal cards ─── */
-const TopGrid = styled.div<{ $isOnlyTop3: boolean }>`
+const TopGrid = styled.div<{ $count: number }>`
   display: grid;
-  grid-template-columns: ${p => p.$isOnlyTop3 ? '1fr' : 'repeat(3, 1fr)'};
+  grid-template-columns: ${p => p.$count === 1 ? '1fr' : `repeat(${Math.min(p.$count, 3)}, 1fr)`};
   gap: 14px;
   margin-bottom: 16px;
-  ${p => p.$isOnlyTop3 && 'flex: 1; grid-auto-rows: 1fr;'}
 
   @media (max-width: ${breakpoints.mobile}) {
     grid-template-columns: 1fr;
@@ -358,9 +357,13 @@ const rawToPlane = (idea: RawIdea, index: number, userProfile?: any): PlaneIdea 
   authorName,
   likesCount: idea.likesCount ?? 0,
   commentsCount: idea.commentsCount ?? 0,
+  goodCount: idea.goodCount ?? 0,
+  futureCount: idea.futureCount ?? 0,
+  complexCount: idea.complexCount ?? 0,
+  fireScore: idea.fireScore ?? 0,
   laneY: 0,
   floatDelay: 0,
-  authorFacultyId: idea.author?.facultyId,
+  authorFacultyId: idea.author?.studentProfile?.facultyId || idea.author?.facultyId,
   problem: idea.problem,
   solution: idea.solution,
   hasVoted: idea.hasVoted ?? false,
@@ -463,7 +466,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
       </Header>
 
       {/* ─── Top 3 Horizontal Cards ─── */}
-      <TopGrid $isOnlyTop3={!showAll}>
+      <TopGrid $count={top3.length}>
         {top3.map((idea, i) => {
           const isCurrentUser = userProfile && idea.authorId === userProfile.id;
           const authorName = idea.isAnonymous

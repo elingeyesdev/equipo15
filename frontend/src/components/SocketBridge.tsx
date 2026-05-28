@@ -5,12 +5,13 @@ import { useAuth } from '../context/AuthContext';
 
 export const SocketBridge: React.FC = () => {
   const socket = useSocket();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
 
   useEffect(() => {
     if (!socket || !user) return;
 
     const handleIdeaCommented = (payload: any) => {
+      if (payload?.authorId === (userProfile as any)?.id) return;
       wallEvents.emit('comment_count_changed', {
         ideaId: payload?.ideaId || '',
         challengeId: payload?.challengeId,
@@ -21,6 +22,7 @@ export const SocketBridge: React.FC = () => {
     };
 
     const handleIdeaVoted = (payload: any) => {
+      if (payload?.authorId === (userProfile as any)?.id) return;
       wallEvents.emit('vote_changed', {
         ideaId: payload?.ideaId || '',
         hasVoted: true,
@@ -29,6 +31,7 @@ export const SocketBridge: React.FC = () => {
     };
 
     const handleIdeaUnvoted = (payload: any) => {
+      if (payload?.authorId === (userProfile as any)?.id) return;
       wallEvents.emit('vote_changed', {
         ideaId: payload?.ideaId || '',
         hasVoted: false,
@@ -41,6 +44,7 @@ export const SocketBridge: React.FC = () => {
         ideaId: payload?.id || payload?.ideaId || '',
         challengeId: payload?.challengeId || '',
         likesCount: typeof payload?.likesCount === 'number' ? payload.likesCount : 0,
+        authorId: payload?.authorId,
       });
     };
 
@@ -55,7 +59,7 @@ export const SocketBridge: React.FC = () => {
       socket.off('idea:unvoted', handleIdeaUnvoted);
       socket.off('idea_created', handleIdeaCreated);
     };
-  }, [socket, user]);
+  }, [socket, user, userProfile]);
 
   return null;
 };

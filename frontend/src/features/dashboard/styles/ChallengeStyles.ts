@@ -213,6 +213,7 @@ export const CardTitle = styled.p`
   margin: 0 0 10px;
   line-height: 1.45;
   padding-right: 4px;
+  word-break: break-word;
 `;
 
 

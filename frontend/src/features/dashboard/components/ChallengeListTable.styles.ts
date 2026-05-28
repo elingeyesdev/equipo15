@@ -83,24 +83,30 @@ export const TableRow = styled.div`
 export const Cell = styled.div`
   display: flex;
   align-items: center;
+  min-width: 0; /* Permite que el grid encoja la celda */
 `;
 
 export const ChallengeInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0; /* Permite el ajuste del texto en contenedores flex */
 `;
 
 export const ChallengeTitle = styled.span`
   font-weight: 700;
   color: #0f172a;
   font-size: ${Pista8Theme.fontSize.md}px;
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 export const CompanyName = styled.span`
   font-weight: 500;
   color: #64748b;
   font-size: ${Pista8Theme.fontSize.sm}px;
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 export const StatusBadge = styled.span<{ $status: string }>`

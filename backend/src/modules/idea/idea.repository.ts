@@ -4,7 +4,7 @@ import { Idea, Prisma } from '@prisma/client';
 
 interface IdeaWhereInput {
   challengeId?: string;
-  status?: string;
+  status?: any;
 }
 
 export interface IdeaWithVoteStatus extends Idea {
@@ -35,8 +35,9 @@ export class IdeaRepository {
               displayName: true,
               nickname: true,
               role: true,
-              facultyId: true,
-              faculty: { select: { name: true } },
+              studentProfile: {
+                select: { facultyId: true, faculty: { select: { name: true } } },
+              },
             },
           },
           challenge: true,
@@ -55,7 +56,7 @@ export class IdeaRepository {
     search?: string,
     sort?: 'newest' | 'oldest' | 'likes' | 'comments',
   ): Promise<{ data: IdeaWithVoteStatus[]; total: number }> {
-    const where: any = { status: 'public' };
+    const where: any = { status: 'PUBLISHED' };
     if (challengeId) where.challengeId = challengeId;
 
     if (search && search.trim().length > 0) {
@@ -96,13 +97,10 @@ export class IdeaRepository {
         solution: true,
         status: true,
         likesCount: true,
-        goodCount: true,
-        futureCount: true,
-        complexCount: true,
-        fireScore: true,
         commentsCount: true,
+        favoritesCount: true,
         isAnonymous: true,
-        tags: true,
+        multimediaLinks: true,
         createdAt: true,
         updatedAt: true,
         authorId: true,
@@ -113,29 +111,28 @@ export class IdeaRepository {
             displayName: true,
             nickname: true,
             email: true,
-            facultyId: true,
-            faculty: { select: { name: true } },
             phone: true,
-            studentCode: true,
             role: true,
+            studentProfile: {
+              select: { facultyId: true, faculty: { select: { name: true } } },
+            },
           },
         },
         challenge: { select: { status: true } },
         ...(userId
           ? {
-              ideaLikes: { where: { userId }, select: { id: true } },
-              ideaReactions: { where: { userId, type: 'FAVORITE' }, select: { id: true } },
+              reactions: { where: { userId }, select: { id: true, type: true } },
             }
           : {}),
       },
     });
 
     const enriched: IdeaWithVoteStatus[] = data.map((idea) => {
-      const { ideaLikes, ideaReactions, ...rest } = idea as any;
+      const { reactions, ...rest } = idea as any;
       return {
         ...rest,
-        hasVoted: Array.isArray(ideaLikes) && ideaLikes.length > 0,
-        hasFavorited: Array.isArray(ideaReactions) && ideaReactions.length > 0,
+        hasVoted: Array.isArray(reactions) && reactions.some((r: any) => r.type === 'LIKE'),
+        hasFavorited: Array.isArray(reactions) && reactions.some((r: any) => r.type === 'FAVORITE'),
       } as IdeaWithVoteStatus;
     });
 
@@ -152,11 +149,11 @@ export class IdeaRepository {
             displayName: true,
             nickname: true,
             email: true,
-            facultyId: true,
-            faculty: { select: { name: true } },
             phone: true,
-            studentCode: true,
             role: true,
+            studentProfile: {
+              select: { facultyId: true, faculty: { select: { name: true } } },
+            },
           },
         },
         challenge: true,
@@ -180,31 +177,31 @@ export class IdeaRepository {
   }
 
   async checkUserLike(ideaId: string, userId: string): Promise<string | null> {
-    const like = await this.prisma.ideaLike.findUnique({
-      where: { ideaId_userId: { ideaId, userId } },
+    const reaction = await this.prisma.ideaReaction.findUnique({
+      where: { uq_reaction_per_type: { ideaId, userId, type: 'LIKE' } },
       select: { reactionType: true },
     });
-    return like ? like.reactionType : null;
+    return reaction ? reaction.reactionType : null;
   }
 
   async registerLikeAndIncrement(
     ideaId: string,
     userId: string,
-    reactionType: 'GOOD' | 'FUTURE' | 'COMPLEX',
+    reactionType: string,
   ): Promise<Idea> {
-    const fireDelta = reactionType === 'COMPLEX' ? 0.5 : 2; 
+    const fireDelta = reactionType === 'COMPLEX' ? 0.5 : 2;
     const countField = reactionType === 'GOOD' ? 'goodCount' : reactionType === 'FUTURE' ? 'futureCount' : 'complexCount';
 
     const [, updated] = await this.prisma.$transaction([
-      this.prisma.ideaLike.create({
-        data: { ideaId, userId, reactionType },
+      this.prisma.ideaReaction.create({
+        data: { ideaId, userId, type: 'LIKE', reactionType },
       }),
       this.prisma.idea.update({
         where: { id: ideaId },
-        data: { 
+        data: {
           likesCount: { increment: 1 },
           [countField]: { increment: 1 },
-          fireScore: { increment: fireDelta }
+          fireScore: { increment: fireDelta },
         },
       }),
     ]);
@@ -214,19 +211,19 @@ export class IdeaRepository {
   async updateLikeReaction(
     ideaId: string,
     userId: string,
-    oldReaction: 'GOOD' | 'FUTURE' | 'COMPLEX',
-    newReaction: 'GOOD' | 'FUTURE' | 'COMPLEX',
+    oldReaction: string,
+    newReaction: string,
   ): Promise<Idea> {
     const oldField = oldReaction === 'GOOD' ? 'goodCount' : oldReaction === 'FUTURE' ? 'futureCount' : 'complexCount';
     const newField = newReaction === 'GOOD' ? 'goodCount' : newReaction === 'FUTURE' ? 'futureCount' : 'complexCount';
-    
-    const oldFire = oldReaction === 'COMPLEX' ? -0.5 : 1;
-    const newFire = newReaction === 'COMPLEX' ? -0.5 : 1;
+
+    const oldFire = oldReaction === 'COMPLEX' ? 0.5 : 2;
+    const newFire = newReaction === 'COMPLEX' ? 0.5 : 2;
     const fireDelta = newFire - oldFire;
 
     const [, updated] = await this.prisma.$transaction([
-      this.prisma.ideaLike.update({
-        where: { ideaId_userId: { ideaId, userId } },
+      this.prisma.ideaReaction.update({
+        where: { uq_reaction_per_type: { ideaId, userId, type: 'LIKE' } },
         data: { reactionType: newReaction },
       }),
       this.prisma.idea.update({
@@ -234,27 +231,27 @@ export class IdeaRepository {
         data: {
           [oldField]: { decrement: 1 },
           [newField]: { increment: 1 },
-          fireScore: { increment: fireDelta }
+          fireScore: { increment: fireDelta },
         },
       }),
     ]);
     return updated;
   }
 
-  async removeLikeAndDecrement(ideaId: string, userId: string, reactionType: 'GOOD' | 'FUTURE' | 'COMPLEX'): Promise<Idea> {
-    const fireDelta = reactionType === 'COMPLEX' ? -0.5 : -2; 
+  async removeLikeAndDecrement(ideaId: string, userId: string, reactionType: string): Promise<Idea> {
+    const fireDelta = reactionType === 'COMPLEX' ? -0.5 : -2;
     const countField = reactionType === 'GOOD' ? 'goodCount' : reactionType === 'FUTURE' ? 'futureCount' : 'complexCount';
 
     const [, updated] = await this.prisma.$transaction([
-      this.prisma.ideaLike.delete({
-        where: { ideaId_userId: { ideaId, userId } },
+      this.prisma.ideaReaction.delete({
+        where: { uq_reaction_per_type: { ideaId, userId, type: 'LIKE' } },
       }),
       this.prisma.idea.update({
         where: { id: ideaId },
-        data: { 
+        data: {
           likesCount: { decrement: 1 },
           [countField]: { decrement: 1 },
-          fireScore: { increment: fireDelta }
+          fireScore: { increment: fireDelta },
         },
       }),
     ]);
@@ -276,16 +273,16 @@ export class IdeaRepository {
 
   async removeFavorite(ideaId: string, userId: string): Promise<void> {
     await this.prisma.ideaReaction.delete({
-      where: { ideaId_userId_type: { ideaId, userId, type: 'FAVORITE' } },
+      where: { uq_reaction_per_type: { ideaId, userId, type: 'FAVORITE' } },
     });
   }
 
   async incrementComments(id: string): Promise<Idea> {
     return this.prisma.idea.update({
       where: { id },
-      data: { 
+      data: {
         commentsCount: { increment: 1 },
-        fireScore: { increment: 1 }
+        fireScore: { increment: 1 },
       },
     });
   }
@@ -306,8 +303,9 @@ export class IdeaRepository {
         complexCount: true,
         fireScore: true,
         commentsCount: true,
+        favoritesCount: true,
         isAnonymous: true,
-        tags: true,
+        multimediaLinks: true,
         createdAt: true,
         updatedAt: true,
         authorId: true,
@@ -337,26 +335,26 @@ export class IdeaRepository {
                 displayName: true,
                 nickname: true,
                 email: true,
-                facultyId: true,
-                faculty: { select: { name: true } },
                 phone: true,
-                studentCode: true,
                 role: true,
+                studentProfile: {
+                  select: { facultyId: true, faculty: { select: { name: true } } },
+                },
               },
             },
             challenge: { select: { id: true, title: true, status: true } },
-            ideaLikes: { where: { userId } },
+            reactions: { where: { userId, type: 'LIKE' } },
           },
         },
       },
     });
 
     return reactions.map((reaction) => {
-      const { ideaLikes, ...ideaRest } = reaction.idea as any;
+      const { reactions: userReactions, ...ideaRest } = reaction.idea as any;
       return {
         ...ideaRest,
-        hasVoted: Array.isArray(ideaLikes) && ideaLikes.length > 0,
-        hasFavorited: true, // We already filtered by FAVORITE
+        hasVoted: Array.isArray(userReactions) && userReactions.length > 0,
+        hasFavorited: true,
       };
     });
   }

@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { FirebaseAdminModule } from './infrastructure/firebase/firebase-admin.module';
-import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { EventsModule } from './infrastructure/events/events.module';
@@ -38,15 +37,6 @@ import { AdminModule } from './modules/admin/admin.module';
         limit: 300,
       },
     ]),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        uri:
-          configService.get<string>('MONGO_URI') ||
-          'mongodb://localhost:27017/pista8',
-      }),
-    }),
   ],
   controllers: [HealthController],
   providers: [

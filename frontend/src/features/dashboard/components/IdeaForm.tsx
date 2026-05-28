@@ -37,7 +37,7 @@ const ChallengeInfoModal: React.FC<{ challenge: any; onClose: () => void }> = ({
         </div>
 
         {/* Title - center */}
-        <h2 style={{ textAlign: 'center', fontSize: 22, fontWeight: 900, color: '#1a1f22', marginBottom: 8, lineHeight: 1.3 }}>
+        <h2 style={{ textAlign: 'center', fontSize: 22, fontWeight: 900, color: '#1a1f22', marginBottom: 8, lineHeight: 1.3, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
           {challenge?.title || 'Sin título'}
         </h2>
         {challenge?.facultyId && (
@@ -50,30 +50,30 @@ const ChallengeInfoModal: React.FC<{ challenge: any; onClose: () => void }> = ({
         {challenge?.problemDescription && (
           <div style={{ textAlign: 'center', marginBottom: 28 }}>
             <p style={{ fontSize: 11, fontWeight: 800, color: '#a8b0b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Planteamiento del Problema</p>
-            <p style={{ fontSize: 14, color: '#485054', lineHeight: 1.7, maxWidth: 520, margin: '0 auto' }}>{challenge.problemDescription}</p>
+            <p style={{ fontSize: 14, color: '#485054', lineHeight: 1.7, maxWidth: 520, margin: '0 auto', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{challenge.problemDescription}</p>
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20, marginTop: 8 }}>
           {/* Rules - left */}
-          <div style={{ background: '#f8f9fa', borderRadius: 16, padding: '20px 18px' }}>
-            <p style={{ fontSize: 11, fontWeight: 800, color: '#a8b0b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Reglas de Participación</p>
-            <p style={{ fontSize: 13, color: '#485054', lineHeight: 1.7, whiteSpace: 'pre-line', margin: 0 }}>
+          <div style={{ background: '#f8f9fa', borderRadius: 16, padding: '20px 18px', minWidth: 0 }}>
+            <p style={{ fontSize: 11, fontWeight: 800, color: '#a8b0b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10, textAlign: 'center' }}>Reglas de Participación</p>
+            <p style={{ fontSize: 13, color: '#485054', lineHeight: 1.7, whiteSpace: 'pre-line', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
               {challenge?.participationRules || 'Sin reglas definidas.'}
             </p>
           </div>
 
           {/* Criteria - right */}
-          <div style={{ background: '#f8f9fa', borderRadius: 16, padding: '20px 18px' }}>
-            <p style={{ fontSize: 11, fontWeight: 800, color: '#a8b0b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>Criterios de Evaluación</p>
+          <div style={{ background: '#f8f9fa', borderRadius: 16, padding: '20px 18px', minWidth: 0 }}>
+            <p style={{ fontSize: 11, fontWeight: 800, color: '#a8b0b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10, textAlign: 'center' }}>Criterios de Evaluación</p>
             {criteria.length === 0 ? (
               <p style={{ fontSize: 13, color: '#a8b0b8', margin: 0 }}>No hay criterios definidos.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {criteria.map((c: any) => (
-                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'white', borderRadius: 10, padding: '8px 12px', border: '1px solid rgba(72,80,84,0.08)' }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#1a1f22' }}>{c.name}</span>
-                    <span style={{ fontSize: 12, fontWeight: 900, color: '#FE410A', background: 'rgba(254,65,10,0.08)', borderRadius: 8, padding: '2px 8px' }}>{c.weight}%</span>
+                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'white', borderRadius: 10, padding: '8px 12px', border: '1px solid rgba(72,80,84,0.08)', gap: 10 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#1a1f22', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{c.name}</span>
+                    <span style={{ fontSize: 12, fontWeight: 900, color: '#FE410A', background: 'rgba(254,65,10,0.08)', borderRadius: 8, padding: '2px 8px', flexShrink: 0 }}>{c.weight}%</span>
                   </div>
                 ))}
               </div>

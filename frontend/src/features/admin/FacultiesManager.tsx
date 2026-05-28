@@ -4,6 +4,7 @@ import styled, { keyframes } from 'styled-components';
 import { Pencil, ToggleLeft, ToggleRight, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminService } from '@/services/admin.service';
+import { getStoredImpersonationToken } from '@/utils/impersonation-session';
 import { Pista8Theme } from '@/config/theme';
 import { premiumTooltip } from '@/features/dashboard/styles/CommonStyles';
 import type { FacultyCatalogItem } from '@/types/models';
@@ -145,6 +146,10 @@ export default function FacultiesManager() {
   const inactiveCount = useMemo(() => faculties.filter((f) => !f.isActive).length, [faculties]);
 
   async function loadFaculties() {
+    if (getStoredImpersonationToken()) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setLoadError(null);
     try {

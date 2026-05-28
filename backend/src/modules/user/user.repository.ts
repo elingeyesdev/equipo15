@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { User } from '@prisma/client';
-import { WHITELISTED_EMAILS, BLOCKED_EMAIL_DOMAINS } from '../../common/constants/email-domains';
+import { WHITELISTED_EMAILS, BLOCKED_EMAIL_DOMAINS, ALLOWED_EMAIL_DOMAINS } from '../../common/constants/email-domains';
 import { extractEmailDomain, normalizeEmail } from '../../common/utils/email-domain.util';
 
 @Injectable()
@@ -11,14 +11,14 @@ export class UserRepository {
   async findByUid(firebaseUid: string): Promise<any | null> {
     return this.prisma.user.findUnique({
       where: { firebaseUid },
-      include: { faculty: true },
+      include: { studentProfile: { include: { faculty: true } } },
     });
   }
 
   async findByEmail(email: string): Promise<any | null> {
     return this.prisma.user.findUnique({
       where: { email },
-      include: { faculty: true },
+      include: { studentProfile: { include: { faculty: true } } },
     });
   }
 
@@ -67,8 +67,6 @@ export class UserRepository {
         create: createData,
       });
     } catch (err: any) {
-      // Handle unique constraint on email: try to find existing user by email
-      // and attach the firebaseUid instead of failing the request.
       if (err?.code === 'P2002' && createData?.email) {
         const existing = await this.prisma.user.findUnique({
           where: { email: createData.email },
@@ -84,14 +82,14 @@ export class UserRepository {
       throw err;
     }
   }
+
   async updateStatus(
     id: string,
     status: any,
-    penaltyExpiresAt: Date,
   ): Promise<User> {
     return this.prisma.user.update({
       where: { id },
-      data: { status, penaltyExpiresAt },
+      data: { status },
     });
   }
 
@@ -113,13 +111,40 @@ export class UserRepository {
 
     const normalized =
       normalizeEmail(domain).split('@').pop() || domain.toLowerCase();
-    const found = await this.prisma.allowedDomain.findFirst({
+
+    const isAllowed = ALLOWED_EMAIL_DOMAINS.some(
+      (d) => normalized.endsWith(d.replace('@', '')),
+    );
+
+    return !isAllowed;
+  }
+
+  async createStudentProfile(userId: string, data: { studentCode?: string; facultyId?: string; enrollmentYear?: number }) {
+    return this.prisma.studentProfile.create({
+      data: { userId, ...data },
+    });
+  }
+
+  async updateStudentProfile(userId: string, data: { studentCode?: string; facultyId?: string; enrollmentYear?: number }) {
+    return this.prisma.studentProfile.upsert({
+      where: { userId },
+      update: data,
+      create: { userId, ...data },
+    });
+  }
+
+  async findActivePenalties(userId: string) {
+    const now = new Date();
+    return this.prisma.penalty.findMany({
       where: {
-        domain: normalized,
-        isActive: false,
+        userId,
+        revokedAt: null,
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gt: now } },
+        ],
       },
     });
-    return !!found;
   }
 
   async isEmailAllowed(email: string): Promise<boolean> {
@@ -137,14 +162,53 @@ export class UserRepository {
     const domain = extractEmailDomain(normalized);
     if (!domain) return false;
 
-    // Check explicit allowed domains first — these should override the blocked list
-    const found = await this.prisma.allowedDomain.findFirst({ where: { domain, isActive: true } });
+    const isAllowed = ALLOWED_EMAIL_DOMAINS.some(
+      (d) => normalized.endsWith(d),
+    );
+    if (isAllowed) return true;
+
+    const found = await this.prisma.allowedDomain.findFirst({
+      where: { domain, isActive: true },
+    });
     if (found) return true;
 
-    // Then check blocked domains (public providers)
     const isBlocked = BLOCKED_EMAIL_DOMAINS.some((b) => normalized.endsWith(b));
     if (isBlocked) return false;
 
     return false;
+  }
+
+  async syncUserStatusFromPenalties(userId: string): Promise<void> {
+    const now = new Date();
+    const activePenalties = await this.prisma.penalty.findMany({
+      where: {
+        userId,
+        revokedAt: null,
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gt: now } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (activePenalties.length === 0) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { status: 'ACTIVE' },
+      });
+      return;
+    }
+
+    const hasSuspension = activePenalties.some(
+      (p) => p.reason === 'ADMIN_MANUAL' || p.reason === 'COMMENT_ABUSE' || p.reason === 'SPAM'
+    );
+
+    const newStatus = hasSuspension ? 'SUSPENDED' : 'SOFT_BLOCK';
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { status: newStatus },
+    });
   }
 }
