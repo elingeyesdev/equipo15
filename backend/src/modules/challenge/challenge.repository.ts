@@ -88,6 +88,8 @@ export class ChallengeRepository {
           ],
         },
       ];
+    } else if (userRole === 'company' || userRole === UserRole.COMPANY) {
+      where.authorId = userId;
     }
 
     const [data, total] = await this.prisma.$transaction([
