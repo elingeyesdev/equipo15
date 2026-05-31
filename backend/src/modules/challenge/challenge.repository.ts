@@ -150,7 +150,6 @@ export class ChallengeRepository {
       }
     });
 
-    // Map legacy field names to new schema
     if ('startDate' in prepared && prepared.startDate !== undefined) {
       prepared.submissionsOpenAt = prepared.startDate;
       delete prepared.startDate;
@@ -164,12 +163,10 @@ export class ChallengeRepository {
       delete prepared.publicationDate;
     }
 
-    // Normalize Spanish status values to English Prisma enum values
     if (prepared.status) {
       prepared.status = this.normalizeStatus(prepared.status);
     }
 
-    // Convert date strings to Date objects
     const dateFields = ['publishedAt', 'submissionsOpenAt', 'submissionsCloseAt'];
     for (const field of dateFields) {
       if (prepared[field]) {
@@ -615,7 +612,6 @@ export class ChallengeRepository {
     };
   }
 
-  // ─── Innovation Stats for Company Dashboard (E1.4) ───────────────────────────
   async getInnovationStats(authorId: string) {
     const faculties = await this.prisma.faculty.findMany({
       select: { id: true, name: true },
@@ -782,8 +778,6 @@ export class ChallengeRepository {
       kpis: { totalIdeas, totalVotes, mostActiveUser, leadingFaculty },
     };
   }
-
-  // ─── Judge Management (E2.3) ───────────────────────────────────────────────
 
   async searchJudges(query: string) {
     const where: any = {

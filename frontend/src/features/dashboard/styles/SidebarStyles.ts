@@ -10,6 +10,10 @@ export const Overlay = styled.div<{ open: boolean }>`
   opacity: ${p => p.open ? 1 : 0};
   pointer-events: ${p => p.open ? 'all' : 'none'};
   transition: opacity 0.3s ease;
+
+  @media (min-width: 1025px) {
+    display: none;
+  }
 `;
 
 export const Sidebar = styled.aside<{ open: boolean }>`
@@ -28,6 +32,12 @@ export const Sidebar = styled.aside<{ open: boolean }>`
   visibility: ${p => p.open ? 'visible' : 'hidden'};
   pointer-events: ${p => p.open ? 'auto' : 'none'};
   box-shadow: -20px 0 50px rgba(0,0,0,0.2);
+
+  @media (min-width: 1025px) {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
 
   @media (max-width: ${breakpoints.small}) {
     width: 100%;
@@ -65,6 +75,10 @@ export const SidebarClose = styled.button`
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
   &:hover { background: rgba(255,255,255,0.14); color: white; }
+
+  @media (min-width: 1025px) {
+    display: none;
+  }
 `;
 
 export const SidebarNav = styled.nav`

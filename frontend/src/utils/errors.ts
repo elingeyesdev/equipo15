@@ -1,12 +1,8 @@
-/**
- * Traduce mensajes de error comunes del backend a español
- */
 export const translateError = (msg: string): string => {
   if (!msg || typeof msg !== 'string') return 'Ocurrió un error inesperado';
   
   const m = msg.toLowerCase();
   
-  // Fechas (startDate, endDate, submissionsOpenAt, etc)
   if (m.includes('startdate must be a valid iso 8601') || m.includes('startdate must be a date')) {
     return 'La fecha de inicio debe ser una fecha válida.';
   }
@@ -20,7 +16,6 @@ export const translateError = (msg: string): string => {
     return 'La fecha de cierre de recepción de ideas debe ser válida.';
   }
   
-  // Título, descripción y campos obligatorios del reto
   if (m.includes('title should not be empty') || m.includes('title must be')) {
     return 'El título es obligatorio.';
   }
@@ -43,12 +38,10 @@ export const translateError = (msg: string): string => {
     return 'El contexto de la empresa es obligatorio.';
   }
   
-  // Ideas / Participación
   if (m.includes('description should not be empty') || m.includes('description must be')) {
     return 'La descripción es obligatoria.';
   }
   
-  // Genéricos
   if (m.includes('must be a valid iso 8601 date string')) {
     const field = msg.split(' ')[0];
     return `El campo ${field} debe ser una fecha válida (ISO 8601).`;
@@ -66,7 +59,6 @@ export const translateError = (msg: string): string => {
     return `El campo ${field} debe ser un número válido.`;
   }
   
-  // Base de datos / Servidor
   if (m.includes('internal server error')) {
     return 'Error interno del servidor. Por favor, intente más tarde.';
   }
@@ -80,9 +72,6 @@ export const translateError = (msg: string): string => {
   return msg;
 };
 
-/**
- * Extrae y traduce los mensajes de error de una excepción (Axios u otras)
- */
 export const extractErrorMessage = (error: unknown, fallback = 'Ocurrió un error inesperado'): string => {
   if (!error || typeof error !== 'object') return fallback;
   

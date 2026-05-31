@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { breakpoints } from '../../../../config/theme';
 import { toast } from 'sonner';
 import { useAuth } from '../../../../context/AuthContext';
 import { adminService } from '../../../../services/admin.service';
 import type { CompanySupportItem } from '../../../../types/models';
 import { premiumTooltip } from '../../styles/CommonStyles';
 import { getStoredImpersonationToken } from '../../../../utils/impersonation-session';
+import { StudentReputationModal } from './StudentReputationModal';
 
 export { AdminStatsView } from './AdminStatsView';
 
@@ -31,6 +33,11 @@ const PanelHeader = styled.div`
   justify-content: space-between;
   gap: 14px;
   align-items: flex-start;
+
+  @media (max-width: ${breakpoints.tablet}) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 `;
 
 const ReadOnlyBanner = styled.div`
@@ -103,6 +110,11 @@ const SearchInput = styled.input<{ $tooltipText?: string }>`
     box-shadow: 0 0 0 3px rgba(254, 65, 10, 0.12);
   }
   ${premiumTooltip}
+
+  @media (max-width: ${breakpoints.tablet}) {
+    min-width: 0;
+    width: 100%;
+  }
 `;
 
 const TableWrap = styled.div`
@@ -402,6 +414,7 @@ export const AdminUsersView = () => {
   const [roleFilter, setRoleFilter] = useState('');
   const [confirmModal, setConfirmModal] = useState<{ userId: string; userName: string; newRole: string } | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [reputationUserId, setReputationUserId] = useState<string | null>(null);
   const limit = 15;
 
   const ROLE_OPTIONS = [
@@ -426,7 +439,6 @@ export const AdminUsersView = () => {
     USER: 'green',
   };
 
-  // Debounce: wait 350ms after user stops typing
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
@@ -435,7 +447,6 @@ export const AdminUsersView = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Fetch users when debounced search, role filter, or page changes
   useEffect(() => {
     if (impersonationSession || getStoredImpersonationToken()) {
       setLoading(false);
@@ -468,7 +479,6 @@ export const AdminUsersView = () => {
     try {
       await adminService.updateUserRole(confirmModal.userId, confirmModal.newRole);
       toast.success(`Rol de ${confirmModal.userName} actualizado a ${ROLE_LABELS[confirmModal.newRole] || confirmModal.newRole}.`);
-      // Refresh list
       setUsers(prev => prev.map(u =>
         u.id === confirmModal.userId ? { ...u, role: confirmModal.newRole } : u,
       ));
@@ -482,7 +492,6 @@ export const AdminUsersView = () => {
 
   return (
     <ViewShell>
-      {/* Confirmation modal */}
       {confirmModal && (
         <div style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)',
@@ -528,7 +537,6 @@ export const AdminUsersView = () => {
           />
         </PanelHeader>
 
-        {/* Role filter chips */}
         <div style={{ padding: '0 24px 16px', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {ROLE_OPTIONS.map(opt => (
             <button
@@ -562,20 +570,21 @@ export const AdminUsersView = () => {
                 <TH style={{ textAlign: 'left' }}>Usuario</TH>
                 <TH>Facultad</TH>
                 <TH>Rol actual</TH>
+                <TH>Evaluar</TH>
                 <TH>Cambiar rol</TH>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <TD colSpan={4}>
+                  <TD colSpan={5}>
                     <EmptyState>Buscando usuarios...</EmptyState>
                   </TD>
                 </tr>
               )}
               {!loading && users.length === 0 && (
                 <tr>
-                  <TD colSpan={4}>
+                  <TD colSpan={5}>
                     <EmptyState>
                       {debouncedSearch
                         ? `No se encontraron usuarios que coincidan con "${debouncedSearch}".`
@@ -617,6 +626,37 @@ export const AdminUsersView = () => {
                     </StatusPill>
                   </TD>
                   <TD>
+                    {user.role === 'USER' && (
+                      <button
+                        type="button"
+                        onClick={() => setReputationUserId(user.id)}
+                        title="Ver perfil de reputación"
+                        style={{
+                          width: 36, height: 36, borderRadius: 10,
+                          border: '1px solid rgba(254,65,10,0.18)',
+                          background: '#fe410a', cursor: 'pointer',
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          transition: 'all 0.15s ease',
+                          color: 'white',
+                          boxShadow: '0 2px 8px rgba(254,65,10,0.18)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-1px)';
+                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(254,65,10,0.28)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(254,65,10,0.18)';
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      </button>
+                    )}
+                  </TD>
+                  <TD>
                     <select
                       value={user.role}
                       onChange={e => handleRoleChange(user.id, user.displayName, e.target.value)}
@@ -629,7 +669,6 @@ export const AdminUsersView = () => {
                     >
                       <option value="ADMIN">Admin</option>
                       <option value="COMPANY">Empresa</option>
-                      <option value="JUDGE">Juez</option>
                       <option value="USER">Estudiante</option>
                     </select>
                   </TD>
@@ -639,7 +678,6 @@ export const AdminUsersView = () => {
           </Table>
         </TableWrap>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div style={{
             padding: '16px 24px', display: 'flex', justifyContent: 'center',
@@ -669,6 +707,19 @@ export const AdminUsersView = () => {
           </div>
         )}
       </Panel>
+
+      {reputationUserId && (
+        <StudentReputationModal
+          userId={reputationUserId}
+          onClose={() => setReputationUserId(null)}
+          onPromoted={(uid) => {
+            setUsers(prev => prev.map(u =>
+              u.id === uid ? { ...u, role: 'JUDGE' } : u
+            ));
+            setReputationUserId(null);
+          }}
+        />
+      )}
     </ViewShell>
   );
 };

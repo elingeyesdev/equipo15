@@ -17,13 +17,11 @@ interface AdminChallengeFilterProps {
   disabled?: boolean;
 }
 
-/* ─── Animations ─── */
 const fadeDown = keyframes`
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
 
-/* ─── Trigger button ─── */
 const TriggerBtn = styled.button<{ $active: boolean; $tooltipText?: string }>`
   display: inline-flex;
   align-items: center;
@@ -57,7 +55,6 @@ const ActiveDot = styled.span`
   margin-left: 2px;
 `;
 
-/* ─── Dropdown panel ─── */
 const Dropdown = styled.div`
   position: absolute;
   top: calc(100% + 10px);

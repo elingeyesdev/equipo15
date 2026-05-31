@@ -5,7 +5,6 @@ import { challengeService } from '../../../services/challenge.service';
 import { DashboardSkeleton } from './DashboardSkeleton';
 import styled, { keyframes } from 'styled-components';
 
-/* ─── Denied state UI ─── */
 const pulse = keyframes`
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
@@ -53,12 +52,6 @@ interface ChallengeOwnerGuardProps {
   children: React.ReactNode;
 }
 
-/**
- * Guard that ensures:
- * 1. User is authenticated
- * 2. User has COMPANY or ADMIN role
- * 3. User owns the challenge (or is ADMIN)
- */
 export const ChallengeOwnerGuard: React.FC<ChallengeOwnerGuardProps> = ({ children }) => {
   const { user, userProfile, loading: authLoading } = useAuth();
   const { challengeId } = useParams<{ challengeId: string }>();
@@ -73,27 +66,23 @@ export const ChallengeOwnerGuard: React.FC<ChallengeOwnerGuardProps> = ({ childr
   useEffect(() => {
     if (authLoading) return;
 
-    // Not authenticated
     if (!user || !userProfile) {
       setRedirecting(true);
       setChecking(false);
       return;
     }
 
-    // Role check
     if (userRole !== 'COMPANY' && userRole !== 'ADMIN') {
       setDenied(true);
       setChecking(false);
       return;
     }
 
-    // Admin bypasses ownership check
     if (userRole === 'ADMIN') {
       setChecking(false);
       return;
     }
 
-    // Company: verify ownership
     if (!challengeId) {
       setDenied(true);
       setChecking(false);
@@ -121,23 +110,19 @@ export const ChallengeOwnerGuard: React.FC<ChallengeOwnerGuardProps> = ({ childr
     void verifyOwnership();
   }, [authLoading, user, userProfile, userRole, challengeId]);
 
-  // Redirect to login
   if (redirecting) {
     return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
-  // Loading state
   if (authLoading || checking) {
     return <DashboardSkeleton />;
   }
 
-  // Denied: wrong role
   if (denied && (userRole !== 'COMPANY' && userRole !== 'ADMIN')) {
     if (userRole === 'JUDGE') return <Navigate to="/dashboard/judge/inbox" replace />;
     return <Navigate to="/" replace />;
   }
 
-  // Denied: not owner
   if (denied) {
     return (
       <DeniedWrap>

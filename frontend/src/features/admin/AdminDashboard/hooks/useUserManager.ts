@@ -24,43 +24,35 @@ interface SearchState {
 }
 
 export const useUserManager = () => {
-  // ── Search & filter state ──
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  // ── Data state ──
   const [data, setData] = useState<SearchState>({ users: [], total: 0, page: 1, limit: pageSize });
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
 
-  // ── Modal state ──
   const [modalUser, setModalUser] = useState<ManagedUser | null>(null);
   const [modalNewRole, setModalNewRole] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // ── Abort controller for cancelling in-flight requests ──
   const abortRef = useRef<AbortController | null>(null);
 
-  // ── Debounce search input (300ms) ──
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
-      setCurrentPage(1); // Reset page on new search
+      setCurrentPage(1);
     }, 300);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // ── Reset page when role filter changes ──
   useEffect(() => {
     setCurrentPage(1);
   }, [roleFilter]);
 
-  // ── Fetch users ──
   const fetchUsers = useCallback(async () => {
-    // Cancel any in-flight request
     if (abortRef.current) abortRef.current.abort();
     abortRef.current = new AbortController();
 
@@ -90,10 +82,8 @@ export const useUserManager = () => {
     fetchUsers();
   }, [fetchUsers]);
 
-  // ── Derived pagination values ──
   const totalPages = Math.max(1, Math.ceil(data.total / pageSize));
 
-  // ── Open role change modal ──
   const openRoleModal = (user: ManagedUser) => {
     setModalUser(user);
     setModalNewRole(user.role);
@@ -104,7 +94,6 @@ export const useUserManager = () => {
     setModalNewRole('');
   };
 
-  // ── Submit role change ──
   const confirmRoleChange = async () => {
     if (!modalUser || !modalNewRole) return;
     if (modalNewRole === modalUser.role) {
@@ -120,7 +109,6 @@ export const useUserManager = () => {
         `Rol de "${modalUser.displayName}" actualizado a ${modalNewRole}`,
       );
       closeRoleModal();
-      // Refetch to reflect changes
       await fetchUsers();
     } catch (error: unknown) {
       const message =
@@ -134,22 +122,18 @@ export const useUserManager = () => {
   };
 
   return {
-    // Search & filter
     searchTerm,
     setSearchTerm,
     roleFilter,
     setRoleFilter,
-    // Data
     users: data.users,
     total: data.total,
     loading,
     initialLoad,
-    // Pagination
     currentPage,
     setCurrentPage,
     totalPages,
     pageSize,
-    // Modal
     modalUser,
     modalNewRole,
     setModalNewRole,

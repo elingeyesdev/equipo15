@@ -81,9 +81,14 @@ const Header = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 12px;
   margin-bottom: 18px;
+
+  @media (max-width: ${breakpoints.tablet}) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 `;
 
 const Heading = styled.h2`
@@ -221,7 +226,14 @@ const ControlsColumn = styled.div`
   flex-direction: column;
   align-items: flex-end;
   gap: 10px;
-  min-width: min(100%, 560px);
+  margin-left: auto;
+  min-width: min(100%, 480px);
+  max-width: 560px;
+
+  @media (max-width: ${breakpoints.tablet}) {
+    align-items: stretch;
+    max-width: 100%;
+  }
 `;
 
 const FiltersRow = styled.div`

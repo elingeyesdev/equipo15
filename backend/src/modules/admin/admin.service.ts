@@ -59,8 +59,6 @@ export class AdminService {
     };
   }
 
-  // ─── Faculty Management ────────────────────────────────────────────────────
-
   async createFaculty(dto: CreateFacultyDto) {
     return this.adminRepository.createFaculty(dto.name.trim());
   }
@@ -76,8 +74,6 @@ export class AdminService {
   async removeFaculty(id: string) {
     return this.adminRepository.removeFaculty(id);
   }
-
-  // ─── User Search & Role Management (E2.3) ──────────────────────────────────
 
   async searchUsers(query?: string, roleFilter?: string, page = 1, limit = 20) {
     return this.adminRepository.searchUsers(query, roleFilter, page, limit);
@@ -101,6 +97,52 @@ export class AdminService {
     }
 
     return result.user;
+  }
+
+  async getUserReputation(userId: string) {
+    const result = await this.adminRepository.getUserReputation(userId);
+
+    if (!result) {
+      throw new NotFoundException(`Usuario con id "${userId}" no encontrado.`);
+    }
+
+    const totalIdeas = result.ideas.length;
+    const finalistIdeas = result.ideas.filter((i) => i.status === 'FINALIST').length;
+    const winnerIdeas = result.ideas.filter((i) => i.status === 'WINNER').length;
+    const avgFireScore =
+      totalIdeas > 0
+        ? result.ideas.reduce((sum, i) => sum + i.fireScore, 0) / totalIdeas
+        : 0;
+    const now = new Date();
+    const activePenalties = result.penalties.filter(
+      (p) => p.expiresAt === null || p.expiresAt > now,
+    ).length;
+
+    return {
+      user: {
+        id: result.id,
+        displayName: result.displayName,
+        email: result.email,
+        avatarUrl: result.avatarUrl,
+        role: result.role,
+        status: result.status,
+        totalPoints: result.totalPoints,
+        faculty: result.studentProfile?.faculty?.name || null,
+        createdAt: result.createdAt,
+      },
+      metrics: {
+        totalIdeas,
+        finalistIdeas,
+        winnerIdeas,
+        avgFireScore,
+        activePenalties,
+      },
+      ideas: result.ideas.map((idea) => ({
+        ...idea,
+        tags: idea.tags.map((t) => t.tag.name),
+      })),
+      penalties: result.penalties,
+    };
   }
 
   async getAllowedDomains() {

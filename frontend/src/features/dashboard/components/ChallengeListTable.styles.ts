@@ -7,13 +7,13 @@ export const TableContainer = styled.div`
   background: ${Pista8Theme.white};
   border-radius: ${Pista8Theme.radius.xl}px;
   box-shadow: ${Pista8Theme.shadowLayers.md};
-  overflow: visible; /* Changed from hidden to visible so dropdown can overflow */
+  overflow: visible;
 `;
 
 export const TableToolbar = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-end; /* Alinea el botón a la derecha */
+  justify-content: flex-end;
   padding: ${Pista8Theme.spacing.lg}px ${Pista8Theme.spacing.xl}px;
   border-bottom: 1px solid #e2e8f0;
   position: relative;
@@ -83,14 +83,14 @@ export const TableRow = styled.div`
 export const Cell = styled.div`
   display: flex;
   align-items: center;
-  min-width: 0; /* Permite que el grid encoja la celda */
+  min-width: 0;
 `;
 
 export const ChallengeInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 0; /* Permite el ajuste del texto en contenedores flex */
+  min-width: 0;
 `;
 
 export const ChallengeTitle = styled.span`

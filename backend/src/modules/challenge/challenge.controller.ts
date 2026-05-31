@@ -80,8 +80,6 @@ export class ChallengesController {
     return this.challengeService.getGlobalStats();
   }
 
-  // ─── Judge Management (E2.3) ───────────────────────────────────────────────
-
   @Get('judges/search')
   @UseGuards(RolesGuard)
   @Roles('company', 'admin')
@@ -91,7 +89,6 @@ export class ChallengesController {
     return this.challengeService.searchJudges(query);
   }
 
-  // ─── Innovation Stats for Company Dashboard (E1.4) ───────────────────────────
   @Get('company/innovation-stats')
   @UseGuards(RolesGuard)
   @Roles('company')

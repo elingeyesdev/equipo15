@@ -418,10 +418,8 @@ export class CommentService {
       },
     );
 
-    // If the requester removed their own comment, track for moderation penalties
     if (isAuthor) {
       this.moderationService.trackCommentAction(requester.id).catch((err) => {
-        // don't block the response if moderation tracking fails
       });
     }
 
@@ -484,7 +482,6 @@ export class CommentService {
       },
     );
 
-    // Track edits for moderation penalties (only authors can edit)
     this.moderationService.trackCommentAction(requester.id).catch(() => {});
 
     return updatedComment;

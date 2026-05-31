@@ -26,7 +26,6 @@ export const ChallengeJudgeSelector: React.FC<Props> = ({ challengeId, readOnlyM
   const [loadingJudges, setLoadingJudges] = useState(true);
   const [loadingSave, setLoadingSave] = useState(false);
 
-  // Fetch all judges and already-assigned judges on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -35,14 +34,11 @@ export const ChallengeJudgeSelector: React.FC<Props> = ({ challengeId, readOnlyM
           axiosInstance.get(`/challenges/${challengeId}/judges`),
         ]);
 
-        // The backend interceptor wraps responses in { success: true, data: [...] }
         const judgesPayload = judgesRes.data?.data || judgesRes.data;
         const assignedPayload = assignedRes.data?.data || assignedRes.data;
 
-        // Get ALL judges (search with empty query returns all)
         setAllJudges(Array.isArray(judgesPayload) ? judgesPayload : []);
 
-        // Get currently assigned IDs
         const assignedData = Array.isArray(assignedPayload) ? assignedPayload : [];
         const assignedIds = new Set<string>(assignedData.map(j => j.id));
         setSelectedIds(assignedIds);
@@ -171,7 +167,6 @@ export const ChallengeJudgeSelector: React.FC<Props> = ({ challengeId, readOnlyM
   );
 };
 
-/* ─── Styles ─── */
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }

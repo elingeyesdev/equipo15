@@ -331,7 +331,6 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
         </Section>
       )}
 
-      {/* Se removió el botón duplicado de 'Guardar Perfil' para evitar dos botones visibles */}
     </>
   );
 };

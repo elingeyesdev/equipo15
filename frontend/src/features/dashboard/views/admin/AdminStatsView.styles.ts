@@ -17,7 +17,7 @@ export const Wrapper = styled.section`
 export const Title = styled.h1`
   font-size: 32px;
   font-weight: 800;
-  color: #1a1a2e; /* Color oscuro para contraste en fondo blanco */
+  color: #1a1a2e;
   margin: 0 0 ${Pista8Theme.spacing.xl}px;
   text-transform: uppercase;
   letter-spacing: 0.05em;

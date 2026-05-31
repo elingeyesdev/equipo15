@@ -58,10 +58,7 @@ export const DashboardRoutes = () => {
 
           <Route path="/" element={<DashboardIndexRedirect />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          {import.meta.env.DEV && (
-            // Development helper route to open the whitelist manager without role guards
-            <Route path="dev/whitelist" element={<AccessConfigPage />} />
-          )}
+          {import.meta.env.DEV && <Route path="dev/whitelist" element={<AccessConfigPage />} />}
         </Routes>
       </Suspense>
     </DashboardLayout>

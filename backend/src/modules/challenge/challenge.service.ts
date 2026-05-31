@@ -215,7 +215,6 @@ export class ChallengeService {
     };
   }
 
-  // ─── Innovation Stats for Company Dashboard (E1.4) ───────────────────────────
   async getInnovationStats(uid: string, challengeId?: string) {
     const user = await this.userService.findByUid(uid);
     if (!user) throw new Error('Usuario no encontrado');
@@ -233,8 +232,6 @@ export class ChallengeService {
     if (!user) throw new Error('Usuario no encontrado');
     return this.challengeRepository.getCompanyChallenges(user.id);
   }
-
-  // ─── Judge Management (E2.3) ───────────────────────────────────────────────
 
   async searchJudges(query: string) {
     return this.challengeRepository.searchJudges(query?.trim() || '');
@@ -270,7 +267,6 @@ export class ChallengeService {
     );
   }
 
-  // ─── Finalize Podium (Company Control) ──────────────────────────────────────
   async finalizePodium(
     challengeId: string,
     dto: FinalizePodiumDto,
@@ -338,10 +334,6 @@ export class ChallengeService {
     };
   }
 
-  /**
-   * Resolve any incoming facultyId to a valid UUID or null.
-   * Handles: null/undefined, valid UUID strings, numeric IDs, and string-encoded numbers like "4".
-   */
   private async resolveFacultyId(facultyId: any): Promise<string | null> {
     if (!facultyId) return null;
 

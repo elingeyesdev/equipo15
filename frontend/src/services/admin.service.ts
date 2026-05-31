@@ -112,4 +112,11 @@ export const adminService = {
     const response = await axiosInstance.put(`/admin/users/${userId}/role`, { role });
     return unwrapApiData(response.data);
   },
+
+  async getUserReputation(userId: string): Promise<import('@/types/models').UserReputation> {
+    const response = await axiosInstance.get<import('@/types/models').UserReputation | ApiResponse<import('@/types/models').UserReputation>>(
+      `/admin/users/${userId}/reputation`,
+    );
+    return unwrapApiData(response.data);
+  },
 };

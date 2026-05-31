@@ -13,6 +13,10 @@ export const MainContent = styled.main`
   margin: 0 auto;
   overflow: hidden;
 
+  @media (min-width: 1025px) {
+    padding: 40px calc(2% + 300px) 40px 4%;
+  }
+
   @media (max-width: ${breakpoints.mobile}) {
     padding: 24px 3%;
   }
@@ -25,6 +29,15 @@ export const Header = styled.header`
   margin-bottom: 40px;
   animation: ${fadeUp} 0.4s ease both;
   gap: 16px;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    flex-direction: column;
+    align-items: stretch;
+
+    & > button {
+      align-self: flex-end;
+    }
+  }
 `;
 
 export const TitleContainer = styled.div`
@@ -78,6 +91,10 @@ export const HamburgerBtn = styled.button`
 
   &:active {
     transform: scale(0.96);
+  }
+
+  @media (min-width: 1025px) {
+    display: none;
   }
 `;
 

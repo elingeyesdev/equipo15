@@ -3,7 +3,6 @@ import { toast } from 'sonner';
 import type { Challenge, ChallengeStatus, EvaluationCriterion } from '../../../../types/models';
 import axiosInstance from '../../../../api/axiosConfig';
 
-/* ─── Types ─── */
 export interface TargetAudience {
   ageRanges: string[];
   participantTypes: string[];
@@ -31,15 +30,12 @@ export interface Errors {
   endDate?: string;
 }
 
-/* ─── Constants ─── */
 export const LIMITS = { title: 80, problemDescription: 500, companyContext: 500, participationRules: 500 };
 
 export const DEFAULT_CRITERIA: EvaluationCriterion[] = [
-  // Obligatorios
   { id: 'desirability', name: 'Deseabilidad', description: 'Valor real para personas o negocio', enabled: false, weight: 33, isOptional: false },
   { id: 'feasibility',  name: 'Factibilidad', description: 'Posibilidad real de implementar', enabled: false, weight: 33, isOptional: false },
   { id: 'alignment',    name: 'Alineación',   description: 'Coherencia con el reto y la estrategia', enabled: false, weight: 34, isOptional: false },
-  // Opcionales
   { id: 'viability',    name: 'Viabilidad',    description: 'Sostenibilidad en el tiempo y en recursos', enabled: false, weight: 0, isOptional: true },
   { id: 'speed',        name: 'Rapidez',       description: 'Velocidad estimada de implementación', enabled: false, weight: 0, isOptional: true },
   { id: 'scalability',  name: 'Escalabilidad', description: 'Potencial de crecimiento más allá del piloto', enabled: false, weight: 0, isOptional: true },
@@ -57,7 +53,6 @@ export const emptyForm: ChallengeFormData = {
 export const CUSTOM_NAME_RE = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 -]+$/;
 export const MAX_WORDS = 10;
 
-/* ─── Image helpers ─── */
 export const compressToWebP = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -86,7 +81,6 @@ export const formatDate = (d?: string) => {
   return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
-/* ─── Hook ─── */
 interface UseChallengeFormProps {
   onBack: () => void;
   onSave: (data: ChallengeFormData) => Promise<void>;
@@ -115,7 +109,6 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
   const isEditMode = !!challenge;
   const hasIdeas   = (challenge?.ideasCount ?? 0) > 0;
 
-  /* ─── Fetch faculties ─── */
   useEffect(() => {
     const fetchFacs = async () => {
       try {
@@ -131,7 +124,6 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     fetchFacs();
   }, []);
 
-  /* ─── Field lock logic ─── */
   const locked = (field: 'core' | 'flexible') => {
     if (readOnlyMode) return true;
     if (!isEditMode) return false;
@@ -140,7 +132,6 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     return false;
   };
 
-  /* ─── Load challenge data ─── */
   useEffect(() => {
     const toDatetimeLocal = (d?: string | Date) => {
       if (!d) return '';
@@ -170,7 +161,6 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     setErrors({});
   }, [challenge]);
 
-  /* ─── Auto-resize textareas ─── */
   useEffect(() => {
     document.querySelectorAll<HTMLTextAreaElement>('textarea').forEach(t => {
       t.style.height = 'auto';
@@ -178,14 +168,12 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     });
   }, [form.problemDescription, form.companyContext, form.participationRules]);
 
-  /* ─── Field updaters ─── */
   const updateField = useCallback(<K extends keyof ChallengeFormData>(key: K, val: ChallengeFormData[K]) => {
     if (readOnlyMode) return;
     setForm(prev => ({ ...prev, [key]: val }));
     setErrors(prev => ({ ...prev, [key]: undefined }));
   }, [readOnlyMode]);
 
-  /* ─── Logo upload ─── */
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (readOnlyMode) return;
     const file = e.target.files?.[0];
@@ -206,7 +194,6 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     }
   };
 
-  /* ─── Criteria helpers ─── */
   const updateCriterion = (id: string, patch: Partial<EvaluationCriterion>) => {
     if (readOnlyMode) return;
     setForm(prev => ({
@@ -249,7 +236,6 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     .filter(c => c.enabled)
     .reduce((s, c) => s + (Number(c.weight) || 0), 0);
 
-  /* ─── Validation ─── */
   const validate = (forDraft: boolean): boolean => {
     const errs: Errors = {};
     if (!form.title.trim()) errs.title = 'El título es obligatorio';
@@ -266,13 +252,11 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     return Object.keys(errs).length === 0;
   };
 
-  /* ─── Back / Cancel ─── */
   const handleBack = () => {
     if (JSON.stringify(form) !== JSON.stringify(initialForm)) { setShowConfirm(true); return; }
     onBack();
   };
 
-  /* ─── Save ─── */
   const handleSave = async (status: ChallengeStatus) => {
     if (readOnlyMode) {
       toast.info('Estás en modo lectura ahora. No puedes guardar cambios.');
@@ -302,7 +286,6 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     setSaving(true);
     try {
       const payload = { ...form, status };
-      // Convert datetime-local values to ISO 8601 for backend validation
       if (payload.startDate) {
         const d = new Date(payload.startDate);
         if (!isNaN(d.getTime())) payload.startDate = d.toISOString();
@@ -316,7 +299,6 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     finally { setSaving(false); }
   };
 
-  /* ─── Open criteria + scroll ─── */
   const toggleCriteria = () => {
     if (readOnlyMode) return;
     const next = !criteriaOpen;

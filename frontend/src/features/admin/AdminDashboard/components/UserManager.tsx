@@ -3,7 +3,6 @@ import { useUserManager } from '../hooks/useUserManager';
 import type { ManagedUser } from '../hooks/useUserManager';
 import * as S from '../styles/UserManagerStyles';
 
-/* ─── Role labels for display ─────────────────────────────────────────────── */
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: 'Administrador',
   COMPANY: 'Empresa',
@@ -13,14 +12,12 @@ const ROLE_LABELS: Record<string, string> = {
 
 const ROLES = ['ADMIN', 'COMPANY', 'JUDGE', 'USER'] as const;
 
-/* ─── Helper: get user initials ───────────────────────────────────────────── */
 const getInitials = (name: string) => {
   const parts = name.trim().split(/\s+/);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return name.slice(0, 2).toUpperCase();
 };
 
-/* ─── Skeleton rows for loading ───────────────────────────────────────────── */
 const SkeletonRows: React.FC = () => (
   <>
     {Array.from({ length: 5 }).map((_, i) => (
@@ -43,8 +40,6 @@ const SkeletonRows: React.FC = () => (
   </>
 );
 
-/* ─── Main Component ──────────────────────────────────────────────────────── */
-
 const UserManager: React.FC = () => {
   const um = useUserManager();
   const [searchFocused, setSearchFocused] = React.useState(false);
@@ -63,7 +58,6 @@ const UserManager: React.FC = () => {
 
   return (
     <S.Container>
-      {/* Header */}
       <S.Header>
         <S.Title>
           Gestión de Usuarios
@@ -71,7 +65,6 @@ const UserManager: React.FC = () => {
         </S.Title>
       </S.Header>
 
-      {/* Search & Filters */}
       <S.ControlsRow>
         <S.SearchWrapper>
           <S.SearchIcon $focused={searchFocused}>
@@ -103,7 +96,6 @@ const UserManager: React.FC = () => {
         </S.FilterSelect>
       </S.ControlsRow>
 
-      {/* Table */}
       <S.TableCard>
         <S.Table>
           <S.Thead>
@@ -174,7 +166,6 @@ const UserManager: React.FC = () => {
           </S.Tbody>
         </S.Table>
 
-        {/* Pagination */}
         {!um.loading && um.users.length > 0 && (
           <S.PaginationRow>
             <S.PageInfo>
@@ -189,7 +180,6 @@ const UserManager: React.FC = () => {
                 ‹
               </S.PageBtn>
               {Array.from({ length: Math.min(um.totalPages, 5) }, (_, i) => {
-                // Show pages around current page
                 let page: number;
                 if (um.totalPages <= 5) {
                   page = i + 1;
@@ -221,7 +211,6 @@ const UserManager: React.FC = () => {
         )}
       </S.TableCard>
 
-      {/* Role Change Modal */}
       {um.modalUser && (
         <S.ModalOverlay onClick={um.closeRoleModal}>
           <S.ModalCard onClick={e => e.stopPropagation()}>

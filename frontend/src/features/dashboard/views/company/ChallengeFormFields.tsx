@@ -19,7 +19,6 @@ import {
   CustomCriterionInput, RemoveBtn, TotalWeightBar, BtnRow, Btn, ConfirmBanner,
 } from './challengeFormStyles';
 
-/* ─── Logo Lightbox ─── */
 const LightboxOverlay: React.FC<{ src: string; onClose: () => void }> = ({ src, onClose }) => (
   <div onClick={onClose} style={{
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.78)',
@@ -39,7 +38,6 @@ const LightboxOverlay: React.FC<{ src: string; onClose: () => void }> = ({ src, 
   </div>
 );
 
-/* ─── Props ─── */
 export interface ChallengeFormFieldsProps {
   form: ChallengeFormData;
   errors: Errors;
@@ -76,7 +74,6 @@ export interface ChallengeFormFieldsProps {
   onBack: () => void;
 }
 
-/* ─── Component ─── */
 export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
   form,
   errors,
@@ -156,12 +153,10 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
     )}
 
     <Wrapper>
-      {/* ─── LEFT: Form ─── */}
       <FormCard>
         <SectionTitle>Información del Reto</SectionTitle>
         <FormGrid>
 
-          {/* Logo */}
           <FullSpan>
             <FieldGroup>
               <Label>Logo del reto</Label>
@@ -218,7 +213,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             </FieldGroup>
           </FullSpan>
 
-          {/* Title */}
           <FullSpan>
             <FieldGroup>
               <Label $locked={locked('core')}>
@@ -238,7 +232,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             </FieldGroup>
           </FullSpan>
 
-          {/* Problem Description */}
           <FieldGroup>
             <Label $locked={locked('core')}>
               Descripción del problema
@@ -256,7 +249,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             </div>
           </FieldGroup>
 
-          {/* Company Context */}
           <FieldGroup>
             <Label $locked={locked('core')}>
               Contexto de la empresa
@@ -271,7 +263,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             </CharCount>
           </FieldGroup>
 
-          {/* Participation Rules (Left Column) */}
           <FieldGroup style={{ display: 'flex', flexDirection: 'column' }}>
             <Label $locked={readOnlyMode}>Reglas de participación{readOnlyMode && <LockedBadge>No editable</LockedBadge>}</Label>
             <TextAreaField placeholder="Reglas o restricciones para las ideas..."
@@ -285,9 +276,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             </CharCount>
           </FieldGroup>
 
-          {/* Right Side Stack (Faculty, Dates, Private) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {/* Faculty Selector */}
             <FieldGroup style={{ marginBottom: 0 }}>
               <Label $locked={locked('core')}>
                 Facultad dirigida
@@ -324,7 +313,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               </select>
             </FieldGroup>
 
-            {/* Dates */}
             <div style={{ display: 'flex', gap: 12, width: '100%' }}>
               <FieldGroup style={{ marginBottom: 0, flex: 1, minWidth: 0 }}>
                 <Label $locked={locked('core')}>Fecha inicio *</Label>
@@ -354,7 +342,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               Reto privado
             </CheckboxRow>
 
-            {/* Audience Filter */}
             <FieldGroup style={{ marginBottom: 0 }}>
               <Label>Audiencia objetivo</Label>
               <div style={{ background: '#f8f9fa', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -405,7 +392,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
         <Divider style={{ margin: '28px 0' }} />
 
-        {/* ─── Criteria ─── */}
         <div ref={criteriaRef}>
           <CriteriaToggleBtn $open={criteriaOpen} onClick={() => !readOnlyMode && toggleCriteria()} type="button" disabled={readOnlyMode} style={{ cursor: readOnlyMode ? 'not-allowed' : 'pointer', opacity: readOnlyMode ? 0.85 : 1 }}>
             <span>Criterios de Evaluación</span>
@@ -422,7 +408,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                 </p>
               )}
 
-              {/* Mandatory criteria */}
               <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a8b0b8', margin: '0 0 6px' }}>Obligatorios</p>
               {form.evaluationCriteria.filter(c => !c.isOptional && !c.isCustom).map(c => (
                 <CriterionRow key={c.id}>
@@ -448,7 +433,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                 </CriterionRow>
               ))}
 
-              {/* Optional criteria */}
               {form.evaluationCriteria.filter(c => c.isOptional).length > 0 && (
                 <div style={{ marginTop: 10 }}>
                   <button type="button" onClick={() => setShowOptionals(!showOptionals)} style={{ 
@@ -487,7 +471,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                 </div>
               )}
 
-              {/* Custom criteria */}
               {form.evaluationCriteria.filter(c => c.isCustom).map(c => (
                 <CriterionRow key={c.id}>
                   <CriterionCheckbox type="checkbox" checked={c.enabled}
@@ -514,7 +497,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                 </CriterionRow>
               ))}
 
-              {/* Total weight bar */}
               {form.evaluationCriteria.some(c => c.enabled) && (
                 <TotalWeightBar $total={totalWeight}>
                   <span style={{ fontSize: 12, fontWeight: 700, flex: 1, color: '#485054' }}>Total asignado</span>
@@ -524,7 +506,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                 </TotalWeightBar>
               )}
 
-              {/* Add custom criterion */}
               {!locked('core') && !readOnlyMode && (
                 addingCustom ? (
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -551,7 +532,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
           )}
         </div>
 
-        {/* ─── Action Buttons ─── */}
         <BtnRow>
           <Btn type="button" onClick={handleBack} disabled={readOnlyMode}>Cancelar</Btn>
           {!isEditMode && (
@@ -565,7 +545,6 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
         </BtnRow>
       </FormCard>
 
-      {/* ─── RIGHT: Live Preview ─── */}
       <PreviewCard>
         <PreviewLabel>Vista previa en vivo</PreviewLabel>
 
@@ -581,13 +560,11 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
           {(() => {
             if (!form.facultyId) return 'Todas las Facultades';
             
-            // Try to find in dbFaculties first
             const dbFac = dbFaculties?.find((f: any) => f.id === form.facultyId);
             if (dbFac) {
               return dbFac.name.startsWith('Facultad') ? dbFac.name : `Facultad de ${dbFac.name}`;
             }
-            
-            // Fallback to config
+
             return getFacultyName(form.facultyId) || 'Facultad';
           })()}
         </div>

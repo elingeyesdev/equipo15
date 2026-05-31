@@ -15,6 +15,10 @@ export const Page = styled.div`
   max-width: 1400px;
   margin: 0 auto;
 
+  @media (min-width: 1025px) {
+    padding: 2.5rem calc(2% + 300px) 2.5rem 4%;
+  }
+
   @media (max-width: ${breakpoints.mobile}) {
     padding: 1.5rem 3%;
   }
@@ -34,9 +38,18 @@ export const Header = styled.header`
 
   @media (max-width: ${breakpoints.mobile}) {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     margin-bottom: 1.5rem;
     gap: 12px;
+
+    & > div:last-child {
+      width: 100%;
+      justify-content: flex-end;
+    }
+
+    & > button {
+      align-self: flex-end;
+    }
   }
 `;
 
@@ -153,6 +166,10 @@ export const HamburgerBtn = styled.button`
   flex-shrink: 0;
   &:hover { border-color: ${Pista8Theme.primary}; color: ${Pista8Theme.primary}; transform: scale(1.04); }
   &:active { transform: scale(0.96); }
+
+  @media (min-width: 1025px) {
+    display: none;
+  }
 `;
 
 export const SplitGrid = styled.div`

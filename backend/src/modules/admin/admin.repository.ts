@@ -133,8 +133,6 @@ export class AdminRepository {
     };
   }
 
-  // ─── Faculty Management ────────────────────────────────────────────────────
-
   async createFaculty(name: string) {
     return this.prisma.faculty.create({
       data: { name },
@@ -160,8 +158,6 @@ export class AdminRepository {
       where: { id },
     });
   }
-
-  // ─── User Search & Role Management (E2.3) ──────────────────────────────────
 
   async searchUsers(
     query?: string,
@@ -277,6 +273,62 @@ export class AdminRepository {
     return this.prisma.allowedDomain.update({
       where: { id },
       data: { isActive },
+    });
+  }
+
+  async getUserReputation(userId: string) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        avatarUrl: true,
+        role: true,
+        status: true,
+        totalPoints: true,
+        createdAt: true,
+        studentProfile: {
+          select: {
+            faculty: { select: { id: true, name: true } },
+          },
+        },
+        ideas: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            title: true,
+            problem: true,
+            solution: true,
+            status: true,
+            likesCount: true,
+            commentsCount: true,
+            fireScore: true,
+            finalScore: true,
+            isAnonymous: true,
+            createdAt: true,
+            tags: {
+              select: { tag: { select: { name: true } } },
+            },
+            challenge: {
+              select: { id: true, title: true, logoUrl: true, status: true },
+            },
+          },
+        },
+        penalties: {
+          where: { revokedAt: null },
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            reason: true,
+            isAutomatic: true,
+            expiresAt: true,
+            revokedAt: true,
+            createdAt: true,
+          },
+        },
+      },
     });
   }
 }

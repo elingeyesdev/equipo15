@@ -36,7 +36,6 @@ const ChallengeInfoModal: React.FC<{ challenge: any; onClose: () => void }> = ({
           <button onClick={onClose} style={{ background: 'rgba(72,80,84,0.08)', border: 'none', borderRadius: '50%', width: 36, height: 36, fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#485054' }}>×</button>
         </div>
 
-        {/* Title - center */}
         <h2 style={{ textAlign: 'center', fontSize: 22, fontWeight: 900, color: '#1a1f22', marginBottom: 8, lineHeight: 1.3, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
           {challenge?.title || 'Sin título'}
         </h2>
@@ -46,7 +45,6 @@ const ChallengeInfoModal: React.FC<{ challenge: any; onClose: () => void }> = ({
           </p>
         )}
 
-        {/* Problem - center */}
         {challenge?.problemDescription && (
           <div style={{ textAlign: 'center', marginBottom: 28 }}>
             <p style={{ fontSize: 11, fontWeight: 800, color: '#a8b0b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Planteamiento del Problema</p>
@@ -55,7 +53,6 @@ const ChallengeInfoModal: React.FC<{ challenge: any; onClose: () => void }> = ({
         )}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20, marginTop: 8 }}>
-          {/* Rules - left */}
           <div style={{ background: '#f8f9fa', borderRadius: 16, padding: '20px 18px', minWidth: 0 }}>
             <p style={{ fontSize: 11, fontWeight: 800, color: '#a8b0b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10, textAlign: 'center' }}>Reglas de Participación</p>
             <p style={{ fontSize: 13, color: '#485054', lineHeight: 1.7, whiteSpace: 'pre-line', margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
@@ -63,7 +60,6 @@ const ChallengeInfoModal: React.FC<{ challenge: any; onClose: () => void }> = ({
             </p>
           </div>
 
-          {/* Criteria - right */}
           <div style={{ background: '#f8f9fa', borderRadius: 16, padding: '20px 18px', minWidth: 0 }}>
             <p style={{ fontSize: 11, fontWeight: 800, color: '#a8b0b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10, textAlign: 'center' }}>Criterios de Evaluación</p>
             {criteria.length === 0 ? (

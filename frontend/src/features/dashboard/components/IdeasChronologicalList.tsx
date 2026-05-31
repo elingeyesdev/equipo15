@@ -87,7 +87,6 @@ const ViewAllBtn = styled.button`
   svg { width: 12px; height: 12px; stroke-width: 3; }
 `;
 
-/* ─── Top 3 horizontal cards ─── */
 const TopGrid = styled.div<{ $count: number; $isVertical?: boolean }>`
   display: grid;
   grid-template-columns: ${p => p.$count === 1 ? '1fr' : `repeat(${Math.min(p.$count, 3)}, 1fr)`};
@@ -255,7 +254,6 @@ const DateLabel = styled.span`
   color: #c0c8d0;
 `;
 
-/* ─── Expanded list cards (Grid 6 columns) ─── */
 const ExpandedGrid = styled(motion.div)`
   display: flex;
   flex-wrap: nowrap;
@@ -316,7 +314,6 @@ const ExpandedBadge = styled.div<{ $rank: number }>`
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 `;
 
-/* ─── Loading Spinner ─── */
 const SpinnerWrap = styled.div`
   display: flex;
   flex-direction: column;
@@ -343,7 +340,6 @@ const SpinnerText = styled.p`
   margin: 0;
 `;
 
-/* ─── Helpers ─── */
 const formatRelative = (dateStr?: string): string => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
@@ -394,7 +390,6 @@ const rawToPlane = (idea: RawIdea, index: number, userProfile?: any): PlaneIdea 
   };
 };
 
-/* ─── Component ─── */
 interface IdeasChronologicalListProps {
   ideas: RawIdea[];
   sortOrder: SortMode;
@@ -438,7 +433,6 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
         }
       })
       .catch(() => {
-        // ignore
       });
   });
 
@@ -485,7 +479,6 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
         )}
       </Header>
 
-      {/* ─── Top 3 Horizontal Cards ─── */}
       <TopGrid $count={top3.length} $isVertical={isVertical}>
         {top3.map((idea, i) => {
           const isCurrentUser = userProfile && idea.authorId === userProfile.id;
@@ -524,7 +517,6 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
         })}
       </TopGrid>
 
-      {/* ─── Full List (when "Ver Todos") ─── */}
       {showAll && rest.length > 0 && (
         <ExpandedGrid layout>
           {rest.map((idea, i) => {

@@ -226,7 +226,6 @@ const replaceCommentInTree = (
 ): CommentTreeNode[] =>
   nodes.map((node) => {
     if (node.id === targetId) {
-      // Preservar canEdit y canWithdraw del comentario optimista si el servidor no los proporciona
       const canEdit = replacement.canEdit !== undefined ? replacement.canEdit : node.canEdit;
       const canWithdraw = replacement.canWithdraw !== undefined ? replacement.canWithdraw : node.canWithdraw;
       
@@ -507,7 +506,6 @@ export const CommentsSection = ({
   const handleWithdraw = useCallback(async (commentId: string) => {
     setSubmitSuccess(null);
 
-    // Warning confirmation before deleting a comment
     const confirmMsg = 'Estás a punto de borrar este comentario. Si borras o editas muchos comentarios en poco tiempo, tu cuenta podría ser desactivada temporalmente. ¿Deseas continuar?';
     if (!window.confirm(confirmMsg)) {
       return;

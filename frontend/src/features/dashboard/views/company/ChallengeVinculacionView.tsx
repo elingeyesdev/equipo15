@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
-import { Pista8Theme } from '../../../../config/theme';
+import { Pista8Theme, breakpoints } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import type { Challenge } from '../../../../types/models';
 import { ChallengeJudgeSelector } from './components/ChallengeJudgeSelector';
@@ -9,7 +9,6 @@ import BackButton from '../../../../components/common/BackButton';
 import { Users } from 'lucide-react';
 
 
-/* ─── Animations ─── */
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -20,7 +19,6 @@ const shimmer = keyframes`
   100% { background-position: -200% 0; }
 `;
 
-/* ─── Styled Components ─── */
 const Page = styled.div`
   animation: ${fadeUp} 0.4s ease both;
   display: flex;
@@ -94,6 +92,18 @@ const StatsRow = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 10px;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    & > :last-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: ${breakpoints.small}) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const StatChip = styled.div`
@@ -212,7 +222,6 @@ const GoBackBtn = styled.button`
   }
 `;
 
-/* ─── Status config ─── */
 const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; dot: string }> = {
   Borrador: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
   DRAFT: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
@@ -235,7 +244,6 @@ const formatDate = (d?: string | Date) => {
   return date.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-/* ─── Component ─── */
 export const ChallengeVinculacionView = () => {
   const [searchParams] = useSearchParams();
   const challengeId = searchParams.get('challengeId');
@@ -312,7 +320,6 @@ export const ChallengeVinculacionView = () => {
     <Page>
       <BackButton onClick={() => navigate('/dashboard/company/challenges')} />
 
-      {/* Challenge Info Card */}
       <ChallengeCard>
         <CardTop>
           <CardTitle>{challenge.title}</CardTitle>
@@ -341,7 +348,6 @@ export const ChallengeVinculacionView = () => {
         </StatsRow>
       </ChallengeCard>
 
-      {/* Judge Selector */}
       <JudgeSection>
         <ChallengeJudgeSelector challengeId={challenge.id} />
       </JudgeSection>

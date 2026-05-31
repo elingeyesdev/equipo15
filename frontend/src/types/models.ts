@@ -235,3 +235,56 @@ export interface FacultyCatalogItem {
   updatedAt?: string | Date;
 }
 
+export interface ReputationIdea {
+  id: string;
+  title: string;
+  problem: string;
+  solution: string;
+  status: string;
+  likesCount: number;
+  commentsCount: number;
+  fireScore: number;
+  finalScore: number;
+  isAnonymous: boolean;
+  createdAt: string;
+  tags: string[];
+  challenge: {
+    id: string;
+    title: string;
+    logoUrl?: string | null;
+    status: string;
+  };
+}
+
+export interface ReputationPenalty {
+  id: string;
+  reason: string;
+  isAutomatic: boolean;
+  expiresAt?: string | null;
+  revokedAt?: string | null;
+  createdAt: string;
+}
+
+export interface UserReputation {
+  user: {
+    id: string;
+    displayName: string;
+    email: string;
+    avatarUrl?: string | null;
+    role: string;
+    status: string;
+    totalPoints: number;
+    faculty?: string | null;
+    createdAt: string;
+  };
+  metrics: {
+    totalIdeas: number;
+    finalistIdeas: number;
+    winnerIdeas: number;
+    avgFireScore: number;
+    activePenalties: number;
+  };
+  ideas: ReputationIdea[];
+  penalties: ReputationPenalty[];
+}
+

@@ -369,7 +369,6 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
       .getComments({ ideaId: idea.id, page: 1, limit: 1 })
       .then((res) => setCommentsCount(res.data.total ?? commentsCount))
       .catch(() => {
-        // ignore
       });
   });
 
@@ -483,7 +482,6 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
             </ActionsRow>
           </SectionBlock>
 
-          {/* CommentsSection siempre se carga para actualizar el contador, pero se oculta si no está abierto */}
           <SectionBlock ref={commentsRef as any} style={{ display: isCommentsOpen ? 'block' : 'none' }}>
             <CommentsSection
               ideaId={idea.id}

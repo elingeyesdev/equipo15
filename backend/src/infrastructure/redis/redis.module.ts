@@ -26,17 +26,25 @@ export class RedisService implements OnModuleDestroy {
   constructor() {
     const redisUrl = process.env['REDIS_URL'];
     if (redisUrl) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
-        const Redis = require('ioredis');
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
-        this.client = new Redis(redisUrl);
-        this.logger.log('Redis client connected');
-      } catch {
-        this.logger.warn('ioredis not available, using in-memory Map fallback');
-      }
+      void this.initializeClient(redisUrl);
     } else {
       this.logger.log('REDIS_URL not set, using in-memory Map fallback');
+    }
+  }
+
+  private async initializeClient(redisUrl: string) {
+    try {
+      const ioredis = await import('ioredis');
+      // Handle both ESM and CJS interop: default may be the constructor itself
+      // or a nested module object with its own .default
+      const RedisConstructor = (ioredis as any).default ?? ioredis;
+      const RedisCls = typeof RedisConstructor === 'function'
+        ? RedisConstructor
+        : RedisConstructor.default;
+      this.client = new RedisCls(redisUrl) as RedisClient;
+      this.logger.log('Redis client connected');
+    } catch {
+      this.logger.warn('ioredis not available, using in-memory Map fallback');
     }
   }
 

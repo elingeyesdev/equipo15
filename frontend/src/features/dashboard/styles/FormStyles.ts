@@ -214,7 +214,6 @@ export const TooltipBubble = styled.span`
   }
 `;
 
-// Show bubble when parent is hovered or focused
 export const TooltipHost = styled.span`
   display: inline-flex;
   align-items: center;

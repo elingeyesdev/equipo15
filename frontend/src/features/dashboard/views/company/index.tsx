@@ -15,13 +15,11 @@ import { toast } from 'sonner';
 import { extractErrorMessage } from '../../../../utils/errors';
 
 
-/* ─── Animations ─── */
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
 
-/* ─── Status Config ─── */
 const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; dot: string }> = {
   Borrador: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
   DRAFT: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
@@ -33,9 +31,7 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
   CLOSED: { label: 'Finalizado', bg: '#fee2e2', color: '#991b1b', dot: '#ef4444' },
 };
 
-/** Deriva el estado visual real considerando las fechas */
 const deriveDisplayStatus = (challenge: Challenge): string => {
-  // Si ya venció la fecha de cierre → Finalizado
   const closeDate = challenge.endDate || challenge.submissionsCloseAt;
   if (closeDate && new Date(closeDate) < new Date()) {
     return 'Finalizado';
@@ -47,7 +43,6 @@ const deriveDisplayStatus = (challenge: Challenge): string => {
 const getStatusConfig = (status: string) =>
   STATUS_CONFIG[status] || STATUS_CONFIG['Borrador'];
 
-/* ─── Styled Components ─── */
 const Container = styled.div`
   animation: ${fadeUp} 0.4s ease both;
 `;
@@ -498,7 +493,6 @@ const CloseBtn = styled.button`
   }
 `;
 
-/* ─── Helpers ─── */
 const formatDate = (d?: string | Date) => {
   if (!d) return '—';
   const date = new Date(d);
@@ -506,7 +500,6 @@ const formatDate = (d?: string | Date) => {
   return date.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-/* ─── Component ─── */
 type FilterValue = 'all' | ChallengeStatus;
 
 export const CompanyChallengesView = () => {
@@ -596,7 +589,6 @@ export const CompanyChallengesView = () => {
     { value: 'Finalizado', label: 'Finalizados' },
   ];
 
-  // ─── If form is open, show inline form instead of list ───
   if (modalOpen) {
     return (
       <Container>
@@ -770,7 +762,6 @@ export const CompanyChallengesView = () => {
         </Grid>
       )}
 
-      {/* ─── Modal para Copiar Link de Reto Privado ─── */}
       {copyChallenge && createPortal(
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: 'white', padding: '32px', borderRadius: '24px', width: '90%', maxWidth: '400px', boxShadow: '0 12px 32px rgba(0,0,0,0.2)' }}>
@@ -873,7 +864,6 @@ export const CompanyChallengesView = () => {
   );
 };
 
-/* ─── Other company views ─── */
 export { CompanyStatsView, CompanyPodiumView };
 
 export const CompanyCriteriaView = () => (

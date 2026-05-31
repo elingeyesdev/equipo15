@@ -281,14 +281,12 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
       nextLikes = Math.max(0, likes - 1);
       removeLocalReaction(ideaId, currentUserId);
     } else if (isVoting && prevVoted) {
-      // Just switching reaction, likes count stays the same
       saveLocalReaction(ideaId, targetReaction, currentUserId);
     }
 
     setLikes(nextLikes);
     wallEvents.emit('vote_changed', { ideaId, hasVoted: isVoting, likesCount: nextLikes });
 
-    // Now the backend handles the reactionType correctly, including switches.
     if (isVoting !== prevVoted || targetReaction !== prevReaction) {
       ideaService.voteIdea(ideaId, targetReaction).catch((error: unknown) => {
         if (isForbiddenError(error)) {
@@ -298,7 +296,6 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
           toast.error('No pudimos procesar tu acción. Intenta de nuevo.');
         }
         
-        // Revert UI on failure
         setHasVoted(prevVoted);
         setReaction(prevReaction);
         setLikes(prevLikes);
@@ -383,4 +380,4 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
   );
 };
 
-export default LikeButton;
+export default LikeButton;

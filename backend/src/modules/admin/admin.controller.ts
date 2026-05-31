@@ -68,6 +68,14 @@ export class AdminController {
     );
   }
 
+  @Get('users/:id/reputation')
+  @ApiOperation({ summary: 'Get student reputation profile for judge promotion evaluation' })
+  @ApiResponse({ status: 200, description: 'Student reputation profile with metrics and idea history' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getUserReputation(@Param('id') userId: string) {
+    return this.adminService.getUserReputation(userId);
+  }
+
   @Put('users/:id/role')
   @ApiOperation({ summary: 'Update user role (transactional mutation)' })
   @ApiResponse({ status: 200, description: 'User role updated successfully' })

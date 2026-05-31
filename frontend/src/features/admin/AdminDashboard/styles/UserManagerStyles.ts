@@ -1,8 +1,6 @@
 import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../../config/theme';
 
-/* ─── Animations ─────────────────────────────────────────────────────────── */
-
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -17,8 +15,6 @@ const pulseGlow = keyframes`
   0%, 100% { box-shadow: 0 0 0 0 rgba(254, 65, 10, 0); }
   50%      { box-shadow: 0 0 0 4px rgba(254, 65, 10, 0.12); }
 `;
-
-/* ─── Layout ─────────────────────────────────────────────────────────────── */
 
 export const Container = styled.div`
   animation: ${fadeIn} 0.4s ease both;
@@ -47,8 +43,6 @@ export const TotalBadge = styled.span`
   color: rgba(72, 80, 84, 0.55);
   margin-left: 10px;
 `;
-
-/* ─── Search & Filters ───────────────────────────────────────────────────── */
 
 export const ControlsRow = styled.div`
   display: flex;
@@ -132,8 +126,6 @@ export const FilterSelect = styled.select`
     box-shadow: 0 0 0 3px ${Pista8Theme.primary}15;
   }
 `;
-
-/* ─── Table ───────────────────────────────────────────────────────────────── */
 
 export const TableCard = styled.div`
   background: white;
@@ -228,8 +220,6 @@ export const UserEmail = styled.span`
   color: rgba(72, 80, 84, 0.5);
 `;
 
-/* ─── Role Badge ──────────────────────────────────────────────────────────── */
-
 const roleColors: Record<string, { bg: string; fg: string }> = {
   ADMIN:   { bg: '#FE410A18', fg: '#FE410A' },
   COMPANY: { bg: '#6366f118', fg: '#6366f1' },
@@ -251,8 +241,6 @@ export const RoleBadge = styled.span<{ $role: string }>`
   color: ${p => roleColors[p.$role]?.fg || '#6b7280'};
   transition: all 0.2s;
 `;
-
-/* ─── Action Button ───────────────────────────────────────────────────────── */
 
 export const RoleButton = styled.button`
   display: inline-flex;
@@ -288,8 +276,6 @@ export const RoleButton = styled.button`
     cursor: not-allowed;
   }
 `;
-
-/* ─── Pagination ──────────────────────────────────────────────────────────── */
 
 export const PaginationRow = styled.div`
   display: flex;
@@ -336,8 +322,6 @@ export const PageBtn = styled.button<{ $active?: boolean }>`
     cursor: default;
   }
 `;
-
-/* ─── Modal ───────────────────────────────────────────────────────────────── */
 
 export const ModalOverlay = styled.div`
   position: fixed;
@@ -461,8 +445,6 @@ export const ModalConfirmBtn = styled.button`
   }
 `;
 
-/* ─── Skeleton Loader ─────────────────────────────────────────────────────── */
-
 export const SkeletonRow = styled.tr``;
 
 export const SkeletonCell = styled.td`
@@ -496,8 +478,6 @@ export const SkeletonCircle = styled.div`
   background-size: 200% 100%;
   animation: ${shimmer} 1.5s infinite;
 `;
-
-/* ─── Empty State ─────────────────────────────────────────────────────────── */
 
 export const EmptyWrapper = styled.div`
   display: flex;
