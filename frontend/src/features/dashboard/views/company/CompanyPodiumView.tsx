@@ -565,7 +565,7 @@ export const CompanyPodiumView = () => {
     try {
       const allFinalists = new Set(filteredIdeas.map(i => i.id));
       await challengeService.finalizePodium(challengeId, {
-        category: 'social',
+        category: metric === 'fireScore' ? 'likes' : 'comments',
         limit: allFinalists.size,
       });
       toast.success('¡Podio finalizado con éxito! El reto ha pasado a evaluación.');

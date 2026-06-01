@@ -136,6 +136,35 @@ export class ChallengesController {
     return this.challengeService.getCompanyChallenges(req.user.uid);
   }
 
+  // ─── Judge Inbox: Assigned Challenges (E3.2) ───────────────────────────────
+
+  @Get('judge/assigned-challenges')
+  @UseGuards(RolesGuard)
+  @Roles('judge')
+  @ApiOperation({
+    summary: 'Get challenges assigned to the authenticated judge (E3.2)',
+    description: 'Returns all challenges where the current user is assigned as a judge.',
+  })
+  @ApiResponse({ status: 200, description: 'Assigned challenges returned successfully.' })
+  getAssignedChallengesForJudge(@Request() req: AuthenticatedRequest) {
+    return this.challengeService.getAssignedChallengesForJudge(req.user.uid);
+  }
+
+  // ─── Judge Inbox: Finalist Ideas (E3.1) ────────────────────────────────────
+
+  @Get('judge/assigned-ideas')
+  @UseGuards(RolesGuard)
+  @Roles('judge')
+  @ApiOperation({
+    summary: 'Get finalist ideas assigned to the authenticated judge (E3.1)',
+    description:
+      'Returns ideas with FINALIST status from challenges where the current user is assigned as a judge. Includes an "evaluated" flag per idea.',
+  })
+  @ApiResponse({ status: 200, description: 'Finalist ideas returned successfully.' })
+  getFinalistIdeasForJudge(@Request() req: AuthenticatedRequest) {
+    return this.challengeService.getFinalistIdeasForJudge(req.user.uid);
+  }
+
   @Get('token/:token')
   @ApiOperation({ summary: 'Get a private challenge by its access token' })
   findByToken(@Param('token') token: string) {

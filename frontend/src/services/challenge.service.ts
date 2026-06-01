@@ -89,5 +89,15 @@ export const challengeService = {
   finalizePodium: async (id: string, payload: { category: string; limit: number }): Promise<ApiResponse<any>> => {
     const response = await axiosInstance.post<ApiResponse<any>>(`/challenges/${id}/finalize-podium`, payload);
     return response.data;
-  }
+  },
+
+  getJudgeAssignedChallenges: async (): Promise<any[]> => {
+    const response = await axiosInstance.get<ApiResponse<any[]> | any[]>('/challenges/judge/assigned-challenges');
+    return unwrapApiData(response.data);
+  },
+
+  getJudgeAssignedIdeas: async (): Promise<any[]> => {
+    const response = await axiosInstance.get<ApiResponse<any[]> | any[]>('/challenges/judge/assigned-ideas');
+    return unwrapApiData(response.data);
+  },
 };

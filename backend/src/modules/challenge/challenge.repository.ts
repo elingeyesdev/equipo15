@@ -836,4 +836,93 @@ export class ChallengeRepository {
 
     return this.getAssignedJudges(challengeId);
   }
+
+  // ─── Judge Inbox: Assigned Challenges (E3.2) ───────────────────────────────
+
+  async getAssignedChallengesForJudge(judgeUserId: string) {
+    const assignments = await this.prisma.challengeJudge.findMany({
+      where: { judgeId: judgeUserId },
+      select: {
+        challenge: {
+          select: {
+            id: true,
+            title: true,
+            problemDescription: true,
+            status: true,
+            submissionsCloseAt: true,
+          },
+        },
+      },
+    });
+
+    return assignments.map((a) => a.challenge);
+  }
+
+  // ─── Judge Inbox: Finalist Ideas (E3.1) ────────────────────────────────────
+
+  async getFinalistIdeasForJudge(judgeUserId: string) {
+    // 1. Get all challengeIds where this user is a judge
+    const assignments = await this.prisma.challengeJudge.findMany({
+      where: { judgeId: judgeUserId },
+      select: { challengeId: true },
+    });
+
+    const challengeIds = assignments.map((a) => a.challengeId);
+    if (challengeIds.length === 0) return [];
+
+    // 2. Get all FINALIST ideas from those challenges, with evaluation info
+    const ideas = await this.prisma.idea.findMany({
+      where: {
+        challengeId: { in: challengeIds },
+        status: 'FINALIST',
+        deletedAt: null,
+      },
+      include: {
+        challenge: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            companyContext: true,
+            submissionsCloseAt: true,
+          },
+        },
+        author: {
+          select: {
+            id: true,
+            displayName: true,
+            avatarUrl: true,
+          },
+        },
+        evaluations: {
+          where: { judgeId: judgeUserId },
+          select: {
+            id: true,
+            createdAt: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // 3. Map to a flat response with evaluated flag
+    return ideas.map((idea) => ({
+      id: idea.id,
+      title: idea.title,
+      problem: idea.problem,
+      solution: idea.solution,
+      isAnonymous: idea.isAnonymous,
+      author: idea.isAnonymous ? null : idea.author,
+      challengeId: idea.challengeId,
+      challengeTitle: idea.challenge.title,
+      challengeStatus: idea.challenge.status,
+      challengeContext: idea.challenge.companyContext,
+      likesCount: idea.likesCount,
+      commentsCount: idea.commentsCount,
+      createdAt: idea.createdAt,
+      evaluated: idea.evaluations.length > 0,
+      evaluationId: idea.evaluations[0]?.id ?? null,
+      evaluatedAt: idea.evaluations[0]?.createdAt ?? null,
+    }));
+  }
 }

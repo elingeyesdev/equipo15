@@ -267,6 +267,22 @@ export class ChallengeService {
     );
   }
 
+  // ─── Judge Inbox: Assigned Challenges (E3.2) ───────────────────────────────
+
+  async getAssignedChallengesForJudge(firebaseUid: string) {
+    const user = await this.userService.findByUid(firebaseUid);
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+    return this.challengeRepository.getAssignedChallengesForJudge(user.id);
+  }
+
+  // ─── Judge Inbox: Finalist Ideas (E3.1) ────────────────────────────────────
+
+  async getFinalistIdeasForJudge(firebaseUid: string) {
+    const user = await this.userService.findByUid(firebaseUid);
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+    return this.challengeRepository.getFinalistIdeasForJudge(user.id);
+  }
+
   async finalizePodium(
     challengeId: string,
     dto: FinalizePodiumDto,
