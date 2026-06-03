@@ -100,4 +100,19 @@ export const challengeService = {
     const response = await axiosInstance.get<ApiResponse<any[]> | any[]>('/challenges/judge/assigned-ideas');
     return unwrapApiData(response.data);
   },
+
+  getChallengeCriteria: async (challengeId: string): Promise<any[]> => {
+    const response = await axiosInstance.get<ApiResponse<any[]> | any[]>(`/challenges/${challengeId}/criteria`);
+    return unwrapApiData(response.data);
+  },
+
+  submitEvaluation: async (payload: {
+    ideaId: string;
+    judgeId: string;
+    feedback?: string;
+    scores: { criterionId: string; score: number }[];
+  }): Promise<any> => {
+    const response = await axiosInstance.post<ApiResponse<any>>('/evaluations', payload);
+    return unwrapApiData(response.data);
+  },
 };

@@ -197,6 +197,15 @@ export class ChallengesController {
     return this.challengeService.findOne(id, req.user.uid);
   }
 
+  @Get(':id/criteria')
+  @UseGuards(RolesGuard)
+  @Roles('judge', 'company', 'admin')
+  @ApiOperation({ summary: 'Get active evaluation criteria for a challenge (E3.1)' })
+  @ApiResponse({ status: 200, description: 'Active criteria returned successfully.' })
+  getCriteriaForChallenge(@Param('id') id: string) {
+    return this.challengeService.getCriteriaForChallenge(id);
+  }
+
   @Get(':id/stats')
   @ApiOperation({ summary: 'Get stats for a specific challenge' })
   getChallengeStats(@Param('id') id: string) {

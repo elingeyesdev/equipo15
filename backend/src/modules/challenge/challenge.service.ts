@@ -283,6 +283,14 @@ export class ChallengeService {
     return this.challengeRepository.getFinalistIdeasForJudge(user.id);
   }
 
+  // ─── Judge Eval Form: Criteria for a challenge (E3.1) ──────────────────────
+
+  async getCriteriaForChallenge(challengeId: string) {
+    const challenge = await this.challengeRepository.findById(challengeId);
+    if (!challenge) throw new NotFoundException('Reto no encontrado');
+    return this.challengeRepository.getCriteriaForChallenge(challengeId);
+  }
+
   async finalizePodium(
     challengeId: string,
     dto: FinalizePodiumDto,

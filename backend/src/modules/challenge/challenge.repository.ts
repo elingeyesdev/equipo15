@@ -925,4 +925,63 @@ export class ChallengeRepository {
       evaluatedAt: idea.evaluations[0]?.createdAt ?? null,
     }));
   }
+
+  // ─── Judge Eval Form: Get active criteria for a challenge (E3.1) ───────────
+
+  async getCriteriaForChallenge(challengeId: string) {
+    const challenge = await this.prisma.challenge.findUnique({
+      where: { id: challengeId },
+      select: { evaluationCriteria: true },
+    });
+
+    if (!challenge || !challenge.evaluationCriteria) {
+      return [];
+    }
+
+    // evaluationCriteria is stored as JSON array of objects
+    const criteriaList = challenge.evaluationCriteria as any[];
+    
+    if (!Array.isArray(criteriaList)) {
+      return [];
+    }
+
+    // Filter only enabled criteria and map to required format
+    const activeCriteria = criteriaList
+      .filter((c: any) => c.enabled !== false && c.weight > 0)
+      .map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        weight: c.weight || 0,
+      }));
+
+    // Sync to Criteria table to ensure foreign key integrity for EvaluationScore
+    if (activeCriteria.length > 0) {
+      await Promise.all(
+        activeCriteria.map(async (c: any) => {
+          if (!c.id) return;
+          try {
+            await this.prisma.criteria.upsert({
+              where: { id: c.id },
+              create: {
+                id: c.id,
+                challengeId: challengeId,
+                name: c.name,
+                weight: c.weight,
+                isActive: true,
+              },
+              update: {
+                name: c.name,
+                weight: c.weight,
+                isActive: true,
+              },
+            });
+          } catch (e) {
+            this.logger.error(`Error syncing criterion ${c.id}:`, e);
+          }
+        })
+      );
+    }
+
+    return activeCriteria.sort((a, b) => a.name.localeCompare(b.name));
+  }
 }

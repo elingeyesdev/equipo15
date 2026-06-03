@@ -509,7 +509,7 @@ export const JudgeEvaluationView = () => {
 
   const handleCardClick = (idea: JudgeIdeaItem) => {
     if (!idea.evaluated) {
-      navigate(`/dashboard/judge/evaluation/${idea.challengeId}`);
+      navigate(`/dashboard/judge/evaluation/${idea.challengeId}/idea/${idea.id}`);
     }
   };
 

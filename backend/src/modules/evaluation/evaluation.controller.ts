@@ -6,6 +6,7 @@ import {
   Param,
   UseGuards,
   Request,
+  NotFoundException,
 } from '@nestjs/common';
 import { EvaluationService } from './evaluation.service';
 import { CreateEvaluationDto } from './dtos/create-evaluation.dto';
@@ -13,10 +14,14 @@ import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/guards/roles.decorator';
 import type { AuthenticatedRequest } from '../../common/types/authenticated-request.interface';
+import { UserService } from '../user/user.service';
 
 @Controller('evaluations')
 export class EvaluationsController {
-  constructor(private readonly evaluationService: EvaluationService) {}
+  constructor(
+    private readonly evaluationService: EvaluationService,
+    private readonly userService: UserService,
+  ) {}
 
   @Post()
   @UseGuards(FirebaseAuthGuard, RolesGuard)
@@ -25,9 +30,12 @@ export class EvaluationsController {
     @Body() createEvaluationDto: CreateEvaluationDto,
     @Request() req: AuthenticatedRequest,
   ) {
+    const user = await this.userService.findByUid(req.user.uid);
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
     return this.evaluationService.evaluateIdea({
       ...createEvaluationDto,
-      judgeId: req.user.uid,
+      judgeId: user.id,
     });
   }
 

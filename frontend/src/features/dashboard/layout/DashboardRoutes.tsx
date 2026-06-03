@@ -21,6 +21,7 @@ const ChallengeVinculacionView = lazy(() => import('../views/company/ChallengeVi
 const JudgeInboxView = lazy(() => import('../views/judge').then(m => ({ default: m.JudgeInboxView })));
 const JudgeEvaluationView = lazy(() => import('../views/judge').then(m => ({ default: m.JudgeEvaluationView })));
 const JudgeHistoryView = lazy(() => import('../views/judge').then(m => ({ default: m.JudgeHistoryView })));
+const JudgeIdeaFormView = lazy(() => import('../views/judge/JudgeIdeaFormView'));
 
 const DashboardIndexRedirect = () => {
   const { userProfile } = useAuth();
@@ -54,6 +55,7 @@ export const DashboardRoutes = () => {
 
           <Route path="judge/inbox" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeInboxView /></WithRoleGuard>} />
           <Route path="judge/evaluation/:challengeId?" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeEvaluationView /></WithRoleGuard>} />
+          <Route path="judge/evaluation/:challengeId/idea/:ideaId" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeIdeaFormView /></WithRoleGuard>} />
           <Route path="judge/history" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeHistoryView /></WithRoleGuard>} />
 
           <Route path="/" element={<DashboardIndexRedirect />} />
