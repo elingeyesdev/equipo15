@@ -186,7 +186,7 @@ export class ChallengeRepository {
     this.logger.log(`Prisma Create Challenge by Author: ${authorId}`);
     this.logger.log(`Faculty ID to connect: ${facultyId}`);
 
-    return this.prisma.challenge.create({
+    const created = await this.prisma.challenge.create({
       data: {
         ...(challengeData as Prisma.ChallengeCreateInput),
         author: {
@@ -195,6 +195,10 @@ export class ChallengeRepository {
         ...(facultyId ? { faculty: { connect: { id: facultyId } } } : {}),
       },
     });
+
+    // Sync criteria to official table on create
+    await this.syncCriteriaToTable(created.id, created.evaluationCriteria);
+    return created;
   }
 
   async update(id: string, data: Partial<Challenge>): Promise<Challenge> {
@@ -204,7 +208,7 @@ export class ChallengeRepository {
     this.logger.log(`Prisma Update Challenge ID: ${id}`);
     this.logger.log(`Faculty ID to connect: ${facultyId}`);
 
-    return this.prisma.challenge.update({
+    const updated = await this.prisma.challenge.update({
       where: { id },
       data: {
         ...(challengeData as Prisma.ChallengeUpdateInput),
@@ -215,6 +219,50 @@ export class ChallengeRepository {
           : {}),
       },
     });
+
+    // Sync criteria to official table on update
+    await this.syncCriteriaToTable(updated.id, updated.evaluationCriteria);
+    return updated;
+  }
+
+  /**
+   * Sync evaluationCriteria JSON → official `criteria` table.
+   * This guarantees FK integrity for EvaluationScore at write time,
+   * not at read time (GET /criteria).
+   */
+  private async syncCriteriaToTable(challengeId: string, evaluationCriteria: any) {
+    if (!evaluationCriteria) return;
+    const criteriaList = Array.isArray(evaluationCriteria) ? evaluationCriteria : [];
+    const active = criteriaList.filter((c: any) => c.enabled !== false && c.weight > 0 && c.id);
+
+    if (active.length === 0) return;
+
+    await Promise.all(
+      active.map(async (c: any) => {
+        try {
+          await this.prisma.criteria.upsert({
+            where: { id: c.id },
+            create: {
+              id: c.id,
+              challengeId,
+              name: c.name,
+              description: c.description || null,
+              weight: c.weight,
+              isActive: true,
+            },
+            update: {
+              name: c.name,
+              description: c.description || null,
+              weight: c.weight,
+              isActive: true,
+            },
+          });
+        } catch (err) {
+          this.logger.warn(`syncCriteriaToTable: failed upsert for ${c.id}: ${err}`);
+        }
+      }),
+    );
+    this.logger.log(`Synced ${active.length} criteria to table for challenge ${challengeId}`);
   }
 
   async delete(id: string): Promise<Challenge> {
@@ -904,6 +952,11 @@ export class ChallengeRepository {
             avatarUrl: true,
           },
         },
+        tags: {
+          include: {
+            tag: { select: { name: true } },
+          },
+        },
         evaluations: {
           where: { judgeId: judgeUserId },
           select: {
@@ -927,6 +980,10 @@ export class ChallengeRepository {
       challengeTitle: idea.challenge.title,
       challengeStatus: idea.challenge.status,
       challengeContext: idea.challenge.companyContext,
+      impactArea: (idea as any).impactArea || null,
+      improvementType: (idea as any).improvementType || null,
+      effortLevel: (idea as any).effortLevel || null,
+      tags: idea.tags?.map(t => t.tag.name) || [],
       likesCount: idea.likesCount,
       commentsCount: idea.commentsCount,
       createdAt: idea.createdAt,

@@ -494,6 +494,11 @@ model Idea {
   // Array estático de URLs — aceptable como Json (no se edita concurrentemente)
   multimediaLinks Json?
 
+  // Clasificación de la idea
+  impactArea      String?
+  improvementType String?
+  effortLevel     String?
+
   // [C3] mentorshipHistory JSONB eliminado → tabla MentorshipSession
 
   // Soft delete

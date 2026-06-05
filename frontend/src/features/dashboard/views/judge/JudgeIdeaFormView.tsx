@@ -7,6 +7,20 @@ import BackButton from '../../../../components/common/BackButton';
 import { useAuth } from '../../../../context/AuthContext';
 import InfoTooltip from '../../../../components/common/InfoTooltip';
 
+/* ─── Label Maps ─── */
+const IMPACT_AREA_LABELS: Record<string, string> = {
+  PRODUCTIVITY: 'Productividad', COSTS: 'Costos', CUSTOMERS: 'Clientes',
+  TEAM: 'Equipo', GROWTH: 'Crecimiento', SUSTAINABILITY: 'Sostenibilidad',
+  SOCIAL_IMPACT: 'Impacto Social',
+};
+const IMPROVEMENT_TYPE_LABELS: Record<string, string> = {
+  OPTIMIZES: 'Optimiza', ENHANCES: 'Potencia', EXPANDS: 'Expande', TRANSFORMS: 'Transforma',
+};
+const EFFORT_LEVEL_LABELS: Record<string, string> = {
+  EASY: 'Fácil de Implementar', COORDINATION: 'Requiere Coordinación',
+  DEVELOPMENT: 'Requiere Desarrollo', TRANSFORMATION: 'Requiere Transformación',
+};
+
 /* ─── Animations ─── */
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -48,6 +62,10 @@ interface IdeaItem {
   challengeId: string;
   challengeTitle: string;
   challengeContext: string | null;
+  impactArea?: string | null;
+  improvementType?: string | null;
+  effortLevel?: string | null;
+  tags?: string[];
   likesCount: number;
   commentsCount: number;
   createdAt: string;
@@ -214,6 +232,8 @@ const FormCard = styled.div`
 `;
 
 const FormTitle = styled.h3`
+  display: flex;
+  align-items: center;
   font-size: 16px;
   font-weight: 800;
   color: ${Pista8Theme.secondary};
@@ -577,11 +597,52 @@ const JudgeIdeaFormView: React.FC = () => {
               Idea Finalista
             </IdeaBadge>
 
-            <IdeaTitle>{idea.title}</IdeaTitle>
+            <IdeaTitle style={{ textAlign: 'center' }}>{idea.title}</IdeaTitle>
+
+            {/* ── Classification Badges ── */}
+            {(idea.impactArea || idea.improvementType || idea.effortLevel) && (
+              <div style={{
+                display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center',
+                margin: '12px 0 16px',
+              }}>
+                {idea.impactArea && (
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 20,
+                    padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#166534',
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>
+                    {IMPACT_AREA_LABELS[idea.impactArea] || idea.impactArea}
+                  </span>
+                )}
+                {idea.improvementType && (
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 20,
+                    padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#92400e',
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    {IMPROVEMENT_TYPE_LABELS[idea.improvementType] || idea.improvementType}
+                  </span>
+                )}
+                {idea.effortLevel && (
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 20,
+                    padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#1e40af',
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                    {EFFORT_LEVEL_LABELS[idea.effortLevel] || idea.effortLevel}
+                  </span>
+                )}
+              </div>
+            )}
+
+            <Divider />
 
             {idea.problem === idea.solution ? (
               <>
-                <SectionLabel>Descripción de la Idea</SectionLabel>
+                <SectionLabel>Propuesta</SectionLabel>
                 <SectionContent>{idea.problem}</SectionContent>
               </>
             ) : (
@@ -591,6 +652,24 @@ const JudgeIdeaFormView: React.FC = () => {
                 <Divider />
                 <SectionLabel>Solución propuesta</SectionLabel>
                 <SectionContent>{idea.solution}</SectionContent>
+              </>
+            )}
+
+            {/* ── Tags ── */}
+            {idea.tags && idea.tags.length > 0 && (
+              <>
+                <Divider />
+                <SectionLabel>Etiquetas</SectionLabel>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                  {idea.tags.map((tag, idx) => (
+                    <span key={idx} style={{
+                      background: 'rgba(254,65,10,0.08)', color: Pista8Theme.primary,
+                      borderRadius: 14, padding: '4px 10px', fontSize: 12, fontWeight: 700,
+                    }}>
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
               </>
             )}
 
@@ -639,8 +718,8 @@ const JudgeIdeaFormView: React.FC = () => {
 
           {idea.challengeContext && (
             <ContextBox>
-              <SectionLabel style={{ margin: '0 0 8px' }}>Contexto del Reto</SectionLabel>
-              <SectionContent style={{ margin: 0 }}>{idea.challengeContext}</SectionContent>
+              <SectionLabel style={{ margin: '0 0 8px', textAlign: 'center' }}>Contexto del Reto</SectionLabel>
+              <SectionContent style={{ margin: 0, textAlign: 'center' }}>{idea.challengeContext}</SectionContent>
             </ContextBox>
           )}
         </ContextPanel>
@@ -649,7 +728,7 @@ const JudgeIdeaFormView: React.FC = () => {
         <StickyPanel>
           <FormCard>
             <FormTitle>
-              <span style={{ marginRight: 8 }}>⚖️</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 8 }}><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></svg>
               Formulario de Calificación
             </FormTitle>
 
