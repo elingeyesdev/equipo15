@@ -5,6 +5,7 @@ import { WithRoleGuard } from './WithRoleGuard';
 import { useAuth } from '../../../context/AuthContext';
 import { DashboardSkeleton } from './DashboardSkeleton';
 import AccessConfigPage from '../../admin/AccessConfigPage';
+import NotFoundPage from '../../../components/errors/NotFoundPage';
 
 const AdminStatsView = lazy(() => import('../views/admin').then(m => ({ default: m.AdminStatsView })));
 const AdminClientsView = lazy(() => import('../views/admin').then(m => ({ default: m.AdminClientsView })));
@@ -59,7 +60,7 @@ export const DashboardRoutes = () => {
           <Route path="judge/history" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeHistoryView /></WithRoleGuard>} />
 
           <Route path="/" element={<DashboardIndexRedirect />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
           {import.meta.env.DEV && <Route path="dev/whitelist" element={<AccessConfigPage />} />}
         </Routes>
       </Suspense>

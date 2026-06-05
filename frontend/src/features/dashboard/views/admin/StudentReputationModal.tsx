@@ -137,6 +137,13 @@ const MetricsGrid = styled.div`
   > * {
     flex: 1 1 120px;
   }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    > * {
+      flex: 1 1 auto;
+    }
+  }
 `;
 
 const MetricCard = styled.div<{ $accent: string }>`
@@ -665,10 +672,8 @@ const IdeaDetailModal = ({ idea, onClose }: { idea: ReputationIdea; onClose: () 
         <DetailText>{idea.problem}</DetailText>
       </DetailSection>
 
-      <DetailSection>
-        <DetailLabel>Solución</DetailLabel>
-        <DetailText>{idea.solution}</DetailText>
-      </DetailSection>
+
+
 
       {idea.tags.length > 0 && (
         <DetailSection>

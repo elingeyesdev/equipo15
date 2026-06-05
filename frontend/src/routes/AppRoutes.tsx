@@ -9,6 +9,7 @@ import MyFavoritesPage from '../pages/MyFavoritesPage';
 import IdeationWall from '../features/dashboard/IdeationWall';
 import { DashboardRoutes } from '../features/dashboard/layout/DashboardRoutes';
 import RunwayLoader from '../components/common/RunwayLoader';
+import NotFoundPage from '../components/errors/NotFoundPage';
 
 const RoleRouter = () => {
   const { user, userProfile, refetchProfile } = useAuth();
@@ -31,7 +32,7 @@ const RoleRouter = () => {
         <Route path="mis-ideas" element={<MyIdeasPage />} />
         <Route path="favoritos" element={<MyFavoritesPage />} />
         <Route path="/" element={<IdeationWall />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     );
   }
@@ -74,7 +75,7 @@ const AppContent = () => {
       <Route path="/reto/privado/:challengeId" element={<PrivateChallengeRedirect />} />
       <Route path="/dashboard/*" element={<RoleRouter />} />
       <Route path="/" element={<Navigate to={user ? '/dashboard' : '/auth'} />} />
-      <Route path="*" element={<Navigate to={user ? '/dashboard' : '/auth'} />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };

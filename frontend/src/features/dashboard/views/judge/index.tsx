@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled, { keyframes, css } from 'styled-components';
 import { Pista8Theme } from '../../../../config/theme';
@@ -395,7 +395,7 @@ export const JudgeInboxView = () => {
             </svg>
           </EmptyIcon>
           <EmptyTitle>No tienes retos asignados</EmptyTitle>
-          <EmptyText>Cuando el administrador te asigne como juez a un reto, aparecerá aquí.</EmptyText>
+          <EmptyText>Cuando la empresa te asigne como juez a un reto, aparecerá aquí.</EmptyText>
         </EmptyState>
       ) : (
         <Grid>

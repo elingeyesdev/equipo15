@@ -1,6 +1,6 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
-import { fadeUp, FEEDBACK_PALETTE } from './CommonStyles';
+import { fadeUp } from './CommonStyles';
 
 
 export const Hangar = styled.section`
@@ -49,7 +49,8 @@ export const HangarSub = styled.p`
 export const ToastViewport = styled.div`
   position: fixed;
   top: 24px;
-  right: 24px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 140;
   display: flex;
   flex-direction: column;
@@ -59,18 +60,16 @@ export const ToastViewport = styled.div`
 export const ToastCard = styled.div<{ $tone: string }>`
   min-width: 320px;
   padding: 16px 18px;
-  border-radius: 18px;
+  border-radius: 14px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
   animation: ${fadeUp} 0.3s ease both;
-  ${({ $tone }) => css`
-    border: 1px solid ${FEEDBACK_PALETTE[$tone as any].border};
-    background: ${FEEDBACK_PALETTE[$tone as any].background};
-    color: ${FEEDBACK_PALETTE[$tone as any].color};
-  `}
+  background: #1a1f22;
+  color: white;
+  border: 1px solid rgba(254,65,10,0.25);
 `;
 
 export const ToastGlyph = styled.span`

@@ -206,12 +206,22 @@ export const useChallengeSelection = () => {
       if (payload.challengeId === selectedChallenge.id) {
         setChallengeStats((prev: any) => {
           if (!prev) return prev;
+          const isAnon = payload.isAnonymous || false;
+          const authorName = isAnon
+            ? 'Participante'
+            : (payload.author?.nickname || payload.author?.displayName || 'Participante');
           const newIdea = {
             id: payload.id ?? payload._id,
             title: payload.title || 'Idea sin título',
             likesCount: 0,
             commentsCount: 0,
-            impact: 0
+            impact: 0,
+            authorName,
+            author: {
+              name: authorName,
+              nickname: isAnon ? undefined : (payload.author?.nickname || undefined),
+              avatar: isAnon ? undefined : (payload.author?.avatarUrl || undefined),
+            }
           };
           return {
             ...prev,

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
-import { Challenge, Prisma, UserRole } from '@prisma/client';
+import { Challenge, Prisma, UserRole, IdeaStatus } from '@prisma/client';
 
 @Injectable()
 export class ChallengeRepository {
@@ -319,21 +319,22 @@ export class ChallengeRepository {
   }
 
   async getChallengeImpactStats(challengeId: string) {
+    const activeStatuses: IdeaStatus[] = [IdeaStatus.PUBLISHED, IdeaStatus.FINALIST, IdeaStatus.WINNER];
     const [agg, ideas, allAuthors, topIdeas] = await Promise.all([
       this.prisma.idea.aggregate({
-        where: { challengeId, status: 'PUBLISHED' },
+        where: { challengeId, status: { in: activeStatuses }, deletedAt: null },
         _count: true,
         _sum: { likesCount: true, commentsCount: true },
       }),
       this.prisma.idea.findMany({
-        where: { challengeId, status: 'PUBLISHED' },
+        where: { challengeId, status: { in: activeStatuses }, deletedAt: null },
         select: {
           author: { select: { studentProfile: { select: { facultyId: true } } } },
         },
       }),
       this.prisma.user.findMany({
         where: {
-          ideas: { some: { challengeId, status: 'PUBLISHED' } },
+          ideas: { some: { challengeId, status: { in: activeStatuses }, deletedAt: null } },
         },
         select: {
           id: true,
@@ -344,7 +345,7 @@ export class ChallengeRepository {
         },
       }),
       this.prisma.idea.findMany({
-        where: { challengeId, status: 'PUBLISHED' },
+        where: { challengeId, status: { in: activeStatuses }, deletedAt: null },
         orderBy: [{ likesCount: 'desc' }, { commentsCount: 'desc' }],
         take: 5,
         select: {
@@ -352,11 +353,13 @@ export class ChallengeRepository {
           title: true,
           likesCount: true,
           commentsCount: true,
+          isAnonymous: true,
           author: {
             select: {
               nickname: true,
               displayName: true,
               email: true,
+              avatarUrl: true,
             },
           },
         },
@@ -383,11 +386,13 @@ export class ChallengeRepository {
         };
       }),
       topIdeas: topIdeas.map((i) => {
-        const authorName =
-          i.author?.nickname ||
-          i.author?.displayName ||
-          i.author?.email?.split('@')[0] ||
-          'Participante';
+        const isAnon = i.isAnonymous;
+        const authorName = isAnon
+          ? 'Participante'
+          : (i.author?.nickname ||
+             i.author?.displayName ||
+             i.author?.email?.split('@')[0] ||
+             'Participante');
         return {
           id: i.id,
           title: i.title,
@@ -395,6 +400,11 @@ export class ChallengeRepository {
           commentsCount: i.commentsCount || 0,
           impact: (i.likesCount || 0) + (i.commentsCount || 0),
           authorName,
+          author: {
+            name: authorName,
+            nickname: isAnon ? undefined : (i.author?.nickname || undefined),
+            avatar: isAnon ? undefined : (i.author?.avatarUrl || undefined),
+          },
         };
       }),
     };

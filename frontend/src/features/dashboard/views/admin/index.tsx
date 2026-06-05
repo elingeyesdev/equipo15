@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { breakpoints } from '../../../../config/theme';
 import { toast } from 'sonner';
 import { useAuth } from '../../../../context/AuthContext';
@@ -12,10 +12,43 @@ import { StudentReputationModal } from './StudentReputationModal';
 
 export { AdminStatsView } from './AdminStatsView';
 
+const fadeUp = keyframes`
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+
 const ViewShell = styled.div`
   display: flex;
   flex-direction: column;
   gap: 18px;
+  animation: ${fadeUp} 0.4s ease both;
+`;
+
+const EvalBtn = styled.button<{ $tooltipText?: string }>`
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(254, 65, 10, 0.18);
+  background: #fe410a;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  color: white;
+  box-shadow: 0 2px 8px rgba(254, 65, 10, 0.18);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(254, 65, 10, 0.28);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(254, 65, 10, 0.18);
+  }
+
+  ${premiumTooltip}
 `;
 
 const Panel = styled.section`
@@ -430,6 +463,11 @@ export const AdminUsersView = () => {
     COMPANY: 'Empresa',
     JUDGE: 'Juez',
     USER: 'Estudiante',
+    admin: 'Admin',
+    company: 'Empresa',
+    judge: 'Juez',
+    student: 'Estudiante',
+    user: 'Estudiante',
   };
 
   const ROLE_TONES: Record<string, 'green' | 'amber' | 'slate'> = {
@@ -437,6 +475,11 @@ export const AdminUsersView = () => {
     COMPANY: 'green',
     JUDGE: 'slate',
     USER: 'green',
+    admin: 'amber',
+    company: 'green',
+    judge: 'slate',
+    student: 'green',
+    user: 'green',
   };
 
   useEffect(() => {
@@ -627,38 +670,21 @@ export const AdminUsersView = () => {
                   </TD>
                   <TD>
                     {user.role === 'USER' && (
-                      <button
+                      <EvalBtn
                         type="button"
                         onClick={() => setReputationUserId(user.id)}
-                        title="Ver perfil de reputación"
-                        style={{
-                          width: 36, height: 36, borderRadius: 10,
-                          border: '1px solid rgba(254,65,10,0.18)',
-                          background: '#fe410a', cursor: 'pointer',
-                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                          transition: 'all 0.15s ease',
-                          color: 'white',
-                          boxShadow: '0 2px 8px rgba(254,65,10,0.18)',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-1px)';
-                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(254,65,10,0.28)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 2px 8px rgba(254,65,10,0.18)';
-                        }}
+                        $tooltipText="Ver perfil de reputación"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                           <circle cx="12" cy="12" r="3" />
                         </svg>
-                      </button>
+                      </EvalBtn>
                     )}
                   </TD>
                   <TD>
                     <select
-                      value={user.role}
+                      value={user.role?.toUpperCase()}
                       onChange={e => handleRoleChange(user.id, user.displayName, e.target.value)}
                       style={{
                         padding: '8px 12px', borderRadius: 10,
@@ -669,7 +695,9 @@ export const AdminUsersView = () => {
                     >
                       <option value="ADMIN">Admin</option>
                       <option value="COMPANY">Empresa</option>
-                      <option value="JUDGE">Juez</option>
+                      {user.role?.toUpperCase() === 'JUDGE' && (
+                        <option value="JUDGE">Juez</option>
+                      )}
                       <option value="USER">Estudiante</option>
                     </select>
                   </TD>

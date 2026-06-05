@@ -388,14 +388,55 @@ const SearchEmptyResult = styled.div`
   font-size: 12px;
 `;
 
-const EmptyState = styled.div`
-  border: 1px dashed rgba(72, 80, 84, 0.28);
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 22px;
+const EmptyStateContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 280px;
   text-align: center;
-  color: ${colors.textMuted};
+  padding: 24px;
 `;
+
+const EmptyStateIcon = styled.div`
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: ${Pista8Theme.primary}12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  color: ${Pista8Theme.primary};
+`;
+
+const EmptyStateText = styled.p`
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #64748b;
+  line-height: 1.5;
+  max-width: 280px;
+`;
+
+const EmptyState = ({ message, type }: { message: string; type: 'chart' | 'activity' }) => (
+  <EmptyStateContainer>
+    <EmptyStateIcon>
+      {type === 'chart' ? (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+      ) : (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
+      )}
+    </EmptyStateIcon>
+    <EmptyStateText>{message}</EmptyStateText>
+  </EmptyStateContainer>
+);
 
 const normalizeDateLabel = (rawDate: string) => {
   const date = new Date(rawDate);
@@ -688,7 +729,7 @@ export const CompanyStatsView = () => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <EmptyState>No hay ideas publicas para graficar por facultad.</EmptyState>
+            <EmptyState message="No hay ideas públicas para graficar por facultad." type="chart" />
           )}
         </ChartCard>
 
@@ -710,7 +751,7 @@ export const CompanyStatsView = () => {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <EmptyState>No hay interacciones en los ultimos 30 dias.</EmptyState>
+            <EmptyState message="No hay interacciones en los últimos 30 días." type="activity" />
           )}
         </ChartCard>
       </ChartsGrid>

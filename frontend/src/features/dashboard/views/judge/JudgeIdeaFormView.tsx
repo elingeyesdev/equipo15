@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled, { keyframes, css } from 'styled-components';
 import { Pista8Theme } from '../../../../config/theme';
@@ -28,11 +28,7 @@ const pulse = keyframes`
   50%      { transform: scale(1.04); }
 `;
 
-const checkPop = keyframes`
-  0%   { transform: scale(0); opacity: 0; }
-  60%  { transform: scale(1.2); }
-  100% { transform: scale(1); opacity: 1; }
-`;
+
 
 /* ─── Types ─── */
 interface CriterionItem {
@@ -406,37 +402,7 @@ const SubmitBtn = styled.button<{ $loading?: boolean }>`
   ${p => !p.$loading && css`animation: ${pulse} 3s ease-in-out infinite;`}
 `;
 
-/* ─── Success Overlay ─── */
-const SuccessOverlay = styled.div`
-  position: fixed;
-  inset: 0;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: ${fadeIn} 0.3s ease;
-`;
 
-const SuccessCard = styled.div`
-  background: white;
-  border-radius: 24px;
-  padding: 40px 48px;
-  text-align: center;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-`;
-
-const CheckCircle = styled.div`
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 16px;
-  animation: ${checkPop} 0.5s ease both;
-`;
 
 const LoadingShimmer = styled.div`
   background: linear-gradient(90deg, #f1f3f5 25%, #e5e7eb 50%, #f1f3f5 75%);
@@ -466,10 +432,8 @@ const JudgeIdeaFormView: React.FC = () => {
   const [touchedSliders, setTouchedSliders] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [readOnly, setReadOnly] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const toastRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!challengeId || !ideaId) return;
@@ -524,14 +488,13 @@ const JudgeIdeaFormView: React.FC = () => {
     setSubmitting(true);
     setError(null);
     try {
-      const firebaseUid = userProfile.uid || (userProfile as any).firebaseUid || '';
+      const firebaseUid = userProfile.firebaseUid || userProfile.id || '';
       await challengeService.submitEvaluation({
         ideaId: idea.id,
         judgeId: firebaseUid,
         feedback: feedback.trim(),
         scores: criteria.map(c => ({ criterionId: c.id, score: scores[c.id] || 5 })),
       });
-      setSuccess(true);
       setReadOnly(true);
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Ocurrió un error al guardar la evaluación.';

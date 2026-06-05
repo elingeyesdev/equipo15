@@ -135,7 +135,7 @@ const MyIdeasView: React.FC = () => {
               {sortedIdeas.map((idea) => (
                 <S.Card key={idea.id}>
                 <S.CardBadge>
-                  {idea.challengeTitle || 'Reto'}
+                  {(idea as any).challenge?.title || idea.challengeTitle || 'Reto'}
                 </S.CardBadge>
                 <S.CardTitle>{idea.title}</S.CardTitle>
                 <S.CardFooter>

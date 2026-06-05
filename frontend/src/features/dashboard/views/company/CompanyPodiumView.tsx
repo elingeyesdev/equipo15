@@ -395,6 +395,7 @@ const PickChallengeView = styled.div`
   padding: 60px 20px;
   text-align: center;
   align-items: center;
+  animation: ${fadeUp} 0.4s ease both;
 `;
 
 const PickTitle = styled.h2`
