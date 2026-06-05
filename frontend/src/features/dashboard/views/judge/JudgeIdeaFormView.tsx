@@ -5,6 +5,7 @@ import { Pista8Theme } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import BackButton from '../../../../components/common/BackButton';
 import { useAuth } from '../../../../context/AuthContext';
+import InfoTooltip from '../../../../components/common/InfoTooltip';
 
 /* ─── Animations ─── */
 const fadeIn = keyframes`
@@ -675,7 +676,12 @@ const JudgeIdeaFormView: React.FC = () => {
                 {criteria.map((criterion, idx) => (
                   <CriterionBlock key={criterion.id} $index={idx}>
                     <CriterionHeader>
-                      <CriterionName>{criterion.name}</CriterionName>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <CriterionName>{criterion.name}</CriterionName>
+                        {criterion.description && (
+                          <InfoTooltip text={criterion.description} size={16} width={260} />
+                        )}
+                      </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <CriterionWeight>Peso: {criterion.weight}%</CriterionWeight>
                         <ScoreDisplay $score={scores[criterion.id] || 5}>

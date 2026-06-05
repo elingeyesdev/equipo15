@@ -422,6 +422,7 @@ model Criteria {
   id          String   @id @default(uuid())
   challengeId String
   name        String
+  description String?
   // CHECK (weight >= 1 AND weight <= 100) — en migration_v4.sql
   // El service además valida SUM(weight) = 100 antes de publicar el reto
   weight      Int

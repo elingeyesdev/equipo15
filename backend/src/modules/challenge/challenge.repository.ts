@@ -951,6 +951,7 @@ export class ChallengeRepository {
       .map((c: any) => ({
         id: c.id,
         name: c.name,
+        description: c.description || '',
         weight: c.weight || 0,
       }));
 
@@ -966,11 +967,13 @@ export class ChallengeRepository {
                 id: c.id,
                 challengeId: challengeId,
                 name: c.name,
+                description: c.description,
                 weight: c.weight,
                 isActive: true,
               },
               update: {
                 name: c.name,
+                description: c.description,
                 weight: c.weight,
                 isActive: true,
               },

@@ -22,6 +22,13 @@ export interface ChallengePayload {
   evaluationCriteria?: EvaluationCriterion[];
 }
 
+export interface CriterionItem {
+  id: string;
+  name: string;
+  description?: string;
+  weight: number;
+}
+
 export interface CompanyChallengeOption {
   id: string;
   title: string;

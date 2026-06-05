@@ -669,6 +669,7 @@ export const AdminUsersView = () => {
                     >
                       <option value="ADMIN">Admin</option>
                       <option value="COMPANY">Empresa</option>
+                      <option value="JUDGE">Juez</option>
                       <option value="USER">Estudiante</option>
                     </select>
                   </TD>
