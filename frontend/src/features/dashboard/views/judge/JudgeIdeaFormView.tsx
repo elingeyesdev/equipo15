@@ -38,6 +38,7 @@ const checkPop = keyframes`
 interface CriterionItem {
   id: string;
   name: string;
+  description?: string;
   weight: number;
 }
 
@@ -462,9 +463,11 @@ const JudgeIdeaFormView: React.FC = () => {
   const [criteria, setCriteria] = useState<CriterionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [scores, setScores] = useState<Record<string, number>>({});
+  const [touchedSliders, setTouchedSliders] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [readOnly, setReadOnly] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const toastRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -503,12 +506,21 @@ const JudgeIdeaFormView: React.FC = () => {
     ? criteria.reduce((sum, c) => sum + (scores[c.id] || 0) * (c.weight / 100), 0)
     : 0;
 
+  // Form validation: all sliders touched + feedback >= 10 words
+  const missingSlidersCount = criteria.length > 0 ? criteria.length - touchedSliders.size : 0;
+  const allSlidersTouched = missingSlidersCount === 0;
+  const feedbackWordsCount = feedback.trim() ? feedback.trim().split(/\s+/).length : 0;
+  const feedbackValid = feedbackWordsCount >= 10;
+  const canSubmit = allSlidersTouched && feedbackValid && criteria.length > 0 && !submitting && !readOnly;
+
   const handleScoreChange = (criterionId: string, value: number) => {
+    if (readOnly) return;
     setScores(prev => ({ ...prev, [criterionId]: value }));
+    setTouchedSliders(prev => new Set(prev).add(criterionId));
   };
 
   const handleSubmit = async () => {
-    if (!idea || !userProfile) return;
+    if (!idea || !userProfile || !canSubmit) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -516,13 +528,11 @@ const JudgeIdeaFormView: React.FC = () => {
       await challengeService.submitEvaluation({
         ideaId: idea.id,
         judgeId: firebaseUid,
-        feedback: feedback.trim() || undefined,
+        feedback: feedback.trim(),
         scores: criteria.map(c => ({ criterionId: c.id, score: scores[c.id] || 5 })),
       });
       setSuccess(true);
-      toastRef.current = setTimeout(() => {
-        navigate(`/dashboard/judge/evaluation/${challengeId}`);
-      }, 2200);
+      setReadOnly(true);
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Ocurrió un error al guardar la evaluación.';
       setError(Array.isArray(msg) ? msg.join(' • ') : msg);
@@ -556,18 +566,31 @@ const JudgeIdeaFormView: React.FC = () => {
 
   return (
     <PageWrapper>
-      {success && (
-        <SuccessOverlay>
-          <SuccessCard>
-            <CheckCircle>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </CheckCircle>
-            <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 900, color: Pista8Theme.secondary }}>¡Evaluación Enviada!</h2>
-            <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>Tu calificación ha sido guardada correctamente.<br />Redirigiendo...</p>
-          </SuccessCard>
-        </SuccessOverlay>
+      {readOnly && (
+        <div style={{
+          background: '#dcfce7',
+          border: '1.5px solid #86efac',
+          borderRadius: 14,
+          padding: '14px 20px',
+          marginBottom: 20,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          animation: 'fadeIn 0.3s ease',
+        }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%', background: '#22c55e',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div>
+            <p style={{ margin: 0, fontWeight: 800, fontSize: 14, color: '#166534' }}>Evaluación enviada con éxito</p>
+            <p style={{ margin: '2px 0 0', fontSize: 12, color: '#15803d' }}>Esta vista es de solo lectura. Tu calificación ya fue registrada.</p>
+          </div>
+        </div>
       )}
 
       <TopBar>
@@ -698,6 +721,8 @@ const JudgeIdeaFormView: React.FC = () => {
                         value={scores[criterion.id] || 5}
                         $score={scores[criterion.id] || 5}
                         onChange={e => handleScoreChange(criterion.id, Number(e.target.value))}
+                        disabled={readOnly}
+                        style={readOnly ? { opacity: 0.5, cursor: 'not-allowed', filter: 'grayscale(1)' } : {}}
                       />
                     </SliderWrapper>
                     <ScoreLabels>
@@ -720,16 +745,27 @@ const JudgeIdeaFormView: React.FC = () => {
               </>
             )}
 
-            <SectionLabel style={{ margin: '0 0 8px' }}>Comentario / Retroalimentación (opcional)</SectionLabel>
+            <SectionLabel style={{ margin: '0 0 8px' }}>
+              Justificación del Veredicto <span style={{ color: Pista8Theme.primary, fontWeight: 900 }}>*</span>
+            </SectionLabel>
             <FeedbackTextarea
-              placeholder="Describe tus observaciones sobre esta idea de manera constructiva..."
+              placeholder="Explica de manera constructiva tu valoración de esta idea. Mínimo 10 palabras..."
               value={feedback}
-              onChange={e => setFeedback(e.target.value)}
+              onChange={e => { if (!readOnly) setFeedback(e.target.value); }}
               maxLength={1000}
+              readOnly={readOnly}
+              style={readOnly ? { background: '#f9fafb', color: '#6b7280', cursor: 'default' } : {}}
             />
-            <p style={{ fontSize: 11, color: '#9ca3af', textAlign: 'right', margin: '4px 0 16px' }}>
-              {feedback.length}/1000
-            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', margin: '4px 0 16px' }}>
+              {!readOnly && !feedbackValid && feedback.length > 0 && (
+                <span style={{ fontSize: 11, color: '#ef4444' }}>Mínimo 10 palabras (llevas {feedbackWordsCount})</span>
+              )}
+              {!readOnly && feedback.length === 0 && (
+                <span style={{ fontSize: 11, color: '#f59e0b' }}>Campo obligatorio</span>
+              )}
+              {(readOnly || (feedbackValid)) && <span style={{ fontSize: 11, color: '#22c55e' }}>¡Justificación válida! ({feedbackWordsCount} palabras)</span>}
+              <span style={{ fontSize: 11, color: '#9ca3af' }}>{feedback.length}/1000 caracteres</span>
+            </div>
 
             {error && (
               <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#991b1b' }}>
@@ -737,28 +773,51 @@ const JudgeIdeaFormView: React.FC = () => {
               </div>
             )}
 
-            <SubmitBtn
-              onClick={handleSubmit}
-              disabled={submitting || criteria.length === 0 || success}
-              $loading={submitting}
-            >
-              {submitting ? (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+            {!readOnly && !canSubmit && criteria.length > 0 && (
+              <div style={{
+                background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10,
+                padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#b45309',
+                display: 'flex', flexDirection: 'column', gap: 4
+              }}>
+                <strong style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
-                  Guardando...
-                </>
-              ) : (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                    <polyline points="22 4 12 14.01 9 11.01" />
-                  </svg>
-                  Enviar Evaluación
-                </>
-              )}
-            </SubmitBtn>
+                  Para habilitar el envío debes:
+                </strong>
+                {!allSlidersTouched && (
+                  <span style={{ marginLeft: 20 }}>• Calificar todos los criterios (te {missingSlidersCount === 1 ? 'falta' : 'faltan'} {missingSlidersCount} por mover).</span>
+                )}
+                {!feedbackValid && (
+                  <span style={{ marginLeft: 20 }}>• Escribir al menos 10 palabras en la justificación.</span>
+                )}
+              </div>
+            )}
+
+            {!readOnly && (
+              <SubmitBtn
+                onClick={handleSubmit}
+                disabled={!canSubmit}
+                $loading={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                    </svg>
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                      <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                    Enviar Evaluación
+                  </>
+                )}
+              </SubmitBtn>
+            )}
           </FormCard>
         </StickyPanel>
       </TwoColumns>
