@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ChallengeRepository } from './challenge.repository';
-import { Challenge } from '@prisma/client';
+import { Challenge, IdeaStatus, WinnerCategory } from '@prisma/client';
 import { CreateChallengeDto } from './dtos/create-challenge.dto';
 import { UpdateChallengeDto } from './dtos/update-challenge.dto';
 import { FinalizePodiumDto, RankingCategory } from './dtos/finalize-podium.dto';
@@ -291,6 +291,55 @@ export class ChallengeService {
     return this.challengeRepository.getCriteriaForChallenge(challengeId);
   }
 
+  async getPodiumStatus(challengeId: string, firebaseUid: string) {
+    const user = await this.userService.findByUid(firebaseUid);
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const challenge = await this.challengeRepository.findById(challengeId);
+    if (!challenge) throw new NotFoundException('Reto no encontrado');
+
+    if (challenge.authorId !== user.id) {
+      throw new ForbiddenException(
+        'No tienes permisos para consultar el estado del podio de este reto.',
+      );
+    }
+
+    const stats = await this.challengeRepository.getPodiumStatus(challengeId);
+
+    let phase: 'SELECT_FINALISTS' | 'AWAITING_JUDGES' | 'COMPLETED' = 'SELECT_FINALISTS';
+    if (challenge.status === 'CLOSED') {
+      phase = 'COMPLETED';
+    } else if (challenge.status === 'EVALUATING') {
+      phase = 'AWAITING_JUDGES';
+    }
+
+    return {
+      challengeId,
+      status: challenge.status,
+      phase,
+      podiumSize: challenge.podiumSize,
+      ...stats,
+      canGenerateResults:
+        challenge.status === 'EVALUATING' && stats.evaluationCount > 0,
+    };
+  }
+
+  async getPodiumIdeas(challengeId: string, firebaseUid: string) {
+    const user = await this.userService.findByUid(firebaseUid);
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    const challenge = await this.challengeRepository.findById(challengeId);
+    if (!challenge) throw new NotFoundException('Reto no encontrado');
+
+    if (challenge.authorId !== user.id) {
+      throw new ForbiddenException(
+        'No tienes permisos para consultar las ideas del podio de este reto.',
+      );
+    }
+
+    return this.challengeRepository.getPodiumIdeas(challengeId);
+  }
+
   async finalizePodium(
     challengeId: string,
     dto: FinalizePodiumDto,
@@ -314,47 +363,201 @@ export class ChallengeService {
       throw new ForbiddenException('No hay ideas en este reto para finalizar.');
     }
 
-    const sortedIdeas = [...ideas].sort((a, b) => {
-      let valA = 0;
-      let valB = 0;
+    const isGeneratingResults = dto.category === RankingCategory.VOTES;
+    const isEvaluationPhase = challenge.status === 'EVALUATING';
 
-      if (dto.category === RankingCategory.LIKES) {
-        valA = a.likesCount || 0;
-        valB = b.likesCount || 0;
-      } else if (dto.category === RankingCategory.COMMENTS) {
-        valA = a.commentsCount || 0;
-        valB = b.commentsCount || 0;
-      } else if (dto.category === RankingCategory.VOTES) {
-        valA = a.finalScore || 0;
-        valB = b.finalScore || 0;
+    if (isGeneratingResults && !isEvaluationPhase) {
+      throw new ForbiddenException(
+        'Primero debes enviar el lote de finalistas a jueces antes de generar resultados técnicos.',
+      );
+    }
+
+    if (!isGeneratingResults && isEvaluationPhase) {
+      throw new ForbiddenException(
+        'Este reto ya está en evaluación. Ahora corresponde generar resultados con las rúbricas de los jueces.',
+      );
+    }
+
+    let scoreSummary: Awaited<ReturnType<typeof this.recalculateFinalScores>> | null =
+      null;
+    let sortedIdeas: Awaited<
+      ReturnType<ChallengeRepository['getRankedIdeasByFinalScore']>
+    > = [];
+
+    if (isGeneratingResults) {
+      scoreSummary = await this.recalculateFinalScores(challengeId);
+      if (scoreSummary.evaluationsCount === 0) {
+        throw new ForbiddenException(
+          'Todavía no hay evaluaciones de jueces para calcular el puntaje técnico.',
+        );
       }
 
-      return valB - valA;
-    });
+      sortedIdeas = await this.challengeRepository.getRankedIdeasByFinalScore(
+        challengeId,
+        [IdeaStatus.FINALIST],
+      );
+
+      if (sortedIdeas.length === 0) {
+        sortedIdeas = await this.challengeRepository.getRankedIdeasByFinalScore(
+          challengeId,
+          [IdeaStatus.FINALIST, IdeaStatus.PUBLISHED, IdeaStatus.WINNER],
+        );
+      }
+    } else {
+      sortedIdeas = [...ideas].sort((a, b) => {
+        let valA = 0;
+        let valB = 0;
+
+        if (dto.category === RankingCategory.LIKES) {
+          valA = a.likesCount || 0;
+          valB = b.likesCount || 0;
+        } else if (dto.category === RankingCategory.COMMENTS) {
+          valA = a.commentsCount || 0;
+          valB = b.commentsCount || 0;
+        }
+
+        return valB - valA;
+      });
+    }
 
     const totalIdeasCount = sortedIdeas.length;
     const finalLimit = Math.min(dto.limit, totalIdeasCount);
-    const finalistIdeas = sortedIdeas.slice(0, finalLimit);
-    const finalistIds = finalistIdeas.map((idea) => idea.id);
+    const rankedWinners = sortedIdeas.slice(0, finalLimit);
+    const finalistIds = rankedWinners.map((idea) => idea.id);
+    const officialPodium = isGeneratingResults
+      ? sortedIdeas.slice(0, Math.min(3, sortedIdeas.length))
+      : [];
 
-    await this.challengeRepository.update(challengeId, {
-      status: 'EVALUATING',
-      podiumSize: finalLimit,
-    } as any);
+    if (isGeneratingResults) {
+      await this.prisma.$transaction([
+        this.prisma.challengeWinner.deleteMany({ where: { challengeId } }),
+        ...officialPodium.map((idea, index) =>
+          this.prisma.challengeWinner.create({
+            data: {
+              challengeId,
+              ideaId: idea.id,
+              category: WinnerCategory.GENERAL,
+              position: index + 1,
+            },
+          }),
+        ),
+        this.prisma.idea.updateMany({
+          where: {
+            challengeId,
+            status: IdeaStatus.WINNER,
+          },
+          data: { status: IdeaStatus.FINALIST },
+        }),
+        this.prisma.idea.updateMany({
+          where: { id: { in: finalistIds } },
+          data: { status: IdeaStatus.WINNER },
+        }),
+        this.prisma.challenge.update({
+          where: { id: challengeId },
+          data: { status: 'CLOSED', podiumSize: finalLimit },
+        }),
+      ]);
+    } else {
+      await this.challengeRepository.update(challengeId, {
+        status: 'EVALUATING',
+        podiumSize: finalLimit,
+      } as any);
 
-    await this.prisma.idea.updateMany({
-      where: { id: { in: finalistIds } },
-      data: { status: 'FINALIST' },
-    });
+      await this.prisma.idea.updateMany({
+        where: { id: { in: finalistIds } },
+        data: { status: IdeaStatus.FINALIST },
+      });
+    }
 
     this.logger.log(
-      `Reto ${challengeId} finalizado. ${finalLimit} finalistas seleccionados basándose en ${dto.category}.`,
+      `Reto ${challengeId} finalizado. ${finalLimit} ideas seleccionadas basándose en ${dto.category}. ${scoreSummary?.evaluationsCount ?? 0} evaluaciones consolidadas.`,
     );
 
     return {
       success: true,
       podiumSize: finalLimit,
       finalistCount: finalistIds.length,
+      evaluationsProcessed: scoreSummary?.evaluationsCount ?? 0,
+      ideasScored: scoreSummary?.ideasScored ?? 0,
+      phase: isGeneratingResults ? 'RESULTS_GENERATED' : 'FINALISTS_SENT',
+      winners: isGeneratingResults
+        ? officialPodium.map((idea, index) => ({
+            ideaId: idea.id,
+            position: index + 1,
+            category: WinnerCategory.GENERAL,
+            finalScore: idea.finalScore,
+          }))
+        : [],
+    };
+  }
+
+  private async recalculateFinalScores(challengeId: string) {
+    const [challengeIdeas, evaluations] = await Promise.all([
+      this.prisma.idea.findMany({
+        where: { challengeId },
+        select: { id: true },
+      }),
+      this.prisma.evaluation.findMany({
+        where: {
+          idea: { challengeId },
+        },
+        select: {
+          ideaId: true,
+          judgeId: true,
+          scores: {
+            select: {
+              score: true,
+              criterion: {
+                select: {
+                  weight: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    const judgeScoresByIdeaId = new Map<string, number[]>();
+
+    evaluations.forEach((evaluation) => {
+      const judgeScore = evaluation.scores.reduce((sum, item) => {
+        const weight = item.criterion?.weight ?? 0;
+        return sum + item.score * (weight / 100);
+      }, 0);
+
+      const current = judgeScoresByIdeaId.get(evaluation.ideaId) ?? [];
+      current.push(judgeScore);
+      judgeScoresByIdeaId.set(evaluation.ideaId, current);
+    });
+
+    const finalScoresByIdeaId = new Map<string, number>();
+    const updateOperations = challengeIdeas.map((idea) => {
+      const judgeScores = judgeScoresByIdeaId.get(idea.id) ?? [];
+      const finalScore =
+        judgeScores.length > 0
+          ? judgeScores.reduce((sum, score) => sum + score, 0) /
+            judgeScores.length
+          : 0;
+
+      finalScoresByIdeaId.set(idea.id, finalScore);
+
+      return this.prisma.idea.update({
+        where: { id: idea.id },
+        data: { finalScore },
+      });
+    });
+
+    if (updateOperations.length > 0) {
+      await this.prisma.$transaction(updateOperations);
+    }
+
+    return {
+      evaluationsCount: evaluations.length,
+      ideasScored: Array.from(finalScoresByIdeaId.values()).filter(
+        (score) => score > 0,
+      ).length,
+      finalScoresByIdeaId,
     };
   }
 

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
-import { Challenge, Prisma, UserRole, IdeaStatus } from '@prisma/client';
+import { Challenge, Prisma, UserRole, IdeaStatus, WinnerCategory } from '@prisma/client';
 
 @Injectable()
 export class ChallengeRepository {
@@ -123,17 +123,117 @@ export class ChallengeRepository {
     });
   }
 
+  async getPodiumStatus(challengeId: string) {
+    const [finalistCount, winnerCount, evaluationCount, assignedJudgesCount, ideasWithEvaluations] =
+      await Promise.all([
+        this.prisma.idea.count({
+          where: { challengeId, status: 'FINALIST', deletedAt: null },
+        }),
+        this.prisma.idea.count({
+          where: { challengeId, status: 'WINNER', deletedAt: null },
+        }),
+        this.prisma.evaluation.count({
+          where: { idea: { challengeId, deletedAt: null } },
+        }),
+        this.prisma.challengeJudge.count({
+          where: { challengeId },
+        }),
+        this.prisma.idea.count({
+          where: {
+            challengeId,
+            deletedAt: null,
+            evaluations: { some: {} },
+          },
+        }),
+      ]);
+
+    return {
+      finalistCount,
+      winnerCount,
+      evaluationCount,
+      assignedJudgesCount,
+      ideasWithEvaluations,
+    };
+  }
+
   async getIdeasByChallenge(challengeId: string) {
     return this.prisma.idea.findMany({
-      where: { challengeId },
+      where: { challengeId, deletedAt: null },
       select: {
         id: true,
         title: true,
+        status: true,
         finalScore: true,
         likesCount: true,
         commentsCount: true,
+        createdAt: true,
       },
     });
+  }
+
+  async getRankedIdeasByFinalScore(
+    challengeId: string,
+    statuses: IdeaStatus[] = [IdeaStatus.FINALIST],
+  ) {
+    return this.prisma.idea.findMany({
+      where: {
+        challengeId,
+        deletedAt: null,
+        status: { in: statuses },
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        finalScore: true,
+        likesCount: true,
+        commentsCount: true,
+        createdAt: true,
+      },
+      orderBy: [{ finalScore: 'desc' }, { createdAt: 'asc' }],
+    });
+  }
+
+  async getPodiumIdeas(challengeId: string) {
+    const [ideas, winners] = await Promise.all([
+      this.prisma.idea.findMany({
+        where: {
+          challengeId,
+          deletedAt: null,
+          status: { in: ['PUBLISHED', 'FINALIST', 'WINNER'] },
+        },
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          finalScore: true,
+          likesCount: true,
+          commentsCount: true,
+          createdAt: true,
+          author: {
+            select: {
+              displayName: true,
+              nickname: true,
+            },
+          },
+        },
+        orderBy: [{ finalScore: 'desc' }, { createdAt: 'asc' }],
+      }),
+      this.prisma.challengeWinner.findMany({
+        where: { challengeId, category: WinnerCategory.GENERAL },
+        select: { ideaId: true, position: true },
+        orderBy: { position: 'asc' },
+      }),
+    ]);
+
+    const positionByIdeaId = new Map(
+      winners.map((winner) => [winner.ideaId, winner.position]),
+    );
+
+    return ideas.map((idea) => ({
+      ...idea,
+      podiumPosition: positionByIdeaId.get(idea.id) ?? null,
+    }));
   }
 
   async findByAccessToken(accessToken: string): Promise<Challenge | null> {
@@ -463,7 +563,7 @@ export class ChallengeRepository {
       where: {
         id: challengeId,
         authorId,
-        status: { in: ['PUBLISHED', 'CLOSED'] as any },
+        status: { in: ['PUBLISHED', 'EVALUATING', 'CLOSED'] as any },
       },
       select: { id: true },
     });
@@ -488,7 +588,7 @@ export class ChallengeRepository {
     return this.prisma.challenge.findMany({
       where: {
         authorId,
-        status: { in: ['PUBLISHED', 'CLOSED'] as any },
+        status: { in: ['PUBLISHED', 'EVALUATING', 'CLOSED'] as any },
       },
       select: {
         id: true,

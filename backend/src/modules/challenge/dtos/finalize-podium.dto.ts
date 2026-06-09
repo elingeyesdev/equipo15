@@ -1,4 +1,5 @@
-import { IsEnum, IsNumber, Min } from 'class-validator';
+import { IsEnum, IsInt, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export enum RankingCategory {
   LIKES = 'likes',
@@ -12,7 +13,8 @@ export class FinalizePodiumDto {
   })
   category: RankingCategory;
 
-  @IsNumber()
+  @Type(() => Number)
+  @IsInt()
   @Min(1, { message: 'El límite debe ser al menos 1.' })
   limit: number;
 }

@@ -23,13 +23,51 @@ export class EvaluationRepository {
     });
   }
 
+  async findIdeaContext(ideaId: string) {
+    return this.prisma.idea.findUnique({
+      where: { id: ideaId, deletedAt: null },
+      select: {
+        id: true,
+        title: true,
+        finalScore: true,
+        challenge: {
+          select: {
+            id: true,
+            title: true,
+            authorId: true,
+          },
+        },
+      },
+    });
+  }
+
   async findByIdeaId(ideaId: string): Promise<any[]> {
     return this.prisma.evaluation.findMany({
       where: { ideaId },
       include: {
-        judge: { select: { displayName: true } },
-        scores: { include: { criterion: true } },
+        judge: {
+          select: {
+            id: true,
+            displayName: true,
+            nickname: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+        scores: {
+          include: {
+            criterion: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                weight: true,
+              },
+            },
+          },
+        },
       },
+      orderBy: { createdAt: 'asc' },
     });
   }
 

@@ -3,13 +3,17 @@ import { createPortal } from 'react-dom';
 import styled, { keyframes, css } from 'styled-components';
 import { Pista8Theme, breakpoints } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
-import { ideaService } from '../../../../services/idea.service';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../../context/AuthContext';
-import { Trophy, Users, MessageSquare, Sparkles, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Trophy, Users, MessageSquare, Sparkles, AlertTriangle, CheckCircle, Loader2, Gavel, Calculator, Clock } from 'lucide-react';
 import MedalSvg from '../../../../components/icons/MedalSvg';
 import { toast } from 'sonner';
 import BackButton from '../../../../components/common/BackButton';
+import InfoTooltip from '../../../../components/common/InfoTooltip';
+import { EvaluationScoresModal } from '../../components/EvaluationScoresModal';
+
+const TIEBREAK_TOOLTIP =
+  'Desempate automático aplicado a favor de la idea postulada con mayor antigüedad.';
 
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(14px); }
@@ -19,6 +23,10 @@ const fadeUp = keyframes`
 const shimmer = keyframes`
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
+`;
+
+const spin = keyframes`
+  to { transform: rotate(360deg); }
 `;
 
 const slideIn = keyframes`
@@ -166,7 +174,7 @@ const RankingList = styled.div`
   gap: 10px;
 `;
 
-const IdeaCard = styled.div<{ $isFinalist: boolean; $rank: number }>`
+const IdeaCard = styled.div<{ $isFinalist: boolean; $rank: number; $clickable?: boolean }>`
   background: white;
   padding: 16px 22px;
   border-radius: 16px;
@@ -175,6 +183,7 @@ const IdeaCard = styled.div<{ $isFinalist: boolean; $rank: number }>`
   display: flex;
   align-items: center;
   gap: 18px;
+  cursor: ${p => p.$clickable ? 'pointer' : 'default'};
   transition:
     border-color 0.35s ease,
     box-shadow 0.35s ease,
@@ -277,6 +286,10 @@ const Metric = styled.div<{ $active: boolean }>`
   }
 `;
 
+const ScoreMetric = styled(Metric)`
+  gap: 6px;
+`;
+
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -377,6 +390,27 @@ const ConfirmBtn = styled.button`
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+  }
+`;
+
+const ProcessingState = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(254, 65, 10, 0.08);
+  border: 1px solid rgba(254, 65, 10, 0.16);
+  color: ${Pista8Theme.primary};
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.4;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    animation: ${spin} 0.9s linear infinite;
   }
 `;
 
@@ -491,6 +525,131 @@ const BannerText = styled.p`
   line-height: 1.55;
 `;
 
+const Stepper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 4px 0 8px;
+  overflow-x: auto;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    padding-bottom: 4px;
+  }
+`;
+
+const StepItem = styled.div<{ $active: boolean; $done: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+
+  &:last-child {
+    flex: 0 0 auto;
+  }
+`;
+
+const StepCircle = styled.div<{ $active: boolean; $done: boolean }>`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  transition: all 0.25s ease;
+  background: ${p =>
+    p.$done ? '#16a34a' :
+    p.$active ? Pista8Theme.primary :
+    '#e5e7eb'};
+  color: ${p => (p.$done || p.$active) ? 'white' : '#9ca3af'};
+  box-shadow: ${p => p.$active ? '0 4px 14px rgba(254, 65, 10, 0.25)' : 'none'};
+`;
+
+const StepLabel = styled.div<{ $active: boolean; $done: boolean }>`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  strong {
+    font-size: 12px;
+    font-weight: 900;
+    color: ${p => p.$active ? Pista8Theme.secondary : p.$done ? '#15803d' : '#9ca3af'};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  span {
+    font-size: 11px;
+    color: #9ca3af;
+    line-height: 1.3;
+  }
+`;
+
+const StepConnector = styled.div<{ $done: boolean }>`
+  flex: 1;
+  height: 2px;
+  min-width: 24px;
+  margin: 0 8px;
+  background: ${p => p.$done ? '#16a34a' : '#e5e7eb'};
+  transition: background 0.25s ease;
+`;
+
+const ProgressCard = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  color: #92400e;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+`;
+
+const PendingBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  font-size: 11px;
+  font-weight: 800;
+`;
+
+type PodiumPhase = 'select' | 'evaluate' | 'done';
+
+type PodiumStatus = {
+  phase: 'SELECT_FINALISTS' | 'AWAITING_JUDGES' | 'COMPLETED';
+  evaluationCount: number;
+  assignedJudgesCount: number;
+  ideasWithEvaluations: number;
+  finalistCount: number;
+  winnerCount: number;
+  canGenerateResults: boolean;
+  podiumSize: number | null;
+};
+
+const resolvePhase = (status?: string): PodiumPhase => {
+  if (status === 'CLOSED') return 'done';
+  if (status === 'EVALUATING') return 'evaluate';
+  return 'select';
+};
+
 
 
 export const CompanyPodiumView = () => {
@@ -501,10 +660,12 @@ export const CompanyPodiumView = () => {
 
   const [challenge, setChallenge] = useState<any>(null);
   const [ideas, setIdeas] = useState<any[]>([]);
+  const [podiumStatus, setPodiumStatus] = useState<PodiumStatus | null>(null);
   const [loading, setLoading] = useState(true);
-  const [cutLimit, setCutLimit] = useState<string>('0');
+  const [cutLimit, setCutLimit] = useState<string>('5');
   const [metric, setMetric] = useState<string>('fireScore');
   const [showConfirm, setShowConfirm] = useState(false);
+  const [scoresModalIdea, setScoresModalIdea] = useState<{ id: string; title: string } | null>(null);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [animKey, setAnimKey] = useState(0);
 
@@ -512,23 +673,19 @@ export const CompanyPodiumView = () => {
     if (!challengeId) return;
     setLoading(true);
     try {
-      const [challengeRes, ideasRes] = await Promise.all([
+      const [challengeRes, ideasRes, statusRes] = await Promise.all([
         challengeService.getChallengeById(challengeId),
-        ideaService.getIdeasByChallenge(challengeId)
+        challengeService.getPodiumIdeas(challengeId).catch(() => []),
+        challengeService.getPodiumStatus(challengeId).catch(() => null),
       ]);
-      const rawIdeas = (ideasRes as any);
-      let resolvedIdeas: any[] = [];
-      if (Array.isArray(rawIdeas)) {
-        resolvedIdeas = rawIdeas;
-      } else if (Array.isArray(rawIdeas?.data?.data)) {
-        resolvedIdeas = rawIdeas.data.data;
-      } else if (Array.isArray(rawIdeas?.data)) {
-        resolvedIdeas = rawIdeas.data;
-      } else if (Array.isArray(rawIdeas?.data?.ideas)) {
-        resolvedIdeas = rawIdeas.data.ideas;
-      }
-      setChallenge((challengeRes as any).data ?? challengeRes);
+      const resolvedIdeas = Array.isArray(ideasRes) ? ideasRes : [];
+      const resolvedChallenge = (challengeRes as any).data ?? challengeRes;
+      setChallenge(resolvedChallenge);
       setIdeas(resolvedIdeas);
+      setPodiumStatus(statusRes);
+      if (resolvedChallenge?.podiumSize) {
+        setCutLimit(String(resolvedChallenge.podiumSize));
+      }
     } catch (err) {
       console.error('Error fetching data:', err);
       toast.error('No se pudo cargar la información del reto.');
@@ -545,38 +702,97 @@ export const CompanyPodiumView = () => {
     setAnimKey(k => k + 1);
   }, [cutLimit, metric]);
 
-  const sortedIdeas = useMemo(() => {
+  const phase = resolvePhase(challenge?.status);
+  const readOnlyMode = Boolean(impersonationSession);
+
+  const visibleIdeas = useMemo(() => {
     const safeIdeas = Array.isArray(ideas) ? ideas : [];
-    return [...safeIdeas].sort((a, b) => {
+    if (phase === 'evaluate') {
+      const finalists = safeIdeas.filter(i => i.status === 'FINALIST');
+      return finalists.length > 0 ? finalists : safeIdeas;
+    }
+    if (phase === 'done') {
+      const winners = safeIdeas.filter(i => i.status === 'WINNER');
+      return winners.length > 0 ? winners : safeIdeas;
+    }
+    return safeIdeas;
+  }, [ideas, phase]);
+
+  const sortedIdeas = useMemo(() => {
+    return [...visibleIdeas].sort((a, b) => {
+      if (phase === 'evaluate' || phase === 'done') {
+        const scoreDiff = (b.finalScore || 0) - (a.finalScore || 0);
+        if (scoreDiff !== 0) return scoreDiff;
+        const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return aCreated - bCreated;
+      }
       if (metric === 'fireScore') {
         return (b.fireScore || b.likesCount || 0) - (a.fireScore || a.likesCount || 0);
       }
       return (b.commentsCount || 0) - (a.commentsCount || 0);
     });
-  }, [ideas, metric]);
+  }, [visibleIdeas, metric, phase]);
+
+  const tieBreakAtPodium = useMemo(() => {
+    if (phase !== 'done' || sortedIdeas.length < 2) return false;
+    const firstScore = sortedIdeas[0]?.finalScore ?? 0;
+    const secondScore = sortedIdeas[1]?.finalScore ?? 0;
+    return firstScore > 0 && firstScore === secondScore;
+  }, [phase, sortedIdeas]);
 
   const filteredIdeas = useMemo(() => {
     const limit = parseInt(cutLimit, 10);
     return limit > 0 ? sortedIdeas.slice(0, limit) : sortedIdeas;
   }, [sortedIdeas, cutLimit]);
 
-  const handleFinalize = async () => {
+  const actionLimit = useMemo(() => {
+    const parsedCut = parseInt(cutLimit, 10);
+    if (parsedCut > 0) {
+      return Math.min(parsedCut, sortedIdeas.length);
+    }
+    return sortedIdeas.length;
+  }, [cutLimit, sortedIdeas.length]);
+
+  const handleSendToJudges = async () => {
     if (!challengeId || readOnlyMode) return;
     setIsFinalizing(true);
     try {
-      const allFinalists = new Set(filteredIdeas.map(i => i.id));
       await challengeService.finalizePodium(challengeId, {
         category: metric === 'fireScore' ? 'likes' : 'comments',
-        limit: allFinalists.size,
+        limit: actionLimit,
       });
-      toast.success('¡Podio finalizado con éxito! El reto ha pasado a evaluación.');
-      navigate('/dashboard/company/challenges');
+      toast.success('Finalistas enviados a jueces. Ahora pueden evaluar las ideas.');
+      await fetchData();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error al finalizar el podio.');
+      toast.error(err.response?.data?.message || 'Error al enviar finalistas a jueces.');
     } finally {
       setIsFinalizing(false);
       setShowConfirm(false);
     }
+  };
+
+  const handleGenerateResults = async () => {
+    if (!challengeId || readOnlyMode) return;
+    setIsFinalizing(true);
+    try {
+      await challengeService.finalizePodium(challengeId, {
+        category: 'votes',
+        limit: actionLimit,
+      });
+      toast.success('¡Podio finalizado! Los puntajes técnicos fueron calculados.');
+      await fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error al calcular puntajes y finalizar el podio.');
+    } finally {
+      setIsFinalizing(false);
+      setShowConfirm(false);
+    }
+  };
+
+  const handleConfirm = () => {
+    if (phase === 'select') return handleSendToJudges();
+    if (phase === 'evaluate') return handleGenerateResults();
   };
 
   if (!challengeId) {
@@ -610,9 +826,33 @@ export const CompanyPodiumView = () => {
     );
   }
 
-  const isAlreadyEvaluated = challenge?.status === 'EVALUATION' || challenge?.status === 'Finalizado';
-  const readOnlyMode = Boolean(impersonationSession);
-  const canSend = filteredIdeas.length > 0 && !isAlreadyEvaluated && !readOnlyMode && ideas.length > 0;
+  const isCompleted = phase === 'done';
+  const canSendToJudges = phase === 'select' && actionLimit > 0 && !readOnlyMode && ideas.length > 0;
+  const canGenerateResults = phase === 'evaluate' && !readOnlyMode && Boolean(podiumStatus?.canGenerateResults) && actionLimit > 0;
+
+  const stepIndex = phase === 'select' ? 0 : phase === 'evaluate' ? 1 : 2;
+
+  const cutLabel = phase === 'select'
+    ? 'Finalistas a enviar'
+    : phase === 'evaluate'
+      ? 'Ganadores a declarar'
+      : 'Podio final';
+
+  const processingMessage = phase === 'select'
+    ? 'Preparando lote de finalistas para los jueces...'
+    : 'Procesando rúbricas y calculando puntajes...';
+
+  const confirmTitle = phase === 'select'
+    ? '¿Enviar finalistas a jueces?'
+    : '¿Calcular puntajes y finalizar podio?';
+
+  const confirmText = phase === 'select'
+    ? `Se cerrará la participación pública y se enviarán ${actionLimit} ideas a los jueces para evaluación técnica. Esta acción es irreversible.`
+    : `Se calcularán los puntajes técnicos con las rúbricas recibidas y se declararán ${actionLimit} ganador${actionLimit !== 1 ? 'es' : ''}. Esta acción es irreversible.`;
+
+  const confirmButtonLabel = phase === 'select'
+    ? (isFinalizing ? 'Enviando...' : 'Sí, enviar a jueces')
+    : (isFinalizing ? 'Calculando...' : 'Sí, finalizar podio');
 
   return (
     <>
@@ -627,15 +867,89 @@ export const CompanyPodiumView = () => {
               </ChallengeName>
             </TitleBlock>
           </TitleRow>
+
+          <Stepper>
+            <StepItem $active={stepIndex === 0} $done={stepIndex > 0}>
+              <StepCircle $active={stepIndex === 0} $done={stepIndex > 0}>
+                {stepIndex > 0 ? <CheckCircle size={16} /> : '1'}
+              </StepCircle>
+              <StepLabel $active={stepIndex === 0} $done={stepIndex > 0}>
+                <strong>Seleccionar finalistas</strong>
+                <span>Por interacción social</span>
+              </StepLabel>
+            </StepItem>
+            <StepConnector $done={stepIndex > 0} />
+            <StepItem $active={stepIndex === 1} $done={stepIndex > 1}>
+              <StepCircle $active={stepIndex === 1} $done={stepIndex > 1}>
+                {stepIndex > 1 ? <CheckCircle size={16} /> : '2'}
+              </StepCircle>
+              <StepLabel $active={stepIndex === 1} $done={stepIndex > 1}>
+                <strong>Evaluación de jueces</strong>
+                <span>Rúbricas técnicas</span>
+              </StepLabel>
+            </StepItem>
+            <StepConnector $done={stepIndex > 1} />
+            <StepItem $active={stepIndex === 2} $done={false}>
+              <StepCircle $active={stepIndex === 2} $done={false}>3</StepCircle>
+              <StepLabel $active={stepIndex === 2} $done={false}>
+                <strong>Podio final</strong>
+                <span>Puntajes consolidados</span>
+              </StepLabel>
+            </StepItem>
+          </Stepper>
         </Header>
 
-        {isAlreadyEvaluated && (
+        {phase === 'select' && (
+          <EvaluationBanner style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.04))', borderColor: 'rgba(59, 130, 246, 0.22)' }}>
+            <BannerIcon style={{ background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb' }}>
+              <Users />
+            </BannerIcon>
+            <BannerContent>
+              <BannerTitle style={{ color: '#1d4ed8' }}>Paso 1 — Elige quién pasa a la ronda de jueces</BannerTitle>
+              <BannerText style={{ color: '#3b5998' }}>
+                Ordena las ideas por destellos o comentarios y define cuántas avanzan. Los puntajes técnicos se calculan recién después de que los jueces evalúen.
+              </BannerText>
+            </BannerContent>
+          </EvaluationBanner>
+        )}
+
+        {phase === 'evaluate' && (
+          <>
+            <EvaluationBanner>
+              <BannerIcon><Gavel /></BannerIcon>
+              <BannerContent>
+                <BannerTitle>Finalistas en evaluación — Paso 2</BannerTitle>
+                <BannerText>
+                  Las ideas ya están con los jueces. Cuando reciban evaluaciones, podrás calcular los puntajes técnicos y declarar el podio final.
+                </BannerText>
+              </BannerContent>
+            </EvaluationBanner>
+            {podiumStatus && (
+              <ProgressCard>
+                <Clock />
+                <span>
+                  {podiumStatus.assignedJudgesCount} juez{podiumStatus.assignedJudgesCount !== 1 ? 'es' : ''} asignado{podiumStatus.assignedJudgesCount !== 1 ? 's' : ''}
+                  {' · '}
+                  {podiumStatus.evaluationCount} evaluación{podiumStatus.evaluationCount !== 1 ? 'es' : ''} recibida{podiumStatus.evaluationCount !== 1 ? 's' : ''}
+                  {' · '}
+                  {podiumStatus.ideasWithEvaluations} de {podiumStatus.finalistCount || filteredIdeas.length} idea{(podiumStatus.finalistCount || filteredIdeas.length) !== 1 ? 's' : ''} evaluada{(podiumStatus.finalistCount || filteredIdeas.length) !== 1 ? 's' : ''}
+                </span>
+              </ProgressCard>
+            )}
+          </>
+        )}
+
+        {phase === 'done' && (
           <EvaluationBanner>
             <BannerIcon><CheckCircle /></BannerIcon>
             <BannerContent>
-              <BannerTitle>Podio Consolidado — Fase de Evaluación Activa</BannerTitle>
+              <BannerTitle>Podio finalizado — Reto cerrado</BannerTitle>
               <BannerText>
-                El podio ha sido enviado. Las ideas seleccionadas ya están en manos de los jueces para su evaluación técnica. No se pueden realizar cambios.
+                Los puntajes técnicos fueron calculados y los ganadores declarados.
+                {tieBreakAtPodium && (
+                  <> El desempate entre el 1° y 2° puesto se resolvió por antigüedad de postulación.</>
+                )}
+                {' '}Esta vista es de solo lectura.
               </BannerText>
             </BannerContent>
           </EvaluationBanner>
@@ -643,67 +957,115 @@ export const CompanyPodiumView = () => {
 
         <ControlCard>
           <ControlGroup>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Label>Cantidad de Corte:</Label>
-              <Select value={cutLimit} onChange={(e) => setCutLimit(e.target.value)} disabled={isAlreadyEvaluated || readOnlyMode}>
-                <option value="0">Todos</option>
-                <option value="5">Top 5</option>
-                <option value="10">Top 10</option>
-                <option value="15">Top 15</option>
-                <option value="20">Top 20</option>
-              </Select>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Label>Criterio de Interacción:</Label>
-              <Select value={metric} onChange={(e) => setMetric(e.target.value)} disabled={isAlreadyEvaluated || readOnlyMode}>
-                <option value="fireScore">Mayor interacción social (Destellos)</option>
-                <option value="comments">Más comentarios / Retroalimentación</option>
-              </Select>
-            </div>
-            {filteredIdeas.length > 0 && (
+            {!isCompleted && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Label>{cutLabel}:</Label>
+                <Select value={cutLimit} onChange={(e) => setCutLimit(e.target.value)} disabled={isCompleted || readOnlyMode}>
+                  <option value="0">Todos</option>
+                  <option value="3">Top 3</option>
+                  <option value="5">Top 5</option>
+                  <option value="10">Top 10</option>
+                  <option value="15">Top 15</option>
+                  <option value="20">Top 20</option>
+                </Select>
+              </div>
+            )}
+            {phase === 'select' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Label>Ordenar por:</Label>
+                <Select value={metric} onChange={(e) => setMetric(e.target.value)} disabled={readOnlyMode}>
+                  <option value="fireScore">Mayor interacción social (Destellos)</option>
+                  <option value="comments">Más comentarios / Retroalimentación</option>
+                </Select>
+              </div>
+            )}
+            {filteredIdeas.length > 0 && !isCompleted && (
               <FinalistCountBadge>
                 {filteredIdeas.length} / {sortedIdeas.length} seleccionadas
               </FinalistCountBadge>
             )}
           </ControlGroup>
 
-          <FinalizeBtn
-            onClick={() => !isAlreadyEvaluated && !readOnlyMode && setShowConfirm(true)}
-            disabled={!canSend}
-            style={isAlreadyEvaluated ? {
-              background: 'linear-gradient(135deg, #16a34a, #15803d)',
-              cursor: 'not-allowed',
-              boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)'
-            } : {}}
-          >
-            {isAlreadyEvaluated ? (
-              <><CheckCircle size={18} /> Lote de Finalistas Enviado</>  
-            ) : (
-              <><Users size={18} /> {readOnlyMode ? 'Estás en modo lectura ahora' : 'Enviar Lote de Finalistas a Jueces'}</>
-            )}
-          </FinalizeBtn>
+          {phase === 'select' && (
+            <FinalizeBtn
+              onClick={() => !readOnlyMode && setShowConfirm(true)}
+              disabled={!canSendToJudges}
+            >
+              <Users size={18} />
+              {readOnlyMode ? 'Estás en modo lectura ahora' : 'Enviar finalistas a jueces'}
+            </FinalizeBtn>
+          )}
+
+          {phase === 'evaluate' && (
+            <FinalizeBtn
+              onClick={() => !readOnlyMode && podiumStatus?.canGenerateResults && setShowConfirm(true)}
+              disabled={!canGenerateResults}
+              title={!podiumStatus?.canGenerateResults ? 'Espera a que los jueces envíen al menos una evaluación' : undefined}
+            >
+              <Calculator size={18} />
+              {readOnlyMode ? 'Estás en modo lectura ahora' : 'Calcular puntajes y finalizar podio'}
+            </FinalizeBtn>
+          )}
+
+          {phase === 'done' && (
+            <FinalizeBtn disabled style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', cursor: 'not-allowed', boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)' }}>
+              <CheckCircle size={18} /> Podio finalizado
+            </FinalizeBtn>
+          )}
         </ControlCard>
 
         <RankingList>
           {filteredIdeas.map((idea, index) => {
+            const showPendingScore = phase === 'evaluate' && !(idea.finalScore > 0);
+            const rankIndex =
+              phase === 'done' && idea.podiumPosition != null
+                ? idea.podiumPosition - 1
+                : index;
+            const showTieBreakInfo =
+              phase === 'done' && tieBreakAtPodium && rankIndex === 0;
+            const canOpenBreakdown = phase === 'evaluate' || phase === 'done';
             return (
               <AnimatedRow key={`${animKey}-${idea.id}`} $key={`${animKey}-${index}`} style={{ animationDelay: `${index * 0.04}s` }}>
-                <IdeaCard $isFinalist={cutLimit !== '0'} $rank={index}>
+                <IdeaCard
+                  $isFinalist={cutLimit !== '0' || phase !== 'select'}
+                  $rank={rankIndex}
+                  $clickable={canOpenBreakdown}
+                  onClick={() => canOpenBreakdown && setScoresModalIdea({ id: idea.id, title: idea.title })}
+                  title={canOpenBreakdown ? 'Ver desglose de evaluaciones' : undefined}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
-                    <RankNumber $pos={index}>
-                      {index < 3 ? <MedalSvg rank={index} size={22} /> : index + 1}
+                    <RankNumber $pos={rankIndex}>
+                      {rankIndex < 3 ? <MedalSvg rank={rankIndex} size={22} /> : rankIndex + 1}
                     </RankNumber>
                     <IdeaInfo>
                       <IdeaTitle>{idea.title}</IdeaTitle>
-                      <IdeaAuthor>Por {idea.author?.nickname || idea.author?.displayName || 'Participante'}</IdeaAuthor>
+                      <IdeaAuthor>
+                        Por {idea.author?.nickname || idea.author?.displayName || 'Participante'}
+                        {showPendingScore && (
+                          <> · <PendingBadge>Pendiente de evaluación</PendingBadge></>
+                        )}
+                      </IdeaAuthor>
                     </IdeaInfo>
                     <Metrics>
-                      <Metric $active={metric === 'fireScore'}>
-                        <Sparkles fill={metric === 'fireScore' ? Pista8Theme.primary : 'none'} /> {idea.likesCount || 0}
-                      </Metric>
-                      <Metric $active={metric === 'comments'}>
-                        <MessageSquare fill={metric === 'comments' ? Pista8Theme.primary : 'none'} /> {idea.commentsCount || 0}
-                      </Metric>
+                      {phase === 'select' && (
+                        <>
+                          <Metric $active={metric === 'fireScore'}>
+                            <Sparkles fill={metric === 'fireScore' ? Pista8Theme.primary : 'none'} /> {idea.likesCount || 0}
+                          </Metric>
+                          <Metric $active={metric === 'comments'}>
+                            <MessageSquare fill={metric === 'comments' ? Pista8Theme.primary : 'none'} /> {idea.commentsCount || 0}
+                          </Metric>
+                        </>
+                      )}
+                      {(phase === 'evaluate' || phase === 'done') && (
+                        <ScoreMetric $active>
+                          <Trophy fill={Pista8Theme.primary} />
+                          {showPendingScore ? '—' : (idea.finalScore || 0).toFixed(2)}
+                          {showTieBreakInfo && (
+                            <InfoTooltip text={TIEBREAK_TOOLTIP} size={16} width={260} />
+                          )}
+                        </ScoreMetric>
+                      )}
                     </Metrics>
                   </div>
                 </IdeaCard>
@@ -714,26 +1076,36 @@ export const CompanyPodiumView = () => {
       </Container>
 
       {showConfirm && !readOnlyMode && createPortal(
-        <ModalOverlay onClick={() => setShowConfirm(false)}>
+        <ModalOverlay onClick={() => !isFinalizing && setShowConfirm(false)}>
           <Modal onClick={e => e.stopPropagation()}>
             <WarningIcon><AlertTriangle /></WarningIcon>
             <ModalContent>
-              <ModalTitle>¿Confirmar Podio Final?</ModalTitle>
-              <ModalText>
-                Esta acción cerrará las votaciones públicas y enviará <strong>{filteredIdeas.length}</strong> ideas seleccionadas a los jueces para evaluación técnica.
-                <br /><br />
-                <strong>Esta acción es irreversible.</strong>
-              </ModalText>
+              <ModalTitle>{confirmTitle}</ModalTitle>
+              <ModalText>{confirmText}</ModalText>
             </ModalContent>
+            {isFinalizing && (
+              <ProcessingState>
+                <Loader2 />
+                {processingMessage}
+              </ProcessingState>
+            )}
             <ModalActions>
-              <CancelBtn onClick={() => setShowConfirm(false)}>Cancelar</CancelBtn>
-              <ConfirmBtn onClick={handleFinalize} disabled={isFinalizing}>
-                {isFinalizing ? 'Procesando...' : 'Sí, Enviar a Jueces'}
+              <CancelBtn onClick={() => setShowConfirm(false)} disabled={isFinalizing}>Cancelar</CancelBtn>
+              <ConfirmBtn onClick={handleConfirm} disabled={isFinalizing}>
+                {confirmButtonLabel}
               </ConfirmBtn>
             </ModalActions>
           </Modal>
         </ModalOverlay>,
         document.body
+      )}
+
+      {scoresModalIdea && (
+        <EvaluationScoresModal
+          ideaId={scoresModalIdea.id}
+          ideaTitle={scoresModalIdea.title}
+          onClose={() => setScoresModalIdea(null)}
+        />
       )}
     </>
   );

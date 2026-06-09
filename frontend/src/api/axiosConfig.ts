@@ -1,12 +1,13 @@
 import axios from 'axios';
 import { auth } from '../config/firebase';
+import { API_URL } from '@/config/constants';
 import {
   clearStoredImpersonationToken,
   getStoredImpersonationSession,
 } from '@/utils/impersonation-session';
 
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  baseURL: API_URL,
 });
 
 instance.interceptors.request.use(

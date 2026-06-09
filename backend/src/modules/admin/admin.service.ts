@@ -160,4 +160,12 @@ export class AdminService {
   async removeAllowedDomain(id: string) {
     return this.adminRepository.deleteAllowedDomain(id);
   }
+
+  async getChallengeAuditIdeas(challengeId: string) {
+    const result = await this.adminRepository.getChallengeAuditIdeas(challengeId);
+    if (!result) {
+      throw new NotFoundException('Reto no encontrado');
+    }
+    return result;
+  }
 }

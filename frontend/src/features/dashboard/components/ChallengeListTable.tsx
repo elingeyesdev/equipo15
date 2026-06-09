@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { ChallengePerformance } from '@/types/models';
 import { AdminChallengeFilter, type AdminChallengeFilterState } from './AdminChallengeFilter';
+import { ChallengeAuditModal } from './ChallengeAuditModal';
 import * as S from './ChallengeListTable.styles';
 
 interface Props {
@@ -38,6 +39,7 @@ export function ChallengeListTable({ challenges }: Props) {
     sortOrder: 'newest',
     status: 'ALL',
   });
+  const [auditChallenge, setAuditChallenge] = useState<ChallengePerformance | null>(null);
 
   const filteredAndSortedChallenges = useMemo(() => {
     let result = [...challenges];
@@ -70,6 +72,7 @@ export function ChallengeListTable({ challenges }: Props) {
   }
 
   return (
+    <>
     <S.TableContainer>
       <S.TableToolbar>
         <S.TableTitle>Listado de Retos</S.TableTitle>
@@ -85,6 +88,7 @@ export function ChallengeListTable({ challenges }: Props) {
             <S.Cell>Estado</S.Cell>
             <S.Cell>Interacciones</S.Cell>
             <S.Cell>Calificación</S.Cell>
+            <S.Cell>Auditoría</S.Cell>
           </S.TableHeader>
           
           {filteredAndSortedChallenges.map((challenge) => (
@@ -110,10 +114,27 @@ export function ChallengeListTable({ challenges }: Props) {
                   <StarSvg /> {challenge.averageScore !== null ? challenge.averageScore : '-'}
                 </S.Metric>
               </S.Cell>
+              <S.Cell>
+                <S.AuditBtn
+                  type="button"
+                  onClick={() => setAuditChallenge(challenge)}
+                >
+                  Auditar rúbricas
+                </S.AuditBtn>
+              </S.Cell>
             </S.TableRow>
           ))}
         </>
       )}
     </S.TableContainer>
+
+    {auditChallenge && (
+      <ChallengeAuditModal
+        challengeId={auditChallenge.id}
+        challengeTitle={auditChallenge.title}
+        onClose={() => setAuditChallenge(null)}
+      />
+    )}
+    </>
   );
 }

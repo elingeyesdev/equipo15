@@ -93,6 +93,27 @@ export const challengeService = {
     return unwrapApiData(response.data);
   },
 
+  getPodiumIdeas: async (id: string): Promise<any[]> => {
+    const response = await axiosInstance.get<ApiResponse<any[]> | any[]>(`/challenges/${id}/podium-ideas`);
+    return unwrapApiData(response.data);
+  },
+
+  getPodiumStatus: async (id: string): Promise<{
+    challengeId: string;
+    status: string;
+    phase: 'SELECT_FINALISTS' | 'AWAITING_JUDGES' | 'COMPLETED';
+    podiumSize: number | null;
+    finalistCount: number;
+    winnerCount: number;
+    evaluationCount: number;
+    assignedJudgesCount: number;
+    ideasWithEvaluations: number;
+    canGenerateResults: boolean;
+  }> => {
+    const response = await axiosInstance.get(`/challenges/${id}/podium-status`);
+    return unwrapApiData(response.data);
+  },
+
   finalizePodium: async (id: string, payload: { category: string; limit: number }): Promise<ApiResponse<any>> => {
     const response = await axiosInstance.post<ApiResponse<any>>(`/challenges/${id}/finalize-podium`, payload);
     return response.data;

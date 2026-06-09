@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { toast } from 'sonner';
 import { adminService } from '@/services/admin.service';
 import type { UserReputation, ReputationIdea } from '@/types/models';
+import { EvaluationScoresModal } from '../../components/EvaluationScoresModal';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -706,6 +707,7 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
   const [data, setData] = useState<UserReputation | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailIdea, setDetailIdea] = useState<ReputationIdea | null>(null);
+  const [evaluationIdea, setEvaluationIdea] = useState<ReputationIdea | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [promoting, setPromoting] = useState(false);
 
@@ -863,7 +865,16 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
                             {formatDate(idea.createdAt)}
                           </ITD>
                           <ITD>
-                            <DetailBtn type="button" onClick={() => setDetailIdea(idea)}>
+                            <DetailBtn
+                              type="button"
+                              onClick={() => {
+                                if (idea.status === 'FINALIST' || idea.status === 'WINNER') {
+                                  setEvaluationIdea(idea);
+                                  return;
+                                }
+                                setDetailIdea(idea);
+                              }}
+                            >
                               Ver detalles
                             </DetailBtn>
                           </ITD>
@@ -902,6 +913,15 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
 
       {detailIdea && (
         <IdeaDetailModal idea={detailIdea} onClose={() => setDetailIdea(null)} />
+      )}
+
+      {evaluationIdea && (
+        <EvaluationScoresModal
+          ideaId={evaluationIdea.id}
+          ideaTitle={evaluationIdea.title}
+          auditMode
+          onClose={() => setEvaluationIdea(null)}
+        />
       )}
 
       {showConfirm && data && (

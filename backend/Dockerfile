@@ -5,6 +5,7 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml ./
+COPY prisma ./prisma
 RUN pnpm install --frozen-lockfile
 
 COPY . .
@@ -18,8 +19,9 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml ./
-# --prod excluye devDependencies. 'prisma' CLI debe estar en dependencies del package.json
-RUN pnpm install --frozen-lockfile --prod
+COPY prisma ./prisma
+# Se instalan tambien devDependencies porque el seed usa ts-node y TypeScript.
+RUN pnpm install --frozen-lockfile
 
 # Copiar artefactos compilados y schema/migraciones de Prisma
 COPY --from=builder /app/dist ./dist

@@ -40,9 +40,13 @@ export class EvaluationsController {
   }
 
   @Get('idea/:ideaId')
-  @UseGuards(FirebaseAuthGuard)
-  async findByIdea(@Param('ideaId') ideaId: string) {
-    return this.evaluationService.findByIdea(ideaId);
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('admin', 'company')
+  async findByIdea(
+    @Param('ideaId') ideaId: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.evaluationService.findByIdea(ideaId, req.user.uid);
   }
 
   @Get('judge/:judgeId')

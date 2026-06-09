@@ -115,6 +115,12 @@ export class AdminController {
     return this.adminService.updateAllowedDomainStatus(id, isActive);
   }
 
+  @Get('challenges/:id/audit-ideas')
+  @ApiOperation({ summary: 'List finalist ideas for rubric audit in global dashboard' })
+  async getChallengeAuditIdeas(@Param('id') challengeId: string) {
+    return this.adminService.getChallengeAuditIdeas(challengeId);
+  }
+
   @Delete('whitelist-domains/:id')
   @ApiOperation({ summary: 'Remove a domain from the whitelist' })
   async removeWhitelistDomain(@Param('id') id: string) {

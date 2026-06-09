@@ -119,4 +119,20 @@ export const adminService = {
     );
     return unwrapApiData(response.data);
   },
+
+  async getChallengeAuditIdeas(challengeId: string): Promise<{
+    challenge: { id: string; title: string; status: string };
+    ideas: Array<{
+      id: string;
+      title: string;
+      status: string;
+      finalScore: number;
+      createdAt: string;
+      authorName: string;
+      evaluationsCount: number;
+    }>;
+  }> {
+    const response = await axiosInstance.get(`/admin/challenges/${challengeId}/audit-ideas`);
+    return unwrapApiData(response.data);
+  },
 };

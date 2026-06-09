@@ -1,10 +1,10 @@
 #!/bin/sh
 set -e
 
-echo "[entrypoint] Aplicando migraciones Prisma..."
-npx prisma migrate deploy
+echo "[entrypoint] Sincronizando esquema Prisma..."
+npx prisma db push --force-reset --skip-generate
 echo "[entrypoint] Migraciones OK. Iniciando poblamiento (seed)..."
-node dist/prisma/seed.js
+npx prisma db seed
 echo "[entrypoint] Seed OK. Iniciando servidor..."
 
 exec node dist/src/main.js

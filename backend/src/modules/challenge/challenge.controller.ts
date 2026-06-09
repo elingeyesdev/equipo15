@@ -231,6 +231,30 @@ export class ChallengesController {
     return this.challengeService.delete(id);
   }
 
+  @Get(':id/podium-ideas')
+  @UseGuards(RolesGuard)
+  @Roles('company')
+  @ApiOperation({ summary: 'Get ideas for company podium management (Company only)' })
+  @ApiResponse({ status: 200, description: 'Podium ideas returned successfully.' })
+  getPodiumIdeas(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.challengeService.getPodiumIdeas(id, req.user.uid);
+  }
+
+  @Get(':id/podium-status')
+  @UseGuards(RolesGuard)
+  @Roles('company')
+  @ApiOperation({ summary: 'Get podium workflow status for a challenge (Company only)' })
+  @ApiResponse({ status: 200, description: 'Podium status returned successfully.' })
+  getPodiumStatus(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.challengeService.getPodiumStatus(id, req.user.uid);
+  }
+
   @Post(':id/finalize-podium')
   @UseGuards(RolesGuard)
   @Roles('company')

@@ -31,7 +31,7 @@ export const TableTitle = styled.h3`
 
 export const TableHeader = styled.div`
   display: grid;
-  grid-template-columns: 2.5fr 1fr 1fr 1fr;
+  grid-template-columns: 2.5fr 1fr 1fr 1fr 1.2fr;
   background: #f8fafc;
   padding: ${Pista8Theme.spacing.md}px ${Pista8Theme.spacing.xl}px;
   border-bottom: 1px solid #e2e8f0;
@@ -54,7 +54,7 @@ export const TableHeader = styled.div`
 
 export const TableRow = styled.div`
   display: grid;
-  grid-template-columns: 2.5fr 1fr 1fr 1fr;
+  grid-template-columns: 2.5fr 1fr 1fr 1fr 1.2fr;
   padding: ${Pista8Theme.spacing.md}px ${Pista8Theme.spacing.xl}px;
   border-bottom: 1px solid #f1f5f9;
   align-items: center;
@@ -146,4 +146,27 @@ export const EmptyState = styled.div`
   text-align: center;
   color: #64748b;
   font-weight: 500;
+`;
+
+export const AuditBtn = styled.button`
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #1e293b;
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease, transform 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: #0f172a;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 `;

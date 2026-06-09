@@ -331,4 +331,54 @@ export class AdminRepository {
       },
     });
   }
+
+  async getChallengeAuditIdeas(challengeId: string) {
+    const challenge = await this.prisma.challenge.findUnique({
+      where: { id: challengeId },
+      select: { id: true, title: true, status: true },
+    });
+
+    if (!challenge) return null;
+
+    const ideas = await this.prisma.idea.findMany({
+      where: {
+        challengeId,
+        deletedAt: null,
+        status: { in: ['FINALIST', 'WINNER'] },
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        finalScore: true,
+        createdAt: true,
+        author: {
+          select: {
+            displayName: true,
+            nickname: true,
+          },
+        },
+        _count: {
+          select: { evaluations: true },
+        },
+      },
+      orderBy: [{ finalScore: 'desc' }, { createdAt: 'asc' }],
+    });
+
+    return {
+      challenge,
+      ideas: ideas.map((idea) => ({
+        id: idea.id,
+        title: idea.title,
+        status: idea.status,
+        finalScore: idea.finalScore,
+        createdAt: idea.createdAt,
+        authorName:
+          idea.author?.nickname ||
+          idea.author?.displayName ||
+          'Participante',
+        evaluationsCount: idea._count.evaluations,
+      })),
+    };
+  }
 }
