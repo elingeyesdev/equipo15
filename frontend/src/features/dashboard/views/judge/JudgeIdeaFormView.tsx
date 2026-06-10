@@ -440,7 +440,11 @@ const formatDate = (d?: string | null) => {
 };
 
 /* ─── Component ─── */
-const JudgeIdeaFormView: React.FC = () => {
+interface JudgeIdeaFormViewProps {
+  isReadOnlyMode?: boolean;
+}
+
+const JudgeIdeaFormView: React.FC<JudgeIdeaFormViewProps> = ({ isReadOnlyMode = false }) => {
   const navigate = useNavigate();
   const { challengeId, ideaId } = useParams<{ challengeId: string; ideaId: string }>();
   const { userProfile } = useAuth();
@@ -452,36 +456,68 @@ const JudgeIdeaFormView: React.FC = () => {
   const [touchedSliders, setTouchedSliders] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [readOnly, setReadOnly] = useState(false);
+  const [readOnly, setReadOnly] = useState(isReadOnlyMode);
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!challengeId || !ideaId) return;
     setLoading(true);
     try {
-      const [ideasData, criteriaData] = await Promise.all([
-        challengeService.getJudgeAssignedIdeas(),
-        challengeService.getChallengeCriteria(challengeId),
-      ]);
+      if (isReadOnlyMode) {
+        // En modo historial, obtenemos los datos desde 'mis evaluaciones'
+        const myEvals = await challengeService.getMyEvaluations();
+        const evaluation = myEvals.find((ev: any) => ev.idea?.id === ideaId);
+        
+        if (evaluation) {
+          // Mapear idea a IdeaItem
+          const mappedIdea: IdeaItem = {
+            ...evaluation.idea,
+            challengeId: evaluation.idea.challenge.id,
+            challengeTitle: evaluation.idea.challenge.title,
+            challengeContext: evaluation.idea.challenge.companyContext,
+          };
+          setIdea(mappedIdea);
+          
+          // Extraer criterios de los scores
+          const criList = evaluation.scores.map((s: any) => s.criterion);
+          setCriteria(criList);
+          
+          // Inicializar scores y feedback con lo que el juez calificó
+          const loadedScores: Record<string, number> = {};
+          evaluation.scores.forEach((s: any) => {
+            loadedScores[s.criterion.id] = s.score;
+          });
+          setScores(loadedScores);
+          setFeedback(evaluation.feedback || '');
+        } else {
+          setIdea(null);
+        }
+      } else {
+        // Modo Evaluación normal
+        const [ideasData, criteriaData] = await Promise.all([
+          challengeService.getJudgeAssignedIdeas(),
+          challengeService.getChallengeCriteria(challengeId),
+        ]);
 
-      const found = Array.isArray(ideasData)
-        ? ideasData.find(i => i.id === ideaId) ?? null
-        : null;
-      setIdea(found);
+        const found = Array.isArray(ideasData)
+          ? ideasData.find(i => i.id === ideaId) ?? null
+          : null;
+        setIdea(found);
 
-      const criList = Array.isArray(criteriaData) ? criteriaData : [];
-      setCriteria(criList);
+        const criList = Array.isArray(criteriaData) ? criteriaData : [];
+        setCriteria(criList);
 
-      // Initialize scores at 5 (middle)
-      const initial: Record<string, number> = {};
-      criList.forEach(c => { initial[c.id] = 5; });
-      setScores(initial);
+        // Initialize scores at 5 (middle)
+        const initial: Record<string, number> = {};
+        criList.forEach(c => { initial[c.id] = 5; });
+        setScores(initial);
+      }
     } catch (err) {
       console.error('Error cargando datos:', err);
     } finally {
       setLoading(false);
     }
-  }, [challengeId, ideaId]);
+  }, [challengeId, ideaId, isReadOnlyMode]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -539,7 +575,7 @@ const JudgeIdeaFormView: React.FC = () => {
     return (
       <PageWrapper>
         <TopBar>
-          <BackButton onClick={() => navigate(`/dashboard/judge/evaluation/${challengeId}`)} />
+          <BackButton onClick={() => navigate(isReadOnlyMode ? '/dashboard/judge/history' : `/dashboard/judge/evaluation/${challengeId}`)} />
           <PageTitle>Idea no encontrada</PageTitle>
         </TopBar>
         <p style={{ color: '#9ca3af', fontSize: 14 }}>No se pudo cargar la información de esta idea. Vuelve al listado e intenta de nuevo.</p>
@@ -577,12 +613,12 @@ const JudgeIdeaFormView: React.FC = () => {
       )}
 
       <TopBar>
-        <BackButton onClick={() => navigate(`/dashboard/judge/evaluation/${challengeId}`)} />
+        <BackButton onClick={() => navigate(isReadOnlyMode ? '/dashboard/judge/history' : `/dashboard/judge/evaluation/${challengeId}`)} />
         <div style={{ flex: 1 }}>
           <p style={{ margin: '0 0 2px', fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             {idea.challengeTitle}
           </p>
-          <PageTitle>Calificar Idea</PageTitle>
+          <PageTitle>{isReadOnlyMode ? 'Detalle de Evaluación' : 'Calificar Idea'}</PageTitle>
         </div>
       </TopBar>
 

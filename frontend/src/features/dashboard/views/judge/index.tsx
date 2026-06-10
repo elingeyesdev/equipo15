@@ -4,6 +4,7 @@ import styled, { keyframes, css } from 'styled-components';
 import { Pista8Theme } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import BackButton from '../../../../components/common/BackButton';
+import { History, Eye } from 'lucide-react';
 
 /* ─── Animations ─── */
 const fadeUp = keyframes`
@@ -652,9 +653,103 @@ export const JudgeEvaluationView = () => {
   );
 };
 
-export const JudgeHistoryView = () => (
-  <div>
-    <h2>Mis Evaluaciones</h2>
-    <p>Registro de notas enviadas (Read-only).</p>
-  </div>
-);
+export const JudgeHistoryView = () => {
+  const navigate = useNavigate();
+  const [evaluations, setEvaluations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchHistory = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await challengeService.getMyEvaluations();
+      setEvaluations(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error fetching history:', err);
+      setEvaluations([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
+
+  const handleCardClick = (evaluation: any) => {
+    const challengeId = evaluation.idea?.challenge?.id || evaluation.idea?.challengeId;
+    if (evaluation.idea && challengeId) {
+      navigate(`/dashboard/judge/history/evaluation/${challengeId}/idea/${evaluation.idea.id}`);
+    }
+  };
+
+  return (
+    <Container>
+      <TopBar>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Title>Mis Evaluaciones</Title>
+          <CountBadge>{evaluations.length}</CountBadge>
+        </div>
+      </TopBar>
+
+      {loading ? (
+        <Grid>
+          {[0, 1, 2].map(i => <LoadingShimmer key={i} />)}
+        </Grid>
+      ) : evaluations.length === 0 ? (
+        <EmptyState>
+          <EmptyIcon>
+            <History size={32} color="#9ca3af" />
+          </EmptyIcon>
+          <EmptyTitle>No hay evaluaciones en tu historial</EmptyTitle>
+          <EmptyText>Una vez que califiques una idea, aparecerá aquí como un registro inmutable de tu participación.</EmptyText>
+        </EmptyState>
+      ) : (
+        <Grid>
+          {evaluations.map((ev, i) => (
+            <Card
+              key={ev.id}
+              $index={i}
+              $evaluated={true}
+              onClick={() => handleCardClick(ev)}
+            >
+              <CardChallengeBadge>
+                <History size={12} style={{ marginRight: 4 }} />
+                Registro Histórico
+              </CardChallengeBadge>
+
+              <CardHeader>
+                <CardTitle>{ev.idea?.title}</CardTitle>
+                <StatusBadge $evaluated={true}>Completado</StatusBadge>
+              </CardHeader>
+
+              <CardDescription>{ev.idea?.problem}</CardDescription>
+
+              <CardMeta>
+                <MetaChip>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  Enviado el {formatDate(ev.createdAt)}
+                </MetaChip>
+              </CardMeta>
+
+              <CardFooter>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 13, color: '#4b5563', fontWeight: 600 }}>Tú calificaste con:</span>
+                  <span style={{ fontSize: 15, fontWeight: 900, color: Pista8Theme.primary }}>{ev.judgeScore}/10</span>
+                </div>
+                <PrimaryBtn onClick={(e) => { e.stopPropagation(); handleCardClick(ev); }} style={{ background: '#f3f4f6', color: '#374151' }}>
+                  <Eye size={14} style={{ marginRight: 6 }} />
+                  Ver Detalles
+                </PrimaryBtn>
+              </CardFooter>
+            </Card>
+          ))}
+        </Grid>
+      )}
+    </Container>
+  );
+};

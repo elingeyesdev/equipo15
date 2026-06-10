@@ -49,6 +49,15 @@ export class EvaluationsController {
     return this.evaluationService.findByIdea(ideaId, req.user.uid);
   }
 
+  @Get('me')
+  @UseGuards(FirebaseAuthGuard, RolesGuard)
+  @Roles('judge', 'admin')
+  async findMyEvaluations(@Request() req: AuthenticatedRequest) {
+    const user = await this.userService.findByUid(req.user.uid);
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+    return this.evaluationService.findMyEvaluations(user.id);
+  }
+
   @Get('judge/:judgeId')
   @UseGuards(FirebaseAuthGuard, RolesGuard)
   @Roles('judge', 'admin')

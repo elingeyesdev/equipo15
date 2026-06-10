@@ -36,7 +36,7 @@ export const NAVIGATION_CONFIG: NavItem[] = [
 
   { name: 'Retos Asignados', icon: Inbox, path: '/dashboard/judge/inbox', roles: ['JUDGE'] },
   { name: 'Evaluar Ideas', icon: ClipboardCheck, path: '/dashboard/judge/evaluation', roles: ['JUDGE'] },
-  { name: 'Mis Evaluaciones', icon: History, path: '/dashboard/judge/history', roles: ['JUDGE'], isComingSoon: true },
+  { name: 'Mis Evaluaciones', icon: History, path: '/dashboard/judge/history', roles: ['JUDGE'] },
 
   { name: 'Ver Retos', icon: Eye, path: '/dashboard', roles: ['STUDENT', 'USER'] },
   { name: 'Mis Favoritos', icon: Bookmark, path: '/dashboard/favoritos', roles: ['STUDENT', 'USER'] },

@@ -80,4 +80,58 @@ export class EvaluationRepository {
       },
     });
   }
+
+  async findByJudgeIdWithDetails(judgeId: string): Promise<any[]> {
+    return this.prisma.evaluation.findMany({
+      where: { judgeId },
+      include: {
+        idea: {
+          select: {
+            id: true,
+            title: true,
+            problem: true,
+            solution: true,
+            isAnonymous: true,
+            finalScore: true,
+            status: true,
+            impactArea: true,
+            improvementType: true,
+            effortLevel: true,
+            tags: true,
+            likesCount: true,
+            commentsCount: true,
+            createdAt: true,
+            multimediaLinks: true,
+            author: {
+              select: {
+                id: true,
+                displayName: true,
+                avatarUrl: true,
+              },
+            },
+            challenge: {
+              select: {
+                id: true,
+                title: true,
+                companyContext: true,
+              },
+            },
+          },
+        },
+        scores: {
+          include: {
+            criterion: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                weight: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

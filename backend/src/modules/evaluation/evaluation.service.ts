@@ -142,4 +142,26 @@ export class EvaluationService {
   async findByJudge(judgeId: string) {
     return this.evaluationRepository.findByJudgeId(judgeId);
   }
+
+  async findMyEvaluations(judgeId: string) {
+    const evaluations =
+      await this.evaluationRepository.findByJudgeIdWithDetails(judgeId);
+
+    return evaluations.map((evaluation) => {
+      const judgeScore = this.computeJudgeScore(evaluation.scores || []);
+      return {
+        id: evaluation.id,
+        feedback: evaluation.feedback,
+        createdAt: evaluation.createdAt,
+        judgeScore: Math.round(judgeScore * 100) / 100,
+        idea: evaluation.idea,
+        scores: (evaluation.scores || []).map(
+          (s: { score: number; criterion: any }) => ({
+            score: s.score,
+            criterion: s.criterion,
+          }),
+        ),
+      };
+    });
+  }
 }

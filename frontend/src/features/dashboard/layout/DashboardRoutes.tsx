@@ -58,6 +58,7 @@ export const DashboardRoutes = () => {
           <Route path="judge/evaluation/:challengeId?" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeEvaluationView /></WithRoleGuard>} />
           <Route path="judge/evaluation/:challengeId/idea/:ideaId" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeIdeaFormView /></WithRoleGuard>} />
           <Route path="judge/history" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeHistoryView /></WithRoleGuard>} />
+          <Route path="judge/history/evaluation/:challengeId/idea/:ideaId" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeIdeaFormView isReadOnlyMode={true} /></WithRoleGuard>} />
 
           <Route path="/" element={<DashboardIndexRedirect />} />
           <Route path="*" element={<NotFoundPage />} />

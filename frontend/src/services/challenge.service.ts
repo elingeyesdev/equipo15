@@ -169,4 +169,9 @@ export const challengeService = {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
   },
+
+  getMyEvaluations: async (): Promise<any[]> => {
+    const response = await axiosInstance.get<ApiResponse<any[]> | any[]>('/evaluations/me');
+    return unwrapApiData(response.data);
+  },
 };
