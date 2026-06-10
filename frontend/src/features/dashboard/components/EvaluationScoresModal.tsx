@@ -1,23 +1,34 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
-import { ChevronDown, Loader2, MessageSquare, Trophy, X } from 'lucide-react';
+import { ChevronDown, Loader2, MessageSquare, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Pista8Theme } from '@/config/theme';
 import {
   evaluationService,
   type IdeaEvaluationBreakdown,
 } from '@/services/evaluation.service';
-
-const fadeIn = keyframes`
-  from { opacity: 0; }
-  to { opacity: 1; }
-`;
-
-const slideUp = keyframes`
-  from { opacity: 0; transform: translateY(20px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-`;
+import {
+  AdminAuditBanner,
+  AdminCloseBtn,
+  AdminCriteriaCard,
+  AdminCriteriaGrid,
+  AdminCriteriaName,
+  AdminCriteriaValue,
+  AdminCriteriaWeight,
+  AdminHeaderContent,
+  AdminModalBody,
+  AdminModalCard,
+  AdminModalHeader,
+  AdminModalOverlay,
+  AdminModalSubtitle,
+  AdminModalTitle,
+  AdminSectionTitle,
+  AdminSummaryCard,
+  AdminSummaryGrid,
+  AdminSummaryLabel,
+  AdminSummaryValue,
+} from './admin/AdminModalStyles';
 
 const spin = keyframes`
   to { transform: rotate(360deg); }
@@ -27,173 +38,12 @@ const SpinIcon = styled(Loader2)`
   animation: ${spin} 1s linear infinite;
 `;
 
-const Overlay = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1200;
-  animation: ${fadeIn} 0.2s ease;
-  padding: 24px;
-`;
-
-const ModalCard = styled.div`
-  background: white;
-  border-radius: 24px;
-  width: 100%;
-  max-width: 760px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
-  animation: ${slideUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-`;
-
-const AuditBanner = styled.div`
-  background: #1e293b;
-  color: #f8fafc;
-  text-align: center;
-  padding: 10px 16px;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-`;
-
-const Header = styled.div`
-  padding: 24px 28px 18px;
-  border-bottom: 1px solid #f1f5f9;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-`;
-
-const HeaderContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-`;
-
-const Title = styled.h2`
-  margin: 0;
-  font-size: 20px;
-  font-weight: 900;
-  color: #0f172a;
-  line-height: 1.3;
-`;
-
-const Subtitle = styled.p`
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: #64748b;
-`;
-
-const CloseBtn = styled.button`
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #64748b;
-  flex-shrink: 0;
-
-  &:hover {
-    background: #f1f5f9;
-    color: #0f172a;
-  }
-`;
-
-const Body = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px 28px 28px;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(15, 23, 42, 0.15);
-    border-radius: 99px;
-  }
-`;
-
-const SummaryGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 24px;
-
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const SummaryCard = styled.div<{ $accent: string }>`
-  background: ${({ $accent }) => `${$accent}0d`};
-  border: 1px solid ${({ $accent }) => `${$accent}22`};
-  border-radius: 14px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const SummaryValue = styled.span<{ $accent: string }>`
-  font-size: 24px;
-  font-weight: 900;
-  color: ${({ $accent }) => $accent};
-  line-height: 1;
-`;
-
-const SummaryLabel = styled.span`
-  font-size: 11px;
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-`;
-
 const CriteriaSection = styled.div`
   margin-bottom: 24px;
 `;
 
-const SectionTitle = styled.h3`
-  margin: 0 0 12px;
-  font-size: 12px;
-  font-weight: 800;
-  color: #475569;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-`;
-
-const CriteriaList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-`;
-
-const CriteriaPill = styled.div`
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 999px;
-  padding: 8px 14px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #334155;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+const SectionTitle = styled(AdminSectionTitle)`
+  text-align: left;
 `;
 
 const AccordionList = styled.div`
@@ -298,6 +148,10 @@ const ScoreCard = styled.div`
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 `;
 
 const ScoreCardName = styled.div`
@@ -414,23 +268,23 @@ export function EvaluationScoresModal({
   };
 
   return createPortal(
-    <Overlay onClick={onClose}>
-      <ModalCard onClick={(e) => e.stopPropagation()}>
-        {auditMode && <AuditBanner>Modo: Auditoría de Rúbricas</AuditBanner>}
+    <AdminModalOverlay onClick={onClose}>
+      <AdminModalCard onClick={(e) => e.stopPropagation()}>
+        {auditMode && <AdminAuditBanner>Auditoría de Rúbricas</AdminAuditBanner>}
 
-        <Header>
-          <HeaderContent>
-            <Title>{data?.ideaTitle || ideaTitle || 'Desglose de evaluaciones'}</Title>
+        <AdminModalHeader>
+          <AdminHeaderContent>
+            <AdminModalTitle>{data?.ideaTitle || ideaTitle || 'Desglose de evaluaciones'}</AdminModalTitle>
             {data?.challengeTitle && (
-              <Subtitle>Reto: {data.challengeTitle}</Subtitle>
+              <AdminModalSubtitle>{data.challengeTitle}</AdminModalSubtitle>
             )}
-          </HeaderContent>
-          <CloseBtn type="button" onClick={onClose} aria-label="Cerrar">
+          </AdminHeaderContent>
+          <AdminCloseBtn type="button" onClick={onClose} aria-label="Cerrar">
             <X size={18} />
-          </CloseBtn>
-        </Header>
+          </AdminCloseBtn>
+        </AdminModalHeader>
 
-        <Body>
+        <AdminModalBody>
           {loading ? (
             <LoadingState>
               <SpinIcon size={18} />
@@ -442,39 +296,39 @@ export function EvaluationScoresModal({
             </EmptyState>
           ) : (
             <>
-              <SummaryGrid>
-                <SummaryCard $accent={Pista8Theme.primary}>
-                  <SummaryValue $accent={Pista8Theme.primary}>
+              <AdminSummaryGrid>
+                <AdminSummaryCard $accent={Pista8Theme.primary}>
+                  <AdminSummaryValue $accent={Pista8Theme.primary}>
                     {data.summary.averageFinalScore.toFixed(2)}
-                  </SummaryValue>
-                  <SummaryLabel>Puntaje promedio</SummaryLabel>
-                </SummaryCard>
-                <SummaryCard $accent="#2563eb">
-                  <SummaryValue $accent="#2563eb">
+                  </AdminSummaryValue>
+                  <AdminSummaryLabel>Puntaje promedio</AdminSummaryLabel>
+                </AdminSummaryCard>
+                <AdminSummaryCard $accent="#2563eb">
+                  <AdminSummaryValue $accent="#2563eb">
                     {data.summary.judgesCount}
-                  </SummaryValue>
-                  <SummaryLabel>Jueces evaluadores</SummaryLabel>
-                </SummaryCard>
-                <SummaryCard $accent="#16a34a">
-                  <SummaryValue $accent="#16a34a">
+                  </AdminSummaryValue>
+                  <AdminSummaryLabel>Jueces evaluadores</AdminSummaryLabel>
+                </AdminSummaryCard>
+                <AdminSummaryCard $accent="#16a34a">
+                  <AdminSummaryValue $accent="#16a34a">
                     {data.finalScore > 0 ? data.finalScore.toFixed(2) : data.summary.averageFinalScore.toFixed(2)}
-                  </SummaryValue>
-                  <SummaryLabel>Nota consolidada</SummaryLabel>
-                </SummaryCard>
-              </SummaryGrid>
+                  </AdminSummaryValue>
+                  <AdminSummaryLabel>Nota consolidada</AdminSummaryLabel>
+                </AdminSummaryCard>
+              </AdminSummaryGrid>
 
               {data.summary.criteriaAverages.length > 0 && (
                 <CriteriaSection>
-                  <SectionTitle>Promedio por criterio</SectionTitle>
-                  <CriteriaList>
+                  <AdminSectionTitle>Promedio por criterio</AdminSectionTitle>
+                  <AdminCriteriaGrid>
                     {data.summary.criteriaAverages.map((criterion) => (
-                      <CriteriaPill key={criterion.id}>
-                        <Trophy size={13} color={Pista8Theme.primary} />
-                        {criterion.name}: {criterion.averageScore.toFixed(1)}/10
-                        <span style={{ color: '#94a3b8' }}>({criterion.weight}%)</span>
-                      </CriteriaPill>
+                      <AdminCriteriaCard key={criterion.id}>
+                        <AdminCriteriaValue>{criterion.averageScore.toFixed(1)}/10</AdminCriteriaValue>
+                        <AdminCriteriaName>{criterion.name}</AdminCriteriaName>
+                        <AdminCriteriaWeight>Peso: {criterion.weight}%</AdminCriteriaWeight>
+                      </AdminCriteriaCard>
                     ))}
-                  </CriteriaList>
+                  </AdminCriteriaGrid>
                 </CriteriaSection>
               )}
 
@@ -541,9 +395,9 @@ export function EvaluationScoresModal({
               </AccordionList>
             </>
           )}
-        </Body>
-      </ModalCard>
-    </Overlay>,
+        </AdminModalBody>
+      </AdminModalCard>
+    </AdminModalOverlay>,
     document.body,
   );
 }

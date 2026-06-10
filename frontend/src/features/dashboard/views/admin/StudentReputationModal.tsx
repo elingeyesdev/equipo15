@@ -1,9 +1,34 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
+import { X } from 'lucide-react';
 import { toast } from 'sonner';
+import { Pista8Theme } from '@/config/theme';
 import { adminService } from '@/services/admin.service';
 import type { UserReputation, ReputationIdea } from '@/types/models';
 import { EvaluationScoresModal } from '../../components/EvaluationScoresModal';
+import { LightbulbIcon } from '../../components/shared/icons/LightbulbIcon';
+import { ScaleIcon } from '../../components/shared/icons/ScaleIcon';
+import { premiumTooltip } from '../../styles/CommonStyles';
+import {
+  AdminCloseBtn,
+  AdminDetailLabel,
+  AdminDetailSection,
+  AdminDetailText,
+  AdminHeaderContent,
+  AdminModalBody,
+  AdminModalCard,
+  AdminModalHeader,
+  AdminModalOverlay,
+  AdminModalSubtitle,
+  AdminModalTitle,
+  AdminSummaryCard,
+  AdminSummaryGrid,
+  AdminSummaryLabel,
+  AdminSummaryValue,
+  AdminTag,
+  AdminTagsRow,
+} from '../../components/admin/AdminModalStyles';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -302,27 +327,44 @@ const StatusBadge = styled.span<{ $tone: 'green' | 'amber' | 'gold' | 'red' | 's
   ${({ $tone }) => $tone === 'slate' && 'background: rgba(72,80,84,0.10); color: #485054;'}
 `;
 
-const DetailBtn = styled.button`
-  padding: 6px 14px;
-  border-radius: 10px;
-  border: none;
-  background: #FE410A;
-  font-size: 12px;
-  font-weight: 700;
-  color: white;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(254, 65, 10, 0.2);
+const ActionBtnGroup = styled.div`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+`;
 
-  &:hover {
+const IconAction = styled.button<{ $disabled?: boolean; $tooltipText?: string }>`
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(254, 65, 10, 0.18);
+  background: ${Pista8Theme.primary};
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'pointer')};
+  opacity: ${({ $disabled }) => ($disabled ? 0.45 : 1)};
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(254, 65, 10, 0.18);
+
+  &:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(254, 65, 10, 0.3);
+    box-shadow: 0 6px 16px rgba(254, 65, 10, 0.28);
   }
-  
-  &:active {
-    transform: translateY(0);
+
+  &:disabled {
+    filter: grayscale(0.4);
   }
+
+  ${premiumTooltip}
+`;
+
+const TooltipWrap = styled.span<{ $tooltipText?: string }>`
+  display: inline-flex;
+  position: relative;
+  ${premiumTooltip}
 `;
 
 const EmptyIdeas = styled.div`
@@ -426,134 +468,7 @@ const CancelBtn = styled.button`
   }
 `;
 
-const DetailOverlay = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(248, 249, 250, 0.88);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1200;
-  animation: ${fadeIn} 0.15s ease;
-  padding: 24px;
-`;
-
-const DetailCard = styled.div`
-  background: white;
-  border-radius: 20px;
-  width: 100%;
-  max-width: 560px;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 16px 48px rgba(72, 80, 84, 0.14), 0 0 0 1px rgba(72, 80, 84, 0.06);
-  animation: ${slideUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  padding: 32px;
-  text-align: center;
-
-  &::-webkit-scrollbar {
-    width: 5px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(72, 80, 84, 0.12);
-    border-radius: 99px;
-  }
-`;
-
-const DetailTitle = styled.h3`
-  margin: 0 0 8px;
-  font-size: 20px;
-  font-weight: 900;
-  color: #485054;
-`;
-
-const DetailChallenge = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: rgba(254, 65, 10, 0.08);
-  color: #fe410a;
-  font-size: 12px;
-  font-weight: 700;
-  margin-bottom: 20px;
-`;
-
-const DetailSection = styled.div`
-  margin-bottom: 18px;
-`;
-
-const DetailLabel = styled.div`
-  font-size: 11px;
-  font-weight: 800;
-  color: #FE410A;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 6px;
-  text-align: left;
-`;
-
-const DetailText = styled.div`
-  font-size: 14px;
-  color: #485054;
-  line-height: 1.7;
-  white-space: pre-wrap;
-  text-align: left;
-`;
-
-const DetailMetrics = styled.div`
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-  justify-content: center;
-`;
-
-const DetailMetricPill = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(72, 80, 84, 0.06);
-  font-size: 12px;
-  font-weight: 700;
-  color: #485054;
-`;
-
-const TagsRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-`;
-
-const Tag = styled.span`
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: rgba(254, 65, 10, 0.08);
-  color: #FE410A;
-  font-size: 11px;
-  font-weight: 700;
-`;
-
-const DetailCloseBtn = styled.button`
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(72, 80, 84, 0.10);
-  background: #F8F9FA;
-  font-size: 14px;
-  font-weight: 700;
-  color: #485054;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  margin-top: 12px;
-
-  &:hover {
-    background: rgba(72, 80, 84, 0.08);
-  }
-`;
+const isFinalistIdea = (status: string) => status === 'FINALIST' || status === 'WINNER';
 
 const LoadingContainer = styled.div`
   display: flex;
@@ -637,65 +552,75 @@ const formatDate = (value?: string | Date | null) => {
   return new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium' }).format(date);
 };
 
-const IdeaDetailModal = ({ idea, onClose }: { idea: ReputationIdea; onClose: () => void }) => (
-  <DetailOverlay onClick={onClose}>
-    <DetailCard onClick={(e) => e.stopPropagation()}>
-      <DetailTitle>{idea.title}</DetailTitle>
-      <DetailChallenge>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-        {idea.challenge.title}
-      </DetailChallenge>
+const IdeaDetailModal = ({ idea, onClose }: { idea: ReputationIdea; onClose: () => void }) =>
+  createPortal(
+    <AdminModalOverlay onClick={onClose}>
+      <AdminModalCard onClick={(e) => e.stopPropagation()}>
+        <AdminModalHeader>
+          <AdminHeaderContent>
+            <AdminModalTitle>{idea.title}</AdminModalTitle>
+            <AdminModalSubtitle>{idea.challenge.title}</AdminModalSubtitle>
+          </AdminHeaderContent>
+          <AdminCloseBtn type="button" onClick={onClose} aria-label="Cerrar">
+            <X size={18} />
+          </AdminCloseBtn>
+        </AdminModalHeader>
 
-      <DetailMetrics>
-        <DetailMetricPill>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          {idea.likesCount} likes
-        </DetailMetricPill>
-        <DetailMetricPill>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          {idea.commentsCount} comentarios
-        </DetailMetricPill>
-        {idea.finalScore > 0 && (
-          <DetailMetricPill>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-            {idea.finalScore.toFixed(1)} pts
-          </DetailMetricPill>
-        )}
-        <StatusBadge $tone={STATUS_TONES[idea.status] || 'slate'}>
-          {STATUS_LABELS[idea.status] || idea.status}
-        </StatusBadge>
-      </DetailMetrics>
+        <AdminModalBody>
+          <AdminSummaryGrid>
+            <AdminSummaryCard $accent="#e11d48">
+              <AdminSummaryValue $accent="#e11d48">{idea.likesCount}</AdminSummaryValue>
+              <AdminSummaryLabel>Likes</AdminSummaryLabel>
+            </AdminSummaryCard>
+            <AdminSummaryCard $accent="#2563eb">
+              <AdminSummaryValue $accent="#2563eb">{idea.commentsCount}</AdminSummaryValue>
+              <AdminSummaryLabel>Comentarios</AdminSummaryLabel>
+            </AdminSummaryCard>
+            <AdminSummaryCard $accent={Pista8Theme.primary}>
+              <AdminSummaryValue $accent={Pista8Theme.primary}>
+                {idea.finalScore > 0 ? idea.finalScore.toFixed(1) : '—'}
+              </AdminSummaryValue>
+              <AdminSummaryLabel>Puntaje</AdminSummaryLabel>
+            </AdminSummaryCard>
+          </AdminSummaryGrid>
 
-      <DetailSection>
-        <DetailLabel>Problema</DetailLabel>
-        <DetailText>{idea.problem}</DetailText>
-      </DetailSection>
+          <AdminDetailSection>
+            <AdminDetailLabel>Estado</AdminDetailLabel>
+            <StatusBadge $tone={STATUS_TONES[idea.status] || 'slate'}>
+              {STATUS_LABELS[idea.status] || idea.status}
+            </StatusBadge>
+          </AdminDetailSection>
 
+          <AdminDetailSection>
+            <AdminDetailLabel>Problema</AdminDetailLabel>
+            <AdminDetailText>{idea.problem}</AdminDetailText>
+          </AdminDetailSection>
 
+          <AdminDetailSection>
+            <AdminDetailLabel>Propuesta</AdminDetailLabel>
+            <AdminDetailText>{idea.solution}</AdminDetailText>
+          </AdminDetailSection>
 
+          {idea.tags.length > 0 && (
+            <AdminDetailSection>
+              <AdminDetailLabel>Tags</AdminDetailLabel>
+              <AdminTagsRow>
+                {idea.tags.map((tag) => (
+                  <AdminTag key={tag}>{tag}</AdminTag>
+                ))}
+              </AdminTagsRow>
+            </AdminDetailSection>
+          )}
 
-      {idea.tags.length > 0 && (
-        <DetailSection>
-          <DetailLabel>Tags</DetailLabel>
-          <TagsRow style={{ justifyContent: 'center' }}>
-            {idea.tags.map((tag) => (
-              <Tag key={tag}>{tag}</Tag>
-            ))}
-          </TagsRow>
-        </DetailSection>
-      )}
-
-      <DetailSection>
-        <DetailLabel>Fecha de publicación</DetailLabel>
-        <DetailText>{formatDate(idea.createdAt)}</DetailText>
-      </DetailSection>
-
-      <DetailCloseBtn type="button" onClick={onClose}>Cerrar</DetailCloseBtn>
-    </DetailCard>
-  </DetailOverlay>
-);
+          <AdminDetailSection>
+            <AdminDetailLabel>Fecha de publicación</AdminDetailLabel>
+            <AdminDetailText>{formatDate(idea.createdAt)}</AdminDetailText>
+          </AdminDetailSection>
+        </AdminModalBody>
+      </AdminModalCard>
+    </AdminModalOverlay>,
+    document.body,
+  );
 
 interface StudentReputationModalProps {
   userId: string;
@@ -865,18 +790,37 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
                             {formatDate(idea.createdAt)}
                           </ITD>
                           <ITD>
-                            <DetailBtn
-                              type="button"
-                              onClick={() => {
-                                if (idea.status === 'FINALIST' || idea.status === 'WINNER') {
-                                  setEvaluationIdea(idea);
-                                  return;
-                                }
-                                setDetailIdea(idea);
-                              }}
-                            >
-                              Ver detalles
-                            </DetailBtn>
+                            <ActionBtnGroup>
+                              <IconAction
+                                type="button"
+                                aria-label="Detalles de la Idea"
+                                $tooltipText="Detalles de la Idea"
+                                onClick={() => setDetailIdea(idea)}
+                              >
+                                <LightbulbIcon color="white" size={16} />
+                              </IconAction>
+                              {isFinalistIdea(idea.status) ? (
+                                <IconAction
+                                  type="button"
+                                  aria-label="Resultados"
+                                  $tooltipText="Resultados"
+                                  onClick={() => setEvaluationIdea(idea)}
+                                >
+                                  <ScaleIcon color="white" size={16} />
+                                </IconAction>
+                              ) : (
+                                <TooltipWrap $tooltipText="Esta idea no clasificó como finalista">
+                                  <IconAction
+                                    type="button"
+                                    aria-label="Resultados no disponibles"
+                                    disabled
+                                    $disabled
+                                  >
+                                    <ScaleIcon color="white" size={16} />
+                                  </IconAction>
+                                </TooltipWrap>
+                              )}
+                            </ActionBtnGroup>
                           </ITD>
                         </ITR>
                       ))}
@@ -919,7 +863,6 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
         <EvaluationScoresModal
           ideaId={evaluationIdea.id}
           ideaTitle={evaluationIdea.title}
-          auditMode
           onClose={() => setEvaluationIdea(null)}
         />
       )}

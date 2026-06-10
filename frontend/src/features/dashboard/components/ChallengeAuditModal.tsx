@@ -44,8 +44,8 @@ const ModalCard = styled.div`
 `;
 
 const AuditBanner = styled.div`
-  background: #1e293b;
-  color: #f8fafc;
+  background: ${Pista8Theme.primary};
+  color: white;
   text-align: center;
   padding: 10px 16px;
   font-size: 12px;
@@ -130,7 +130,7 @@ const IdeaAuthor = styled.span`
 
 const AuditBtn = styled.button`
   border: none;
-  border-radius: 10px;
+  border-radius: 999px;
   padding: 8px 14px;
   background: ${Pista8Theme.primary};
   color: white;
@@ -138,6 +138,14 @@ const AuditBtn = styled.button`
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(254, 65, 10, 0.2);
+  transition: background 0.2s ease, transform 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: #e63a09;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(254, 65, 10, 0.3);
+  }
 
   &:disabled {
     opacity: 0.45;
@@ -208,7 +216,7 @@ export function ChallengeAuditModal({
       {createPortal(
         <Overlay onClick={onClose}>
           <ModalCard onClick={(e) => e.stopPropagation()}>
-            <AuditBanner>Modo: Auditoría de Rúbricas</AuditBanner>
+            <AuditBanner>Auditoría de Rúbricas</AuditBanner>
             <Header>
               <div>
                 <Title>

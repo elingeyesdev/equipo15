@@ -152,17 +152,19 @@ export const AuditBtn = styled.button`
   border: none;
   border-radius: 999px;
   padding: 8px 14px;
-  background: #1e293b;
+  background: ${Pista8Theme.primary};
   color: white;
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 2px 8px rgba(254, 65, 10, 0.2);
 
   &:hover:not(:disabled) {
-    background: #0f172a;
+    background: #e63a09;
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(254, 65, 10, 0.3);
   }
 
   &:disabled {
