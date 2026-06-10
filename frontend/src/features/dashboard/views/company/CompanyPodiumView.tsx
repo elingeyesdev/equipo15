@@ -5,7 +5,7 @@ import { Pista8Theme, breakpoints } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../../context/AuthContext';
-import { Trophy, Users, MessageSquare, Sparkles, AlertTriangle, CheckCircle, Loader2, Gavel, Calculator, Clock, Download } from 'lucide-react';
+import { Trophy, Users, MessageSquare, Sparkles, AlertTriangle, CheckCircle, Loader2, Gavel, Calculator, Clock, Download, FileSpreadsheet } from 'lucide-react';
 import { generatePodiumPDF } from '../../../../utils/generatePodiumPDF';
 import MedalSvg from '../../../../components/icons/MedalSvg';
 import { toast } from 'sonner';
@@ -697,6 +697,7 @@ export const CompanyPodiumView = () => {
   const [scoresModalIdea, setScoresModalIdea] = useState<{ id: string; title: string } | null>(null);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
+  const [isDownloadingExcel, setIsDownloadingExcel] = useState(false);
   const [animKey, setAnimKey] = useState(0);
 
   const fetchData = useCallback(async () => {
@@ -837,6 +838,20 @@ export const CompanyPodiumView = () => {
       toast.error('No se pudo generar el reporte. Intenta de nuevo.');
     } finally {
       setIsDownloadingPDF(false);
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    if (!challengeId || isDownloadingExcel) return;
+    setIsDownloadingExcel(true);
+    try {
+      await challengeService.downloadEvaluationExcel(challengeId);
+      toast.success('Reporte Excel descargado exitosamente.');
+    } catch (err) {
+      console.error('Error descargando Excel:', err);
+      toast.error('No se pudo descargar el reporte Excel.');
+    } finally {
+      setIsDownloadingExcel(false);
     }
   };
 
@@ -1065,6 +1080,16 @@ export const CompanyPodiumView = () => {
                 {isDownloadingPDF
                   ? <><Loader2 size={16} style={{ animation: 'spin 0.9s linear infinite' }} /> Generando...</>
                   : <><Download size={16} /> Reporte PDF</>
+                }
+              </DownloadBtn>
+              <DownloadBtn
+                onClick={handleDownloadExcel}
+                disabled={isDownloadingExcel}
+                title="Descargar datos crudos de evaluaciones en Excel"
+              >
+                {isDownloadingExcel
+                  ? <><Loader2 size={16} style={{ animation: 'spin 0.9s linear infinite' }} /> Generando...</>
+                  : <><FileSpreadsheet size={16} /> Reporte Excel</>
                 }
               </DownloadBtn>
             </div>

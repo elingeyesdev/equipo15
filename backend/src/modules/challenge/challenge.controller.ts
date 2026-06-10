@@ -10,8 +10,11 @@ import {
   UseGuards,
   Query,
   Request,
+  Res,
+  Header,
   NotFoundException,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -269,5 +272,33 @@ export class ChallengesController {
     @Request() req: AuthenticatedRequest,
   ) {
     return this.challengeService.finalizePodium(id, dto, req.user.uid);
+  }
+
+  // ─── E3.3: Export evaluations as Excel ────────────────────────────────
+  @Get(':id/export-evaluations')
+  @UseGuards(RolesGuard)
+  @Roles('company')
+  @ApiOperation({
+    summary: 'Export raw evaluation data as Excel (E3.3)',
+    description: 'Generates an .xlsx file with all disaggregated scores and judge feedback for a challenge.',
+  })
+  @ApiResponse({ status: 200, description: 'Excel file downloaded successfully.' })
+  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  async exportEvaluations(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+    @Res() res: Response,
+  ) {
+    try {
+      const { buffer, fileName } = await this.challengeService.generateEvaluationExcel(id, req.user.uid);
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buffer);
+    } catch (error) {
+      console.error('Error exporting evaluations:', error);
+      const status = error?.status || error?.getStatus?.() || 500;
+      const message = error?.message || 'Error interno al generar el Excel.';
+      res.status(status).json({ statusCode: status, message });
+    }
   }
 }

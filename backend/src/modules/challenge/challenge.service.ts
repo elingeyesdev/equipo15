@@ -612,4 +612,269 @@ export class ChallengeService {
 
     return null;
   }
+
+  // ─── E3.3: Generate Excel with raw evaluation data ──────────────────────
+  async generateEvaluationExcel(
+    challengeId: string,
+    ownerUid: string,
+  ): Promise<{ buffer: Buffer; fileName: string }> {
+    // 1. Verify ownership
+    const user = await this.getUserByUid(ownerUid);
+    if (!user) throw new NotFoundException('Usuario no encontrado.');
+
+    const challenge = await this.challengeRepository.findById(challengeId);
+    if (!challenge) throw new NotFoundException('Reto no encontrado.');
+    if (challenge.authorId !== user.id) {
+      throw new ForbiddenException('No tienes acceso a este reto.');
+    }
+
+    // 2. Fetch deep data
+    const ideas =
+      await this.challengeRepository.getEvaluationDataForExport(challengeId);
+
+    // 3. Build workbook
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const ExcelJS = require('exceljs');
+    const workbook = new (ExcelJS.Workbook || ExcelJS.default?.Workbook)();
+    workbook.creator = 'Pista8';
+    workbook.created = new Date();
+
+    // 1. Extract dynamic criteria names
+    const criteriaNames = new Set<string>();
+    ideas.forEach((idea) => {
+      idea.evaluations.forEach((evaluation) => {
+        evaluation.scores.forEach((sc) => {
+          if (sc.criterion?.name) criteriaNames.add(sc.criterion.name);
+        });
+      });
+    });
+    const dynamicCriteria = Array.from(criteriaNames).sort();
+
+    // ── Sheet 1: Evaluaciones Detalladas ──
+    const detailSheet = workbook.addWorksheet('Evaluaciones Detalladas');
+    
+    // Base columns
+    const columns: any[] = [
+      { header: 'Posición', key: 'position', width: 10 },
+      { header: 'Título Idea', key: 'ideaTitle', width: 30 },
+      { header: 'Autor', key: 'author', width: 22 },
+      { header: 'Email Autor', key: 'authorEmail', width: 28 },
+      { header: 'Estado', key: 'status', width: 14 },
+      { header: 'Puntaje Final Idea', key: 'finalScore', width: 16 },
+      { header: 'Nombre Juez', key: 'judgeName', width: 22 },
+      { header: 'Email Juez', key: 'judgeEmail', width: 28 },
+    ];
+
+    // Dynamic criteria columns
+    dynamicCriteria.forEach((cName) => {
+      columns.push({ header: `Nota: ${cName}`, key: `crit_${cName}`, width: 18 });
+    });
+
+    columns.push(
+      { header: 'Total Juez (Ponderado)', key: 'judgeTotalScore', width: 22 },
+      { header: 'Feedback General', key: 'feedback', width: 50 },
+      { header: 'Fecha Evaluación', key: 'evaluationDate', width: 20 },
+    );
+    detailSheet.columns = columns;
+
+    // Style header
+    detailSheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFE410A' },
+      };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    });
+    detailSheet.getRow(1).height = 24;
+
+    const STATUS_LABELS: Record<string, string> = {
+      PUBLISHED: 'Publicada',
+      FINALIST: 'Finalista',
+      WINNER: 'Ganadora',
+    };
+
+    const IMPACT_LABELS: Record<string, string> = {
+      TEAM: 'Equipo',
+      PRODUCT: 'Producto',
+      SERVICE: 'Servicio',
+      PROCESS: 'Procesos',
+      BUSINESS_MODEL: 'Modelo de Negocio',
+      PRODUCTIVITY: 'Productividad',
+    };
+
+    const IMPROV_LABELS: Record<string, string> = {
+      ENHANCES: 'Potencia',
+      TRANSFORMS: 'Transforma',
+      EXPANDS: 'Expande',
+    };
+
+    const EFFORT_LABELS: Record<string, string> = {
+      DEVELOPMENT: 'Requiere Desarrollo',
+      COORDINATION: 'Coordinación',
+      FUNDING: 'Requiere Fondos',
+      ADAPTATION: 'Adaptación',
+    };
+
+    for (const [idx, idea] of ideas.entries()) {
+      const currentPosition = idx + 1;
+
+      if (idea.evaluations.length === 0) {
+        // Ideas without evaluations still appear
+        const rowData: any = {
+          position: currentPosition,
+          ideaTitle: idea.title,
+          author: idea.author?.displayName || '—',
+          authorEmail: idea.author?.email || '—',
+          status: STATUS_LABELS[idea.status] || idea.status,
+          finalScore: idea.finalScore ?? 0,
+          judgeName: '—',
+          judgeEmail: '—',
+          judgeTotalScore: '—',
+          feedback: 'Sin evaluaciones',
+          evaluationDate: '—',
+        };
+        dynamicCriteria.forEach((cName) => {
+          rowData[`crit_${cName}`] = '—';
+        });
+        detailSheet.addRow(rowData);
+        continue;
+      }
+
+      for (const evaluation of idea.evaluations) {
+        let judgeTotalScore = 0;
+        const criterionScores: Record<string, number> = {};
+
+        for (const sc of evaluation.scores) {
+          const cName = sc.criterion?.name;
+          if (cName) {
+            criterionScores[`crit_${cName}`] = sc.score;
+            const weighted = (sc.score * (sc.criterion?.weight ?? 0)) / 100;
+            judgeTotalScore += weighted;
+          }
+        }
+
+        const rowData: any = {
+          position: currentPosition,
+          ideaTitle: idea.title,
+          author: idea.author?.displayName || '—',
+          authorEmail: idea.author?.email || '—',
+          status: STATUS_LABELS[idea.status] || idea.status,
+          finalScore: idea.finalScore ?? 0,
+          judgeName: evaluation.judge?.displayName || '—',
+          judgeEmail: evaluation.judge?.email || '—',
+          judgeTotalScore: evaluation.scores.length > 0 ? Math.round(judgeTotalScore * 100) / 100 : '—',
+          feedback: evaluation.feedback || '—',
+          evaluationDate: evaluation.createdAt
+            ? new Date(evaluation.createdAt).toLocaleDateString('es')
+            : '—',
+        };
+
+        dynamicCriteria.forEach((cName) => {
+          rowData[`crit_${cName}`] = criterionScores[`crit_${cName}`] ?? '—';
+        });
+
+        detailSheet.addRow(rowData);
+      }
+    }
+
+    // Style data rows and add borders
+    detailSheet.eachRow((row, rowNumber) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' },
+        };
+        if (rowNumber > 1) {
+          cell.alignment = { vertical: 'top', wrapText: true };
+          if (rowNumber % 2 === 0) {
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFF9FAFB' },
+            };
+          }
+        }
+      });
+    });
+
+    // ── Sheet 2: Resumen por Idea ──
+    const summarySheet = workbook.addWorksheet('Resumen por Idea');
+    summarySheet.columns = [
+      { header: 'Posición', key: 'position', width: 10 },
+      { header: 'Título', key: 'title', width: 30 },
+      { header: 'Autor', key: 'author', width: 22 },
+      { header: 'Estado', key: 'status', width: 14 },
+      { header: 'Puntaje Final', key: 'finalScore', width: 14 },
+      { header: 'N° Evaluaciones', key: 'evalCount', width: 16 },
+      { header: 'Área de Impacto', key: 'impactArea', width: 20 },
+      { header: 'Tipo de Mejora', key: 'improvementType', width: 20 },
+      { header: 'Nivel de Esfuerzo', key: 'effortLevel', width: 18 },
+      { header: 'Problema', key: 'problem', width: 60 },
+    ];
+
+    summarySheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFE410A' }, // Naranja Pista8
+      };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    });
+    summarySheet.getRow(1).height = 24;
+
+    ideas.forEach((idea, idx) => {
+      summarySheet.addRow({
+        position: idx + 1,
+        title: idea.title,
+        author: idea.author?.displayName || '—',
+        status: STATUS_LABELS[idea.status] || idea.status,
+        finalScore: idea.finalScore ?? 0,
+        evalCount: idea.evaluations.length,
+        impactArea: idea.impactArea ? (IMPACT_LABELS[idea.impactArea] || idea.impactArea) : '—',
+        improvementType: idea.improvementType ? (IMPROV_LABELS[idea.improvementType] || idea.improvementType) : '—',
+        effortLevel: idea.effortLevel ? (EFFORT_LABELS[idea.effortLevel] || idea.effortLevel) : '—',
+        problem: idea.problem || '—',
+      });
+    });
+
+    summarySheet.eachRow((row, rowNumber) => {
+      row.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' },
+        };
+        if (rowNumber > 1) {
+          cell.alignment = { vertical: 'top', wrapText: true };
+          if (rowNumber % 2 === 0) {
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFF9FAFB' },
+            };
+          }
+        }
+      });
+    });
+
+    // 4. Return buffer
+    const arrayBuffer = await workbook.xlsx.writeBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const safeTitle = (challenge.title || 'reto')
+      .replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ ]/g, '')
+      .replace(/\s+/g, '_')
+      .substring(0, 40);
+
+    return {
+      buffer,
+      fileName: `evaluaciones_${safeTitle}.xlsx`,
+    };
+  }
 }

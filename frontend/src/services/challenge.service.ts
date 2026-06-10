@@ -143,4 +143,30 @@ export const challengeService = {
     const response = await axiosInstance.post<ApiResponse<any>>('/evaluations', payload);
     return unwrapApiData(response.data);
   },
+
+  downloadEvaluationExcel: async (challengeId: string): Promise<void> => {
+    const response = await axiosInstance.get(`/challenges/${challengeId}/export-evaluations`, {
+      responseType: 'blob',
+    });
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+
+    // Try to extract filename from Content-Disposition header
+    const disposition = response.headers['content-disposition'];
+    let fileName = `evaluaciones_${challengeId}.xlsx`;
+    if (disposition) {
+      const match = disposition.match(/filename="?([^";\n]+)"?/);
+      if (match?.[1]) fileName = match[1];
+    }
+
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
 };

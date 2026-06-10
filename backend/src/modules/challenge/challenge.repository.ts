@@ -1159,4 +1159,58 @@ export class ChallengeRepository {
 
     return activeCriteria.sort((a, b) => a.name.localeCompare(b.name));
   }
+
+  // ─── E3.3: Export evaluation data for Excel ──────────────────────────────
+  async getEvaluationDataForExport(challengeId: string) {
+    return this.prisma.idea.findMany({
+      where: {
+        challengeId,
+        deletedAt: null,
+        status: { in: ['PUBLISHED', 'FINALIST', 'WINNER'] },
+      },
+      select: {
+        id: true,
+        title: true,
+        problem: true,
+        solution: true,
+        finalScore: true,
+        status: true,
+        createdAt: true,
+        impactArea: true,
+        improvementType: true,
+        effortLevel: true,
+        author: {
+          select: {
+            displayName: true,
+            email: true,
+          },
+        },
+        evaluations: {
+          select: {
+            id: true,
+            feedback: true,
+            createdAt: true,
+            judge: {
+              select: {
+                displayName: true,
+                email: true,
+              },
+            },
+            scores: {
+              select: {
+                score: true,
+                criterion: {
+                  select: {
+                    name: true,
+                    weight: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: [{ finalScore: 'desc' }, { createdAt: 'asc' }],
+    });
+  }
 }
