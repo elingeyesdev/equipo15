@@ -5,7 +5,8 @@ import { Pista8Theme, breakpoints } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../../context/AuthContext';
-import { Trophy, Users, MessageSquare, Sparkles, AlertTriangle, CheckCircle, Loader2, Gavel, Calculator, Clock } from 'lucide-react';
+import { Trophy, Users, MessageSquare, Sparkles, AlertTriangle, CheckCircle, Loader2, Gavel, Calculator, Clock, Download } from 'lucide-react';
+import { generatePodiumPDF } from '../../../../utils/generatePodiumPDF';
 import MedalSvg from '../../../../components/icons/MedalSvg';
 import { toast } from 'sonner';
 import BackButton from '../../../../components/common/BackButton';
@@ -162,6 +163,34 @@ const FinalizeBtn = styled.button`
   &:disabled {
     background: #e5e7eb;
     color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+`;
+
+const DownloadBtn = styled.button`
+  padding: 12px 22px;
+  border-radius: 14px;
+  border: 1.5px solid #16a34a;
+  background: white;
+  color: #16a34a;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover {
+    background: #f0fdf4;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(22, 163, 74, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
@@ -667,6 +696,7 @@ export const CompanyPodiumView = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [scoresModalIdea, setScoresModalIdea] = useState<{ id: string; title: string } | null>(null);
   const [isFinalizing, setIsFinalizing] = useState(false);
+  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
   const [animKey, setAnimKey] = useState(0);
 
   const fetchData = useCallback(async () => {
@@ -793,6 +823,21 @@ export const CompanyPodiumView = () => {
   const handleConfirm = () => {
     if (phase === 'select') return handleSendToJudges();
     if (phase === 'evaluate') return handleGenerateResults();
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!challenge || isDownloadingPDF) return;
+    setIsDownloadingPDF(true);
+    try {
+      const topWinners = sortedIdeas.slice(0, 3);
+      generatePodiumPDF(challenge, topWinners);
+      toast.success('Reporte ejecutivo generado y descargado.');
+    } catch (err) {
+      console.error('Error generando PDF:', err);
+      toast.error('No se pudo generar el reporte. Intenta de nuevo.');
+    } finally {
+      setIsDownloadingPDF(false);
+    }
   };
 
   if (!challengeId) {
@@ -1008,9 +1053,21 @@ export const CompanyPodiumView = () => {
           )}
 
           {phase === 'done' && (
-            <FinalizeBtn disabled style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', cursor: 'not-allowed', boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)' }}>
-              <CheckCircle size={18} /> Podio finalizado
-            </FinalizeBtn>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              <FinalizeBtn disabled style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', cursor: 'not-allowed', boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)' }}>
+                <CheckCircle size={18} /> Podio finalizado
+              </FinalizeBtn>
+              <DownloadBtn
+                onClick={handleDownloadPDF}
+                disabled={isDownloadingPDF}
+                title="Descargar reporte ejecutivo en PDF"
+              >
+                {isDownloadingPDF
+                  ? <><Loader2 size={16} style={{ animation: 'spin 0.9s linear infinite' }} /> Generando...</>
+                  : <><Download size={16} /> Reporte PDF</>
+                }
+              </DownloadBtn>
+            </div>
           )}
         </ControlCard>
 

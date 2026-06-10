@@ -210,6 +210,11 @@ export class ChallengeRepository {
           likesCount: true,
           commentsCount: true,
           createdAt: true,
+          problem: true,
+          solution: true,
+          impactArea: true,
+          improvementType: true,
+          effortLevel: true,
           author: {
             select: {
               displayName: true,
