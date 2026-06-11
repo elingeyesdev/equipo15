@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { ideaService } from '../../../services/idea.service';
+import { ideaService, type IdeaDraft } from '../../../services/idea.service';
 import type { Challenge, UserProfile } from '../../../types/models';
 import {
   IDEA_WORD_RULES,
@@ -8,6 +8,11 @@ import {
   getWordRangeError,
   isWordCountInRange,
 } from '../helpers/ideaValidation';
+import {
+  stripDraftProblem,
+  stripDraftSolution,
+  stripDraftTitle,
+} from '../helpers/draftPlaceholders';
 
 export type ConsentKey = 'terms' | 'usage' | 'originality';
 export type ImpactArea = 'PRODUCTIVITY' | 'COSTS' | 'CUSTOMERS' | 'TEAM' | 'GROWTH' | 'SUSTAINABILITY' | 'SOCIAL_IMPACT';
@@ -112,6 +117,7 @@ export const useIdeationForm = (
     usage: false,
     originality: false,
   });
+  const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
 
   const minTitleWords = IDEA_WORD_RULES.title.min;
   const maxTitleWords = IDEA_WORD_RULES.title.max;
@@ -150,6 +156,26 @@ export const useIdeationForm = (
     setConsents({ terms: false, usage: false, originality: false });
     setFormErrors({});
     setConsentsTouched(false);
+    setActiveDraftId(null);
+  };
+
+  const loadFromDraft = (draft: IdeaDraft) => {
+    setActiveDraftId(draft.id);
+    setIdeaName(stripDraftTitle(draft.title));
+    setIdeaProblem(stripDraftProblem(draft.problem));
+    setIdeaSolution(stripDraftSolution(draft.solution));
+    setImpactArea((draft.impactArea as ImpactArea) || '');
+    setImprovementType((draft.improvementType as ImprovementType) || '');
+    setEffortLevel((draft.effortLevel as EffortLevel) || '');
+    setTags(Array.isArray(draft.tags) ? draft.tags : []);
+    setTagInput('');
+    setFormErrors({});
+    setConsentsTouched(false);
+    setFormFeedback({
+      tone: 'info',
+      title: 'Borrador cargado',
+      message: 'Retomaste tu borrador. Puedes seguir editándolo y guardar cambios.',
+    });
   };
 
   const clearFieldError = (field: FormErrorKey) => {
@@ -260,6 +286,7 @@ export const useIdeationForm = (
   const handleIdeaSubmit = async (
     targetStatus: 'draft' | 'public',
     formChallenge: Challenge | null,
+    onDraftSaved?: () => void,
   ): Promise<boolean> => {
     if (!profile?.id) {
       const message = {
@@ -331,12 +358,22 @@ export const useIdeationForm = (
           improvementType: improvementType || undefined,
           effortLevel: effortLevel || undefined,
         };
-        await ideaService.saveDraftIdea(payload);
-        showToast({
-          tone: 'info',
+        if (activeDraftId) {
+          await ideaService.updateDraftIdea(activeDraftId, payload);
+        } else {
+          const created = await ideaService.saveDraftIdea(payload);
+          const createdId = (created as { data?: { id?: string }; id?: string })?.data?.id
+            ?? (created as { id?: string })?.id;
+          if (createdId) setActiveDraftId(createdId);
+        }
+        const draftMessage: FeedbackMessage = {
+          tone: 'success',
           title: 'Borrador guardado',
-          message: 'Guardamos tus avances. Puedes retomarlos cuando quieras.',
-        });
+          message: 'Guardamos tus avances sobre esta propuesta. Puedes continuar editando o compartirla cuando esté lista.',
+        };
+        setFormFeedback(draftMessage);
+        showToast(draftMessage);
+        onDraftSaved?.();
         success = true;
       } else {
         const normalizedProblem =
@@ -353,6 +390,15 @@ export const useIdeationForm = (
           improvementType: improvementType || undefined,
           effortLevel: effortLevel || undefined,
         });
+
+        if (activeDraftId) {
+          try {
+            await ideaService.deleteDraftIdea(activeDraftId);
+            onDraftSaved?.();
+          } catch {
+            // Publicación exitosa aunque falle limpiar el borrador previo.
+          }
+        }
 
         resetForm();
         success = true;
@@ -423,6 +469,8 @@ export const useIdeationForm = (
     isProfileComplete,
     handleIdeaSubmit,
     resetForm,
+    loadFromDraft,
+    activeDraftId,
     isReadOnlyByPenalty,
   };
 };

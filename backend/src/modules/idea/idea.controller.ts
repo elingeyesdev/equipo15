@@ -4,6 +4,7 @@ import {
   Body,
   Get,
   Patch,
+  Delete,
   Param,
   UseGuards,
   Query,
@@ -57,6 +58,12 @@ export class IdeasController {
     return this.ideaService.findMyIdeas(request.user.uid);
   }
 
+  @Get('me/drafts')
+  @ApiOperation({ summary: 'Get draft ideas of the current authenticated user' })
+  findMyDrafts(@Req() request: AuthenticatedRequest) {
+    return this.ideaService.findMyDrafts(request.user.uid);
+  }
+
   @Get()
   @SkipThrottle()
   @ApiOperation({ summary: 'Get all ideas (optionally filter by public only)' })
@@ -86,6 +93,25 @@ export class IdeasController {
   @ApiOperation({ summary: 'Update the status of an idea (Admin only)' })
   updateStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.ideaService.updateStatus(id, status);
+  }
+
+  @Patch(':id/draft')
+  @ApiOperation({ summary: 'Update a draft idea (author only)' })
+  updateDraft(
+    @Param('id') id: string,
+    @Body() updateDraftDto: CreateDraftIdeaDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.ideaService.updateDraft(id, updateDraftDto, request.user.uid);
+  }
+
+  @Delete(':id/draft')
+  @ApiOperation({ summary: 'Delete a draft idea (author only)' })
+  deleteDraft(
+    @Param('id') id: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.ideaService.deleteDraft(id, request.user.uid);
   }
 
   @Patch(':id')

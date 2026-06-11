@@ -33,6 +33,29 @@ export interface CreateDraftIdeaPayload {
   effortLevel?: 'EASY' | 'COORDINATION' | 'DEVELOPMENT' | 'TRANSFORMATION';
 }
 
+export interface IdeaDraft {
+  id: string;
+  title: string;
+  problem: string;
+  solution: string;
+  status: string;
+  impactArea?: string | null;
+  improvementType?: string | null;
+  effortLevel?: string | null;
+  isAnonymous: boolean;
+  createdAt: string;
+  updatedAt: string;
+  challengeId: string;
+  tags: string[];
+  challenge?: {
+    id: string;
+    title: string;
+    status: string;
+    facultyId?: number | null;
+    faculty?: { id: string; name: string } | null;
+  };
+}
+
 export interface UpdateIdeaPayload {
   title?: string;
   problem?: string;
@@ -85,6 +108,24 @@ export const ideaService = {
 
   saveDraftIdea: async (payload: CreateDraftIdeaPayload) => {
     const response = await axiosInstance.post('/ideas/drafts', payload);
+    return response.data;
+  },
+
+  updateDraftIdea: async (draftId: string, payload: CreateDraftIdeaPayload) => {
+    const response = await axiosInstance.patch(`/ideas/${draftId}/draft`, payload);
+    return response.data;
+  },
+
+  getMyDrafts: async (): Promise<IdeaDraft[]> => {
+    const response = await axiosInstance.get('/ideas/me/drafts');
+    const body = response.data;
+    if (Array.isArray(body)) return body;
+    if (Array.isArray(body?.data)) return body.data;
+    return [];
+  },
+
+  deleteDraftIdea: async (draftId: string) => {
+    const response = await axiosInstance.delete(`/ideas/${draftId}/draft`);
     return response.data;
   },
 

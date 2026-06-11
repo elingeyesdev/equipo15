@@ -4,6 +4,7 @@ import IdeaDetailModal from '../../../features/sky-wall/components/IdeaDetailMod
 import { ModerationModals } from './ModerationModals';
 import type { PlaneIdea } from '../../../features/sky-wall/types';
 import type { FeedbackMessage } from '../hooks/useIdeationForm';
+import type { IdeaDraft } from '../../../services/idea.service';
 
 interface IdeationOverlayProps {
   toastMessage: FeedbackMessage | null;
@@ -19,6 +20,8 @@ interface IdeationOverlayProps {
   onConfirm: () => Promise<void>;
   confirmOpen: boolean;
   setConfirmOpen: (v: boolean) => void;
+  showToast: (payload: FeedbackMessage) => void;
+  onContinueDraft: (draft: IdeaDraft) => void;
 }
 
 const IdeationOverlay: React.FC<IdeationOverlayProps> = ({
@@ -35,6 +38,8 @@ const IdeationOverlay: React.FC<IdeationOverlayProps> = ({
   onConfirm,
   confirmOpen,
   setConfirmOpen,
+  showToast,
+  onContinueDraft,
 }) => {
   return (
     <>
@@ -59,6 +64,8 @@ const IdeationOverlay: React.FC<IdeationOverlayProps> = ({
         onConfirm={onConfirm}
         confirmOpen={confirmOpen}
         setConfirmOpen={setConfirmOpen}
+        showToast={showToast}
+        onContinueDraft={onContinueDraft}
       />
     </>
   );

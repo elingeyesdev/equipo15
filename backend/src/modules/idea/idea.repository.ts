@@ -287,9 +287,49 @@ export class IdeaRepository {
     });
   }
 
+  async findDraftsByAuthorId(authorId: string): Promise<any[]> {
+    return this.prisma.idea.findMany({
+      where: { authorId, status: 'DRAFT', deletedAt: null },
+      orderBy: { updatedAt: 'desc' },
+      select: {
+        id: true,
+        title: true,
+        problem: true,
+        solution: true,
+        status: true,
+        impactArea: true,
+        improvementType: true,
+        effortLevel: true,
+        isAnonymous: true,
+        createdAt: true,
+        updatedAt: true,
+        challengeId: true,
+        challenge: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            facultyId: true,
+            faculty: { select: { id: true, name: true } },
+          },
+        },
+        tags: {
+          select: { tag: { select: { name: true } } },
+        },
+      },
+    });
+  }
+
+  async softDeleteDraft(id: string): Promise<Idea> {
+    return this.prisma.idea.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+  }
+
   async findByAuthorId(authorId: string): Promise<any[]> {
     return this.prisma.idea.findMany({
-      where: { authorId },
+      where: { authorId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,

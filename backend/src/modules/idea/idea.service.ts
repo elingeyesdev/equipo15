@@ -499,6 +499,88 @@ export class IdeaService {
     return this.ideaRepository.findByAuthorId(authorId);
   }
 
+  private mapDraftRecord(draft: any) {
+    return {
+      ...draft,
+      tags: draft.tags?.map((t: { tag: { name: string } }) => t.tag.name) ?? [],
+    };
+  }
+
+  async findMyDrafts(firebaseUid: string) {
+    const authorId = await this.resolveAuthorId(firebaseUid);
+    const drafts = await this.ideaRepository.findDraftsByAuthorId(authorId);
+    return drafts.map((draft) => this.mapDraftRecord(draft));
+  }
+
+  async updateDraft(
+    ideaId: string,
+    updateDraftDto: CreateDraftIdeaDto,
+    firebaseUid: string,
+  ): Promise<Idea> {
+    const authorId = await this.resolveAuthorId(firebaseUid);
+    const existingIdea = await this.ideaRepository.findById(ideaId);
+
+    if (!existingIdea || existingIdea.deletedAt) {
+      throw new BadRequestException('El borrador que intentas editar no existe.');
+    }
+
+    if (existingIdea.authorId !== authorId) {
+      throw new ForbiddenException('Solo el autor puede editar este borrador.');
+    }
+
+    if (existingIdea.status !== 'DRAFT') {
+      throw new BadRequestException('Solo puedes editar ideas en estado borrador.');
+    }
+
+    if (updateDraftDto.challengeId) {
+      const challenge = await this.challengeRepository.findById(
+        updateDraftDto.challengeId,
+      );
+      if (!challenge) {
+        throw new BadRequestException('El reto vinculado no existe.');
+      }
+    }
+
+    const updatedDraft = await this.ideaRepository.update(ideaId, {
+      title: updateDraftDto.title ?? existingIdea.title,
+      problem: updateDraftDto.problem ?? existingIdea.problem,
+      solution: updateDraftDto.solution ?? existingIdea.solution,
+      isAnonymous: updateDraftDto.isAnonymous ?? existingIdea.isAnonymous,
+      multimediaLinks: updateDraftDto.multimediaLinks ?? undefined,
+      impactArea: updateDraftDto.impactArea ?? existingIdea.impactArea,
+      improvementType:
+        updateDraftDto.improvementType ?? existingIdea.improvementType,
+      effortLevel: updateDraftDto.effortLevel ?? existingIdea.effortLevel,
+      challengeId: updateDraftDto.challengeId ?? existingIdea.challengeId,
+    } as any);
+
+    this.logger.log(`Borrador de idea actualizado: "${updatedDraft.title}"`);
+    this.invalidateCache();
+    return updatedDraft;
+  }
+
+  async deleteDraft(ideaId: string, firebaseUid: string): Promise<{ id: string }> {
+    const authorId = await this.resolveAuthorId(firebaseUid);
+    const existingIdea = await this.ideaRepository.findById(ideaId);
+
+    if (!existingIdea || existingIdea.deletedAt) {
+      throw new BadRequestException('El borrador que intentas eliminar no existe.');
+    }
+
+    if (existingIdea.authorId !== authorId) {
+      throw new ForbiddenException('Solo el autor puede eliminar este borrador.');
+    }
+
+    if (existingIdea.status !== 'DRAFT') {
+      throw new BadRequestException('Solo puedes eliminar ideas en estado borrador.');
+    }
+
+    await this.ideaRepository.softDeleteDraft(ideaId);
+    this.logger.log(`Borrador de idea eliminado: ${ideaId}`);
+    this.invalidateCache();
+    return { id: ideaId };
+  }
+
   async findMyFavorites(firebaseUid: string) {
     const userId = await this.resolveAuthorId(firebaseUid);
     return this.ideaRepository.findFavoritedByUser(userId);

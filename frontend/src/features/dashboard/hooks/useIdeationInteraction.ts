@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Challenge } from '../../../types/models';
 import type { FeedbackMessage } from './useIdeationForm';
 
@@ -20,8 +20,8 @@ export const useIdeationInteraction = () => {
     return () => window.clearTimeout(timeout);
   }, [toastMessage]);
 
-  const showToast = (payload: FeedbackMessage) => setToastMessage(payload);
-  const dismissToast = () => setToastMessage(null);
+  const showToast = useCallback((payload: FeedbackMessage) => setToastMessage(payload), []);
+  const dismissToast = useCallback(() => setToastMessage(null), []);
 
   return {
     formOpen, setFormOpen,

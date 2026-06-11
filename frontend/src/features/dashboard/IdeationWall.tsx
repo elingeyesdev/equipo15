@@ -14,6 +14,9 @@ import { resolveDisplayName } from '../../utils/user.utils';
 import { useDashboardState } from './hooks/useDashboardState';
 import { useIdeationForm } from './hooks/useIdeationForm';
 import type { AdvancedFilterState } from './components/AdvancedFilter';
+import { getFacultySlug } from '../../config/faculties';
+import type { Challenge } from '../../types/models';
+import type { IdeaDraft } from '../../services/idea.service';
 
 const IdeationWall = () => {
   const { user, userProfile } = useAuth();
@@ -145,6 +148,26 @@ const IdeationWall = () => {
 
   const fullName = resolveDisplayName(userProfile as any) || user?.email || '';
 
+  const mapDraftChallenge = (draft: IdeaDraft): Challenge => {
+    const challenge = draft.challenge;
+    return {
+      id: draft.challengeId,
+      title: challenge?.title || 'Reto',
+      status: (challenge?.status as Challenge['status']) || 'Activo',
+      facultyId: challenge?.facultyId ?? null,
+      faculty: challenge?.faculty ?? null,
+      category: getFacultySlug(challenge?.facultyId ?? null, challenge?.faculty?.name),
+      isPrivate: false,
+    };
+  };
+
+  const handleContinueDraft = (draft: IdeaDraft) => {
+    const mappedChallenge = mapDraftChallenge(draft);
+    ds.setFormChallenge(mappedChallenge);
+    ds.selectChallenge(mappedChallenge);
+    form.loadFromDraft(draft);
+  };
+
   const handleConfirmSubmit = async () => {
     if (form.formSaving) return;
     ds.setConfirmSubmitOpen(false);
@@ -191,6 +214,8 @@ const IdeationWall = () => {
         onConfirm={handleConfirmSubmit}
         confirmOpen={ds.confirmSubmitOpen}
         setConfirmOpen={ds.setConfirmSubmitOpen}
+        showToast={ds.showToast}
+        onContinueDraft={handleContinueDraft}
       />
     </S.Root>
   );

@@ -446,6 +446,215 @@ export const ChecklistLabel = styled.span`
   color: ${Pista8Theme.secondary};
 `;
 
+export const DraftsPanel = styled.div`
+  background: linear-gradient(135deg, rgba(254, 65, 10, 0.04) 0%, rgba(99, 102, 241, 0.04) 100%);
+  border-radius: 24px;
+  padding: 20px;
+  border: 1px solid rgba(254, 65, 10, 0.08);
+  box-shadow: 0 12px 28px rgba(254, 65, 10, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: rgba(254, 65, 10, 0.15);
+    box-shadow: 0 16px 36px rgba(254, 65, 10, 0.08);
+    transform: translateY(-2px);
+  }
+`;
+
+export const DraftsPanelLabel = styled.p`
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: ${Pista8Theme.primary};
+  margin: 0;
+  opacity: 0.85;
+`;
+
+export const DraftsPanelButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(72, 80, 84, 0.1);
+  background: white;
+  color: ${Pista8Theme.secondary};
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  svg {
+    color: rgba(72, 80, 84, 0.45);
+    transition: color 0.2s ease, transform 0.2s ease;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: ${Pista8Theme.primary};
+    color: ${Pista8Theme.primary};
+    box-shadow: 0 8px 20px rgba(254, 65, 10, 0.08);
+    
+    svg {
+      color: ${Pista8Theme.primary};
+      transform: scale(1.1);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: rgba(248, 249, 250, 0.5);
+  }
+`;
+
+export const DraftsPanelText = styled.span`
+  font-size: 13.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  text-align: left;
+`;
+
+export const DraftsPanelCount = styled.span`
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+  color: white;
+  background: linear-gradient(135deg, #FF6B3D 0%, #FE410A 100%);
+  padding: 3px 9px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(254, 65, 10, 0.25);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  
+  ${DraftsPanelButton}:hover & {
+    transform: scale(1.08);
+  }
+`;
+
+export const DraftsEmpty = styled.div`
+  padding: 28px 16px;
+  text-align: center;
+  border-radius: 18px;
+  background: #f8f9fa;
+
+  p {
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1f22;
+  }
+
+  span {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+`;
+
+export const DraftCard = styled.article`
+  border: 1px solid rgba(72,80,84,0.1);
+  border-radius: 18px;
+  padding: 16px 18px;
+  background: #fafbfc;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+export const DraftCardHeader = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+`;
+
+export const DraftCardTitle = styled.h3`
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1a1f22;
+  word-break: break-word;
+`;
+
+export const DraftCardMeta = styled.p`
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.4;
+`;
+
+export const DraftCardExcerpt = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: #485054;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
+export const DraftCardTags = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+`;
+
+export const DraftChip = styled.span<{ $muted?: boolean }>`
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: ${p => (p.$muted ? 'rgba(72,80,84,0.08)' : 'rgba(254,65,10,0.08)')};
+  color: ${p => (p.$muted ? '#6b7280' : Pista8Theme.primary)};
+`;
+
+export const DraftCardActions = styled.div`
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+`;
+
+export const DraftActionButton = styled.button<{ $primary?: boolean; $danger?: boolean }>`
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+
+  ${p => p.$primary && css`
+    background: ${Pista8Theme.primary};
+    color: white;
+  `}
+
+  ${p => p.$danger && css`
+    background: rgba(220,38,38,0.08);
+    color: #dc2626;
+  `}
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+`;
+
 export const ConsentList = styled.div<{ $invalid?: boolean }>`
   display: flex;
   flex-direction: column;

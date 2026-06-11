@@ -4,8 +4,11 @@ import * as S from '../styles/FormStyles';
 import * as FM from '../styles/FeedbackAndMiscStyles';
 import { FEEDBACK_GLYPH } from '../styles/CommonStyles';
 import { useIdeationForm } from '../hooks/useIdeationForm';
+import { useIdeaDrafts } from '../hooks/useIdeaDrafts';
 import { IMPACT_AREA_OPTIONS, IMPROVEMENT_TYPE_OPTIONS, EFFORT_LEVEL_OPTIONS } from '../constants/ideaClassificationOptions';
-import type { ConsentKey } from '../hooks/useIdeationForm';
+import type { ConsentKey, FeedbackMessage } from '../hooks/useIdeationForm';
+import type { IdeaDraft } from '../../../services/idea.service';
+import IdeaDraftsModal from './IdeaDraftsModal';
 import FlagIcon from '../../../components/icons/FlagIcon';
 
 interface IdeaFormProps {
@@ -18,6 +21,8 @@ interface IdeaFormProps {
   onConfirm: () => void;
   confirmOpen: boolean;
   setConfirmOpen: (open: boolean) => void;
+  showToast: (payload: FeedbackMessage) => void;
+  onContinueDraft: (draft: IdeaDraft) => void;
 }
 
 const ChallengeInfoModal: React.FC<{ challenge: any; onClose: () => void }> = ({ challenge, onClose }) => {
@@ -83,9 +88,19 @@ const ChallengeInfoModal: React.FC<{ challenge: any; onClose: () => void }> = ({
 };
 
 const IdeaForm: React.FC<IdeaFormProps> = ({
-  open, challenge, fullName, isGuest, onClose, form, onConfirm, confirmOpen, setConfirmOpen
+  open, challenge, fullName, isGuest, onClose, form, onConfirm, confirmOpen, setConfirmOpen,
+  showToast, onContinueDraft,
 }) => {
   const [showChallengeInfo, setShowChallengeInfo] = useState(false);
+  const [draftsModalOpen, setDraftsModalOpen] = useState(false);
+  const {
+    drafts,
+    draftsLoading,
+    deletingDraftId,
+    fetchDrafts,
+    deleteDraft,
+  } = useIdeaDrafts(open && !isGuest, showToast);
+
   if (!open) return null;
 
   const checklist = [
@@ -148,6 +163,23 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
     }
   };
 
+  const handleSaveDraft = () => {
+    form.handleIdeaSubmit('draft', challenge, fetchDrafts);
+  };
+
+  const handleContinueDraft = (draft: IdeaDraft) => {
+    onContinueDraft(draft);
+    setDraftsModalOpen(false);
+  };
+
+  const handleDeleteDraft = async (draftId: string) => {
+    const success = await deleteDraft(draftId);
+    if (success && form.activeDraftId === draftId) {
+      form.resetForm();
+    }
+    return success;
+  };
+
   const modalContent = (
     <>
       <S.ModalBackdrop onClick={onClose} />
@@ -204,6 +236,31 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                   </button>
                 )}
               </S.MetaCard>
+
+              {!isGuest && (
+                <S.DraftsPanel>
+                  <S.DraftsPanelLabel>Borradores de ideas</S.DraftsPanelLabel>
+                  <S.DraftsPanelButton
+                    type="button"
+                    onClick={() => setDraftsModalOpen(true)}
+                    disabled={draftsLoading}
+                  >
+                    <S.DraftsPanelText>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 10, verticalAlign: 'middle', flexShrink: 0 }}>
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                      </svg>
+                      {draftsLoading ? 'Cargando borradores...' : 'Ver mis borradores guardados'}
+                    </S.DraftsPanelText>
+                    {!draftsLoading && drafts.length > 0 && (
+                      <S.DraftsPanelCount>{drafts.length}</S.DraftsPanelCount>
+                    )}
+                  </S.DraftsPanelButton>
+                </S.DraftsPanel>
+              )}
 
               <S.Checklist>
                 {checklist.map(item => (
@@ -452,7 +509,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
               </S.Field>
 
               <S.ButtonRow>
-                <S.GhostButton type="button" onClick={() => form.handleIdeaSubmit('draft', challenge)} disabled={form.formSaving}>
+                <S.GhostButton type="button" onClick={handleSaveDraft} disabled={form.formSaving}>
                   {form.formSaving && form.savingAction === 'draft' ? 'Guardando...' : 'Guardar como borrador'}
                 </S.GhostButton>
                 <S.CTAButton type="submit" disabled={form.formSaving || !checklist.every(c => c.done) || form.solutionWords < form.minSolutionWords}>
@@ -502,6 +559,15 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
       {showChallengeInfo && challenge && (
         <ChallengeInfoModal challenge={challenge} onClose={() => setShowChallengeInfo(false)} />
       )}
+      <IdeaDraftsModal
+        open={draftsModalOpen}
+        onClose={() => setDraftsModalOpen(false)}
+        drafts={drafts}
+        loading={draftsLoading}
+        deletingDraftId={deletingDraftId}
+        onContinue={handleContinueDraft}
+        onDelete={handleDeleteDraft}
+      />
     </>
   );
 };
