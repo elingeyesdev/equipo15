@@ -254,13 +254,16 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               Contexto de la empresa
               {locked('core') && <LockedBadge>No editable</LockedBadge>}
             </Label>
-            <TextAreaField $locked={locked('core')}
+            <TextAreaField $locked={locked('core')} $error={!!errors.companyContext}
               placeholder="Información relevante sobre tu empresa..." rows={2}
               value={form.companyContext} readOnly={locked('core')}
               onChange={e => !locked('core') && updateField('companyContext', e.target.value)} />
-            <CharCount $over={form.companyContext.length > LIMITS.companyContext}>
-              {form.companyContext.length}/{LIMITS.companyContext}
-            </CharCount>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              {errors.companyContext ? <ErrorText>{errors.companyContext}</ErrorText> : <span />}
+              <CharCount $over={form.companyContext.length > LIMITS.companyContext}>
+                {form.companyContext.length}/{LIMITS.companyContext}
+              </CharCount>
+            </div>
           </FieldGroup>
 
           <FieldGroup style={{ display: 'flex', flexDirection: 'column' }}>
@@ -269,11 +272,15 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               value={form.participationRules}
               style={{ flex: 1, resize: 'none' }}
               readOnly={readOnlyMode}
+              $error={!!errors.participationRules}
               $locked={readOnlyMode}
               onChange={e => !readOnlyMode && updateField('participationRules', e.target.value)} />
-            <CharCount $over={form.participationRules.length > LIMITS.participationRules}>
-              {form.participationRules.length}/{LIMITS.participationRules}
-            </CharCount>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              {errors.participationRules ? <ErrorText>{errors.participationRules}</ErrorText> : <span />}
+              <CharCount $over={form.participationRules.length > LIMITS.participationRules}>
+                {form.participationRules.length}/{LIMITS.participationRules}
+              </CharCount>
+            </div>
           </FieldGroup>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -441,7 +448,12 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                     textTransform: 'uppercase', color: '#a8b0b8', padding: 0, marginBottom: 6,
                   }}>
                     Opcional
-                    <span style={{ fontSize: 16, fontWeight: 900, color: Pista8Theme.primary, lineHeight: 1 }}>
+                    <span style={{ 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      width: 18, height: 18, borderRadius: '50%',
+                      background: Pista8Theme.primary, color: 'white',
+                      fontSize: 16, fontWeight: 900, lineHeight: 1 
+                    }}>
                       {showOptionals ? '−' : '+'}
                     </span>
                   </button>

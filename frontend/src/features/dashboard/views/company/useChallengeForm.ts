@@ -26,6 +26,8 @@ export interface ChallengeFormData {
 export interface Errors {
   title?: string;
   problemDescription?: string;
+  companyContext?: string;
+  participationRules?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -240,13 +242,24 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     const errs: Errors = {};
     if (!form.title.trim()) errs.title = 'El título es obligatorio';
     else if (form.title.length > LIMITS.title) errs.title = `Máximo ${LIMITS.title} caracteres`;
+
+    if (!form.startDate) errs.startDate = 'La fecha de inicio es obligatoria';
+    if (!form.endDate) errs.endDate = 'La fecha fin es obligatoria';
+    else if (form.startDate && form.endDate && new Date(form.endDate) <= new Date(form.startDate))
+      errs.endDate = 'La fecha fin debe ser posterior al inicio';
+
     if (!forDraft) {
-      if (form.problemDescription.length > LIMITS.problemDescription)
+      if (!form.problemDescription.trim()) errs.problemDescription = 'La descripción del problema es obligatoria';
+      else if (form.problemDescription.length > LIMITS.problemDescription)
         errs.problemDescription = `Máximo ${LIMITS.problemDescription} caracteres`;
-      if (!form.startDate) errs.startDate = 'La fecha de inicio es obligatoria';
-      if (!form.endDate) errs.endDate = 'La fecha fin es obligatoria';
-      else if (form.startDate && form.endDate && new Date(form.endDate) <= new Date(form.startDate))
-        errs.endDate = 'La fecha fin debe ser posterior al inicio';
+
+      if (!form.companyContext.trim()) errs.companyContext = 'El contexto de la empresa es obligatorio';
+      else if (form.companyContext.length > LIMITS.companyContext)
+        errs.companyContext = `Máximo ${LIMITS.companyContext} caracteres`;
+
+      if (!form.participationRules.trim()) errs.participationRules = 'Las reglas de participación son obligatorias';
+      else if (form.participationRules.length > LIMITS.participationRules)
+        errs.participationRules = `Máximo ${LIMITS.participationRules} caracteres`;
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
