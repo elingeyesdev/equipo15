@@ -591,10 +591,6 @@ const IdeaDetailModal = ({ idea, onClose }: { idea: ReputationIdea; onClose: () 
             </StatusBadge>
           </AdminDetailSection>
 
-          <AdminDetailSection>
-            <AdminDetailLabel>Problema</AdminDetailLabel>
-            <AdminDetailText>{idea.problem}</AdminDetailText>
-          </AdminDetailSection>
 
           <AdminDetailSection>
             <AdminDetailLabel>Propuesta</AdminDetailLabel>
@@ -755,7 +751,7 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
                 </SectionTitle>
 
                 {data.ideas.length === 0 ? (
-                  <EmptyIdeas>Este estudiante aún no ha publicado ideas.</EmptyIdeas>
+                  <EmptyIdeas>Este participante aún no ha publicado ideas.</EmptyIdeas>
                 ) : (
                   <IdeaTable>
                     <thead>

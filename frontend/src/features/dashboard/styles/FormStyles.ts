@@ -1,4 +1,4 @@
-import styled, { css, keyframes } from 'styled-components';
+import styled, { css } from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 import { fadeUp, FEEDBACK_PALETTE } from './CommonStyles';
 
@@ -145,99 +145,7 @@ export const Label = styled.label`
   color: ${Pista8Theme.secondary};
 `;
 
-const flagPulse = keyframes`
-  0%, 100% {
-    transform: translateY(0) scale(1);
-    box-shadow: 0 0 0 0 rgba(254,65,10,0.14);
-  }
-  50% {
-    transform: translateY(-1px) scale(1.04);
-    box-shadow: 0 0 0 5px rgba(254,65,10,0.06);
-  }
-`;
 
-export const TooltipWrap = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  margin-left: 8px;
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  background: rgba(254,65,10,0.08);
-  border: 1px solid rgba(254,65,10,0.22);
-  animation: ${flagPulse} 2.2s ease-in-out infinite;
-  vertical-align: middle;
-  svg {
-    display: block;
-    transition: transform 180ms ease, filter 180ms ease;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-    svg { transition: none; }
-  }
-`;
-
-export const TooltipBubble = styled.span`
-  position: absolute;
-  top: 110%;
-  left: 50%;
-  transform: translateX(-50%) translateY(6px) scale(0.98);
-  transform-origin: top center;
-  min-width: 200px;
-  max-width: 320px;
-  background: rgba(26,31,36,0.96);
-  color: white;
-  font-size: 13px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-  white-space: normal;
-  line-height: 1.3;
-  z-index: 2000;
-  display: none;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 180ms ease, transform 180ms cubic-bezier(.2,.9,.2,1);
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 6px;
-    border-style: solid;
-    border-color: transparent transparent rgba(26,31,36,0.96) transparent;
-  }
-`;
-
-export const TooltipHost = styled.span`
-  display: inline-flex;
-  align-items: center;
-  position: relative;
-  &:hover ${TooltipBubble}, &:focus-within ${TooltipBubble} {
-    display: block;
-    opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
-  }
-
-  &:hover ${TooltipWrap}, &:focus-within ${TooltipWrap} {
-    background: rgba(254,65,10,0.14);
-    border-color: rgba(254,65,10,0.42);
-  }
-
-  &:hover ${TooltipWrap} svg, &:focus-within ${TooltipWrap} svg {
-    transform: scale(1.12) rotate(-8deg);
-    filter: drop-shadow(0 2px 6px rgba(254,65,10,0.35));
-  }
-
-  &:hover .info-badge, &:focus-within .info-badge {
-    transform: translateY(-2px) scale(1.02);
-  }
-`;
 
 export const InfoBadge = styled.span`
   display: inline-flex;
@@ -372,6 +280,10 @@ export const MetaCard = styled.div<{ $invalid?: boolean }>`
   padding: 22px;
   border: 1px solid ${p => (p.$invalid ? '#ff8a8a' : 'rgba(72,80,84,0.08)')};
   box-shadow: 0 20px 35px rgba(72,80,84,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 `;
 
 export const MetaLabel = styled.p`
@@ -480,9 +392,9 @@ export const DraftsPanelButton = styled.button`
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  padding: 14px 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(72, 80, 84, 0.1);
+  padding: 14px 24px;
+  border-radius: 999px;
+  border: none;
   background: white;
   color: ${Pista8Theme.secondary};
   cursor: pointer;
@@ -568,13 +480,17 @@ export const DraftCard = styled.article`
   background: #fafbfc;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: 10px;
 `;
 
 export const DraftCardHeader = styled.div`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: 12px;
+  width: 100%;
 `;
 
 export const DraftCardTitle = styled.h3`
@@ -606,6 +522,7 @@ export const DraftCardExcerpt = styled.p`
 export const DraftCardTags = styled.div`
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
 `;
 
@@ -620,6 +537,7 @@ export const DraftChip = styled.span<{ $muted?: boolean }>`
 
 export const DraftCardActions = styled.div`
   display: flex;
+  justify-content: center;
   gap: 10px;
   margin-top: 4px;
 `;

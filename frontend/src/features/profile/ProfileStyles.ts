@@ -1,5 +1,6 @@
 import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '@/config/theme';
+import { premiumTooltip } from '@/features/dashboard/styles/CommonStyles';
 
 export const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(20px); }
@@ -294,7 +295,12 @@ export const PhonePrefix = styled.div`
   white-space: nowrap;
 `;
 
-export const SaveBtn = styled.button`
+export const SaveBtn = styled.button<{
+  $tooltipText?: string;
+  $tooltipPosition?: 'top' | 'bottom';
+  $tooltipAlign?: 'center' | 'right';
+}>`
+  ${premiumTooltip}
   align-self: flex-end;
   padding: 12px 24px;
   background: ${Pista8Theme.primary};
@@ -316,6 +322,33 @@ export const SaveBtn = styled.button`
     box-shadow: none;
     cursor: default;
     transform: none;
+  }
+`;
+
+export const ToggleProfessionalBtn = styled.button`
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.18s, opacity 0.18s;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: ${Pista8Theme.primary};
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 16px ${Pista8Theme.primary}38;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px ${Pista8Theme.primary}48;
+  }
+  
+  &:active {
+    transform: scale(0.97);
   }
 `;
 
@@ -393,46 +426,108 @@ export const GoogleLinkedBadge = styled.div`
 `;
 
 export const GoogleBtn = styled.button`
+  background: transparent;
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #ffffff;
-  border: 1.5px solid rgba(72, 80, 84, 0.1);
-  border-radius: 12px;
   padding: 10px 16px;
   font-size: 13.5px;
   font-weight: 700;
-  color: ${Pista8Theme.secondary};
+  text-decoration: none;
   cursor: pointer;
-  transition: all 0.18s;
+  border: 1px solid rgb(66, 133, 244);
+  border-radius: 25px;
+  outline: none;
+  overflow: hidden;
+  color: rgb(66, 133, 244);
+  transition: color 0.3s 0.1s ease-out;
+  text-align: center;
   width: fit-content;
+  z-index: 1;
+
+  &::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    content: '';
+    border-radius: 50%;
+    display: block;
+    width: 30em;
+    height: 30em;
+    left: -5em;
+    text-align: center;
+    transition: box-shadow 0.5s ease-out;
+    z-index: -1;
+  }
+
+  svg path {
+    transition: fill 0.3s 0.1s ease-out;
+  }
 
   &:hover {
-    background: #f5f7f9;
-    border-color: rgba(66, 133, 244, 0.4);
-    box-shadow: 0 2px 10px rgba(66, 133, 244, 0.1);
+    color: #fff;
+    border: 1px solid rgb(66, 133, 244);
+  }
+
+  &:hover::before {
+    box-shadow: inset 0 0 0 15em rgb(66, 133, 244);
+  }
+
+  &:hover svg path {
+    fill: #ffffff;
   }
 `;
 
 export const PassButton = styled.button`
-  background: none;
-  border: 1.5px solid rgba(72, 80, 84, 0.1);
-  border-radius: 12px;
-  font-size: 13.5px;
-  color: ${Pista8Theme.secondary};
-  font-weight: 700;
-  cursor: pointer;
+  background: transparent;
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid ${Pista8Theme.primary};
+  border-radius: 25px;
+  outline: none;
+  overflow: hidden;
+  color: ${Pista8Theme.primary};
+  transition: color 0.3s 0.1s ease-out;
+  text-align: center;
   width: fit-content;
-  transition: all 0.18s;
+  z-index: 1;
+
+  &::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    content: '';
+    border-radius: 50%;
+    display: block;
+    width: 30em;
+    height: 30em;
+    left: -5em;
+    text-align: center;
+    transition: box-shadow 0.5s ease-out;
+    z-index: -1;
+  }
 
   &:hover {
-    border-color: ${Pista8Theme.primary}50;
-    color: ${Pista8Theme.primary};
-    background: ${Pista8Theme.primary}06;
+    color: #fff;
+    border: 1px solid ${Pista8Theme.primary};
+  }
+
+  &:hover::before {
+    box-shadow: inset 0 0 0 15em ${Pista8Theme.primary};
   }
 `;
 

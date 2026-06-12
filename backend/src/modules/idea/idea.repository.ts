@@ -48,15 +48,11 @@ export class IdeaRepository {
     return { data, total };
   }
 
-  async findPublic(
-    skip?: number,
-    take?: number,
+  private buildWhereClause(
     challengeId?: string,
-    userId?: string,
     search?: string,
-    sort?: 'newest' | 'oldest' | 'likes' | 'comments',
-  ): Promise<{ data: IdeaWithVoteStatus[]; total: number }> {
-    const where: any = { status: 'PUBLISHED' };
+  ): any {
+    const where: any = { status: { in: ['PUBLISHED', 'FINALIST', 'WINNER'] } };
     if (challengeId) where.challengeId = challengeId;
 
     if (search && search.trim().length > 0) {
@@ -67,6 +63,18 @@ export class IdeaRepository {
         { solution: { contains: keyword, mode: 'insensitive' } },
       ];
     }
+    return where;
+  }
+
+  async findPublic(
+    skip?: number,
+    take?: number,
+    challengeId?: string,
+    userId?: string,
+    search?: string,
+    sort?: 'newest' | 'oldest' | 'likes' | 'comments',
+  ): Promise<{ data: IdeaWithVoteStatus[]; total: number }> {
+    const where = this.buildWhereClause(challengeId, search);
 
     let orderBy: Record<string, 'asc' | 'desc'>;
     switch (sort) {
@@ -85,47 +93,51 @@ export class IdeaRepository {
         break;
     }
 
-    const data = await this.prisma.idea.findMany({
-      where,
-      skip,
-      take,
-      orderBy,
-      select: {
-        id: true,
-        title: true,
-        problem: true,
-        solution: true,
-        status: true,
-        likesCount: true,
-        commentsCount: true,
-        favoritesCount: true,
-        isAnonymous: true,
-        multimediaLinks: true,
-        createdAt: true,
-        updatedAt: true,
-        authorId: true,
-        challengeId: true,
-        finalScore: true,
-        author: {
-          select: {
-            displayName: true,
-            nickname: true,
-            email: true,
-            phone: true,
-            role: true,
-            studentProfile: {
-              select: { facultyId: true, faculty: { select: { name: true } } },
+    const [data, total] = await Promise.all([
+      this.prisma.idea.findMany({
+        where,
+        skip,
+        take,
+        orderBy,
+        select: {
+          id: true,
+          title: true,
+          problem: true,
+          solution: true,
+          status: true,
+          likesCount: true,
+          commentsCount: true,
+          favoritesCount: true,
+          isAnonymous: true,
+          multimediaLinks: true,
+          createdAt: true,
+          updatedAt: true,
+          authorId: true,
+          challengeId: true,
+          finalScore: true,
+          author: {
+            select: {
+              displayName: true,
+              nickname: true,
+              email: true,
+              phone: true,
+              role: true,
+              avatarUrl: true,
+              studentProfile: {
+                select: { facultyId: true, faculty: { select: { name: true } } },
+              },
             },
           },
+          challenge: { select: { status: true } },
+          ...(userId
+            ? {
+                reactions: { where: { userId }, select: { id: true, type: true } },
+              }
+            : {}),
         },
-        challenge: { select: { status: true } },
-        ...(userId
-          ? {
-              reactions: { where: { userId }, select: { id: true, type: true } },
-            }
-          : {}),
-      },
-    });
+      }),
+      this.prisma.idea.count({ where }),
+    ]);
 
     const enriched: IdeaWithVoteStatus[] = data.map((idea) => {
       const { reactions, ...rest } = idea as any;
@@ -136,7 +148,7 @@ export class IdeaRepository {
       } as IdeaWithVoteStatus;
     });
 
-    return { data: enriched, total: enriched.length };
+    return { data: enriched, total };
   }
 
   async findById(id: string): Promise<Idea | null> {
@@ -176,104 +188,103 @@ export class IdeaRepository {
     });
   }
 
-  async checkUserLike(ideaId: string, userId: string): Promise<string | null> {
-    const reaction = await this.prisma.ideaReaction.findUnique({
-      where: { uq_reaction_per_type: { ideaId, userId, type: 'LIKE' } },
-      select: { reactionType: true },
-    });
-    return reaction ? reaction.reactionType : null;
+  async upsertLike(ideaId: string, userId: string, targetReaction: string): Promise<any> {
+    const fireDelta = targetReaction === 'COMPLEX' ? 0.5 : 2;
+    const countField = targetReaction === 'GOOD' ? 'goodCount' : targetReaction === 'FUTURE' ? 'futureCount' : 'complexCount';
+
+    try {
+      // Usar transaction para intentar crear y si falla (P2002), actualizar en otra petición no es atómico.
+      // Upsert es atómico a nivel de tabla IdeaReaction, pero necesitamos actualizar Idea al mismo tiempo.
+      // Así que usaremos la transacción interactiva de Prisma para hacer ambas cosas de forma segura.
+      return await this.prisma.$transaction(async (tx) => {
+        const existing = await tx.ideaReaction.findUnique({
+          where: { uq_reaction_per_type: { ideaId, userId, type: 'LIKE' } },
+        });
+
+        if (existing) {
+          if (existing.reactionType === targetReaction) {
+            // Eliminar reacción si es la misma
+            await tx.ideaReaction.delete({
+              where: { id: existing.id },
+            });
+            const oldFireDelta = existing.reactionType === 'COMPLEX' ? -0.5 : -2;
+            const oldField = existing.reactionType === 'GOOD' ? 'goodCount' : existing.reactionType === 'FUTURE' ? 'futureCount' : 'complexCount';
+            const updatedIdea = await tx.idea.update({
+              where: { id: ideaId },
+              data: {
+                likesCount: { decrement: 1 },
+                [oldField]: { decrement: 1 },
+                fireScore: { increment: oldFireDelta },
+              },
+            });
+            return { updatedIdea, hasVoted: false };
+          } else {
+            // Actualizar reacción
+            await tx.ideaReaction.update({
+              where: { id: existing.id },
+              data: { reactionType: targetReaction },
+            });
+            const oldFireDelta = existing.reactionType === 'COMPLEX' ? -0.5 : -2;
+            const oldField = existing.reactionType === 'GOOD' ? 'goodCount' : existing.reactionType === 'FUTURE' ? 'futureCount' : 'complexCount';
+            const updatedIdea = await tx.idea.update({
+              where: { id: ideaId },
+              data: {
+                [oldField]: { decrement: 1 },
+                [countField]: { increment: 1 },
+                fireScore: { increment: oldFireDelta + fireDelta },
+              },
+            });
+            return { updatedIdea, hasVoted: true };
+          }
+        } else {
+          // Crear reacción (puede lanzar P2002 si hay concurrencia extrema, el service lo capturará)
+          await tx.ideaReaction.create({
+            data: { ideaId, userId, type: 'LIKE', reactionType: targetReaction },
+          });
+          const updatedIdea = await tx.idea.update({
+            where: { id: ideaId },
+            data: {
+              likesCount: { increment: 1 },
+              [countField]: { increment: 1 },
+              fireScore: { increment: fireDelta },
+            },
+          });
+          return { updatedIdea, hasVoted: true };
+        }
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw error; // Re-throw to be caught by service
+      }
+      throw error;
+    }
   }
 
-  async registerLikeAndIncrement(
-    ideaId: string,
-    userId: string,
-    reactionType: string,
-  ): Promise<Idea> {
-    const fireDelta = reactionType === 'COMPLEX' ? 0.5 : 2;
-    const countField = reactionType === 'GOOD' ? 'goodCount' : reactionType === 'FUTURE' ? 'futureCount' : 'complexCount';
+  async toggleFavoriteAtomic(ideaId: string, userId: string): Promise<boolean> {
+    return await this.prisma.$transaction(async (tx) => {
+      const existing = await tx.ideaReaction.findUnique({
+        where: { uq_reaction_per_type: { ideaId, userId, type: 'FAVORITE' } },
+      });
 
-    const [, updated] = await this.prisma.$transaction([
-      this.prisma.ideaReaction.create({
-        data: { ideaId, userId, type: 'LIKE', reactionType },
-      }),
-      this.prisma.idea.update({
-        where: { id: ideaId },
-        data: {
-          likesCount: { increment: 1 },
-          [countField]: { increment: 1 },
-          fireScore: { increment: fireDelta },
-        },
-      }),
-    ]);
-    return updated;
-  }
-
-  async updateLikeReaction(
-    ideaId: string,
-    userId: string,
-    oldReaction: string,
-    newReaction: string,
-  ): Promise<Idea> {
-    const oldField = oldReaction === 'GOOD' ? 'goodCount' : oldReaction === 'FUTURE' ? 'futureCount' : 'complexCount';
-    const newField = newReaction === 'GOOD' ? 'goodCount' : newReaction === 'FUTURE' ? 'futureCount' : 'complexCount';
-
-    const oldFire = oldReaction === 'COMPLEX' ? 0.5 : 2;
-    const newFire = newReaction === 'COMPLEX' ? 0.5 : 2;
-    const fireDelta = newFire - oldFire;
-
-    const [, updated] = await this.prisma.$transaction([
-      this.prisma.ideaReaction.update({
-        where: { uq_reaction_per_type: { ideaId, userId, type: 'LIKE' } },
-        data: { reactionType: newReaction },
-      }),
-      this.prisma.idea.update({
-        where: { id: ideaId },
-        data: {
-          [oldField]: { decrement: 1 },
-          [newField]: { increment: 1 },
-          fireScore: { increment: fireDelta },
-        },
-      }),
-    ]);
-    return updated;
-  }
-
-  async removeLikeAndDecrement(ideaId: string, userId: string, reactionType: string): Promise<Idea> {
-    const fireDelta = reactionType === 'COMPLEX' ? -0.5 : -2;
-    const countField = reactionType === 'GOOD' ? 'goodCount' : reactionType === 'FUTURE' ? 'futureCount' : 'complexCount';
-
-    const [, updated] = await this.prisma.$transaction([
-      this.prisma.ideaReaction.delete({
-        where: { uq_reaction_per_type: { ideaId, userId, type: 'LIKE' } },
-      }),
-      this.prisma.idea.update({
-        where: { id: ideaId },
-        data: {
-          likesCount: { decrement: 1 },
-          [countField]: { decrement: 1 },
-          fireScore: { increment: fireDelta },
-        },
-      }),
-    ]);
-    return updated;
-  }
-
-  async checkUserFavorite(ideaId: string, userId: string): Promise<boolean> {
-    const count = await this.prisma.ideaReaction.count({
-      where: { ideaId, userId, type: 'FAVORITE' },
-    });
-    return count > 0;
-  }
-
-  async registerFavorite(ideaId: string, userId: string): Promise<void> {
-    await this.prisma.ideaReaction.create({
-      data: { ideaId, userId, type: 'FAVORITE' },
-    });
-  }
-
-  async removeFavorite(ideaId: string, userId: string): Promise<void> {
-    await this.prisma.ideaReaction.delete({
-      where: { uq_reaction_per_type: { ideaId, userId, type: 'FAVORITE' } },
+      if (existing) {
+        await tx.ideaReaction.delete({
+          where: { id: existing.id },
+        });
+        await tx.idea.update({
+          where: { id: ideaId },
+          data: { favoritesCount: { decrement: 1 } },
+        });
+        return false;
+      } else {
+        await tx.ideaReaction.create({
+          data: { ideaId, userId, type: 'FAVORITE' },
+        });
+        await tx.idea.update({
+          where: { id: ideaId },
+          data: { favoritesCount: { increment: 1 } },
+        });
+        return true;
+      }
     });
   }
 

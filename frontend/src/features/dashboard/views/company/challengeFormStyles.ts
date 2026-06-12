@@ -248,6 +248,31 @@ export const CriteriaToggleBtn = styled.button<{ $open: boolean }>`
   &:hover { border-color: ${Pista8Theme.primary}; color: ${Pista8Theme.primary}; }
 `;
 
+export const OptionalToggleBtn = styled.button<{ $open: boolean }>`
+  display: flex; align-items: center; gap: 6px; background: none; border: none;
+  cursor: pointer; font-size: 10px; font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: #a8b0b8; padding: 0; margin-bottom: 6px;
+  
+  .icon-circle {
+    display: flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: ${Pista8Theme.primary}; color: white;
+    font-size: 18px; font-weight: 500; line-height: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: ${p => p.$open ? 'rotate(180deg)' : 'rotate(0deg)'};
+    padding-bottom: 2px; /* Alineación óptica para + y - */
+  }
+
+  &:hover .icon-circle {
+    transform: ${p => p.$open ? 'rotate(180deg) scale(1.1)' : 'rotate(0deg) scale(1.1)'};
+    box-shadow: 0 4px 12px rgba(254, 65, 10, 0.3);
+  }
+
+  &:active .icon-circle {
+    transform: ${p => p.$open ? 'rotate(180deg) scale(0.95)' : 'rotate(0deg) scale(0.95)'};
+  }
+`;
+
 export const CriteriaPanel = styled.div`
   padding: 24px; border-radius: 14px;
   border: 2px solid rgba(254,65,10,0.1);
@@ -288,11 +313,22 @@ export const WeightUnit = styled.span`
 `;
 
 export const AddCriterionBtn = styled.button`
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 16px; border-radius: 12px; border: 2px dashed rgba(254,65,10,0.3);
-  background: transparent; color: ${Pista8Theme.primary};
-  font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;
-  &:hover { background: rgba(254,65,10,0.05); border-color: ${Pista8Theme.primary}; }
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 24px; border-radius: 14px; border: none;
+  background: ${Pista8Theme.primary}; color: white;
+  font-size: 13px; font-weight: 800; cursor: pointer;
+  transition: all 0.15s ease-out;
+  box-shadow: 0 4px 14px rgba(254, 65, 10, 0.25);
+
+  &:hover { 
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(254, 65, 10, 0.4);
+    background: #e53a09;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
 `;
 
 export const CustomCriterionInput = styled.input`

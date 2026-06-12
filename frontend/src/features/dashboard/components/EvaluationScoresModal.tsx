@@ -43,7 +43,6 @@ const CriteriaSection = styled.div`
 `;
 
 const SectionTitle = styled(AdminSectionTitle)`
-  text-align: left;
 `;
 
 const AccordionList = styled.div`

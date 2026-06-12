@@ -94,6 +94,13 @@ export class CommentService {
     }
   }
 
+  private async ensureChallengeNotClosed(challengeId: string): Promise<void> {
+    const challenge = await this.challengeRepository.findById(challengeId);
+    if (challenge?.status === 'CLOSED') {
+      throw new ForbiddenException('Operación denegada. El reto ya ha finalizado y se encuentra en la biblioteca histórica');
+    }
+  }
+
   private buildRateLimitKeys(userId: string, clientIp?: string): string[] {
     const keys = [`user:${userId}`];
 
@@ -225,6 +232,7 @@ export class CommentService {
       );
     }
     this.ensureIdeaAllowsComments(idea.status);
+    await this.ensureChallengeNotClosed(idea.challengeId);
 
     if (input.parentCommentId) {
       const parentComment = await this.commentRepository.findById(
@@ -312,6 +320,7 @@ export class CommentService {
       throw new NotFoundException('La idea asociada al comentario no existe.');
     }
     this.ensureIdeaAllowsComments(idea.status);
+    await this.ensureChallengeNotClosed(idea.challengeId);
 
     const content = normalizeCommentContent(input.content, 'La respuesta');
     await this.registerCommentAttempt(rateLimitKeys);
@@ -370,6 +379,9 @@ export class CommentService {
     const challenge = await this.challengeRepository.findById(idea.challengeId);
     if (!challenge) {
       throw new NotFoundException('El reto asociado a la idea no existe.');
+    }
+    if (challenge.status === 'CLOSED') {
+      throw new ForbiddenException('Operación denegada. El reto ya ha finalizado y se encuentra en la biblioteca histórica');
     }
 
     const requesterRole = (requester as any).role ?? 'student';
@@ -463,6 +475,7 @@ export class CommentService {
       throw new NotFoundException('La idea asociada al comentario no existe.');
     }
     this.ensureIdeaAllowsComments(idea.status);
+    await this.ensureChallengeNotClosed(idea.challengeId);
 
     const content = normalizeCommentContent(input.content, 'El comentario');
 

@@ -514,6 +514,13 @@ export const CompanyChallengesView = () => {
   const [viewChallenge, setViewChallenge] = useState<Challenge | null>(null);
   const readOnlyMode = Boolean(impersonationSession);
 
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => setTick(t => t + 1), 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const fetchChallenges = useCallback(async () => {
     setLoading(true);
     try {

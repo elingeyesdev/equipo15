@@ -2,9 +2,9 @@ import React from 'react';
 import * as S from '../styles/ChallengeStyles';
 import ChallengeCard from './ChallengeCard';
 import ChallengeCardSkeleton from './ChallengeCardSkeleton';
+import { Search } from 'lucide-react';
 import { getFacultySlug } from '../../../config/faculties';
 import type { Challenge } from '../../../types/models';
-import FlagIcon from '../../../components/icons/FlagIcon';
 
 interface ChallengeListProps {
   loading?: boolean;
@@ -28,14 +28,28 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
   forceColumn = false,
 }) => {
   const userSlug = getFacultySlug(userFacultyId || null);
-  const filters = ['Todos'];
-  if (userFacultyId && userSlug && userSlug !== 'Todas' && userSlug !== 'General') {
-    filters.push(userSlug);
-  }
+  const filters = ['Activos', 'En Evaluación', 'Finalizados', 'Mis Retos'];
+  
+  // Si no hay filtro válido seleccionado, o es 'Todos', por defecto 'Activos'
+  const currentFilter = filters.includes(activeFilter) ? activeFilter : 'Activos';
 
   const filtered = challenges
-    .filter(c => (c.status === 'Activo' || c.status === 'PUBLISHED') && (!c.submissionsCloseAt || new Date(c.submissionsCloseAt) >= new Date()) && (!c.endDate || new Date(c.endDate) >= new Date()))
-    .filter(c => activeFilter === 'Todos' || c.category === activeFilter)
+    .filter(c => {
+      if (currentFilter === 'Activos') {
+        return (c.status === 'Activo' || c.status === 'PUBLISHED') && (!c.submissionsCloseAt || new Date(c.submissionsCloseAt) >= new Date()) && (!c.endDate || new Date(c.endDate) >= new Date());
+      }
+      if (currentFilter === 'En Evaluación') {
+        return c.status === 'En Evaluación' || c.status === 'EVALUATING';
+      }
+      if (currentFilter === 'Finalizados') {
+        return c.status === 'Finalizado' || c.status === 'CLOSED' || (c.endDate && new Date(c.endDate) < new Date());
+      }
+      if (currentFilter === 'Mis Retos') {
+        // Asumiendo que Mis Retos significa los de mi facultad si soy estudiante
+        return c.category === userSlug;
+      }
+      return true;
+    })
     .filter(c => {
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
@@ -46,11 +60,16 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
       );
     });
 
+  let title = 'Explorar Retos';
+  if (currentFilter === 'Finalizados') title = 'Retos Finalizados';
+  else if (currentFilter === 'En Evaluación') title = 'Retos en Evaluación';
+  else if (currentFilter === 'Mis Retos') title = 'Mis Retos';
+
   return (
     <S.LeftPanel>
       <S.PanelHeader>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <S.PanelTitle>Retos activos</S.PanelTitle>
+          <S.PanelTitle>{title}</S.PanelTitle>
           {selectedChallengeId && onClearSelection && (
             <S.ClearBtn
               onClick={(e) => { e.stopPropagation(); onClearSelection(); }}
@@ -108,13 +127,13 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
           <div style={{
             padding: '40px 20px',
             textAlign: 'center',
-            background: 'white',
-            borderRadius: '16px',
-            border: '1px dashed #e5e7eb',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            justifyContent: 'center',
             gap: '12px',
+            minHeight: '400px',
+            flex: 1,
           }}>
             <div style={{
               width: '56px', height: '56px',
@@ -122,7 +141,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
               background: 'rgba(254, 65, 10, 0.07)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <FlagIcon width={28} height={28} color="#FE410A" />
+              <Search size={28} color="#FE410A" />
             </div>
             <p style={{ margin: 0, fontSize: '15px', fontWeight: 900, color: '#1a1f22' }}>
               {searchQuery.trim() ? `Sin resultados para "${searchQuery}"` : '¡La pista se está preparando!'}

@@ -6,9 +6,11 @@ export interface PlaneIdea {
   challengeTitle?: string;
   challengeId?: string;
   authorName: string;
+  authorAvatar?: string;
   likesCount: number;
   commentsCount: number;
   fireScore?: number;
+  finalScore?: number;
   goodCount?: number;
   futureCount?: number;
   complexCount?: number;
@@ -54,6 +56,7 @@ export interface RawAuthor {
   phone?: string;
   studentCode?: string;
   role?: { name: string };
+  avatarUrl?: string;
 }
 
 export interface RawIdea {
@@ -68,6 +71,7 @@ export interface RawIdea {
   likesCount?: number;
   commentsCount?: number;
   fireScore?: number;
+  finalScore?: number;
   goodCount?: number;
   futureCount?: number;
   complexCount?: number;

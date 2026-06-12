@@ -33,10 +33,13 @@ export class EvaluationsController {
     const user = await this.userService.findByUid(req.user.uid);
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
-    return this.evaluationService.evaluateIdea({
-      ...createEvaluationDto,
-      judgeId: user.id,
-    });
+    return this.evaluationService.evaluateIdea(
+      {
+        ...createEvaluationDto,
+        judgeId: user.id,
+      },
+      user.role,
+    );
   }
 
   @Get('idea/:ideaId')

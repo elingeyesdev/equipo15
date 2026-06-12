@@ -20,7 +20,7 @@ export function NoExcessiveSymbols(
           if (typeof value !== 'string' || value.length === 0) return true;
 
           const cleanChars =
-            value.match(/[a-záéíóúüñA-ZÁÉÍÓÚÜÑ\s.,;:¿?¡!()\-"']/g) || [];
+            value.match(/[a-záéíóúüñA-ZÁÉÍÓÚÜÑ\s.,;:¿?¡!()"'\-]/g) || [];
           const ratio = cleanChars.length / value.length;
 
           return ratio >= 1 - maxRatio;

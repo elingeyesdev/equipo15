@@ -301,4 +301,15 @@ export class ChallengesController {
       res.status(status).json({ statusCode: status, message });
     }
   }
+  @Patch(':id/close')
+  @UseGuards(RolesGuard)
+  @Roles('company', 'admin')
+  @ApiOperation({ summary: 'Close a challenge indefinitely (Company/Admin only)' })
+  @ApiResponse({ status: 200, description: 'The challenge has been marked as CLOSED.' })
+  closeChallenge(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.challengeService.closeChallenge(id, req.user.uid);
+  }
 }

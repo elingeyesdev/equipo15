@@ -454,15 +454,17 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
                   </StatPill>
                 </StatsContainer>
               ) : (
-                <>
-                  <FavoriteButton ideaId={idea.id} hasFavorited={idea.hasFavorited} />
-                  <LikeButton 
-                    ideaId={idea.id} 
-                    initialLikes={idea.likesCount} 
-                    hasVoted={idea.hasVoted}
-                    isAuthor={isAuthor}
-                  />
-                </>
+                idea.challengeStatus !== 'CLOSED' && (
+                  <>
+                    <FavoriteButton ideaId={idea.id} hasFavorited={idea.hasFavorited} />
+                    <LikeButton 
+                      ideaId={idea.id} 
+                      initialLikes={idea.likesCount} 
+                      hasVoted={idea.hasVoted}
+                      isAuthor={isAuthor}
+                    />
+                  </>
+                )
               )}
 
               <CommentTooltipContainer>
@@ -488,6 +490,7 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
               challengeId={idea.challengeId}
               title="Debate y feedback"
               onCountChange={setCommentsCount}
+              disabled={idea.challengeStatus === 'CLOSED'}
             />
           </SectionBlock>
         </Body>

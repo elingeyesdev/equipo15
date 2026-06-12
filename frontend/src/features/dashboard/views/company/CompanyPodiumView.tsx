@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import BackButton from '../../../../components/common/BackButton';
 import InfoTooltip from '../../../../components/common/InfoTooltip';
 import { EvaluationScoresModal } from '../../components/EvaluationScoresModal';
+import { premiumTooltip } from '../../styles/CommonStyles';
 
 const TIEBREAK_TOOLTIP =
   'Desempate automático aplicado a favor de la idea postulada con mayor antigüedad.';
@@ -169,41 +170,20 @@ const FinalizeBtn = styled.button`
   }
 `;
 
-const DownloadBtn = styled.button`
-  padding: 12px 22px;
-  border-radius: 14px;
-  border: 1.5px solid #16a34a;
-  background: white;
-  color: #16a34a;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  &:hover {
-    background: #f0fdf4;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(22, 163, 74, 0.2);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
-`;
-
 const RankingList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
 `;
-
-const IdeaCard = styled.div<{ $isFinalist: boolean; $rank: number; $clickable?: boolean }>`
+const IdeaCard = styled.div<{ 
+  $isFinalist: boolean; 
+  $rank: number; 
+  $clickable?: boolean;
+  $tooltipText?: string;
+  $tooltipPosition?: 'top' | 'bottom';
+  $tooltipAlign?: 'center' | 'right';
+}>`
+  ${premiumTooltip}
   background: white;
   padding: 16px 22px;
   border-radius: 16px;
@@ -398,6 +378,86 @@ const ModalActions = styled.div`
   }
 `;
 
+const ExportBtnWrapper = styled.div<{ 
+  $color: string;
+  $tooltipText?: string;
+  $tooltipPosition?: 'top' | 'bottom';
+  $tooltipAlign?: 'center' | 'right';
+}>`
+  ${premiumTooltip}
+  
+  .Btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 45px;
+    height: 45px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition-duration: .3s;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.199);
+    background-color: ${p => p.$color};
+  }
+
+  .sign {
+    width: 100%;
+    transition-duration: .3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sign svg {
+    width: 18px;
+    height: 18px;
+    color: white;
+  }
+
+  .text {
+    position: absolute;
+    right: 0%;
+    width: 0%;
+    opacity: 0;
+    color: white;
+    font-size: 0.95em;
+    font-weight: 600;
+    transition-duration: .3s;
+    white-space: nowrap;
+  }
+
+  .Btn:hover {
+    width: 180px;
+    border-radius: 40px;
+    transition-duration: .3s;
+  }
+
+  .Btn:hover .sign {
+    width: 30%;
+    transition-duration: .3s;
+    padding-left: 15px;
+  }
+
+  .Btn:hover .text {
+    opacity: 1;
+    width: 70%;
+    transition-duration: .3s;
+    padding-right: 15px;
+  }
+
+  .Btn:active {
+    transform: translate(2px ,2px);
+  }
+
+  .Btn:disabled {
+    background-color: #cdd3d8;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+`;
+
 const CancelBtn = styled.button`
   background: #f1f3f5;
   color: #475569;
@@ -515,8 +575,8 @@ const EvaluationBanner = styled.div`
   gap: 16px;
   padding: 20px 24px;
   border-radius: 20px;
-  background: linear-gradient(135deg, rgba(22, 163, 74, 0.08), rgba(22, 163, 74, 0.04));
-  border: 1.5px solid rgba(22, 163, 74, 0.25);
+  background: linear-gradient(135deg, rgba(254, 65, 10, 0.08), rgba(254, 65, 10, 0.03));
+  border: 1.5px solid rgba(254, 65, 10, 0.18);
   animation: ${fadeUp} 0.4s ease both;
 `;
 
@@ -524,8 +584,8 @@ const BannerIcon = styled.div`
   width: 44px;
   height: 44px;
   border-radius: 14px;
-  background: rgba(22, 163, 74, 0.12);
-  color: #16a34a;
+  background: rgba(254, 65, 10, 0.12);
+  color: #FE410A;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -543,13 +603,13 @@ const BannerContent = styled.div`
 const BannerTitle = styled.p`
   font-size: 14px;
   font-weight: 900;
-  color: #15803d;
+  color: #d93809;
   margin: 0;
 `;
 
 const BannerText = styled.p`
   font-size: 13px;
-  color: #4b7c59;
+  color: #8c2406;
   margin: 0;
   line-height: 1.55;
 `;
@@ -696,6 +756,8 @@ export const CompanyPodiumView = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [scoresModalIdea, setScoresModalIdea] = useState<{ id: string; title: string } | null>(null);
   const [isFinalizing, setIsFinalizing] = useState(false);
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
   const [isDownloadingExcel, setIsDownloadingExcel] = useState(false);
   const [animKey, setAnimKey] = useState(0);
@@ -855,6 +917,22 @@ export const CompanyPodiumView = () => {
     }
   };
 
+  const handleCloseChallenge = async () => {
+    if (!challengeId || isClosing) return;
+    setIsClosing(true);
+    try {
+      await challengeService.closeChallenge(challengeId);
+      toast.success('Resultados publicados', { description: 'El reto ha sido cerrado y los resultados son públicos.' });
+      setShowConfirmClose(false);
+      await fetchData();
+    } catch (err: any) {
+      console.error('Error cerrando reto:', err);
+      toast.error('No se pudo publicar los resultados.', { description: err.message });
+    } finally {
+      setIsClosing(false);
+    }
+  };
+
   if (!challengeId) {
     return (
       <PickChallengeView>
@@ -889,6 +967,7 @@ export const CompanyPodiumView = () => {
   const isCompleted = phase === 'done';
   const canSendToJudges = phase === 'select' && actionLimit > 0 && !readOnlyMode && ideas.length > 0;
   const canGenerateResults = phase === 'evaluate' && !readOnlyMode && Boolean(podiumStatus?.canGenerateResults) && actionLimit > 0;
+  const isResultsGenerated = phase === 'evaluate' && (podiumStatus?.winnerCount || 0) > 0;
 
   const stepIndex = phase === 'select' ? 0 : phase === 'evaluate' ? 1 : 2;
 
@@ -902,17 +981,29 @@ export const CompanyPodiumView = () => {
     ? 'Preparando lote de finalistas para los jueces...'
     : 'Procesando rúbricas y calculando puntajes...';
 
-  const confirmTitle = phase === 'select'
-    ? '¿Enviar finalistas a jueces?'
-    : '¿Calcular puntajes y finalizar podio?';
+  const expectedEvaluations = (podiumStatus?.assignedJudgesCount || 0) * (podiumStatus?.finalistCount || 0);
+  const hasMissingEvaluations = (podiumStatus?.evaluationCount || 0) < expectedEvaluations;
 
-  const confirmText = phase === 'select'
-    ? `Se cerrará la participación pública y se enviarán ${actionLimit} ideas a los jueces para evaluación técnica. Esta acción es irreversible.`
-    : `Se calcularán los puntajes técnicos con las rúbricas recibidas y se declararán ${actionLimit} ganador${actionLimit !== 1 ? 'es' : ''}. Esta acción es irreversible.`;
+  let confirmTitle = '';
+  let confirmText = '';
+
+  if (phase === 'select') {
+    confirmTitle = '¿Enviar finalistas a jueces?';
+    confirmText = 'Se cerrará la participación pública y se enviarán ' + actionLimit + ' ideas a los jueces para evaluación técnica. Esta acción es irreversible.';
+  } else if (phase === 'evaluate') {
+    if (hasMissingEvaluations) {
+      const missingCount = expectedEvaluations - (podiumStatus?.evaluationCount || 0);
+      confirmTitle = '⚠️ Evaluaciones Incompletas';
+      confirmText = 'Aún faltan ' + missingCount + ' rúbricas por completar por parte del panel de jueces. Si decides forzar el cálculo ahora, el algoritmo promediará las notas utilizando únicamente las evaluaciones que ya han sido enviadas. Los jueces rezagados perderán el acceso para calificar. ¿Deseas proceder?';
+    } else {
+      confirmTitle = '¿Calcular puntajes y finalizar podio?';
+      confirmText = 'Se calcularán los puntajes técnicos con las rúbricas recibidas y se declararán ' + actionLimit + ' ganador' + (actionLimit !== 1 ? 'es' : '') + '. Esta acción es irreversible.';
+    }
+  }
 
   const confirmButtonLabel = phase === 'select'
     ? (isFinalizing ? 'Enviando...' : 'Sí, enviar a jueces')
-    : (isFinalizing ? 'Calculando...' : 'Sí, finalizar podio');
+    : (isFinalizing ? 'Calculando...' : hasMissingEvaluations ? 'Sí, forzar cálculo' : 'Sí, finalizar podio');
 
   return (
     <>
@@ -960,13 +1051,13 @@ export const CompanyPodiumView = () => {
         </Header>
 
         {phase === 'select' && (
-          <EvaluationBanner style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.04))', borderColor: 'rgba(59, 130, 246, 0.22)' }}>
-            <BannerIcon style={{ background: 'rgba(59, 130, 246, 0.12)', color: '#2563eb' }}>
+          <EvaluationBanner>
+            <BannerIcon>
               <Users />
             </BannerIcon>
             <BannerContent>
-              <BannerTitle style={{ color: '#1d4ed8' }}>Paso 1 — Elige quién pasa a la ronda de jueces</BannerTitle>
-              <BannerText style={{ color: '#3b5998' }}>
+              <BannerTitle>Paso 1 — Elige quién pasa a la ronda de jueces</BannerTitle>
+              <BannerText>
                 Ordena las ideas por destellos o comentarios y define cuántas avanzan. Los puntajes técnicos se calculan recién después de que los jueces evalúen.
               </BannerText>
             </BannerContent>
@@ -1057,41 +1148,74 @@ export const CompanyPodiumView = () => {
           )}
 
           {phase === 'evaluate' && (
-            <FinalizeBtn
-              onClick={() => !readOnlyMode && podiumStatus?.canGenerateResults && setShowConfirm(true)}
-              disabled={!canGenerateResults}
-              title={!podiumStatus?.canGenerateResults ? 'Espera a que los jueces envíen al menos una evaluación' : undefined}
-            >
-              <Calculator size={18} />
-              {readOnlyMode ? 'Estás en modo lectura ahora' : 'Calcular puntajes y finalizar podio'}
-            </FinalizeBtn>
+            <>
+              {!isResultsGenerated ? (
+                <FinalizeBtn
+                  onClick={() => !readOnlyMode && podiumStatus?.canGenerateResults && setShowConfirm(true)}
+                  disabled={!canGenerateResults}
+                  title={!podiumStatus?.canGenerateResults ? 'Espera a que los jueces envíen al menos una evaluación' : undefined}
+                >
+                  <Calculator size={18} />
+                  {readOnlyMode ? 'Estás en modo lectura ahora' : 'Calcular puntajes y visualizar podio'}
+                </FinalizeBtn>
+              ) : (
+                <FinalizeBtn
+                  onClick={() => !readOnlyMode && setShowConfirmClose(true)}
+                >
+                  <Trophy size={18} />
+                  {readOnlyMode ? 'Estás en modo lectura ahora' : 'Publicar Resultados'}
+                </FinalizeBtn>
+              )}
+            </>
           )}
 
           {phase === 'done' && (
             <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-              <FinalizeBtn disabled style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', cursor: 'not-allowed', boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)' }}>
-                <CheckCircle size={18} /> Podio finalizado
-              </FinalizeBtn>
-              <DownloadBtn
-                onClick={handleDownloadPDF}
-                disabled={isDownloadingPDF}
-                title="Descargar reporte ejecutivo en PDF"
+              {challenge?.status === 'CLOSED' ? (
+                <FinalizeBtn disabled style={{ background: 'linear-gradient(135deg, #16a34a, #15803d)', cursor: 'not-allowed', boxShadow: '0 4px 14px rgba(22, 163, 74, 0.25)' }}>
+                  <CheckCircle size={18} /> Podio finalizado
+                </FinalizeBtn>
+              ) : (
+                <FinalizeBtn 
+                  onClick={() => !readOnlyMode && setShowConfirmClose(true)}
+                  disabled={isClosing || readOnlyMode}
+                >
+                  <Trophy size={18} /> {isClosing ? 'Publicando...' : 'Publicar Resultados'}
+                </FinalizeBtn>
+              )}
+              <ExportBtnWrapper 
+                $color="#E93131"
+                data-tooltip="Descargar reporte ejecutivo en PDF"
+                data-tooltip-position="top"
               >
-                {isDownloadingPDF
-                  ? <><Loader2 size={16} style={{ animation: 'spin 0.9s linear infinite' }} /> Generando...</>
-                  : <><Download size={16} /> Reporte PDF</>
-                }
-              </DownloadBtn>
-              <DownloadBtn
-                onClick={handleDownloadExcel}
-                disabled={isDownloadingExcel}
-                title="Descargar datos crudos de evaluaciones en Excel"
+                <button 
+                  className="Btn" 
+                  onClick={handleDownloadPDF} 
+                  disabled={isDownloadingPDF}
+                >
+                  <div className="sign">
+                    {isDownloadingPDF ? <Loader2 style={{ animation: 'spin 0.9s linear infinite' }} /> : <Download />}
+                  </div>
+                  <div className="text">Exportar a PDF</div>
+                </button>
+              </ExportBtnWrapper>
+
+              <ExportBtnWrapper 
+                $color="#1F613D"
+                data-tooltip="Descargar datos crudos de evaluaciones en Excel"
+                data-tooltip-position="top"
               >
-                {isDownloadingExcel
-                  ? <><Loader2 size={16} style={{ animation: 'spin 0.9s linear infinite' }} /> Generando...</>
-                  : <><FileSpreadsheet size={16} /> Reporte Excel</>
-                }
-              </DownloadBtn>
+                <button 
+                  className="Btn" 
+                  onClick={handleDownloadExcel} 
+                  disabled={isDownloadingExcel}
+                >
+                  <div className="sign">
+                    {isDownloadingExcel ? <Loader2 style={{ animation: 'spin 0.9s linear infinite' }} /> : <FileSpreadsheet />}
+                  </div>
+                  <div className="text">Exportar a Excel</div>
+                </button>
+              </ExportBtnWrapper>
             </div>
           )}
         </ControlCard>
@@ -1113,7 +1237,8 @@ export const CompanyPodiumView = () => {
                   $rank={rankIndex}
                   $clickable={canOpenBreakdown}
                   onClick={() => canOpenBreakdown && setScoresModalIdea({ id: idea.id, title: idea.title })}
-                  title={canOpenBreakdown ? 'Ver desglose de evaluaciones' : undefined}
+                  $tooltipText={canOpenBreakdown ? 'Ver desglose de evaluaciones' : undefined}
+                  $tooltipPosition="top"
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
                     <RankNumber $pos={rankIndex}>
@@ -1175,6 +1300,38 @@ export const CompanyPodiumView = () => {
               <CancelBtn onClick={() => setShowConfirm(false)} disabled={isFinalizing}>Cancelar</CancelBtn>
               <ConfirmBtn onClick={handleConfirm} disabled={isFinalizing}>
                 {confirmButtonLabel}
+              </ConfirmBtn>
+            </ModalActions>
+          </Modal>
+        </ModalOverlay>,
+        document.body
+      )}
+
+      {showConfirmClose && !readOnlyMode && createPortal(
+        <ModalOverlay onClick={() => !isClosing && setShowConfirmClose(false)}>
+          <Modal onClick={e => e.stopPropagation()}>
+            <WarningIcon style={{ background: 'rgba(254, 65, 10, 0.1)', color: '#FE410A' }}>
+              <AlertTriangle />
+            </WarningIcon>
+            <ModalContent>
+              <ModalTitle>¡Estás a punto de publicar los resultados!</ModalTitle>
+              <ModalText>
+                Al confirmar, el estado del reto pasará a <b>Histórico</b>. Esto revelará el podio a los estudiantes, deshabilitará nuevas evaluaciones y congelará cualquier edición. <b>¡Esta acción es irreversible!</b>
+              </ModalText>
+            </ModalContent>
+            {isClosing && (
+              <ProcessingState>
+                <Loader2 />
+                Publicando resultados y notificando...
+              </ProcessingState>
+            )}
+            <ModalActions>
+              <CancelBtn onClick={() => setShowConfirmClose(false)} disabled={isClosing}>Cancelar</CancelBtn>
+              <ConfirmBtn 
+                onClick={handleCloseChallenge} 
+                disabled={isClosing}
+              >
+                Cerrar Reto
               </ConfirmBtn>
             </ModalActions>
           </Modal>

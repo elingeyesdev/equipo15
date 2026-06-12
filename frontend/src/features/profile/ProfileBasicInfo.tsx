@@ -13,8 +13,9 @@ import {
   PhoneInputWrap,
   PhonePrefix,
   SaveBtn,
+  ToggleProfessionalBtn,
 } from './ProfileStyles';
-import { Pista8Theme } from '@/config/theme';
+
 
 const INSTITUTIONS = ['Univalle', 'UAGRM', 'UPSA', 'Empresa Particular', 'Independiente', 'Otro'];
 const SPECIALTIES = ['Desarrollo de Software', 'Marketing Digital', 'Gestión de Negocios', 'Salud y Bienestar', 'Derecho', 'Arquitectura', 'Otro'];
@@ -181,7 +182,7 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
             </div>
           </div>
 
-          <SaveBtn onClick={onSave} disabled={saving || readOnlyMode} title={readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Perfil'} style={{ alignSelf: 'center', marginTop: 0 }}>
+          <SaveBtn onClick={onSave} disabled={saving || readOnlyMode} data-tooltip={readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Perfil'} data-tooltip-position="top" style={{ alignSelf: 'center', marginTop: 0 }}>
             {saving ? 'Guardando...' : readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Perfil'}
           </SaveBtn>
         </div>
@@ -240,25 +241,12 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
 
       {!isAdmin && !isCompany && (
         <div style={{ textAlign: 'center', margin: '12px 0' }}>
-          <button
-            onClick={() => setShowProfessional(!showProfessional)}
-            style={(() => {
-              const base = {
-                padding: '12px 24px', borderRadius: 14, fontSize: 13,
-                fontWeight: 800, cursor: 'pointer', transition: 'all 0.12s',
-                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              } as React.CSSProperties;
-              if (isJudge) {
-                return { ...base, background: Pista8Theme.primary, color: '#ffffff', border: 'none' };
-              }
-              return { ...base, border: '2px dashed rgba(254,65,10,0.3)', background: showProfessional ? 'rgba(254,65,10,0.06)' : 'transparent', color: Pista8Theme.primary };
-            })()}
-          >
+          <ToggleProfessionalBtn onClick={() => setShowProfessional(!showProfessional)}>
             <span style={{ fontSize: 20, fontWeight: 900, lineHeight: 1 }}>
               {showProfessional ? '−' : '+'}
             </span>
             {showProfessional ? 'Ocultar Hoja de Vuelo Profesional' : 'Completar Hoja de Vuelo Profesional'}
-          </button>
+          </ToggleProfessionalBtn>
         </div>
       )}
 

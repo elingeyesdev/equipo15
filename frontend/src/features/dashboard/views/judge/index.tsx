@@ -315,12 +315,17 @@ const EmptyIcon = styled.div`
   width: 72px;
   height: 72px;
   border-radius: 20px;
-  background: #f1f3f5;
+  background: #fff7ed;
+  color: #ea580c;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 16px;
-  color: #9ca3af;
+
+  svg {
+    width: 32px;
+    height: 32px;
+  }
 `;
 
 const EmptyTitle = styled.h3`
@@ -543,7 +548,7 @@ export const JudgeEvaluationView = () => {
       ) : filtered.length === 0 ? (
         <EmptyState>
           <EmptyIcon>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M9 11l3 3L22 4" />
               <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
@@ -698,7 +703,7 @@ export const JudgeHistoryView = () => {
       ) : evaluations.length === 0 ? (
         <EmptyState>
           <EmptyIcon>
-            <History size={32} color="#9ca3af" />
+            <History size={32} />
           </EmptyIcon>
           <EmptyTitle>No hay evaluaciones en tu historial</EmptyTitle>
           <EmptyText>Una vez que califiques una idea, aparecerá aquí como un registro inmutable de tu participación.</EmptyText>
@@ -741,7 +746,7 @@ export const JudgeHistoryView = () => {
                   <span style={{ fontSize: 13, color: '#4b5563', fontWeight: 600 }}>Tú calificaste con:</span>
                   <span style={{ fontSize: 15, fontWeight: 900, color: Pista8Theme.primary }}>{ev.judgeScore}/10</span>
                 </div>
-                <PrimaryBtn onClick={(e) => { e.stopPropagation(); handleCardClick(ev); }} style={{ background: '#f3f4f6', color: '#374151' }}>
+                <PrimaryBtn onClick={(e) => { e.stopPropagation(); handleCardClick(ev); }}>
                   <Eye size={14} style={{ marginRight: 6 }} />
                   Ver Detalles
                 </PrimaryBtn>

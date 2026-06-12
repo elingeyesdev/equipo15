@@ -61,7 +61,7 @@ const Panel = styled.section`
 
 const PanelHeader = styled.div`
   padding: 22px 24px 18px;
-  border-bottom: 1px solid rgba(72, 80, 84, 0.06);
+  border-bottom: none;
   display: flex;
   justify-content: space-between;
   gap: 14px;
@@ -203,7 +203,7 @@ const RowSub = styled.div`
   margin-top: 4px;
 `;
 
-const StatusPill = styled.span<{ $tone: 'green' | 'amber' | 'slate' }>`
+const StatusPill = styled.span<{ $tone: 'green' | 'amber' | 'slate' | 'blue' }>`
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -215,6 +215,7 @@ const StatusPill = styled.span<{ $tone: 'green' | 'amber' | 'slate' }>`
   ${({ $tone }) => $tone === 'green' && `background: rgba(34,197,94,0.12); color: #15803d;`}
   ${({ $tone }) => $tone === 'amber' && `background: rgba(245,158,11,0.14); color: #b45309;`}
   ${({ $tone }) => $tone === 'slate' && `background: rgba(100,116,139,0.12); color: #475569;`}
+  ${({ $tone }) => $tone === 'blue' && `background: rgba(59,130,246,0.12); color: #1d4ed8;`}
 `;
 
 const ActionBtn = styled.button<{ $variant?: 'solid' | 'ghost'; $tooltipText?: string }>`
@@ -455,28 +456,28 @@ export const AdminUsersView = () => {
     { value: 'ADMIN', label: 'Admin' },
     { value: 'COMPANY', label: 'Empresa' },
     { value: 'JUDGE', label: 'Juez' },
-    { value: 'USER', label: 'Estudiante' },
+    { value: 'USER', label: 'Participante' },
   ];
 
   const ROLE_LABELS: Record<string, string> = {
     ADMIN: 'Admin',
     COMPANY: 'Empresa',
     JUDGE: 'Juez',
-    USER: 'Estudiante',
+    USER: 'Participante',
     admin: 'Admin',
     company: 'Empresa',
     judge: 'Juez',
-    student: 'Estudiante',
-    user: 'Estudiante',
+    student: 'Participante',
+    user: 'Participante',
   };
 
-  const ROLE_TONES: Record<string, 'green' | 'amber' | 'slate'> = {
+  const ROLE_TONES: Record<string, 'green' | 'amber' | 'slate' | 'blue'> = {
     ADMIN: 'amber',
-    COMPANY: 'green',
+    COMPANY: 'blue',
     JUDGE: 'slate',
     USER: 'green',
     admin: 'amber',
-    company: 'green',
+    company: 'blue',
     judge: 'slate',
     student: 'green',
     user: 'green',
@@ -610,11 +611,11 @@ export const AdminUsersView = () => {
           <Table>
             <thead>
               <tr>
-                <TH style={{ textAlign: 'left' }}>Usuario</TH>
-                <TH>Facultad</TH>
-                <TH>Rol actual</TH>
-                <TH>Evaluar</TH>
-                <TH>Cambiar rol</TH>
+                <TH>USUARIO</TH>
+                <TH>ÁREA</TH>
+                <TH>ROL ACTUAL</TH>
+                <TH>EVALUAR</TH>
+                <TH>CAMBIAR ROL</TH>
               </tr>
             </thead>
             <tbody>
@@ -660,7 +661,7 @@ export const AdminUsersView = () => {
                   </TD>
                   <TD>
                     <span style={{ fontSize: 13, color: '#64748b' }}>
-                      {user.studentProfile?.faculty?.name || 'Sin facultad'}
+                      {user.studentProfile?.faculty?.name || 'No especificada'}
                     </span>
                   </TD>
                   <TD>
@@ -672,7 +673,7 @@ export const AdminUsersView = () => {
                     {user.role === 'USER' && (
                       <EvalBtn
                         type="button"
-                        onClick={() => setReputationUserId(user.id)}
+                        onClick={(e) => { (e.currentTarget as HTMLElement).blur(); setReputationUserId(user.id); }}
                         $tooltipText="Ver perfil de reputación"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -693,10 +694,10 @@ export const AdminUsersView = () => {
                         outline: 'none', transition: 'border-color 0.2s',
                       }}
                     >
+                      {user.role === 'JUDGE' && <option value="JUDGE">Juez</option>}
                       <option value="ADMIN">Admin</option>
                       <option value="COMPANY">Empresa</option>
-                      <option value="JUDGE">Juez</option>
-                      <option value="USER">Estudiante</option>
+                      <option value="USER">Participante</option>
                     </select>
                   </TD>
                 </TR>

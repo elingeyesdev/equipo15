@@ -110,7 +110,7 @@ const IdeasLoader = () => {
         <Dot delay={0.3} />
       </DotRow>
 
-      <Sub>Las ideas aparecerán aquí al publicarse</Sub>
+      <Sub>Sincronizando ideas...</Sub>
     </Wrap>
   );
 };

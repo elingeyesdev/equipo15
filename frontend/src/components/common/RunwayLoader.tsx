@@ -44,7 +44,7 @@ const Stage = styled.div`
   bottom: 0;
   left: 0;
   right: 0;
-  height: 55vh;
+  height: 40vh;
   perspective: 300px;
   perspective-origin: 50% 0%;
   overflow: hidden;
@@ -172,7 +172,7 @@ const Content = styled.div`
   align-items: center;
   gap: 16px;
   animation: ${fadeInUp} 0.7s ease both;
-  margin-bottom: 18vh;
+  margin-bottom: 0;
 `;
 
 const LogoWrap = styled.div`

@@ -137,13 +137,19 @@ const IdeationWall = () => {
     if (advFilter.onlyMyIdeas && user) {
       ideas = ideas.filter(idea => (idea as any).authorId === (userProfile as any)?.id || (idea.author as any)?.firebaseUid === user.uid);
     }
+    if (ds.selectedChallenge?.id) {
+      ideas = ideas.filter(idea => idea.challengeId === ds.selectedChallenge.id);
+    }
     if (advFilter.facultyId) {
       ideas = ideas.filter(idea => (idea as any).authorFacultyId === advFilter.facultyId || (idea.author as any)?.studentProfile?.facultyId === advFilter.facultyId || (idea.author as any)?.facultyId === advFilter.facultyId);
     }
     if (advFilter.topLimit) {
       ideas = ideas.slice(0, advFilter.topLimit);
     }
-    return ideas;
+    return ideas.map(idea => ({
+      ...idea,
+      challengeStatus: ds.selectedChallenge?.status,
+    }));
   })();
 
   const fullName = resolveDisplayName(userProfile as any) || user?.email || '';
@@ -162,7 +168,8 @@ const IdeationWall = () => {
   };
 
   const handleContinueDraft = (draft: IdeaDraft) => {
-    const mappedChallenge = mapDraftChallenge(draft);
+    const fullChallenge = ds.challenges.find(c => c.id === draft.challengeId);
+    const mappedChallenge = fullChallenge || mapDraftChallenge(draft);
     ds.setFormChallenge(mappedChallenge);
     ds.selectChallenge(mappedChallenge);
     form.loadFromDraft(draft);
@@ -201,8 +208,6 @@ const IdeationWall = () => {
       />
 
       <IdeationOverlay
-        toastMessage={ds.toastMessage}
-        dismissToast={ds.dismissToast}
         selectedListIdea={selectedListIdea}
         setSelectedListIdea={setSelectedListIdea}
         formOpen={ds.formOpen}

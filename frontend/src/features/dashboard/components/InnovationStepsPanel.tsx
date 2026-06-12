@@ -77,18 +77,15 @@ const StepItem = styled.li<{ $delay: number }>`
   }
 `;
 
-const IconBox = styled.div<{ $color: string; $bg: string }>`
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: ${p => p.$bg};
-  color: ${p => p.$color};
+const IconBox = styled.div`
+  color: ${Pista8Theme.primary};
   display: flex;
   align-items: center;
   justify-content: center;
+  align-self: center;
   flex-shrink: 0;
 
-  svg { width: 20px; height: 20px; }
+  svg { width: 22px; height: 22px; }
 `;
 
 const StepContent = styled.div`
@@ -124,8 +121,6 @@ const StepDesc = styled.p`
 const STEPS = [
   {
     icon: MousePointerClick,
-    color: '#4f46e5',
-    bg: 'rgba(79, 70, 229, 0.1)',
     label: 'Paso 1',
     title: 'Elige un reto',
     desc: 'Selecciona un reto de la lista lateral para conocer el problema que las empresas necesitan resolver.',
@@ -133,8 +128,6 @@ const STEPS = [
   },
   {
     icon: SearchCode,
-    color: '#0891b2',
-    bg: 'rgba(8, 145, 178, 0.1)',
     label: 'Paso 2',
     title: 'Lee los criterios',
     desc: 'Revisa detenidamente los criterios de evaluación: Deseabilidad, Factibilidad y Viabilidad.',
@@ -142,8 +135,6 @@ const STEPS = [
   },
   {
     icon: Send,
-    color: '#16a34a',
-    bg: 'rgba(22, 163, 74, 0.1)',
     label: 'Paso 3',
     title: '¡Publica tu propuesta!',
     desc: 'Sube tu idea siguiendo el modelo estructurado para maximizar tus posibilidades de ganar.',
@@ -160,9 +151,9 @@ const InnovationStepsPanel: React.FC = () => (
     </HeadBlock>
 
     <StepList>
-      {STEPS.map(({ icon: Icon, color, bg, label, title, desc, delay }) => (
+      {STEPS.map(({ icon: Icon, label, title, desc, delay }) => (
         <StepItem key={label} $delay={delay}>
-          <IconBox $color={color} $bg={bg}>
+          <IconBox>
             <Icon />
           </IconBox>
           <StepContent>

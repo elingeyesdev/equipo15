@@ -345,10 +345,11 @@ export class ChallengeRepository {
     await Promise.all(
       active.map(async (c: any) => {
         try {
+          const uniqueId = `${challengeId}_${c.id}`;
           await this.prisma.criteria.upsert({
-            where: { id: c.id },
+            where: { id: uniqueId },
             create: {
-              id: c.id,
+              id: uniqueId,
               challengeId,
               name: c.name,
               description: c.description || null,
@@ -629,9 +630,11 @@ export class ChallengeRepository {
       };
     }
 
+    const activeStatuses: any[] = ['PUBLISHED', 'FINALIST', 'WINNER'];
+
     const groupedIdeasByAuthor = await this.prisma.idea.groupBy({
       by: ['authorId'],
-      where: { challengeId: { in: challengeIds }, status: 'PUBLISHED' },
+      where: { challengeId: { in: challengeIds }, status: { in: activeStatuses } },
       _count: { _all: true },
       _sum: { finalScore: true },
     });
@@ -689,7 +692,7 @@ export class ChallengeRepository {
     const recentIdeas = await this.prisma.idea.findMany({
       where: {
         challengeId: { in: challengeIds },
-        status: 'PUBLISHED',
+        status: { in: activeStatuses },
         createdAt: { gte: thirtyDaysAgo },
       },
       select: {
@@ -803,9 +806,11 @@ export class ChallengeRepository {
       };
     }
 
+    const activeStatuses: any[] = ['PUBLISHED', 'FINALIST', 'WINNER'];
+
     const groupedIdeasByAuthor = await this.prisma.idea.groupBy({
       by: ['authorId'],
-      where: { challengeId: { in: challengeIds }, status: 'PUBLISHED' },
+      where: { challengeId: { in: challengeIds }, status: { in: activeStatuses } },
       _count: { _all: true },
       _sum: { finalScore: true },
     });
@@ -863,7 +868,7 @@ export class ChallengeRepository {
     const recentIdeas = await this.prisma.idea.findMany({
       where: {
         challengeId: { in: challengeIds },
-        status: 'PUBLISHED',
+        status: { in: activeStatuses },
         createdAt: { gte: thirtyDaysAgo },
       },
       select: {
@@ -1120,12 +1125,15 @@ export class ChallengeRepository {
     // Filter only enabled criteria and map to required format
     const activeCriteria = criteriaList
       .filter((c: any) => c.enabled !== false && c.weight > 0)
-      .map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        description: c.description || '',
-        weight: c.weight || 0,
-      }));
+      .map((c: any) => {
+        const uniqueId = `${challengeId}_${c.id}`;
+        return {
+          id: uniqueId,
+          name: c.name,
+          description: c.description || '',
+          weight: c.weight || 0,
+        };
+      });
 
     // Sync to Criteria table to ensure foreign key integrity for EvaluationScore
     if (activeCriteria.length > 0) {

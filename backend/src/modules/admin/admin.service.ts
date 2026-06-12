@@ -5,12 +5,16 @@ import type { UserRoleEnum } from './dto/update-user-role.dto';
 import { CreateFacultyDto } from './dto/create-faculty.dto';
 import { UpdateFacultyDto } from './dto/update-faculty.dto';
 import { CreateAllowedDomainDto } from './dto/create-allowed-domain.dto';
+import { RedisService } from '../../infrastructure/redis/redis.module';
 
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
 
-  constructor(private readonly adminRepository: AdminRepository) {}
+  constructor(
+    private readonly adminRepository: AdminRepository,
+    private readonly redisService: RedisService,
+  ) {}
 
   async getGlobalAnalytics() {
     return this.adminRepository.getGlobalAnalytics();
@@ -87,6 +91,9 @@ export class AdminService {
     }
 
     if (result.changed) {
+      if (result.user.firebaseUid) {
+        await this.redisService.del(`role:${result.user.firebaseUid}`);
+      }
       this.logger.log(
         `[ROLE_CHANGE] Usuario "${result.user.email}" (${userId}): ${result.previousRole} → ${result.newRole}`,
       );

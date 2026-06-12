@@ -23,6 +23,22 @@ export class EvaluationRepository {
     });
   }
 
+  async checkJudgeAssignment(ideaId: string, judgeId: string): Promise<boolean> {
+    const idea = await this.prisma.idea.findUnique({
+      where: { id: ideaId },
+      select: { challengeId: true },
+    });
+    if (!idea) return false;
+
+    const count = await this.prisma.challengeJudge.count({
+      where: {
+        challengeId: idea.challengeId,
+        judgeId,
+      },
+    });
+    return count > 0;
+  }
+
   async findIdeaContext(ideaId: string) {
     return this.prisma.idea.findUnique({
       where: { id: ideaId, deletedAt: null },

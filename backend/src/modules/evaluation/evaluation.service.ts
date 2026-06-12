@@ -40,7 +40,17 @@ export class EvaluationService {
     private readonly userService: UserService,
   ) {}
 
-  async evaluateIdea(evaluationData: any): Promise<any> {
+  async evaluateIdea(evaluationData: any, userRole: string): Promise<any> {
+    if (userRole !== 'ADMIN') {
+      const isAssigned = await this.evaluationRepository.checkJudgeAssignment(
+        evaluationData.ideaId,
+        evaluationData.judgeId,
+      );
+      if (!isAssigned) {
+        throw new ForbiddenException('No estás asignado a este reto como juez.');
+      }
+    }
+
     const evaluation = await this.evaluationRepository.create(evaluationData);
     this.logger.log(
       `Idea evaluada: ID ${evaluation.ideaId} por Juez ${evaluation.judgeId} con ${evaluation.scores?.length || 0} criterios evaluados`,

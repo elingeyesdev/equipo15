@@ -47,4 +47,9 @@ export const GlobalStyles = createGlobalStyle`
       font-size: 14px;
     }
   }
+
+  /* Forzar z-index de Sonner Toaster por encima de todos los modales y overlays */
+  [data-sonner-toaster], .sonner-toaster {
+    z-index: 999999 !important;
+  }
 `;

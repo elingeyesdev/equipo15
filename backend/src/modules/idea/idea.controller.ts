@@ -22,6 +22,7 @@ import { IdeaService } from './idea.service';
 import { CreateIdeaDto } from './dtos/create-idea.dto';
 import { CreateDraftIdeaDto } from './dtos/create-draft-idea.dto';
 import { UpdateIdeaDto } from './dtos/update-idea.dto';
+import { UpdateIdeaStatusDto } from './dtos/update-idea-status.dto';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/guards/roles.decorator';
@@ -91,8 +92,11 @@ export class IdeasController {
   @UseGuards(RolesGuard)
   @Roles('admin')
   @ApiOperation({ summary: 'Update the status of an idea (Admin only)' })
-  updateStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.ideaService.updateStatus(id, status);
+  updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateIdeaStatusDto,
+  ) {
+    return this.ideaService.updateStatus(id, dto.status);
   }
 
   @Patch(':id/draft')

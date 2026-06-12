@@ -27,6 +27,10 @@ export function IsWithinSixMonths(
           const startDate = new Date(relatedValue);
           const endDate = new Date(value);
 
+          if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+            return false;
+          }
+
           if (endDate < startDate) return false;
 
           const timeDiff = endDate.getTime() - startDate.getTime();

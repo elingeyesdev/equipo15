@@ -364,7 +364,7 @@ const PodiumSection: React.FC<PodiumSectionProps> = ({ topIdeas, onSelectIdea })
           padding: '32px 24px 24px',
           borderRadius: '20px',
           background: 'white',
-          border: '2px dashed rgba(72,80,84,0.12)',
+          border: 'none',
           textAlign: 'center',
           color: '#6b7280',
           fontSize: '14px',

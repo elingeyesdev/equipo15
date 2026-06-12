@@ -74,7 +74,7 @@ const Container = styled.section`
   background: radial-gradient(circle at 100% 0%, #fff4ee 0%, ${colors.bg} 56%);
   border: 1px solid ${colors.border};
   border-radius: 20px;
-  padding: 24px;
+  padding: 32px 24px 24px;
 `;
 
 const Header = styled.header`
@@ -83,7 +83,7 @@ const Header = styled.header`
   align-items: flex-start;
   flex-wrap: nowrap;
   gap: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 40px;
 
   @media (max-width: ${breakpoints.tablet}) {
     flex-direction: column;
@@ -576,7 +576,7 @@ export const CompanyStatsView = () => {
   return (
     <Container>
       <Header>
-        <div>
+        <div style={{ marginTop: '28px' }}>
           <Heading>Resultados de Innovacion</Heading>
           <Subheading>
             Vista consolidada de ideas por facultad, interacciones por dia y KPIs principales.

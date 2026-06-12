@@ -7,7 +7,7 @@ const ROLE_LABELS: Record<string, string> = {
   ADMIN: 'Administrador',
   COMPANY: 'Empresa',
   JUDGE: 'Juez',
-  USER: 'Estudiante',
+  USER: 'Participante',
 };
 
 const ROLES = ['ADMIN', 'COMPANY', 'JUDGE', 'USER'] as const;

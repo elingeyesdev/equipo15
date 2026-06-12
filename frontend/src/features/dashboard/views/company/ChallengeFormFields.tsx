@@ -16,7 +16,7 @@ import {
   LogoUploadArea, LogoThumb, LogoPlaceholder, UploadText,
   CriteriaToggleBtn, CriteriaPanel, CriterionRow, CriterionCheckbox,
   CriterionName, WeightInput, WeightUnit, AddCriterionBtn,
-  CustomCriterionInput, RemoveBtn, TotalWeightBar, BtnRow, Btn, ConfirmBanner,
+  CustomCriterionInput, RemoveBtn, TotalWeightBar, BtnRow, Btn, ConfirmBanner, OptionalToggleBtn,
 } from './challengeFormStyles';
 
 const LightboxOverlay: React.FC<{ src: string; onClose: () => void }> = ({ src, onClose }) => (
@@ -442,21 +442,12 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
               {form.evaluationCriteria.filter(c => c.isOptional).length > 0 && (
                 <div style={{ marginTop: 10 }}>
-                  <button type="button" onClick={() => setShowOptionals(!showOptionals)} style={{ 
-                    display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', 
-                    cursor: 'pointer', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', 
-                    textTransform: 'uppercase', color: '#a8b0b8', padding: 0, marginBottom: 6,
-                  }}>
+                  <OptionalToggleBtn type="button" $open={showOptionals} onClick={() => setShowOptionals(!showOptionals)}>
                     Opcional
-                    <span style={{ 
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      width: 18, height: 18, borderRadius: '50%',
-                      background: Pista8Theme.primary, color: 'white',
-                      fontSize: 16, fontWeight: 900, lineHeight: 1 
-                    }}>
+                    <span className="icon-circle">
                       {showOptionals ? '−' : '+'}
                     </span>
-                  </button>
+                  </OptionalToggleBtn>
                   {showOptionals && form.evaluationCriteria.filter(c => c.isOptional).map(c => (
                     <CriterionRow key={c.id}>
                       <CriterionCheckbox type="checkbox" checked={c.enabled}

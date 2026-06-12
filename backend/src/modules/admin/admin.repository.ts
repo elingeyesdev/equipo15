@@ -209,7 +209,7 @@ export class AdminRepository {
     return this.prisma.$transaction(async (tx) => {
       const existingUser = await tx.user.findUnique({
         where: { id: userId },
-        select: { id: true, role: true, displayName: true, email: true },
+        select: { id: true, firebaseUid: true, role: true, displayName: true, email: true },
       });
 
       if (!existingUser) {
@@ -232,6 +232,7 @@ export class AdminRepository {
         data: { role: newRole },
         select: {
           id: true,
+          firebaseUid: true,
           email: true,
           displayName: true,
           role: true,

@@ -28,10 +28,10 @@ const MyIdeasView: React.FC = () => {
     onlyMyIdeas: false,
   });
 
-  const resolvedName = userProfile?.displayName || 'Estudiante';
+  const resolvedName = userProfile?.displayName || 'Participante';
   const roleName = (userProfile?.roleInfo?.name || userProfile?.role || 'STUDENT').toLowerCase();
   const roleLabels: Record<string, string> = {
-    student: 'estudiante',
+    student: 'participante',
     admin: 'administrador',
     company: 'empresa',
     judge: 'jurado',

@@ -6,6 +6,7 @@ import { challengeService } from '../../../../services/challenge.service';
 import BackButton from '../../../../components/common/BackButton';
 import { useAuth } from '../../../../context/AuthContext';
 import InfoTooltip from '../../../../components/common/InfoTooltip';
+import { toast } from 'sonner';
 
 /* ─── Label Maps ─── */
 const IMPACT_AREA_LABELS: Record<string, string> = {
@@ -348,7 +349,7 @@ const StyledSlider = styled.input<{ $score: number }>`
 `;
 
 const ScoreSummary = styled.div`
-  background: linear-gradient(135deg, ${Pista8Theme.secondary}, #2d3748);
+  background: #1a1f22;
   border-radius: 14px;
   padding: 16px;
   display: flex;
@@ -360,7 +361,7 @@ const ScoreSummary = styled.div`
 const SummaryLabel = styled.span`
   font-size: 12px;
   font-weight: 700;
-  color: rgba(255,255,255,0.7);
+  color: white;
 `;
 
 const SummaryScore = styled.span`
@@ -552,6 +553,7 @@ const JudgeIdeaFormView: React.FC<JudgeIdeaFormViewProps> = ({ isReadOnlyMode = 
         scores: criteria.map(c => ({ criterionId: c.id, score: scores[c.id] || 5 })),
       });
       setReadOnly(true);
+      toast.success('Evaluación enviada con éxito');
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Ocurrió un error al guardar la evaluación.';
       setError(Array.isArray(msg) ? msg.join(' • ') : msg);
@@ -585,33 +587,6 @@ const JudgeIdeaFormView: React.FC<JudgeIdeaFormViewProps> = ({ isReadOnlyMode = 
 
   return (
     <PageWrapper>
-      {readOnly && (
-        <div style={{
-          background: '#dcfce7',
-          border: '1.5px solid #86efac',
-          borderRadius: 14,
-          padding: '14px 20px',
-          marginBottom: 20,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          animation: 'fadeIn 0.3s ease',
-        }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: '50%', background: '#22c55e',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-          <div>
-            <p style={{ margin: 0, fontWeight: 800, fontSize: 14, color: '#166534' }}>Evaluación enviada con éxito</p>
-            <p style={{ margin: '2px 0 0', fontSize: 12, color: '#15803d' }}>Esta vista es de solo lectura. Tu calificación ya fue registrada.</p>
-          </div>
-        </div>
-      )}
-
       <TopBar>
         <BackButton onClick={() => navigate(isReadOnlyMode ? '/dashboard/judge/history' : `/dashboard/judge/evaluation/${challengeId}`)} />
         <div style={{ flex: 1 }}>
@@ -814,7 +789,7 @@ const JudgeIdeaFormView: React.FC<JudgeIdeaFormViewProps> = ({ isReadOnlyMode = 
                 <ScoreSummary>
                   <div>
                     <SummaryLabel>Puntaje Parcial Ponderado</SummaryLabel>
-                    <p style={{ margin: '2px 0 0', fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
+                    <p style={{ margin: '2px 0 0', fontSize: 11, color: 'white' }}>
                       Basado en los pesos de cada criterio
                     </p>
                   </div>

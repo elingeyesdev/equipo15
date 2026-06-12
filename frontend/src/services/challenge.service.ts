@@ -174,4 +174,9 @@ export const challengeService = {
     const response = await axiosInstance.get<ApiResponse<any[]> | any[]>('/evaluations/me');
     return unwrapApiData(response.data);
   },
+
+  closeChallenge: async (id: string): Promise<any> => {
+    const response = await axiosInstance.patch<ApiResponse<any>>(`/challenges/${id}/close`);
+    return unwrapApiData(response.data);
+  },
 };

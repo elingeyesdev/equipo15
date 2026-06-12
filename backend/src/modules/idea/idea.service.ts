@@ -8,7 +8,7 @@ import {
 import { IdeaRepository } from './idea.repository';
 import { ChallengeRepository } from '../challenge/challenge.repository';
 import { UserRepository } from '../user/user.repository';
-import { Idea } from '@prisma/client';
+import { Idea, Prisma } from '@prisma/client';
 import { CreateIdeaDto } from './dtos/create-idea.dto';
 import { CreateDraftIdeaDto } from './dtos/create-draft-idea.dto';
 import { UpdateIdeaDto } from './dtos/update-idea.dto';
@@ -54,6 +54,13 @@ export class IdeaService {
     return user.id;
   }
 
+  private async ensureChallengeNotClosed(challengeId: string): Promise<void> {
+    const challenge = await this.challengeRepository.findById(challengeId);
+    if (challenge?.status === 'CLOSED') {
+      throw new ForbiddenException('Operación denegada. El reto ya ha finalizado y se encuentra en la biblioteca histórica');
+    }
+  }
+
   private validateIdeaWords(createIdeaDto: CreateIdeaDto): void {
     assertWordRange(
       'ideaName',
@@ -93,6 +100,7 @@ export class IdeaService {
     }
 
     ensureActiveChallengeStatus(challenge.status);
+    await this.ensureChallengeNotClosed(challenge.id);
 
     if (challenge.submissionsCloseAt && new Date() > new Date(challenge.submissionsCloseAt)) {
       this.logger.warn(
@@ -157,6 +165,8 @@ export class IdeaService {
     if (!challenge) {
       throw new BadRequestException('El reto vinculado no existe.');
     }
+
+    await this.ensureChallengeNotClosed(challenge.id);
 
     const draftPayload: any = {
       title: createIdeaDraftDto.title || 'Borrador sin titulo',
@@ -290,6 +300,8 @@ export class IdeaService {
       throw new BadRequestException('La idea que intentas editar no existe.');
     }
 
+    await this.ensureChallengeNotClosed(existingIdea.challengeId);
+
     if (existingIdea.authorId !== authorId) {
       throw new ForbiddenException('Solo el autor de la idea puede editarla.');
     }
@@ -362,6 +374,8 @@ export class IdeaService {
       throw new BadRequestException('La idea no existe.');
     }
 
+    await this.ensureChallengeNotClosed(idea.challengeId);
+
     if (idea.authorId === userId) {
       throw new ForbiddenException({
         message:
@@ -377,13 +391,11 @@ export class IdeaService {
     };
     const targetReaction = rawType && reactionMap[rawType] ? reactionMap[rawType] : 'GOOD';
 
-    const previousReaction = await this.ideaRepository.checkUserLike(ideaId, userId);
+    try {
+      const { updatedIdea, hasVoted } = await this.ideaRepository.upsertLike(ideaId, userId, targetReaction);
+      this.invalidateCache();
 
-    if (previousReaction) {
-      if (rawType === null || previousReaction === targetReaction) {
-        const updatedIdea = await this.ideaRepository.removeLikeAndDecrement(ideaId, userId, previousReaction);
-        this.invalidateCache();
-
+      if (!hasVoted) {
         this.moderationService.trackUnlike(userId).catch((err) => {
           this.logger.error(`Error in trackUnlike for user ${userId}:`, err);
         });
@@ -399,15 +411,7 @@ export class IdeaService {
             authorId: userId,
           },
         );
-
-        return {
-          ...updatedIdea,
-          hasVoted: false,
-        };
       } else {
-        const updatedIdea = await this.ideaRepository.updateLikeReaction(ideaId, userId, previousReaction, targetReaction);
-        this.invalidateCache();
-
         this.eventBus.emitToRoom(`challenge:${idea.challengeId}`, 'idea:voted', {
           ideaId: idea.id,
           likesCount: updatedIdea.likesCount,
@@ -415,30 +419,17 @@ export class IdeaService {
           challengeId: idea.challengeId,
           authorId: userId,
         });
-
-        return {
-          ...updatedIdea,
-          hasVoted: true,
-        };
       }
-    } else {
-      if (rawType === null) return { ...idea, hasVoted: false };
-
-      const updatedIdea = await this.ideaRepository.registerLikeAndIncrement(ideaId, userId, targetReaction);
-      this.invalidateCache();
-
-      this.eventBus.emitToRoom(`challenge:${idea.challengeId}`, 'idea:voted', {
-        ideaId: idea.id,
-        likesCount: updatedIdea.likesCount,
-        fireScore: updatedIdea.fireScore,
-        challengeId: idea.challengeId,
-        authorId: userId,
-      });
 
       return {
         ...updatedIdea,
-        hasVoted: true,
+        hasVoted,
       };
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException('Reacción ya registrada o en proceso concurrente');
+      }
+      throw error;
     }
   }
 
@@ -472,25 +463,13 @@ export class IdeaService {
       throw new BadRequestException('La idea no existe.');
     }
 
-    const hasFavorited = await this.ideaRepository.checkUserFavorite(
-      ideaId,
-      userId,
-    );
-
-    if (hasFavorited) {
-      await this.ideaRepository.removeFavorite(ideaId, userId);
-      this.invalidateCache();
-      return {
-        ...idea,
-        hasFavorited: false,
-      };
-    }
-
-    await this.ideaRepository.registerFavorite(ideaId, userId);
+    const hasFavorited = await this.ideaRepository.toggleFavoriteAtomic(ideaId, userId);
     this.invalidateCache();
+    
     return {
       ...idea,
-      hasFavorited: true,
+      hasFavorited,
+      favoritesCount: idea.favoritesCount + (hasFavorited ? 1 : -1)
     };
   }
 

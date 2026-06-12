@@ -26,9 +26,11 @@ const buildPlanes = (
     challengeId: idea.challengeId,
     challengeTitle: idea.challengeTitle ?? fallbackChallengeTitle,
     authorName: idea.isAnonymous ? 'Anónimo' : resolveDisplayName(idea.author),
+    authorAvatar: idea.author?.avatarUrl,
     likesCount: idea.likesCount ?? 0,
     commentsCount: idea.commentsCount ?? 0,
     fireScore: idea.fireScore ?? 0,
+    finalScore: idea.finalScore ?? 0,
     laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),
     floatDelay: (i % 5) * 0.4,
     authorFacultyId: idea.author?.studentProfile?.facultyId || idea.author?.facultyId,
@@ -131,9 +133,11 @@ export const useWallSocket = (
           challengeId: rawIdea.challengeId,
           challengeTitle: rawIdea.challengeTitle ?? fallbackChallengeTitle,
           authorName: rawIdea.isAnonymous ? 'Anónimo' : resolveDisplayName(rawIdea.author),
+          authorAvatar: rawIdea.author?.avatarUrl,
           likesCount: rawIdea.likesCount ?? 0,
           commentsCount: rawIdea.commentsCount ?? 0,
           fireScore: rawIdea.fireScore ?? 0,
+          finalScore: rawIdea.finalScore ?? 0,
           laneY: TOP_PADDING + (i * LANE_HEIGHT_PER_IDEA),
           floatDelay: (i % 5) * 0.4,
           authorFacultyId: rawIdea.author?.studentProfile?.facultyId || rawIdea.author?.facultyId,
@@ -151,10 +155,14 @@ export const useWallSocket = (
       });
     });
 
-    socket.on('user:profile_updated', (payload: { userId: string; displayName: string; nickname?: string }) => {
+    socket.on('user:profile_updated', (payload: { userId: string; displayName: string; nickname?: string; avatarUrl?: string }) => {
       setIdeas(prev => prev.map(idea =>
         idea.authorId === payload.userId
-          ? { ...idea, authorName: payload.displayName }
+          ? { 
+              ...idea, 
+              authorName: payload.nickname || payload.displayName,
+              ...(payload.avatarUrl && { authorAvatar: payload.avatarUrl })
+            }
           : idea
       ));
     });

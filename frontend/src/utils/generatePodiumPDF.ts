@@ -142,10 +142,15 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
   doc.text(wrappedTitle[0], margin, 40);
 
   // ── 3. Meta info bar ─────────────────────────────────────────────────────
-  setFillHex(doc, '#1A1F22');
+  setFillHex(doc, '#F1F3F5');
   doc.rect(0, 52, pageW, 16, 'F');
 
-  setTextHex(doc, LIGHT_GRAY);
+  // Top border to separate from orange header slightly
+  setDrawHex(doc, '#E5E7EB');
+  doc.setLineWidth(0.5);
+  doc.line(0, 52, pageW, 52); 
+
+  setTextHex(doc, GRAY);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.text(`Generado el ${formatDate()}`, margin, 60);
@@ -159,7 +164,7 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
   doc.text('CERRADO', pageW - margin - 14, 59.2, { align: 'center' });
 
   // Separator text
-  setTextHex(doc, '#6B7280');
+  setTextHex(doc, GRAY);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.text('·', pageW / 2, 60, { align: 'center' });
@@ -186,9 +191,13 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
     const color = medalColor(idx);
 
     // Calculate dynamic height based on text
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    const titleMaxW = contentW - 35 - 28;
+    const titleLines = wrapText(doc, idea.title ?? 'Sin título', titleMaxW);
+
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    
     const proposalLines: string[] = [];
     if (idea.problem) {
       proposalLines.push(...wrapText(doc, idea.problem, contentW - 40));
@@ -202,10 +211,14 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
     if (idea.effortLevel) tagsToRender.push(idea.effortLevel);
 
     const hasTags = tagsToRender.length > 0;
-    const tagSpacing = hasTags ? 10 : 0; // extra space for tags at the bottom
+    
+    const titleHeight = titleLines.length * 5;
+    const proposalHeight = proposalLines.length * 4;
+    const tagSpacing = hasTags ? 10 : 0;
 
-    const textHeight = proposalLines.length * 4; // 4mm per line
-    const cardH = Math.max(54, 33 + textHeight + tagSpacing + 6); // Base 33 for header + text + padding
+    // Calculate dynamic card height to fit all content securely
+    const dynamicContentHeight = 10 + titleHeight + 2 + 5 + 6 + 7 + proposalHeight + tagSpacing + 6;
+    const cardH = Math.max(54, dynamicContentHeight);
 
     // Check page overflow
     if (cursorY + cardH > pageH - 25) {
@@ -238,22 +251,6 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
     doc.setFont('helvetica', 'bold');
     doc.text(medalLabel(idx), margin + 20, cardY + 16, { align: 'center', baseline: 'middle' });
 
-    // Idea title
-    const titleX = margin + 35;
-    const titleMaxW = contentW - 35 - 28;
-    setTextHex(doc, DARK);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    const titleLines = wrapText(doc, idea.title ?? 'Sin título', titleMaxW);
-    doc.text(titleLines[0], titleX, cardY + 14);
-
-    // Author
-    const authorName = idea.author?.nickname || idea.author?.displayName || 'Participante';
-    setTextHex(doc, LIGHT_GRAY);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Por ${authorName}`, titleX, cardY + 21);
-
     // Score badge
     if (idea.finalScore != null) {
       const scoreStr = idea.finalScore.toFixed(2);
@@ -271,10 +268,31 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
       doc.text('pts', scoreX + 8, cardY + 21, { align: 'center' });
     }
 
+    let localY = 14;
+    const titleX = margin + 35;
+
+    // Idea title
+    setTextHex(doc, DARK);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    titleLines.forEach((line, li) => {
+      doc.text(line, titleX, cardY + localY + li * 5);
+    });
+    localY += titleHeight + 2;
+
+    // Author
+    const authorName = idea.author?.nickname || idea.author?.displayName || 'Participante';
+    setTextHex(doc, LIGHT_GRAY);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Por ${authorName}`, titleX, cardY + localY);
+    localY += 6;
+
     // Divider
     setDrawHex(doc, '#E5E7EB');
     doc.setLineWidth(0.3);
-    doc.line(titleX, cardY + 26, margin + contentW - 5, cardY + 26);
+    doc.line(titleX, cardY + localY, margin + contentW - 5, cardY + localY);
+    localY += 7;
 
     // Render full proposal text
     setTextHex(doc, GRAY);
@@ -287,13 +305,13 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
     }
     
     proposalLines.forEach((line, li) => {
-      doc.text(line, titleX, cardY + 33 + li * 4);
+      doc.text(line, titleX, cardY + localY + li * 4);
     });
+    localY += proposalHeight + 4;
 
     // Render tags
     if (hasTags) {
       let tagX = titleX;
-      const tagY = cardY + 33 + proposalLines.length * 4 + 4; // Below text
       
       doc.setFontSize(7);
       doc.setFont('helvetica', 'normal');
@@ -307,11 +325,11 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
 
         // Draw tag bg
         setFillHex(doc, '#E5E7EB');
-        roundedRect(doc, tagX, tagY, boxW, boxH, 2.5, 'F');
+        roundedRect(doc, tagX, cardY + localY, boxW, boxH, 2.5, 'F');
         
         // Draw tag text (perfectly centered)
         setTextHex(doc, GRAY);
-        doc.text(label, tagX + boxW / 2, tagY + boxH / 2 + 0.3, { align: 'center', baseline: 'middle' });
+        doc.text(label, tagX + boxW / 2, cardY + localY + boxH / 2 + 0.3, { align: 'center', baseline: 'middle' });
         
         tagX += boxW + 4; // gap between tags
       });
@@ -323,28 +341,7 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
   cursorY += 6;
 
   // ── 6. Summary box ───────────────────────────────────────────────────────
-  if (cursorY + 28 < pageH - 30) {
-    setFillHex(doc, '#FFF7ED');
-    setDrawHex(doc, '#FED7AA');
-    roundedRect(doc, margin, cursorY, contentW, 22, 4, 'FD');
-
-    setTextHex(doc, '#C2410C');
-    doc.setFontSize(8.5);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Resumen del proceso', margin + 6, cursorY + 8);
-
-    setTextHex(doc, '#9A3412');
-    doc.setFontSize(7.5);
-    doc.setFont('helvetica', 'normal');
-    const summaryText =
-      'Los finalistas fueron seleccionados por interacción social y evaluados por jueces mediante ' +
-      'rúbricas técnicas ponderadas. El puntaje final refleja la evaluación experta consolidada.';
-    const summaryLines = wrapText(doc, summaryText, contentW - 12);
-    summaryLines.slice(0, 2).forEach((line, i) => {
-      doc.text(line, margin + 6, cursorY + 15 + i * 5);
-    });
-    cursorY += 30;
-  }
+  // (Removed as requested)
 
   // ── 7. Footer ─────────────────────────────────────────────────────────────
   const footerY = pageH - 14;

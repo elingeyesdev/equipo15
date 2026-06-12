@@ -11,6 +11,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 RUN npx prisma generate
 RUN pnpm build
+RUN pnpm prune --prod
 
 # ── ETAPA PRODUCTION ────────────────────────────────────────────────────────────
 FROM node:20-alpine AS production
@@ -20,17 +21,11 @@ RUN npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma
-# Se instalan tambien devDependencies porque el seed usa ts-node y TypeScript.
-RUN pnpm install --frozen-lockfile
 
-# Copiar artefactos compilados y schema/migraciones de Prisma
+# Copiar artefactos compilados y dependencias de producción
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/firebase-admin.json ./firebase-admin.json
-
-# Regenerar cliente Prisma para la arquitectura del contenedor (Linux/amd64)
-# No alcanza copiar el cliente del builder: puede haber sido compilado en Windows o Mac ARM
-RUN npx prisma generate
 
 COPY entrypoint.sh ./entrypoint.sh
 RUN apk add --no-cache dos2unix && dos2unix entrypoint.sh

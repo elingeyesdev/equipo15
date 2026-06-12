@@ -245,9 +245,9 @@ export const EmptyState = styled.div`
   justify-content: center;
   text-align: center;
   padding: 60px 24px;
-  background: ${Pista8Theme.white};
+  background: transparent;
   border-radius: 28px;
-  border: 1px dashed rgba(72, 80, 84, 0.15);
+  border: none;
   max-width: 600px;
   margin: 40px auto 0;
   animation: ${fadeUp} 0.4s ease both;

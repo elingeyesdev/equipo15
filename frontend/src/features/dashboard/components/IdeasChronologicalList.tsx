@@ -387,6 +387,7 @@ const rawToPlane = (idea: RawIdea, index: number, userProfile?: any): PlaneIdea 
   authorRealName: idea.author?.displayName,
   authorStudentCode: idea.author?.studentCode,
   authorPhone: idea.author?.phone,
+  challengeStatus: (idea as any).challengeStatus,
   };
 };
 

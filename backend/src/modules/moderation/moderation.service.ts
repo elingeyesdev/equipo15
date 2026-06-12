@@ -110,28 +110,34 @@ export class ModerationService {
     hours: number,
     reason: PenaltyReason,
   ): Promise<void> {
-    const user = await this.userRepository.findById(userId);
-    if (!user || user.status === UserStatus.SUSPENDED) return;
-    if (status === 'SOFT_BLOCK' && user.status === UserStatus.SOFT_BLOCK) return;
-
     const expiresAt = new Date();
     expiresAt.setUTCHours(expiresAt.getUTCHours() + hours);
 
-    const prismaStatus = status === 'SOFT_BLOCK' ? UserStatus.SOFT_BLOCK : UserStatus.SUSPENDED;
+    await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({ where: { id: userId } });
+      if (!user || user.status === UserStatus.SUSPENDED) return;
+      if (status === 'SOFT_BLOCK' && user.status === UserStatus.SOFT_BLOCK) return;
 
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { status: prismaStatus },
+      const prismaStatus = status === 'SOFT_BLOCK' ? UserStatus.SOFT_BLOCK : UserStatus.SUSPENDED;
+
+      await tx.user.update({
+        where: { id: userId },
+        data: { status: prismaStatus },
+      });
+
+      await tx.penalty.create({
+        data: {
+          userId,
+          reason,
+          isAutomatic: true,
+          expiresAt,
+        },
+      });
     });
 
-    await this.prisma.penalty.create({
-      data: {
-        userId,
-        reason,
-        isAutomatic: true,
-        expiresAt,
-      },
-    });
+    // Fetched again or used previous user object to get email and firebaseUid, but we need it.
+    const user = await this.userRepository.findById(userId);
+    if (!user) return;
 
     this.logger.warn(
       `Moderation: User ${userId} (${user.email}) changed to ${status} for ${hours} hours.`,

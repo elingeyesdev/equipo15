@@ -75,7 +75,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
   const roleName: string = (userProfile?.roleInfo?.name || userProfile?.role || '').toLowerCase();
   const roleLabels: Record<string, string> = {
     admin: 'administrador',
-    student: 'estudiante',
+    student: 'participante',
     company: 'empresa',
     judge: 'jurado',
   };
@@ -170,13 +170,22 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
               </S.DetailMeta>
             </S.DetailCardBody>
             <S.DetailActions>
-              <S.RespondBtn onClick={() => ds.handleOpenForm(ds.selectedChallenge, formResetForm)}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-                </svg>
-                Responder Reto
-              </S.RespondBtn>
-              <InfoTooltip text="Envia tu idea para este reto. Detalla el problema que resuelves y tu propuesta de solucion." size={20} />
+              {ds.selectedChallenge.status === 'CLOSED' ? (
+                <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                  Reto finalizado: modo lectura histórica
+                </div>
+              ) : (
+                <>
+                  <S.RespondBtn onClick={() => ds.handleOpenForm(ds.selectedChallenge, formResetForm)}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    Responder Reto
+                  </S.RespondBtn>
+                  <InfoTooltip text="Envia tu idea para este reto. Detalla el problema que resuelves y tu propuesta de solucion." size={20} />
+                </>
+              )}
             </S.DetailActions>
           </S.ChallengeDetailCard>
 
@@ -193,23 +202,24 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
             />
           </div>
 
-          <div id="ideation-wall">
-          <SkyCanvas
-            challengeId={ds.selectedChallenge?.id}
-            challengeTitle={ds.selectedChallenge?.title}
-            challengeFacultyId={ds.selectedChallenge?.facultyId ?? undefined}
-            isDashboardLoading={ds.loading}
-            search={ds.debouncedSearch}
-            sort={advFilter.sortOrder ?? undefined}
-            challengeStatus={ds.selectedChallenge?.status}
-            onIdeasLoaded={handleIdeasLoaded}
-            onlyFavorites={advFilter.onlyFavorites}
-            topLimit={advFilter.topLimit}
-            facultyId={advFilter.facultyId}
-            highlightedIdeaId={highlightedIdeaId}
-            onlyMyIdeas={advFilter.onlyMyIdeas}
-            currentUserId={(userProfile as any)?.id}
-          />
+          <div id="ideation-wall" style={{ position: 'relative' }}>
+
+            <SkyCanvas
+              challengeId={ds.selectedChallenge?.id}
+              challengeTitle={ds.selectedChallenge?.title}
+              challengeFacultyId={ds.selectedChallenge?.facultyId ?? undefined}
+              isDashboardLoading={ds.loading}
+              search={ds.debouncedSearch}
+              sort={advFilter.sortOrder ?? undefined}
+              challengeStatus={ds.selectedChallenge?.status}
+              onIdeasLoaded={handleIdeasLoaded}
+              onlyFavorites={advFilter.onlyFavorites}
+              topLimit={advFilter.topLimit}
+              facultyId={advFilter.facultyId}
+              highlightedIdeaId={highlightedIdeaId}
+              onlyMyIdeas={advFilter.onlyMyIdeas}
+              currentUserId={(userProfile as any)?.id}
+            />
           </div>
 
           {!showAllIdeas ? (
@@ -268,15 +278,17 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                   />
                 )}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
-                  <S.RespondBtn onClick={() => {
-                    const el = document.getElementById('challenge-detail');
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-                    </svg>
-                    Participar
-                  </S.RespondBtn>
+                  {ds.selectedChallenge?.status !== 'CLOSED' && (
+                    <S.RespondBtn onClick={() => {
+                      const el = document.getElementById('challenge-detail');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+                      </svg>
+                      Participar
+                    </S.RespondBtn>
+                  )}
                 </div>
               </S.FullWidthContainer>
 

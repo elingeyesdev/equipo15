@@ -213,11 +213,21 @@ export const BtnMain = styled.button`
   align-items: center;
   justify-content: center;
   margin-top: 4px;
-  transition: opacity 0.15s, transform 0.12s;
+  transition: all 0.15s ease-out;
+  box-shadow: 0 4px 14px rgba(254, 65, 10, 0.25);
 
-  &:hover:not(:disabled) { opacity: 0.88; }
-  &:active:not(:disabled) { transform: scale(0.975); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:hover:not(:disabled) { 
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(254, 65, 10, 0.4);
+    background: #e53a09;
+  }
+  &:active:not(:disabled) { transform: scale(0.97); }
+  &:disabled { 
+    background: rgba(72,80,84,0.08); 
+    color: #b8c0c8; 
+    box-shadow: none; 
+    cursor: not-allowed; 
+  }
 `;
 
 export const Spinner = styled.span`
@@ -251,24 +261,59 @@ export const OrText = styled.span`
 
 export const BtnGoogle = styled.button`
   width: 100%;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  background: ${Pista8Theme.white};
-  color: ${Pista8Theme.secondary};
+  background: transparent;
+  color: rgb(66, 133, 244);
   padding: 15px;
   border-radius: 14px;
-  border: 1px solid rgba(72, 80, 84, 0.16);
+  border: 1px solid rgb(66, 133, 244);
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.18s;
+  outline: none;
+  overflow: hidden;
+  transition: color 0.3s 0.1s ease-out, transform 0.18s;
+  z-index: 1;
+
+  &::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    content: '';
+    border-radius: 50%;
+    display: block;
+    width: 30em;
+    height: 30em;
+    left: -5em;
+    text-align: center;
+    transition: box-shadow 0.5s ease-out;
+    z-index: -1;
+  }
+
+  svg path:not([fill="none"]) {
+    transition: fill 0.3s 0.1s ease-out;
+  }
 
   &:hover:not(:disabled) {
-    background: ${Pista8Theme.background};
-    border-color: #4285F4;
+    color: #fff;
+    border: 1px solid rgb(66, 133, 244);
   }
+
+  &:hover:not(:disabled)::before {
+    box-shadow: inset 0 0 0 15em rgb(66, 133, 244);
+  }
+
+  &:hover:not(:disabled) svg path:not([fill="none"]) {
+    fill: #ffffff;
+  }
+
   &:active:not(:disabled) { transform: scale(0.975); }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;

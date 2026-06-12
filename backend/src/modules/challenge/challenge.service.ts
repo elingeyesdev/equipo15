@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   Logger,
+  BadRequestException,
 } from '@nestjs/common';
 import { ChallengeRepository } from './challenge.repository';
 import { Challenge, IdeaStatus, WinnerCategory } from '@prisma/client';
@@ -12,6 +13,7 @@ import { FinalizePodiumDto, RankingCategory } from './dtos/finalize-podium.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { UserService, UserResponse } from '../user/user.service';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
+import { RedisService } from '../../infrastructure/redis/redis.module';
 
 @Injectable()
 export class ChallengeService {
@@ -21,6 +23,7 @@ export class ChallengeService {
     private readonly challengeRepository: ChallengeRepository,
     private readonly userService: UserService,
     private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
   ) {}
 
   async getUserByUid(uid: string): Promise<UserResponse | null> {
@@ -454,24 +457,26 @@ export class ChallengeService {
         }),
         this.prisma.challenge.update({
           where: { id: challengeId },
-          data: { status: 'CLOSED', podiumSize: finalLimit },
+          data: { podiumSize: finalLimit },
         }),
       ]);
     } else {
-      await this.challengeRepository.update(challengeId, {
-        status: 'EVALUATING',
-        podiumSize: finalLimit,
-      } as any);
+      await this.prisma.$transaction(async (tx) => {
+        await tx.challenge.update({
+          where: { id: challengeId },
+          data: { status: 'EVALUATING', podiumSize: finalLimit },
+        });
 
-      await this.prisma.idea.updateMany({
-        where: { id: { in: finalistIds } },
-        data: { status: IdeaStatus.FINALIST },
+        await tx.idea.updateMany({
+          where: { id: { in: finalistIds } },
+          data: { status: IdeaStatus.FINALIST },
+        });
       });
     }
 
-    this.logger.log(
-      `Reto ${challengeId} finalizado. ${finalLimit} ideas seleccionadas basándose en ${dto.category}. ${scoreSummary?.evaluationsCount ?? 0} evaluaciones consolidadas.`,
-    );
+    await this.redisService.delByPrefix('public:').catch((err) => {
+      this.logger.error(`Failed to invalidate public ideas cache: ${err.message}`);
+    });
 
     return {
       success: true,
@@ -876,5 +881,41 @@ export class ChallengeService {
       buffer,
       fileName: `evaluaciones_${safeTitle}.xlsx`,
     };
+  }
+
+  async closeChallenge(id: string, firebaseUid: string) {
+    const challenge = await this.prisma.challenge.findUnique({
+      where: { id },
+    });
+
+    if (!challenge) {
+      throw new NotFoundException('Reto no encontrado');
+    }
+
+    const user = await this.getUserByUid(firebaseUid);
+    if (!user) {
+      throw new ForbiddenException('Usuario no encontrado');
+    }
+
+    if (user.role !== 'ADMIN') {
+      if (challenge.authorId !== user.id) {
+        throw new ForbiddenException('No tienes permiso para cerrar este reto');
+      }
+    }
+
+    if (challenge.status === 'CLOSED') {
+      throw new BadRequestException('El reto ya se encuentra cerrado');
+    }
+
+    const updated = await this.prisma.challenge.update({
+      where: { id },
+      data: { status: 'CLOSED' },
+    });
+
+    await this.redisService.delByPrefix('public:').catch((err) => {
+      this.logger.error(`Failed to invalidate public ideas cache: ${err.message}`);
+    });
+
+    return updated;
   }
 }

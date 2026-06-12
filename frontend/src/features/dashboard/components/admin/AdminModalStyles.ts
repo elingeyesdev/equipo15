@@ -102,6 +102,9 @@ export const AdminModalBody = styled.div`
   flex: 1;
   overflow-y: auto;
   padding: 20px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -117,6 +120,7 @@ export const AdminSummaryGrid = styled.div`
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 24px;
+  width: 100%;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
@@ -165,6 +169,7 @@ export const AdminCriteriaGrid = styled.div`
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 24px;
+  width: 100%;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
@@ -206,6 +211,7 @@ export const AdminCriteriaWeight = styled.span`
 
 export const AdminDetailSection = styled.div`
   margin-bottom: 18px;
+  text-align: center;
 `;
 
 export const AdminDetailLabel = styled.div`
@@ -227,6 +233,7 @@ export const AdminDetailText = styled.div`
 export const AdminTagsRow = styled.div`
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
 `;
 

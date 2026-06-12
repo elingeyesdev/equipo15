@@ -1,4 +1,3 @@
-import FeedbackToast from './FeedbackToast';
 import IdeaForm from './IdeaForm';
 import IdeaDetailModal from '../../../features/sky-wall/components/IdeaDetailModal';
 import { ModerationModals } from './ModerationModals';
@@ -7,8 +6,6 @@ import type { FeedbackMessage } from '../hooks/useIdeationForm';
 import type { IdeaDraft } from '../../../services/idea.service';
 
 interface IdeationOverlayProps {
-  toastMessage: FeedbackMessage | null;
-  dismissToast: () => void;
   selectedListIdea: PlaneIdea | null;
   setSelectedListIdea: (idea: PlaneIdea | null) => void;
   formOpen: boolean;
@@ -25,8 +22,6 @@ interface IdeationOverlayProps {
 }
 
 const IdeationOverlay: React.FC<IdeationOverlayProps> = ({
-  toastMessage,
-  dismissToast,
   selectedListIdea,
   setSelectedListIdea,
   formOpen,
@@ -43,8 +38,6 @@ const IdeationOverlay: React.FC<IdeationOverlayProps> = ({
 }) => {
   return (
     <>
-      <FeedbackToast message={toastMessage} onDismiss={dismissToast} />
-
       <ModerationModals />
 
       {selectedListIdea && (

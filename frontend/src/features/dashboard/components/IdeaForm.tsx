@@ -9,7 +9,7 @@ import { IMPACT_AREA_OPTIONS, IMPROVEMENT_TYPE_OPTIONS, EFFORT_LEVEL_OPTIONS } f
 import type { ConsentKey, FeedbackMessage } from '../hooks/useIdeationForm';
 import type { IdeaDraft } from '../../../services/idea.service';
 import IdeaDraftsModal from './IdeaDraftsModal';
-import FlagIcon from '../../../components/icons/FlagIcon';
+import InfoTooltip from '../../../components/common/InfoTooltip';
 
 interface IdeaFormProps {
   open: boolean;
@@ -293,12 +293,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 <S.FieldHeader>
                   <S.Label>
                     Nombre y/o info básica de la idea
-                    <S.TooltipHost tabIndex={0} aria-label="Descripción del título">
-                      <S.TooltipWrap>
-                        <FlagIcon width={16} height={16} color="#FE410A" />
-                        <S.TooltipBubble>Un titular breve y descriptivo (2-10 palabras) que resuma la idea.</S.TooltipBubble>
-                      </S.TooltipWrap>
-                    </S.TooltipHost>
+                    <span style={{ marginLeft: 8 }}><InfoTooltip text="Un titular breve y descriptivo (2-10 palabras) que resuma la idea." size={16} /></span>
                   </S.Label>
                   <S.CharCounter>{form.titleWords} palabras ({form.minTitleWords}-{form.maxTitleWords})</S.CharCounter>
                 </S.FieldHeader>
@@ -321,12 +316,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 <S.FieldHeader>
                   <S.Label>
                     La Propuesta
-                    <S.TooltipHost tabIndex={0} aria-label="Descripción de la propuesta">
-                      <S.TooltipWrap>
-                        <FlagIcon width={16} height={16} color="#FE410A" />
-                        <S.TooltipBubble>Describe cómo funciona tu solución, recursos necesarios y el cambio que generará. Mínimo {form.minSolutionWords} palabras.</S.TooltipBubble>
-                      </S.TooltipWrap>
-                    </S.TooltipHost>
+                    <span style={{ marginLeft: 8 }}><InfoTooltip text={`Describe cómo funciona tu solución, recursos necesarios y el cambio que generará. Mínimo ${form.minSolutionWords} palabras.`} size={16} width={320} /></span>
                   </S.Label>
                   <S.CharCounter>{form.solutionWords} palabras ({form.minSolutionWords}-{form.maxSolutionWords})</S.CharCounter>
                 </S.FieldHeader>
@@ -352,12 +342,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 <S.FieldHeader>
                   <S.Label>
                     ¿Dónde tendría más impacto tu idea?
-                    <S.TooltipHost tabIndex={0} aria-label="Descripción del área de impacto">
-                      <S.TooltipWrap>
-                        <FlagIcon width={16} height={16} color="#FE410A" />
-                        <S.TooltipBubble>Selecciona el área que se beneficiaría más (p.ej. Productividad, Costos, Clientes).</S.TooltipBubble>
-                      </S.TooltipWrap>
-                    </S.TooltipHost>
+                    <span style={{ marginLeft: 8 }}><InfoTooltip text="Selecciona el área que se beneficiaría más (p.ej. Productividad, Costos, Clientes)." size={16} width={280} /></span>
                   </S.Label>
                 </S.FieldHeader>
                 <S.Tip>Selecciona el área donde tu propuesta generaría el mayor valor.</S.Tip>
@@ -390,12 +375,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 <S.FieldHeader>
                   <S.Label>
                     ¿Qué tanto podría mejorar esta idea lo que hacemos hoy?
-                    <S.TooltipHost tabIndex={0} aria-label="Descripción del tipo de mejora">
-                      <S.TooltipWrap>
-                        <FlagIcon width={16} height={16} color="#FE410A" />
-                        <S.TooltipBubble>Indica si la idea optimiza procesos, amplía capacidades o transforma la forma de trabajo.</S.TooltipBubble>
-                      </S.TooltipWrap>
-                    </S.TooltipHost>
+                    <span style={{ marginLeft: 8 }}><InfoTooltip text="Indica si la idea optimiza procesos, amplía capacidades o transforma la forma de trabajo." size={16} width={280} /></span>
                   </S.Label>
                 </S.FieldHeader>
                 <S.Tip>Elige el nivel de transformación que propone tu idea.</S.Tip>
@@ -428,12 +408,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 <S.FieldHeader>
                   <S.Label>
                     ¿Qué nivel de esfuerzo requiere poner esta idea en marcha?
-                    <S.TooltipHost tabIndex={0} aria-label="Descripción del nivel de esfuerzo">
-                      <S.TooltipWrap>
-                        <FlagIcon width={16} height={16} color="#FE410A" />
-                        <S.TooltipBubble>Selecciona si la implementación es fácil, requiere coordinación, desarrollo o una transformación mayor.</S.TooltipBubble>
-                      </S.TooltipWrap>
-                    </S.TooltipHost>
+                    <span style={{ marginLeft: 8 }}><InfoTooltip text="Selecciona si la implementación es fácil, requiere coordinación, desarrollo o una transformación mayor." size={16} width={280} /></span>
                   </S.Label>
                 </S.FieldHeader>
                 <S.Tip>Define la complejidad de implementación de tu propuesta.</S.Tip>

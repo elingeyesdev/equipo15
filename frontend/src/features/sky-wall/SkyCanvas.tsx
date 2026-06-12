@@ -188,8 +188,15 @@ const SkyCanvasScene = memo(({ initialIdeas, isLoading = false, progress = 0, ch
   );
 
   const phase: WallPhase = useMemo(() => {
+    if (challengeStatus === 'CLOSED') return 'race';
     return socketPhase === 'race' ? 'race' : 'active';
-  }, [socketPhase]);
+  }, [socketPhase, challengeStatus]);
+
+  useEffect(() => {
+    if (challengeStatus === 'CLOSED') {
+      setShowPodium(true);
+    }
+  }, [challengeStatus]);
 
   const displayIdeas = useMemo(() => {
     let filteredIdeas = onlyFavorites

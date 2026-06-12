@@ -22,48 +22,41 @@ export class FirebaseAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const authHeader = request.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Token no proporcionado');
-    }
-
-    const token = authHeader.split(' ')[1];
-    const unsafeMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
-
-    try {
-      const decodedToken = await this.firebaseAdmin.auth().verifyIdToken(token);
-      request.user = decodedToken;
-
-      return true;
-    } catch (firebaseError: any) {
+    
+    // 1. Check for impersonation token first
+    const impToken = request.headers['x-impersonation-token'] as string;
+    if (impToken) {
       try {
-        const impersonationToken = verifyImpersonationToken(token);
+        const impersonationToken = verifyImpersonationToken(impToken);
         request.user = impersonationToken as unknown as AuthenticatedRequest['user'];
 
+        const unsafeMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
         if (unsafeMethods.has((request.method || '').toUpperCase())) {
           throw new ForbiddenException(
             'La sesión en espejo está en modo solo lectura. Esta acción está bloqueada.',
           );
         }
-
         return true;
-      } catch (impersonationError: any) {
-        if (impersonationError instanceof ForbiddenException) {
-          throw impersonationError;
-        }
-
-        const message =
-          impersonationError instanceof Error
-            ? impersonationError.message
-            : firebaseError instanceof Error
-              ? firebaseError.message
-              : 'Error desconocido';
-        this.logger.error(
-          `[FirebaseAuthGuard] Error verificando token: ${message}`,
-        );
-        throw new UnauthorizedException('Token inválido');
+      } catch (error) {
+        if (error instanceof ForbiddenException) throw error;
+        throw new UnauthorizedException('Token de impersonación inválido');
       }
+    }
+
+    // 2. Standard Firebase Auth
+    const authHeader = request.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Token no proporcionado');
+    }
+
+    const token = authHeader.split(' ')[1];
+    try {
+      const decodedToken = await this.firebaseAdmin.auth().verifyIdToken(token);
+      request.user = decodedToken;
+      return true;
+    } catch (firebaseError: any) {
+      this.logger.error(`[FirebaseAuthGuard] Error verificando token: ${firebaseError.message}`);
+      throw new UnauthorizedException('Token inválido');
     }
   }
 }

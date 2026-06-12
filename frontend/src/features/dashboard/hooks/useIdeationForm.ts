@@ -118,6 +118,7 @@ export const useIdeationForm = (
     originality: false,
   });
   const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
+  const [activeDraftData, setActiveDraftData] = useState<string | null>(null);
 
   const minTitleWords = IDEA_WORD_RULES.title.min;
   const maxTitleWords = IDEA_WORD_RULES.title.max;
@@ -157,6 +158,7 @@ export const useIdeationForm = (
     setFormErrors({});
     setConsentsTouched(false);
     setActiveDraftId(null);
+    setActiveDraftData(null);
   };
 
   const loadFromDraft = (draft: IdeaDraft) => {
@@ -171,10 +173,21 @@ export const useIdeationForm = (
     setTagInput('');
     setFormErrors({});
     setConsentsTouched(false);
-    setFormFeedback({
+
+    const draftSnapshot = JSON.stringify({
+      title: stripDraftTitle(draft.title),
+      problem: stripDraftProblem(draft.problem),
+      solution: stripDraftSolution(draft.solution),
+      impactArea: (draft.impactArea as ImpactArea) || '',
+      improvementType: (draft.improvementType as ImprovementType) || '',
+      effortLevel: (draft.effortLevel as EffortLevel) || '',
+      tags: Array.isArray(draft.tags) ? draft.tags : [],
+    });
+    setActiveDraftData(draftSnapshot);
+    showToast({
       tone: 'info',
-      title: 'Borrador cargado',
-      message: 'Retomaste tu borrador. Puedes seguir editándolo y guardar cambios.',
+      title: '¡Borrador recuperado!',
+      message: 'Ya puedes seguir dándole forma a tu propuesta.',
     });
   };
 
@@ -358,6 +371,26 @@ export const useIdeationForm = (
           improvementType: improvementType || undefined,
           effortLevel: effortLevel || undefined,
         };
+
+        const currentSnapshot = JSON.stringify({
+          title: title || '',
+          problem: ideaProblem.trim() || '',
+          solution: ideaSolution.trim() || '',
+          impactArea: impactArea || '',
+          improvementType: improvementType || '',
+          effortLevel: effortLevel || '',
+          tags: normalizedTags(),
+        });
+
+        if (activeDraftId && activeDraftData === currentSnapshot) {
+          showToast({
+            tone: 'info',
+            title: 'Sin cambios',
+            message: 'El borrador ya está guardado con esta información.',
+          });
+          setFormSaving(false);
+          return false;
+        }
         if (activeDraftId) {
           await ideaService.updateDraftIdea(activeDraftId, payload);
         } else {
@@ -368,11 +401,11 @@ export const useIdeationForm = (
         }
         const draftMessage: FeedbackMessage = {
           tone: 'success',
-          title: 'Borrador guardado',
-          message: 'Guardamos tus avances sobre esta propuesta. Puedes continuar editando o compartirla cuando esté lista.',
+          title: '¡Avances guardados!',
+          message: 'Tu borrador te espera en el panel para cuando quieras seguir.',
         };
-        setFormFeedback(draftMessage);
         showToast(draftMessage);
+        resetForm();
         onDraftSaved?.();
         success = true;
       } else {

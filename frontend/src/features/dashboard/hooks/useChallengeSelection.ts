@@ -19,7 +19,7 @@ export const useChallengeSelection = () => {
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [challengeStats, setChallengeStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState('Todos');
+  const [activeFilter, setActiveFilter] = useState('Activos');
   const [filterOpen, setFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -48,7 +48,7 @@ export const useChallengeSelection = () => {
         }
 
         const [cloudChallenges, globalStats] = await Promise.all([
-          challengeService.getPublicChallenges(1, 40, 'Activo'),
+          challengeService.getPublicChallenges(1, 40, undefined),
           challengeService.getGlobalStats().catch(() => null)
         ]);
 

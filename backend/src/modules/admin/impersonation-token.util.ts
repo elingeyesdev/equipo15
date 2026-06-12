@@ -39,16 +39,34 @@ const base64UrlEncode = (value: Buffer | string) =>
 const base64UrlDecode = (value: string) =>
   Buffer.from(value.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
 
+let cachedSecret: string | null = null;
+
 const getImpersonationSecret = () => {
+  if (cachedSecret) return cachedSecret;
+
+  // Opción 1: Desde variable de entorno (recomendado)
+  const envSecret = process.env.IMPERSONATION_SECRET;
+  if (envSecret) {
+    cachedSecret = envSecret;
+    return cachedSecret;
+  }
+
+  // Opción 2: Desde firebase-admin.json (fallback, solo para dev)
   try {
     const serviceAccount = JSON.parse(
       readFileSync(join(process.cwd(), 'firebase-admin.json'), 'utf8'),
     ) as { private_key?: string; project_id?: string };
-    return [serviceAccount.project_id, serviceAccount.private_key]
+    cachedSecret = [serviceAccount.project_id, serviceAccount.private_key]
       .filter(Boolean)
       .join('::');
+    return cachedSecret;
   } catch {
-    return 'pista8-admin-support-dev-secret';
+    // Opción 3: Dev fallback
+    if (process.env.NODE_ENV !== 'production') {
+      cachedSecret = 'pista8-admin-support-dev-secret';
+      return cachedSecret;
+    }
+    throw new Error('IMPERSONATION_SECRET no configurada en producción');
   }
 };
 

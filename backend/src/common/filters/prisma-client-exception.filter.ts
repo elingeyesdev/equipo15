@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, HttpStatus } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Prisma } from '@prisma/client';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 
 @Catch(Prisma.PrismaClientKnownRequestError)
 export class PrismaClientExceptionFilter extends BaseExceptionFilter {
@@ -31,9 +31,13 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
     }
 
     if (status !== HttpStatus.INTERNAL_SERVER_ERROR) {
+      const request = ctx.getRequest<Request>();
       response.status(status).json({
+        success: false,
         statusCode: status,
-        message: message,
+        message,
+        timestamp: new Date().toISOString(),
+        path: request.url,
       });
     } else {
       super.catch(exception, host);

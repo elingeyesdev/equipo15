@@ -27,6 +27,7 @@ const parseAuthor = (author: unknown): RawAuthor | undefined => {
     studentCode: typeof record.studentCode === 'string' ? record.studentCode : undefined,
     studentProfile: studentProfileObj,
     role: typeof record.role === 'object' && record.role !== null ? record.role as { name: string } : undefined,
+    avatarUrl: typeof record.avatarUrl === 'string' ? record.avatarUrl : undefined,
   };
 };
 
@@ -51,6 +52,7 @@ const parseRawIdea = (item: Record<string, unknown>): RawIdea => ({
   likesCount: typeof item.likesCount === 'number' ? item.likesCount : 0,
   commentsCount: typeof item.commentsCount === 'number' ? item.commentsCount : 0,
   fireScore: typeof item.fireScore === 'number' ? item.fireScore : 0,
+  finalScore: typeof item.finalScore === 'number' ? item.finalScore : (typeof item.finalScore === 'string' ? parseFloat(item.finalScore) : 0),
   isAnonymous: typeof item.isAnonymous === 'boolean' ? item.isAnonymous : false,
   hasVoted: typeof item.hasVoted === 'boolean' ? item.hasVoted : false,
   hasFavorited:

@@ -22,8 +22,8 @@ const STEPS: readonly StepConfig[] = [
     description:
       'Analiza la descripción y el contexto de la empresa para asegurar que tu idea resuelva el dolor principal.',
     Icon: MagnifierIcon,
-    accent: '#4f46e5',
-    accentBg: 'rgba(79,70,229,0.10)',
+    accent: '#FE410A',
+    accentBg: 'rgba(254,65,10,0.10)',
     delay: 0,
   },
   {
@@ -32,8 +32,8 @@ const STEPS: readonly StepConfig[] = [
     description:
       'Verifica las restricciones de participación y los entregables solicitados para que tu idea no sea descartada.',
     Icon: ShieldCheckIcon,
-    accent: '#0891b2',
-    accentBg: 'rgba(8,145,178,0.10)',
+    accent: '#FE410A',
+    accentBg: 'rgba(254,65,10,0.10)',
     delay: 80,
   },
   {
@@ -110,7 +110,7 @@ const StepItem = ({ step }: StepItemProps) => {
     <li
       style={{
         display: 'flex',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         gap: '14px',
         padding: '14px 16px',
         background: 'rgba(255,255,255,0.82)',

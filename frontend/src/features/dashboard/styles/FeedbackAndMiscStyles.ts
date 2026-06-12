@@ -51,7 +51,7 @@ export const ToastViewport = styled.div`
   top: 24px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 140;
+  z-index: 100000;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -59,50 +59,59 @@ export const ToastViewport = styled.div`
 
 export const ToastCard = styled.div<{ $tone: string }>`
   min-width: 320px;
-  padding: 16px 18px;
-  border-radius: 14px;
+  padding: 16px 20px;
+  border-radius: 16px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 12px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.25);
-  animation: ${fadeUp} 0.3s ease both;
-  background: #1a1f22;
-  color: white;
-  border: 1px solid rgba(254,65,10,0.25);
+  gap: 14px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.12);
+  animation: ${fadeUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  background: #ffffff;
+  color: ${Pista8Theme.secondary};
+  border: 1px solid rgba(72,80,84,0.08);
+  border-left: 5px solid ${p => p.$tone === 'success' ? Pista8Theme.success : p.$tone === 'info' ? Pista8Theme.secondary : p.$tone === 'error' ? Pista8Theme.error : Pista8Theme.primary};
 `;
 
-export const ToastGlyph = styled.span`
-  width: 28px;
-  height: 28px;
+export const ToastGlyph = styled.span<{ $tone?: string }>`
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 2px solid currentColor;
+  background: ${p => p.$tone === 'success' ? 'rgba(52,168,83,0.1)' : p.$tone === 'info' ? 'rgba(72,80,84,0.1)' : p.$tone === 'error' ? 'rgba(255,51,51,0.1)' : 'rgba(254,65,10,0.1)'};
+  color: ${p => p.$tone === 'success' ? Pista8Theme.success : p.$tone === 'info' ? Pista8Theme.secondary : p.$tone === 'error' ? Pista8Theme.error : Pista8Theme.primary};
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 800;
 `;
 
 export const ToastContent = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  p { margin: 0; font-size: 14px; font-weight: 500; }
+  gap: 4px;
+  p { margin: 0; font-size: 14px; font-weight: 500; color: rgba(72,80,84,0.8); }
 `;
 
 export const ToastTitle = styled.span`
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 800;
+  color: #1a1f22;
 `;
 
 export const ToastDismiss = styled.button`
   border: none;
-  background: transparent;
-  color: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  background: rgba(72,80,84,0.06);
+  color: #485054;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  transition: background 0.2s;
+  &:hover { background: rgba(72,80,84,0.12); }
 `;
 
 
