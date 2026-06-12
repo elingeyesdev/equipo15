@@ -12,6 +12,7 @@ import { computeCanvasHeight, sortIdeas, computeGlowIntensity } from './flight.e
 import { ideaService } from '../../services/idea.service';
 import { extractRawIdeas } from './raw-idea.parser';
 import type { WallPhase, PlaneIdea, RawIdea, SortMode } from './types';
+import { Trophy } from 'lucide-react';
 
 
 const generateClouds = (height: number) => {
@@ -140,6 +141,69 @@ const PlaneLayer = styled.div`
   z-index: 2;
 `;
 
+const slideDown = keyframes`
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+`;
+
+const TopBanner = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #FE410A, #FF7B00);
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 20px rgba(254, 65, 10, 0.4);
+  animation: ${slideDown} 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  z-index: 30;
+`;
+
+const EvalOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  backdrop-filter: blur(4px);
+`;
+
+const EvalBox = styled.div`
+  text-align: center;
+  padding: 32px 48px;
+  background: rgba(30, 30, 30, 0.85);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  max-width: 90%;
+`;
+
+const EvalTitle = styled.h2`
+  font-size: clamp(24px, 4vw, 42px);
+  font-weight: 900;
+  color: white;
+  letter-spacing: 0.12em;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+`;
+
+const EvalSubtitle = styled.p`
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.03em;
+`;
+
 interface SkyCanvasProps {
   initialIdeas?: RawIdea[];
   challengeId?: string;
@@ -197,6 +261,9 @@ const SkyCanvasScene = memo(({ initialIdeas, isLoading = false, progress = 0, ch
       setShowPodium(true);
     }
   }, [challengeStatus]);
+
+  const statusUpper = challengeStatus?.toUpperCase() || '';
+  const isEvaluating = statusUpper === 'EVALUATING' || statusUpper === 'EN_EVALUACION' || statusUpper === 'EN EVALUACIÓN';
 
   const displayIdeas = useMemo(() => {
     let filteredIdeas = onlyFavorites
@@ -289,7 +356,21 @@ const SkyCanvasScene = memo(({ initialIdeas, isLoading = false, progress = 0, ch
             <RaceOverlay onShowPodium={handleShowPodium} />
           )}
 
-          {showPodium && <PodiumScreen ideas={ideas} onSelectIdea={setSelectedIdea} />}
+          {showPodium && !isEvaluating && <PodiumScreen ideas={ideas} onSelectIdea={setSelectedIdea} />}
+
+          {isEvaluating && (
+            <>
+              <TopBanner>
+                <Trophy size={20} /> Reto Finalizado
+              </TopBanner>
+              <EvalOverlay>
+                <EvalBox>
+                  <EvalTitle>RETO FINALIZADO</EvalTitle>
+                  <EvalSubtitle>Las ideas están siendo calificadas...</EvalSubtitle>
+                </EvalBox>
+              </EvalOverlay>
+            </>
+          )}
         </Sky>
       </ScrollableSkyContainer>
 

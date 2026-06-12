@@ -507,7 +507,8 @@ export class ChallengeRepository {
       where: { id: challengeId },
       select: { status: true }
     });
-    const isClosed = challenge?.status === 'CLOSED';
+    const statusStr = challenge?.status?.toUpperCase() || '';
+    const showScores = statusStr === 'CLOSED' || statusStr === 'FINALIZADO' || statusStr === 'EVALUATING' || statusStr === 'EN_EVALUACION' || statusStr === 'EN EVALUACIÓN';
 
     const activeStatuses: IdeaStatus[] = [
       IdeaStatus.PUBLISHED,
@@ -548,7 +549,7 @@ export class ChallengeRepository {
       }),
       this.prisma.idea.findMany({
         where: { challengeId, status: { in: activeStatuses }, deletedAt: null },
-        orderBy: isClosed 
+        orderBy: showScores 
           ? [{ finalScore: 'desc' }, { likesCount: 'desc' }]
           : [{ likesCount: 'desc' }, { commentsCount: 'desc' }],
         take: 5,
@@ -610,10 +611,7 @@ export class ChallengeRepository {
         };
       }),
       topIdeas: topIdeas.map((i) => {
-        const isAnon = i.isAnonymous;
-        const authorName = isAnon
-          ? 'Participante'
-          : i.author?.nickname ||
+        const authorName = i.author?.nickname ||
             i.author?.displayName ||
             i.author?.email?.split('@')[0] ||
             'Participante';
@@ -632,18 +630,18 @@ export class ChallengeRepository {
           impact: (i.likesCount || 0) + (i.commentsCount || 0),
           authorName,
           authorRealName,
-          authorAvatar: isAnon ? undefined : i.author?.avatarUrl || undefined,
-          authorStudentCode: isAnon ? undefined : i.author?.studentProfile?.studentCode || undefined,
-          authorPhone: isAnon ? undefined : i.author?.phone || undefined,
+          authorAvatar: i.author?.avatarUrl || undefined,
+          authorStudentCode: i.author?.studentProfile?.studentCode || undefined,
+          authorPhone: i.author?.phone || undefined,
           authorFacultyId: i.author?.studentProfile?.facultyId,
           authorFacultyName: i.author?.studentProfile?.faculty?.name,
           author: {
             name: authorName,
-            nickname: isAnon ? undefined : i.author?.nickname || undefined,
-            avatar: isAnon ? undefined : i.author?.avatarUrl || undefined,
+            nickname: i.author?.nickname || undefined,
+            avatar: i.author?.avatarUrl || undefined,
             displayName: authorRealName,
-            studentCode: isAnon ? undefined : i.author?.studentProfile?.studentCode || undefined,
-            phone: isAnon ? undefined : i.author?.phone || undefined,
+            studentCode: i.author?.studentProfile?.studentCode || undefined,
+            phone: i.author?.phone || undefined,
           },
         };
       }),
@@ -1181,7 +1179,7 @@ export class ChallengeRepository {
       problem: idea.problem,
       solution: idea.solution,
       isAnonymous: idea.isAnonymous,
-      author: idea.isAnonymous ? null : idea.author,
+      author: idea.author,
       challengeId: idea.challengeId,
       challengeTitle: idea.challenge.title,
       challengeStatus: idea.challenge.status,

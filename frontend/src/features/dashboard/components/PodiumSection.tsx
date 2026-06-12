@@ -1,25 +1,31 @@
 import React from 'react';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 `;
 
-const Grid = styled.div<{ $count?: number }>`
-  display: grid;
-  grid-template-columns: ${p =>
-    p.$count === 1 ? '1fr' :
-    'repeat(auto-fit, minmax(280px, 1fr))'
-  };
-  gap: 16px;
-  justify-content: center;
-  justify-items: center;
+const Grid = styled.div<{ $count?: number; $isNarrow?: boolean }>`
+  ${p => p.$isNarrow ? css`
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    justify-content: flex-start;
+  ` : css`
+    display: grid;
+    grid-template-columns: ${p.$count === 1 ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))'};
+    gap: 16px;
+    justify-content: center;
+    justify-items: center;
+    width: 100%;
 
-  @media (max-width: 1200px) {
-    grid-template-columns: 1fr !important;
-    gap: 12px;
-  }
+    @media (max-width: 1200px) {
+      grid-template-columns: 1fr !important;
+      gap: 12px;
+    }
+  `}
 `;
 
 const RANK_CONFIG: Record<number, {
@@ -96,10 +102,8 @@ const RANK_CONFIG: Record<number, {
   }
 };
 
-const PodiumCard = styled.div<{ $rank: number; $idx: number }>`
+const PodiumCard = styled.div<{ $rank: number; $idx: number; $isNarrow?: boolean }>`
   position: relative;
-  height: 150px;
-  transition-duration: 0.5s;
   background: none;
   overflow: hidden;
   max-width: 100%;
@@ -108,53 +112,102 @@ const PodiumCard = styled.div<{ $rank: number; $idx: number }>`
   cursor: pointer;
   animation: ${fadeUp} 0.35s ${p => p.$idx * 0.08}s ease both;
 
-  &:hover {
-    height: 270px;
-  }
+  ${p => p.$isNarrow ? css`
+    display: flex;
+    flex-direction: column;
+    transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    &:hover .detailPage {
+      display: flex;
+    }
+
+    .outlinePage {
+      position: relative;
+      background: ${RANK_CONFIG[p.$rank]?.bg ?? 'linear-gradient(45deg, #fffbf0, #ffdd87)'};
+      width: 100%;
+      border-radius: 25px;
+      transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+      z-index: 2;
+      border: 1px solid rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 24px 28px;
+      box-sizing: border-box;
+    }
+
+    .detailPage {
+      position: relative;
+      display: none;
+      width: 100%;
+      height: 100px;
+      background: white;
+      z-index: 1;
+      border-radius: 0 0 25px 25px;
+      overflow: hidden;
+      align-items: center;
+      justify-content: flex-start;
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+      margin-top: -16px;
+      padding-top: 16px;
+    }
+  ` : css`
+    height: 180px;
+    transition-duration: 0.5s;
+
+    &:hover {
+      height: 300px;
+    }
+
+    &:hover .detailPage {
+      display: flex;
+    }
+
+    .outlinePage {
+      position: relative;
+      background: ${RANK_CONFIG[p.$rank]?.bg ?? 'linear-gradient(45deg, #fffbf0, #ffdd87)'};
+      width: 100%;
+      height: 180px;
+      border-radius: 25px;
+      transition-duration: 0.5s;
+      z-index: 2;
+      border: 1px solid rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 24px 28px;
+      box-sizing: border-box;
+    }
+
+    .detailPage {
+      position: relative;
+      display: none;
+      width: 100%;
+      height: 120px;
+      background: white;
+      top: -20px;
+      z-index: 1;
+      transition-duration: 1s;
+      border-radius: 0 0 25px 25px;
+      overflow: hidden;
+      align-items: center;
+      justify-content: flex-start;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-top: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+    }
+  `}
 
   &:hover .outlinePage {
     box-shadow: ${p => RANK_CONFIG[p.$rank]?.shadow ?? '0 10px 15px #b1985e'};
   }
 
-  &:hover .detailPage {
-    display: flex;
-  }
-
-  .outlinePage {
-    position: relative;
-    background: ${p => RANK_CONFIG[p.$rank]?.bg ?? 'linear-gradient(45deg, #fffbf0, #ffdd87)'};
-    width: 100%;
-    height: 150px;
-    border-radius: 25px;
-    transition-duration: 0.5s;
-    z-index: 2;
-    border: 1px solid rgba(0,0,0,0.04);
-  }
-
-  .detailPage {
-    position: relative;
-    display: none;
-    width: 100%;
-    height: 120px;
-    background: white;
-    top: -20px;
-    z-index: 1;
-    transition-duration: 1s;
-    border-radius: 0 0 25px 25px;
-    overflow: hidden;
-    align-items: center;
-    justify-content: flex-start;
-    border: 1px solid rgba(0,0,0,0.06);
-    border-top: none;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
-  }
-
   .splitLine {
-    position: absolute;
     width: 70%;
-    height: 8px;
-    top: 98px;
-    left: 15%;
+    height: 10px;
+    margin: 14px 0;
+    align-self: center;
     background-image: linear-gradient(
       to right,
       transparent 10%,
@@ -168,20 +221,20 @@ const PodiumCard = styled.div<{ $rank: number; $idx: number }>`
 
   .trophy {
     position: absolute;
-    right: 0px;
-    top: 4px;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
     z-index: 2;
+    pointer-events: none;
   }
 
   .topHeader {
     display: flex;
     align-items: flex-end;
-    height: 98px;
-    padding-left: 20px;
-    padding-right: 125px;
-    padding-bottom: 12px;
-    gap: 12px;
+    width: 100%;
+    padding-right: 95px;
     box-sizing: border-box;
+    gap: 12px;
   }
 
   .ranking_number {
@@ -200,35 +253,36 @@ const PodiumCard = styled.div<{ $rank: number; $idx: number }>`
     color: #424c50;
   }
 
-  .userAvatar {
-    position: absolute;
-    bottom: 6px;
-    left: 20px;
+  .authorRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 4px;
+    box-sizing: border-box;
+  }
+
+  .userAvatar, .userAvatarImg {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    flex-shrink: 0;
   }
 
   .userAvatarImg {
-    position: absolute;
-    bottom: 6px;
-    left: 20px;
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
     object-fit: cover;
     border: 1.5px solid rgba(0,0,0,0.08);
   }
 
   .userName {
-    position: absolute;
     font-weight: 700;
     color: #6b7578;
-    left: 55px;
     font-size: 13.5px;
-    bottom: 8px;
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 140px;
+    max-width: 180px;
   }
 
   .medals {
@@ -346,6 +400,7 @@ interface PodiumSectionProps {
   topIdeas: TopIdea[];
   onSelectIdea?: (idea: any) => void;
   challengeStatus?: string;
+  isNarrow?: boolean;
 }
 
 const getRankDisplay = (rank: number) => {
@@ -355,13 +410,13 @@ const getRankDisplay = (rank: number) => {
   return { num: String(rank + 1), suffix: 'th' };
 };
 
-const PodiumSection: React.FC<PodiumSectionProps> = ({ topIdeas, onSelectIdea, challengeStatus }) => {
+const PodiumSection: React.FC<PodiumSectionProps> = ({ topIdeas, onSelectIdea, challengeStatus, isNarrow }) => {
   const podiumEntries = topIdeas.slice(0, 3);
   const isClosed = challengeStatus === 'CLOSED';
 
   if (podiumEntries.length === 0) {
     return (
-      <Grid $count={1}>
+      <Grid $count={1} $isNarrow={isNarrow}>
         <div style={{
           padding: '32px 24px 24px',
           borderRadius: '20px',
@@ -380,7 +435,7 @@ const PodiumSection: React.FC<PodiumSectionProps> = ({ topIdeas, onSelectIdea, c
   }
 
   return (
-    <Grid $count={podiumEntries.length}>
+    <Grid $count={podiumEntries.length} $isNarrow={isNarrow}>
       {podiumEntries.map((idea, i) => {
         const isEvaluated = isClosed || (idea.finalScore !== undefined && idea.finalScore > 0);
         const totalInteractions = (idea.likesCount ?? 0) + (idea.commentsCount ?? 0);
@@ -395,6 +450,7 @@ const PodiumSection: React.FC<PodiumSectionProps> = ({ topIdeas, onSelectIdea, c
             key={idea.id}
             $rank={i}
             $idx={i}
+            $isNarrow={isNarrow}
             onClick={() => onSelectIdea?.(idea)}
           >
             <div className="outlinePage">
@@ -413,15 +469,16 @@ const PodiumSection: React.FC<PodiumSectionProps> = ({ topIdeas, onSelectIdea, c
 
               <div className="splitLine" />
 
-              {idea.author?.avatar ? (
-                <img className="icon userAvatarImg" src={idea.author.avatar} alt={authorName} />
-              ) : (
-                <svg className="icon userAvatar" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width={25} height={25}>
-                  <path d="M512 0C228.693 0 0 228.693 0 512s228.693 512 512 512 512-228.693 512-512S795.307 0 512 0z m0 69.973c244.053 0 442.027 197.973 442.027 442.027 0 87.04-25.6 168.96-69.973 237.227-73.387-78.507-170.667-133.12-281.6-151.893 69.973-34.133 119.467-105.813 119.467-187.733 0-116.053-93.867-209.92-209.92-209.92s-209.92 93.867-209.92 209.92c0 83.627 47.787 155.307 119.467 187.733-110.933 20.48-208.213 75.093-281.6 153.6-44.373-68.267-69.973-150.187-69.973-238.933 0-244.053 197.973-442.027 442.027-442.027z" fill="#8a8a8a" />
-                </svg>
-              )}
-
-              <p className="userName">{authorName}</p>
+              <div className="authorRow">
+                {idea.author?.avatar ? (
+                  <img className="userAvatarImg" src={idea.author.avatar} alt={authorName} />
+                ) : (
+                  <svg className="userAvatar" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width={25} height={25}>
+                    <path d="M512 0C228.693 0 0 228.693 0 512s228.693 512 512 512 512-228.693 512-512S795.307 0 512 0z m0 69.973c244.053 0 442.027 197.973 442.027 442.027 0 87.04-25.6 168.96-69.973 237.227-73.387-78.507-170.667-133.12-281.6-151.893 69.973-34.133 119.467-105.813 119.467-187.733 0-116.053-93.867-209.92-209.92-209.92s-209.92 93.867-209.92 209.92c0 83.627 47.787 155.307 119.467 187.733-110.933 20.48-208.213 75.093-281.6 153.6-44.373-68.267-69.973-150.187-69.973-238.933 0-244.053 197.973-442.027 442.027-442.027z" fill="#8a8a8a" />
+                  </svg>
+                )}
+                <span className="userName">{authorName}</span>
+              </div>
             </div>
             
             <div className="detailPage">

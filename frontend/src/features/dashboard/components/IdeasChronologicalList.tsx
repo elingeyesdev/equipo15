@@ -1,9 +1,9 @@
-import React, { useRef } from 'react';
-import styled, { keyframes } from 'styled-components';
-import { motion } from 'framer-motion';
+import React from 'react';
+import styled, { keyframes, css } from 'styled-components';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, MessageSquare } from 'lucide-react';
 import IdeationGuidePanel from './IdeationGuidePanel';
-import { Pista8Theme, breakpoints } from '../../../config/theme';
+import { Pista8Theme } from '../../../config/theme';
 import { interactiveHover, premiumTooltip } from '../styles/CommonStyles';
 import type { RawIdea, PlaneIdea, SortMode } from '../../../features/sky-wall/types';
 import { resolveDisplayName } from '../../../utils/user.utils';
@@ -11,10 +11,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useWallEventListener } from '../../../hooks/useWallEvents';
 import { commentService } from '../../../services/comment.service';
 
-const fadeIn = keyframes`
-  from { opacity: 0; transform: scale(0.97); }
-  to   { opacity: 1; transform: scale(1); }
-`;
+
 
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -26,18 +23,13 @@ const spin = keyframes`
   to   { transform: rotate(360deg); }
 `;
 
-const shimmer = keyframes`
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-`;
-
 const Wrapper = styled.div`
   margin-top: 0.5rem;
-  margin-bottom: 2.5rem;
-  animation: ${fadeIn} 0.35s ease both;
+  background: transparent;
   display: flex;
   flex-direction: column;
   height: 100%;
+  flex: 1;
 `;
 
 const Header = styled.div`
@@ -88,109 +80,208 @@ const ViewAllBtn = styled.button`
 `;
 
 const TopGrid = styled.div<{ $count: number; $isVertical?: boolean }>`
-  display: grid;
-  grid-template-columns: ${p => p.$count === 1 ? '1fr' : `repeat(${Math.min(p.$count, 3)}, 1fr)`};
+  display: ${p => p.$isVertical ? 'flex' : 'grid'};
+  flex-direction: ${p => p.$isVertical ? 'column' : 'row'};
+  grid-template-columns: ${p => !p.$isVertical ? (p.$count === 1 ? '1fr' : `repeat(${Math.min(p.$count, 3)}, 1fr)`) : 'none'};
   gap: 14px;
-  margin-bottom: 16px;
-
-  ${p => p.$isVertical && `
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    margin-bottom: 0;
-  `}
-
-  @media (max-width: ${breakpoints.mobile}) {
-    grid-template-columns: 1fr;
-    ${p => p.$isVertical && `
-      display: grid;
-      grid-template-columns: 1fr;
-      flex: none;
-    `}
-  }
+  margin-bottom: ${p => p.$isVertical ? '0' : '16px'};
+  flex: ${p => p.$isVertical ? '1' : 'none'};
+  height: ${p => p.$isVertical ? '100%' : 'auto'};
 `;
 
-const medalStyles: Record<number, { border: string; bg: string; gradient: string; badge: string; badgeText: string; label: string }> = {
-  0: {
-    border: '#FFD700',
-    bg: 'linear-gradient(135deg, #FFFBEA 0%, #FFF9E0 100%)',
-    gradient: 'linear-gradient(90deg, #FFD700, #FFE44D, #FFD700)',
-    badge: '#FFD700',
-    badgeText: '#7a5c00',
-    label: '1°',
-  },
-  1: {
-    border: '#C0C0C0',
-    bg: 'linear-gradient(135deg, #F8F9FA 0%, #F1F3F5 100%)',
-    gradient: 'linear-gradient(90deg, #C0C0C0, #E0E0E0, #C0C0C0)',
-    badge: '#C0C0C0',
-    badgeText: '#4a4a4a',
-    label: '2°',
-  },
-  2: {
-    border: '#CD7F32',
-    bg: 'linear-gradient(135deg, #FFF5EB 0%, #FFECD2 100%)',
-    gradient: 'linear-gradient(90deg, #CD7F32, #E8A860, #CD7F32)',
-    badge: '#CD7F32',
-    badgeText: '#fff',
-    label: '3°',
-  },
-};
-
-const TopCard = styled.div<{ $rank: number; $idx: number; $isVertical?: boolean }>`
+const IdeaCard = styled(motion.div)<{ $isVertical?: boolean; $idx?: number }>`
   position: relative;
-  padding: 48px 18px 16px;
+  padding: 24px 20px;
   border-radius: 18px;
-  background: ${p => medalStyles[p.$rank]?.bg ?? 'white'};
-  border: 2px solid ${p => medalStyles[p.$rank]?.border ?? 'rgba(72,80,84,0.08)'};
-  box-shadow: 0 4px 16px rgba(72,80,84,0.08);
-  animation: ${fadeIn} 0.35s ${p => p.$idx * 0.08}s ease both;
+  background: white;
+  border: 1.5px solid rgba(72, 80, 84, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   cursor: pointer;
-  transition: all 0.2s;
-  overflow: hidden;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
+  min-width: 0;
 
-  ${p => p.$isVertical && `
+  ${p => p.$isVertical ? css`
+    width: 92%;
+    height: 100%;
+  ` : css`
     flex: 1;
-    min-height: 0;
-    padding: 32px 18px 16px;
+    width: auto;
+    height: 100%;
   `}
 
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 28px rgba(72,80,84,0.15);
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 4px;
-    background: ${p => medalStyles[p.$rank]?.gradient ?? '#eef0f2'};
-    background-size: 200% 100%;
-    animation: ${shimmer} 3s linear infinite;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(72, 80, 84, 0.12);
+    border-color: rgba(72, 80, 84, 0.14);
   }
 `;
 
-const MedalBadge = styled.div<{ $rank: number }>`
+const VerticalRow = styled.div`
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  width: 100%;
+  flex: 1;
+`;
+
+
+const TopPodiumGrid = styled.div`
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  height: 240px;
+  margin-bottom: 24px;
+`;
+
+const PodiumIdeaCard = styled(motion.div)<{ $rank: number }>`
+  position: relative;
+  border-radius: 20px;
+  background: white;
+  border: 1.5px solid rgba(72, 80, 84, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px 18px 16px;
+  flex: 1;
+  min-width: 0;
+
+  order: ${p => p.$rank === 1 ? 2 : p.$rank === 2 ? 1 : 3};
+  height: ${p => p.$rank === 1 ? '100%' : p.$rank === 2 ? '85%' : '72%'};
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(72, 80, 84, 0.12);
+    border-color: rgba(72, 80, 84, 0.14);
+  }
+`;
+
+const PodiumRankBadge = styled.div<{ $rank: number }>`
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 30px;
-  height: 30px;
+  top: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
+  background: white;
+  border: 2.5px solid ${p => p.$rank === 1 ? '#fe410a' : p.$rank === 2 ? '#7f8c8d' : '#d35400'};
+  color: ${p => p.$rank === 1 ? '#fe410a' : p.$rank === 2 ? '#7f8c8d' : '#d35400'};
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 900;
-  background: ${p => medalStyles[p.$rank]?.badge ?? '#f1f3f5'};
-  color: ${p => medalStyles[p.$rank]?.badgeText ?? '#9ca3af'};
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+`;
+
+const CarouselWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  margin-top: 20px;
+`;
+
+const CarouselContainer = styled.div`
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-start;
+  align-items: stretch;
+`;
+
+const CarouselNavBtn = styled.button<{ $disabled: boolean; $left?: boolean }>`
+  background: transparent;
+  border: none;
+  cursor: ${p => p.$disabled ? 'not-allowed' : 'pointer'};
+  opacity: ${p => p.$disabled ? 0.35 : 1};
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+
+  &:hover {
+    ${p => !p.$disabled && 'transform: scale(1.05);'}
+  }
+  &:active {
+    ${p => !p.$disabled && 'transform: scale(0.95);'}
+  }
+
+  .outer-ring {
+    width: 64px;
+    height: 64px;
+    background: rgba(254, 65, 10, 0.05);
+    border-radius: 50%;
+    position: relative;
+    box-shadow: inset 0px 0px 1px 1px rgba(0, 0, 0, 0.15), 2px 3px 5px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .shadow-overlay {
+    position: absolute;
+    width: 54px;
+    height: 54px;
+    z-index: 10;
+    background: black;
+    border-radius: 50%;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 4px;
+    filter: blur(1px);
+    opacity: 0.12;
+  }
+
+  .button-inner {
+    cursor: ${p => p.$disabled ? 'not-allowed' : 'pointer'};
+    position: absolute;
+    width: 54px;
+    height: 54px;
+    background: linear-gradient(180deg, #fe410a 0%, #ff6b3d 100%);
+    border-radius: 50%;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 4px;
+    box-shadow: inset 0px 3px 2px #ff9e80, inset 0px -3px 0px #9e2600, 0px 0px 2px rgba(0,0,0,0.4);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+
+    ${p => !p.$disabled && css`
+      &:active {
+        box-shadow: inset 0px 3px 2px rgba(255,158,128,0.5), inset 0px -3px 2px rgba(254,65,10,0.5), 0px 0px 2px rgba(0,0,0,0.4);
+      }
+    `}
+  }
+
+  .svg-wrap {
+    width: 24px;
+    fill: #ffeae6;
+    filter: drop-shadow(0px 1.5px 1.5px rgba(0,0,0,0.4));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: ${p => p.$left ? 'scaleX(-1)' : 'none'};
+  }
 `;
 
 const CardTitle = styled.p`
@@ -254,139 +345,6 @@ const DateLabel = styled.span`
   color: #c0c8d0;
 `;
 
-const ExpandedGrid = styled(motion.div)<{ $isVertical?: boolean }>`
-  display: grid;
-  grid-template-columns: ${({ $isVertical }) => $isVertical ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))'};
-  gap: 20px;
-  width: 100%;
-  animation: ${fadeIn} 0.35s ease both;
-
-  &::-webkit-scrollbar {
-    height: 8px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(0,0,0,0.15);
-    border-radius: 4px;
-  }
-`;
-
-const ExpandedCard = styled(motion.div)<{ $rank: number; $idx: number }>`
-  position: relative;
-  flex: 0 0 auto;
-  width: 220px;
-  scroll-snap-align: start;
-  padding: 48px 18px 16px;
-  border-radius: 18px;
-  background: white;
-  border: 2px solid rgba(72,80,84,0.08);
-  box-shadow: 0 4px 16px rgba(72,80,84,0.08);
-  cursor: pointer;
-  transition: all 0.2s;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  animation: ${fadeIn} 0.35s ${p => p.$idx * 0.06}s ease both;
-
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 28px rgba(72,80,84,0.15);
-  }
-`;
-
-const ExpandedBadge = styled.div<{ $rank: number }>`
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 800;
-  background: #f1f3f5;
-  color: #9ca3af;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-`;
-
-const SpinnerWrap = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 0;
-  gap: 14px;
-  animation: ${fadeUp} 0.3s ease both;
-`;
-
-const Spinner = styled.div`
-  width: 36px;
-  height: 36px;
-  border: 3.5px solid #f1f3f5;
-  border-top-color: ${Pista8Theme.primary};
-  border-radius: 50%;
-  animation: ${spin} 0.7s linear infinite;
-`;
-
-const SpinnerText = styled.p`
-  font-size: 12px;
-  font-weight: 600;
-  color: #a8b0b8;
-  margin: 0;
-`;
-
-type AnimPhase = 'idle' | 'out-right' | 'banner' | 'hidden-left' | 'in-center';
-
-const SlideContainer = styled.div<{ $phase: AnimPhase }>`
-  transition: ${({ $phase }) => {
-    if ($phase === 'hidden-left') return 'none';
-    if ($phase === 'in-center') return 'transform 1000ms ease-out, opacity 1000ms ease-out';
-    return 'transform 500ms ease-in-out, opacity 500ms ease-in-out';
-  }};
-  transform: ${({ $phase }) => {
-    if ($phase === 'out-right') return 'translateX(100vw)';
-    if ($phase === 'banner') return 'translateX(100vw)';
-    if ($phase === 'hidden-left') return 'translateX(-100vw)';
-    return 'translateX(0)';
-  }};
-  opacity: ${({ $phase }) => ($phase === 'idle' || $phase === 'in-center' ? 1 : 0)};
-`;
-
-const bannerPulse = keyframes`
-  0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 0.85; transform: translate(-50%, -50%) scale(1.03); }
-`;
-
-const BannerOverlay = styled.div`
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
-`;
-
-const BannerTitle = styled.h1`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: clamp(28px, 6vw, 72px);
-  font-weight: 900;
-  color: white;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-  animation: ${bannerPulse} 1.5s ease-in-out infinite;
-  white-space: nowrap;
-  margin: 0;
-`;
-
 const formatRelative = (dateStr?: string): string => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
@@ -436,6 +394,32 @@ const rawToPlane = (idea: RawIdea, index: number, userProfile?: any): PlaneIdea 
   };
 };
 
+const SpinnerWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  gap: 14px;
+  animation: ${fadeUp} 0.3s ease both;
+`;
+
+const Spinner = styled.div`
+  width: 36px;
+  height: 36px;
+  border: 3.5px solid #f1f3f5;
+  border-top-color: ${Pista8Theme.primary};
+  border-radius: 50%;
+  animation: ${spin} 0.7s linear infinite;
+`;
+
+const SpinnerText = styled.p`
+  font-size: 12px;
+  font-weight: 600;
+  color: #a8b0b8;
+  margin: 0;
+`;
+
 interface IdeasChronologicalListProps {
   ideas: RawIdea[];
   sortOrder: SortMode;
@@ -443,7 +427,6 @@ interface IdeasChronologicalListProps {
   onSelectIdea?: (idea: PlaneIdea) => void;
   showAll: boolean;
   onToggleShowAll: () => void;
-  isVertical?: boolean;
   challengeStatus?: string;
 }
 
@@ -454,37 +437,15 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
   onSelectIdea,
   showAll,
   onToggleShowAll,
-  isVertical = false,
   challengeStatus,
 }) => {
   const { userProfile } = useAuth();
   const [localIdeas, setLocalIdeas] = React.useState(ideas);
-  const [animPhase, setAnimPhase] = React.useState<AnimPhase>(
-    challengeStatus === 'EVALUATING' || challengeStatus === 'CLOSED' ? 'in-center' : 'idle'
-  );
-  const hasAnimatedRef = useRef(challengeStatus === 'EVALUATING' || challengeStatus === 'CLOSED');
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  React.useEffect(() => {
-    if (challengeStatus !== 'EVALUATING' || hasAnimatedRef.current) return;
-    hasAnimatedRef.current = true;
-
-    setAnimPhase('out-right');
-
-    const t1 = setTimeout(() => setAnimPhase('banner'), 500);
-    const t2 = setTimeout(() => setAnimPhase('hidden-left'), 3500);
-    const t3 = setTimeout(() => setAnimPhase('in-center'), 3600);
-
-    timersRef.current = [t1, t2, t3];
-
-    return () => {
-      timersRef.current.forEach(clearTimeout);
-      timersRef.current = [];
-    };
-  }, [challengeStatus]);
+  const [carouselIndex, setCarouselIndex] = React.useState(0);
 
   React.useEffect(() => {
     setLocalIdeas(ideas);
+    setCarouselIndex(0);
   }, [ideas]);
 
   useWallEventListener('comment_count_changed', ({ ideaId, count }) => {
@@ -526,19 +487,17 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
     sortOrder === 'likes' ? 'Más populares' :
     'Más comentadas';
 
-  const top3 = localIdeas.slice(0, 3);
-  const rest = localIdeas.slice(3);
-  const hasScores = localIdeas.some(idea => (idea.fireScore || 0) > 0);
-  const shouldShowPodiumCards = challengeStatus !== 'EVALUATING' && (challengeStatus !== 'CLOSED' || hasScores);
+  const statusUpper = challengeStatus?.toUpperCase() || '';
+  const isFinished = statusUpper === 'CLOSED' || statusUpper === 'FINALIZADO' || statusUpper === 'EVALUATING' || statusUpper === 'EN_EVALUACION' || statusUpper === 'EN EVALUACIÓN';
+
+  const top3 = (showAll && isFinished) ? [] : localIdeas.slice(0, 3);
+  const rest = (showAll && isFinished) ? localIdeas : localIdeas.slice(3);
+
+  const maxIndex = Math.max(0, rest.length - 5);
+  const visibleIdeas = rest.slice(carouselIndex, carouselIndex + 5);
 
   return (
     <Wrapper>
-      {animPhase === 'banner' && (
-        <BannerOverlay>
-          <BannerTitle>EN EVALUACIÓN</BannerTitle>
-        </BannerOverlay>
-      )}
-      <SlideContainer $phase={animPhase}>
       <Header>
         <HeaderLeft>
           <Title>{sortLabel}</Title>
@@ -558,29 +517,25 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
         )}
       </Header>
 
-      {shouldShowPodiumCards ? (
-        <>
-          <TopGrid $count={top3.length} $isVertical={isVertical}>
-            {top3.map((idea, i) => {
-              const isCurrentUser = userProfile && idea.authorId === userProfile.id;
-              const authorName = isCurrentUser && userProfile
-                ? resolveDisplayName(userProfile as any)
-                : resolveDisplayName(idea.author);
+      {!showAll ? (
+        <TopGrid $count={top3.length} $isVertical={true}>
+          {top3.map((idea, i) => {
+            const isCurrentUser = userProfile && idea.authorId === userProfile.id;
+            const authorName = isCurrentUser && userProfile
+              ? resolveDisplayName(userProfile as any)
+              : resolveDisplayName(idea.author);
 
-              return (
-                <TopCard
-                  key={idea.id ?? idea._id ?? i}
-                  $rank={i}
+            return (
+              <VerticalRow key={idea.id ?? idea._id ?? i}>
+                <IdeaCard
+                  $isVertical={true}
                   $idx={i}
-                  $isVertical={isVertical}
                   onClick={() => onSelectIdea?.(rawToPlane(idea, i, userProfile))}
                 >
-                  <MedalBadge $rank={i}>{medalStyles[i]?.label}</MedalBadge>
-
                   <CardTitle>{idea.title}</CardTitle>
                   <CardAuthor>por {authorName}</CardAuthor>
 
-                  <CardStats $isVertical={isVertical}>
+                  <CardStats $isVertical={true}>
                     <StatItem $tooltipText="Interacciones totales">
                       <Sparkles size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
                       <StatValue>{idea.likesCount ?? 0}</StatValue>
@@ -589,90 +544,156 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
                       <MessageSquare size={14} />
                       <StatValue>{idea.commentsCount ?? 0}</StatValue>
                     </StatItem>
-                    <DateLabel>{formatRelative(idea.createdAt)}</DateLabel>
                   </CardStats>
-                </TopCard>
-              );
-            })}
-          </TopGrid>
-
-          {showAll && rest.length > 0 && (
-            <ExpandedGrid layout $isVertical={isVertical}>
-              {rest.map((idea, i) => {
-                const idx = i + 3;
-                const isCurrentUser = userProfile && idea.authorId === userProfile.id;
-                const authorName = isCurrentUser && userProfile
-                  ? resolveDisplayName(userProfile as any)
-                  : resolveDisplayName(idea.author);
-
-                return (
-                  <ExpandedCard
-                    layout
-                    key={idea.id ?? idea._id ?? idx}
-                    $rank={idx}
-                    $idx={i}
-                    onClick={() => onSelectIdea?.(rawToPlane(idea, idx, userProfile))}
-                  >
-                    <ExpandedBadge $rank={idx}>#{idx + 1}</ExpandedBadge>
-                    
-                    <CardTitle>{idea.title}</CardTitle>
-                    <CardAuthor>por {authorName}</CardAuthor>
-
-                    <CardStats>
-                      <StatItem $tooltipText="Interacciones totales">
-                        <Sparkles size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
-                        <StatValue>{idea.likesCount ?? 0}</StatValue>
-                      </StatItem>
-                      <StatItem $tooltipText="Comentarios">
-                        <MessageSquare size={14} />
-                        <StatValue>{idea.commentsCount ?? 0}</StatValue>
-                      </StatItem>
-                    </CardStats>
-
-                    <DateLabel>{formatRelative(idea.createdAt)}</DateLabel>
-                  </ExpandedCard>
-                );
-              })}
-            </ExpandedGrid>
-          )}
-        </>
-      ) : (
-        <ExpandedGrid layout $isVertical={!showAll}>
-          {(showAll ? localIdeas : top3).map((idea, i) => {
-            const isCurrentUser = userProfile && idea.authorId === userProfile.id;
-            const authorName = isCurrentUser && userProfile
-              ? resolveDisplayName(userProfile as any)
-              : resolveDisplayName(idea.author);
-
-            return (
-              <ExpandedCard
-                layout
-                key={idea.id ?? idea._id ?? i}
-                $rank={i}
-                $idx={i}
-                onClick={() => onSelectIdea?.(rawToPlane(idea, i, userProfile))}
-              >
-                <CardTitle>{idea.title}</CardTitle>
-                <CardAuthor>por {authorName}</CardAuthor>
-
-                <CardStats>
-                  <StatItem $tooltipText="Interacciones totales">
-                    <Sparkles size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
-                    <StatValue>{idea.likesCount ?? 0}</StatValue>
-                  </StatItem>
-                  <StatItem $tooltipText="Comentarios">
-                    <MessageSquare size={14} />
-                    <StatValue>{idea.commentsCount ?? 0}</StatValue>
-                  </StatItem>
-                </CardStats>
-
-                <DateLabel>{formatRelative(idea.createdAt)}</DateLabel>
-              </ExpandedCard>
+                  <DateLabel>{formatRelative(idea.createdAt)}</DateLabel>
+                </IdeaCard>
+              </VerticalRow>
             );
           })}
-        </ExpandedGrid>
+        </TopGrid>
+      ) : (
+        <>
+          {top3.length > 0 && (
+            <TopPodiumGrid>
+              {top3.map((idea, i) => {
+              const isCurrentUser = userProfile && idea.authorId === userProfile.id;
+              const authorName = isCurrentUser && userProfile
+                ? resolveDisplayName(userProfile as any)
+                : resolveDisplayName(idea.author);
+              const rank = i + 1;
+
+              return (
+                <PodiumIdeaCard
+                  key={idea.id ?? idea._id ?? i}
+                  $rank={rank}
+                  onClick={() => onSelectIdea?.(rawToPlane(idea, i, userProfile))}
+                >
+                  <PodiumRankBadge $rank={rank}>
+                    {rank === 1 ? '①' : rank === 2 ? '②' : '③'}
+                  </PodiumRankBadge>
+
+                  <CardTitle>{idea.title}</CardTitle>
+                  <CardAuthor>por {authorName}</CardAuthor>
+
+                  <CardStats $isVertical={false}>
+                    <StatItem $tooltipText="Interacciones totales">
+                      <Sparkles size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
+                      <StatValue>{idea.likesCount ?? 0}</StatValue>
+                    </StatItem>
+                    <StatItem $tooltipText="Comentarios">
+                      <MessageSquare size={14} />
+                      <StatValue>{idea.commentsCount ?? 0}</StatValue>
+                    </StatItem>
+                  </CardStats>
+                  <DateLabel>{formatRelative(idea.createdAt)}</DateLabel>
+                </PodiumIdeaCard>
+              );
+            })}
+            </TopPodiumGrid>
+          )}
+
+          {rest.length > 0 && (
+            <CarouselWrapper>
+              <CarouselNavBtn
+                type="button"
+                $disabled={carouselIndex === 0}
+                $left={true}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setCarouselIndex(prev => Math.max(0, prev - 1));
+                }}
+              >
+                <div className="outer-ring">
+                  <div className="shadow-overlay" />
+                  <div className="button-inner">
+                    <div className="svg-wrap">
+                      <svg xmlns="http://www.w3.org/2000/svg" id="Filled" viewBox="0 0 24 24">
+                        <path d="M20.492,7.969,10.954.975A5,5,0,0,0,3,5.005V19a4.994,4.994,0,0,0,7.954,4.03l9.538-6.994a5,5,0,0,0,0-8.062Z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </CarouselNavBtn>
+
+              <CarouselContainer>
+                <AnimatePresence mode="popLayout">
+                  {visibleIdeas.map((idea, i) => {
+                    const idx = i + 3 + carouselIndex;
+                    const isCurrentUser = userProfile && idea.authorId === userProfile.id;
+                    const authorName = isCurrentUser && userProfile
+                      ? resolveDisplayName(userProfile as any)
+                      : resolveDisplayName(idea.author);
+
+                    return (
+                      <IdeaCard
+                        key={idea.id ?? idea._id ?? idx}
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.25 }}
+                        $isVertical={false}
+                        onClick={() => onSelectIdea?.(rawToPlane(idea, idx, userProfile))}
+                      >
+                        <CardTitle>{idea.title}</CardTitle>
+                        <CardAuthor>por {authorName}</CardAuthor>
+
+                        <CardStats $isVertical={false}>
+                          <StatItem $tooltipText="Interacciones totales">
+                            <Sparkles size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
+                            <StatValue>{idea.likesCount ?? 0}</StatValue>
+                          </StatItem>
+                          <StatItem $tooltipText="Comentarios">
+                            <MessageSquare size={14} />
+                            <StatValue>{idea.commentsCount ?? 0}</StatValue>
+                          </StatItem>
+                        </CardStats>
+                        <DateLabel>{formatRelative(idea.createdAt)}</DateLabel>
+                      </IdeaCard>
+                    );
+                  })}
+                </AnimatePresence>
+              </CarouselContainer>
+
+              <CarouselNavBtn
+                type="button"
+                $disabled={carouselIndex === maxIndex}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setCarouselIndex(prev => Math.min(maxIndex, prev + 1));
+                }}
+              >
+                <div className="outer-ring">
+                  <div className="shadow-overlay" />
+                  <div className="button-inner">
+                    <div className="svg-wrap">
+                      <svg xmlns="http://www.w3.org/2000/svg" id="Filled" viewBox="0 0 24 24">
+                        <path d="M20.492,7.969,10.954.975A5,5,0,0,0,3,5.005V19a4.994,4.994,0,0,0,7.954,4.03l9.538-6.994a5,5,0,0,0,0-8.062Z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </CarouselNavBtn>
+            </CarouselWrapper>
+          )}
+
+          {!isFinished && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px', width: '100%' }}>
+              <ViewAllBtn onClick={() => {
+                const el = document.getElementById('challenge-detail');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}>
+                Participar
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </ViewAllBtn>
+            </div>
+          )}
+        </>
       )}
-      </SlideContainer>
     </Wrapper>
   );
 };

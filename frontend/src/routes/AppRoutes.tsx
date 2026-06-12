@@ -26,6 +26,15 @@ const RoleRouter = () => {
   }
 
   if (role === 'student') {
+    const isOtherRolePath =
+      location.pathname.includes('/admin') ||
+      location.pathname.includes('/company') ||
+      location.pathname.includes('/judge');
+
+    if (isOtherRolePath) {
+      return <Navigate to="/dashboard" replace />;
+    }
+
     return (
       <Routes>
         <Route path="perfil" element={<ProfilePage />} />

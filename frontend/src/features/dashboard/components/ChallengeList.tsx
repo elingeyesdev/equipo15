@@ -20,12 +20,14 @@ interface ChallengeListProps {
   searchQuery?: string;
   userFacultyId?: number | string | null;
   forceColumn?: boolean;
+  visibleChallengesLimit?: number;
 }
 
 const ChallengeList: React.FC<ChallengeListProps> = ({
   loading, challenges, activeFilter, onFilterChange, filterOpen, setFilterOpen,
   selectedChallengeId, onSelectChallenge, onRespond, onClearSelection, searchQuery = '', userFacultyId,
   forceColumn = false,
+  visibleChallengesLimit,
 }) => {
   const userSlug = getFacultySlug(userFacultyId || null);
   const filters = ['Activos', 'En Evaluación', 'Finalizados', 'Mis Retos'];
@@ -106,7 +108,13 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
         </S.FilterWrap>
       </S.PanelHeader>
 
-      <S.ChallengeList $isFullWidth={!selectedChallengeId} $forceColumn={forceColumn} $flexCards={filtered.length > 0 && filtered.length < 3}>
+      <S.ChallengeList
+        $isFullWidth={!selectedChallengeId}
+        $forceColumn={forceColumn}
+        $flexCards={(forceColumn || !!selectedChallengeId) && filtered.length > 0 && filtered.length <= (visibleChallengesLimit || 3)}
+        $cardCount={filtered.length}
+        $visibleLimit={visibleChallengesLimit}
+      >
         {loading ? (
           <>
             <ChallengeCardSkeleton />

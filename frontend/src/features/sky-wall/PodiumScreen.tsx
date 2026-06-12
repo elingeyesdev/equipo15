@@ -30,9 +30,9 @@ const Screen = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   z-index: 20;
-  padding: 40px 24px;
+  padding: 130px 24px 20px;
   pointer-events: none;
 `;
 
@@ -64,7 +64,7 @@ const IntroTitle = styled.h2`
   text-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.6);
   animation: ${fadeInOut} 4.5s ease both;
   position: absolute;
-  top: 40%;
+  top: 30%;
 `;
 
 const IntroSubtitle = styled.div`
@@ -74,7 +74,7 @@ const IntroSubtitle = styled.div`
   margin-top: 16px;
   animation: ${fadeInOut} 4.5s ease both;
   position: absolute;
-  top: calc(40% + 60px);
+  top: calc(30% + 60px);
   text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 1px 4px rgba(0,0,0,0.8);
 `;
 
@@ -93,7 +93,7 @@ const PodiumRow = styled.div`
   justify-content: center;
   width: 100%;
   max-width: 860px;
-  margin-top: 60px;
+  margin-top: 20px;
   pointer-events: auto;
 `;
 

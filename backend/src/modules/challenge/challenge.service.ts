@@ -150,6 +150,15 @@ export class ChallengeService {
   }
 
   async update(id: string, updateChallengeDto: UpdateChallengeDto) {
+    const existing = await this.challengeRepository.findById(id);
+    if (!existing) {
+      throw new NotFoundException('Reto no encontrado.');
+    }
+    const statusUpper = existing.status?.toUpperCase() || '';
+    if (statusUpper === 'EVALUATING' || statusUpper === 'CLOSED' || statusUpper === 'EN_EVALUACION' || statusUpper === 'FINALIZADO') {
+      throw new ForbiddenException('No se puede modificar un reto en fase de evaluación o cerrado.');
+    }
+
     const { submissionsOpenAt, submissionsCloseAt, publishedAt, ...rest } =
       updateChallengeDto;
 

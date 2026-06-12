@@ -146,17 +146,21 @@ const IdeationWall = () => {
     if (advFilter.facultyId) {
       ideas = ideas.filter(idea => (idea as any).authorFacultyId === advFilter.facultyId || (idea.author as any)?.studentProfile?.facultyId === advFilter.facultyId || (idea.author as any)?.facultyId === advFilter.facultyId);
     }
+    if (advFilter.onlyPodium) {
+      const podiumIds = [...ideas]
+        .filter(idea => (idea.finalScore || 0) > 0 || (idea.fireScore || 0) > 0)
+        .sort((a, b) => (b.finalScore || b.fireScore || 0) - (a.finalScore || a.fireScore || 0))
+        .slice(0, 3)
+        .map(idea => idea.id ?? idea._id);
+      ideas = ideas.filter(idea => podiumIds.includes(idea.id ?? idea._id));
+    }
     if (advFilter.topLimit) {
       ideas = ideas.slice(0, advFilter.topLimit);
     }
 
-    const isClosed = ds.selectedChallenge?.status === 'CLOSED';
     ideas.sort((a, b) => {
-      if (isClosed) {
-        return (b.fireScore || b.finalScore || 0) - (a.fireScore || a.finalScore || 0);
-      }
       if (advFilter.sortOrder === 'oldest') {
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        return new Date(a.createdAt || '').getTime() - new Date(b.createdAt || '').getTime();
       }
       if (advFilter.sortOrder === 'likes') {
         return (b.likesCount || 0) - (a.likesCount || 0);
@@ -164,7 +168,7 @@ const IdeationWall = () => {
       if (advFilter.sortOrder === 'comments') {
         return (b.commentsCount || 0) - (a.commentsCount || 0);
       }
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
     });
 
     return ideas.map(idea => ({

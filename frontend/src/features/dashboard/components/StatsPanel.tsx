@@ -149,9 +149,10 @@ interface StatsPanelProps {
   challengeStats: any;
   onSelectIdea?: (idea: any) => void;
   style?: React.CSSProperties;
+  isNarrow?: boolean;
 }
 
-const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeStats, onSelectIdea, style }) => {
+const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeStats, onSelectIdea, style, isNarrow }) => {
   const [liveTotalLikes, setLiveTotalLikes] = useState<number | null>(null);
   const [liveTotalComments, setLiveTotalComments] = useState<number | null>(null);
   const [liveTotalIdeas, setLiveTotalIdeas] = useState<number | null>(null);
@@ -222,6 +223,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
         topIdeas={topIdeas}
         onSelectIdea={handlePodiumClick}
         challengeStatus={selectedChallenge?.status}
+        isNarrow={isNarrow}
       />
     </div>
   );

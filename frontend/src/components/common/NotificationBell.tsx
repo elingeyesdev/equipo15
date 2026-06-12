@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-import { Bell, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { notificationService } from '@/services/notification.service';
 import type { Notification } from '@/services/notification.service';
-import { Pista8Theme } from '@/config/theme';
 import { useNavigate } from 'react-router-dom';
+import { useSocket } from '@/hooks/useSocket';
+import { useAuth } from '@/context/AuthContext';
 
-const spin = keyframes`
-  to { transform: rotate(360deg); }
-`;
 
 const Container = styled.div`
   position: relative;
@@ -168,6 +166,8 @@ const EmptyState = styled.div`
 `;
 
 export const NotificationBell: React.FC = () => {
+  const socket = useSocket();
+  const { refetchProfile } = useAuth();
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -198,9 +198,38 @@ export const NotificationBell: React.FC = () => {
 
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 10000); // Poll every 10 seconds for real-time feel
+    const interval = setInterval(fetchUnreadCount, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewNotification = (notif: any) => {
+      setUnreadCount((prev) => prev + 1);
+      setNotifications((prev) => [
+        {
+          id: notif.id || String(Math.random()),
+          title: notif.title,
+          body: notif.body,
+          type: notif.type,
+          createdAt: notif.createdAt || new Date().toISOString(),
+          readAt: null,
+        } as any,
+        ...prev,
+      ]);
+
+      if (notif.type === 'ROLE_UPDATE') {
+        void refetchProfile();
+      }
+    };
+
+    socket.on('notification:received', handleNewNotification);
+
+    return () => {
+      socket.off('notification:received', handleNewNotification);
+    };
+  }, [socket, refetchProfile]);
 
   useEffect(() => {
     if (open) {

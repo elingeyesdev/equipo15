@@ -14,6 +14,7 @@ export interface AdvancedFilterState {
   facultyId: string | number | null;
   onlyFavorites: boolean;
   onlyMyIdeas: boolean;
+  onlyPodium?: boolean;
 }
 
 interface AdvancedFilterProps {
@@ -21,6 +22,7 @@ interface AdvancedFilterProps {
   onChange: (next: AdvancedFilterState) => void;
   disabled?: boolean;
   onlySort?: boolean;
+  challengeStatus?: string;
 }
 
 const fadeDown = keyframes`
@@ -108,6 +110,10 @@ const Chip = styled.button<{ $active: boolean }>`
   ${interactiveHover}
 `;
 
+const PodiumChip = styled(Chip)<{ $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
+  ${premiumTooltip}
+`;
+
 const Divider = styled.hr`
   border: none;
   border-top: 1px solid rgba(72,80,84,0.08);
@@ -149,7 +155,7 @@ const TOP_OPTIONS: { label: string; value: TopLimit }[] = [
   { label: 'Todos',   value: null },
 ];
 
-const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabled, onlySort = false }) => {
+const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabled, onlySort = false, challengeStatus }) => {
   const { faculties: apiFaculties } = useActiveFaculties();
   const facultyOptions = apiFaculties.length > 0
     ? apiFaculties.filter((f) => f.name.toLowerCase() !== 'todas')
@@ -165,9 +171,18 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabl
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  const statusUpper = challengeStatus?.toUpperCase() || '';
+  const isClosed = statusUpper === 'CLOSED' || statusUpper === 'FINALIZADO';
+  const tooltipText = !isClosed ? 'No hay podio, las ideas están siendo calificadas' : undefined;
+
+  const handlePodiumClick = () => {
+    if (!isClosed) return;
+    update({ onlyPodium: !value.onlyPodium });
+  };
+
   const isActive = onlySort
     ? !!value.sortOrder
-    : !!(value.sortOrder || value.topLimit || value.facultyId || value.onlyFavorites || value.onlyMyIdeas);
+    : !!(value.sortOrder || value.topLimit || value.facultyId || value.onlyFavorites || value.onlyMyIdeas || value.onlyPodium);
 
   const update = (patch: Partial<AdvancedFilterState>) => onChange({ ...value, ...patch });
 
@@ -175,7 +190,7 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabl
     if (onlySort) {
       onChange({ ...value, sortOrder: 'newest' });
     } else {
-      onChange({ sortOrder: 'newest', topLimit: null, facultyId: null, onlyFavorites: false, onlyMyIdeas: false });
+      onChange({ sortOrder: 'newest', topLimit: null, facultyId: null, onlyFavorites: false, onlyMyIdeas: false, onlyPodium: false });
     }
   };
 
@@ -188,6 +203,7 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabl
     if (value.topLimit) summaryParts.push(`Top ${value.topLimit}`);
     if (value.onlyFavorites) summaryParts.push('Favoritos');
     if (value.onlyMyIdeas) summaryParts.push('Mis Ideas');
+    if (value.onlyPodium) summaryParts.push('Podio');
     if (value.facultyId) {
       const fac = facultyOptions.find((f) => String(f.id) === String(value.facultyId));
       if (fac) summaryParts.push('name' in fac && typeof fac.name === 'string' ? fac.name : String(fac.id));
@@ -301,13 +317,16 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabl
                     </svg>
                     Mis Ideas
                   </Chip>
-                  <Chip
-                    $active={false}
-                    onClick={() => {}}
+                  <PodiumChip
+                    $active={Boolean(value.onlyPodium)}
+                    onClick={handlePodiumClick}
                     type="button"
-                    disabled
-                    style={{ opacity: 0.4, cursor: 'not-allowed' }}
-                    title="Disponible cuando los evaluadores envíen los puntajes finales"
+                    $tooltipText={tooltipText}
+                    $tooltipPosition="top"
+                    style={{
+                      opacity: isClosed ? 1 : 0.5,
+                      cursor: isClosed ? 'pointer' : 'not-allowed',
+                    }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>
                       <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7" />
@@ -319,7 +338,7 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabl
                       <path d="M6 10a8 8 0 0 0 12 0" />
                     </svg>
                     Podio
-                  </Chip>
+                  </PodiumChip>
                 </ChipRow>
               </Section>
             </>

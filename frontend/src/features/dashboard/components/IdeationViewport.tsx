@@ -92,6 +92,10 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
         : 'Todas las Facultades')
     : null;
 
+  const visibleLimit = (!showAllIdeas && displayedWallIdeas && displayedWallIdeas.length > 0)
+    ? Math.min(displayedWallIdeas.length, 3)
+    : 3;
+
   return (
     <S.Page>
       <div style={{ marginBottom: '16px' }}>
@@ -221,6 +225,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                 setAdvFilter(next);
               }}
               disabled={!ds.selectedChallenge}
+              challengeStatus={ds.selectedChallenge?.status}
             />
           </div>
 
@@ -246,7 +251,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
 
           {!showAllIdeas ? (
             <>
-              <S.SplitGrid style={{ marginTop: '24px' }}>
+              <S.SplitGrid style={{ marginTop: '24px', alignItems: 'start', height: visibleLimit === 1 ? '280px' : visibleLimit === 2 ? '480px' : '680px' }}>
                 {ds.sortOrder && (
                   <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <IdeasChronologicalList
@@ -256,12 +261,11 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                       onSelectIdea={handleSelectIdea}
                       showAll={showAllIdeas}
                       onToggleShowAll={() => setShowAllIdeas(!showAllIdeas)}
-                      isVertical={true}
                       challengeStatus={ds.selectedChallenge?.status}
                     />
                   </div>
                 )}
-                <div>
+                <div style={{ height: '100%' }}>
                   <ChallengeList
                     loading={ds.loading}
                     challenges={ds.challenges}
@@ -276,15 +280,18 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                     searchQuery={ds.debouncedSearch}
                     userFacultyId={userProfile?.facultyId}
                     forceColumn
+                    visibleChallengesLimit={visibleLimit}
                   />
                 </div>
               </S.SplitGrid>
+
 
               <StatsPanel
                 selectedChallenge={ds.selectedChallenge}
                 challengeStats={ds.challengeStats}
                 onSelectIdea={handleSelectIdea}
                 style={{ marginTop: 32 }}
+                isNarrow={false}
               />
             </>
           ) : (
@@ -332,6 +339,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                     searchQuery={ds.debouncedSearch}
                     userFacultyId={userProfile?.facultyId}
                     forceColumn
+                    visibleChallengesLimit={visibleLimit}
                   />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -339,6 +347,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                     selectedChallenge={ds.selectedChallenge}
                     challengeStats={ds.challengeStats}
                     onSelectIdea={handleSelectIdea}
+                    isNarrow={true}
                   />
                 </div>
               </S.SplitGridEqual>
@@ -365,6 +374,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
               searchQuery={ds.debouncedSearch}
               userFacultyId={userProfile?.facultyId}
               forceColumn
+              visibleChallengesLimit={visibleLimit}
             />
           </div>
         </S.SplitGrid>

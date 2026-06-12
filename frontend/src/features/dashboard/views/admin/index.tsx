@@ -542,7 +542,7 @@ export const AdminUsersView = () => {
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
         }}>
           <div style={{
-            background: 'white', borderRadius: 0, padding: '32px 36px', maxWidth: 440,
+            background: 'white', borderRadius: '24px', padding: '32px 36px', maxWidth: 440,
             boxShadow: '0 24px 80px rgba(0,0,0,0.18)', textAlign: 'center',
             border: '1px solid #e2e8f0',
           }}>

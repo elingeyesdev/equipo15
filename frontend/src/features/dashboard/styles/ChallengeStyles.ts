@@ -119,7 +119,7 @@ export const ChallengeCard = styled.div<{ $active: boolean }>`
   position: relative;
   background: ${Pista8Theme.white};
   border-radius: 20px;
-  padding: 28px 24px;
+  padding: 32px 24px;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   border: 1.5px solid ${p => p.$active ? Pista8Theme.primary : 'rgba(72,80,84,0.08)'};
@@ -324,7 +324,7 @@ export const LikesChip = StatChip;
 export const CommentsChip = StatChip;
 export const CardActionRow = CardBottomRow;
 
-export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?: boolean; $flexCards?: boolean }>`
+export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?: boolean; $flexCards?: boolean; $cardCount?: number; $visibleLimit?: number }>`
   display: flex;
   flex-direction: ${p => (p.$forceColumn || !p.$isFullWidth) ? 'column' : 'row'};
   flex-wrap: ${p => (!p.$forceColumn && p.$isFullWidth) ? 'wrap' : 'nowrap'};
@@ -341,9 +341,22 @@ export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?:
   }
 
   ${p => (p.$forceColumn || !p.$isFullWidth) && `
-    max-height: 520px;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding-right: 6px;
+
+    ${p.$cardCount && p.$cardCount > (p.$visibleLimit || 3) ? `
+      > * {
+        height: calc((100% - ${((p.$visibleLimit || 3) - 1) * 14}px) / ${p.$visibleLimit || 3});
+        flex-shrink: 0;
+      }
+    ` : `
+      > * {
+        flex: 1;
+        min-height: 180px;
+      }
+    `}
 
     &::-webkit-scrollbar {
       width: 6px;

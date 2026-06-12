@@ -17,7 +17,6 @@ export class VisibilityStrategy {
 
       case 'company':
         if (challengeStatus !== 'Finalizado') {
-          delete safeAuthor.displayName;
           delete safeAuthor.phone;
           delete safeAuthor.email;
         }
@@ -27,7 +26,6 @@ export class VisibilityStrategy {
       case 'student':
       case 'guest':
       default:
-        delete safeAuthor.displayName;
         delete safeAuthor.phone;
         delete safeAuthor.email;
         break;

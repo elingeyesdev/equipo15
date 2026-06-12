@@ -35,6 +35,8 @@ export const Header = styled.header`
   margin-bottom: 2.5rem;
   animation: ${fadeUp} 0.4s ease both;
   gap: 16px;
+  position: relative;
+  z-index: 1000;
 
   @media (max-width: ${breakpoints.mobile}) {
     flex-direction: column;

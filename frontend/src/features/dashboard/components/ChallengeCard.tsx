@@ -30,7 +30,7 @@ const getRemainingText = (endDateStr?: string): { text: string; urgent: boolean 
 const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSelect, onRespond }) => {
   const [commentsCount, setCommentsCount] = useState(challenge.commentsCount || 0);
   const closeDate = challenge.endDate || challenge.submissionsCloseAt;
-  const isExpired = challenge.status === 'CLOSED' || challenge.status === 'Finalizado' || (closeDate ? new Date() > new Date(closeDate) : false);
+  const isExpired = challenge.status === 'CLOSED' || challenge.status === 'Finalizado' || challenge.status === 'EVALUATING' || challenge.status === 'En Evaluación' || (closeDate ? new Date() > new Date(closeDate) : false);
   const remaining = !isExpired ? getRemainingText(closeDate) : null;
 
   useEffect(() => {

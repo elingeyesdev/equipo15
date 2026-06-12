@@ -2,12 +2,35 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { ReferenceType } from '@prisma/client';
+import { EventsGateway } from '../../infrastructure/events/events.gateway';
 
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventsGateway: EventsGateway,
+  ) {}
+
+  private async sendRealTimeNotification(userId: string, notificationData: any) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { firebaseUid: true },
+      });
+      if (user?.firebaseUid) {
+        this.eventsGateway.server
+          .to(`user:${user.firebaseUid}`)
+          .emit('notification:received', {
+            ...notificationData,
+            createdAt: new Date().toISOString(),
+          });
+      }
+    } catch (error) {
+      this.logger.error('Error sending real-time notification via WebSocket:', error);
+    }
+  }
 
   async notifyWinners(winners: { userId: string; ideaId: string }[], challengeId: string, challengeTitle: string) {
     if (winners.length === 0) return;
@@ -15,7 +38,6 @@ export class NotificationService {
     try {
       const winnerIds = winners.map((w) => w.userId);
 
-      // 1. Save to Internal Inbox
       await this.prisma.notification.createMany({
         data: winners.map((w) => ({
           userId: w.userId,
@@ -26,6 +48,16 @@ export class NotificationService {
           referenceId: w.ideaId,
         })),
       });
+
+      for (const w of winners) {
+        await this.sendRealTimeNotification(w.userId, {
+          type: 'WINNER_ANNOUNCED',
+          title: '¡Felicidades! 🎉',
+          body: `Tu idea ha sido seleccionada como ganadora en el reto: ${challengeTitle}`,
+          referenceType: 'IDEA',
+          referenceId: w.ideaId,
+        });
+      }
 
       // 2. Get active tokens for winners
       const devices = await this.prisma.userDevice.findMany({
@@ -67,14 +99,20 @@ export class NotificationService {
 
   async notifyJudgeRemoved(companyUserId: string, judgeName: string, challengeTitle: string) {
     try {
-      // 1. Save to Internal Inbox
-      await this.prisma.notification.create({
+      const notif = await this.prisma.notification.create({
         data: {
           userId: companyUserId,
           type: 'JUDGE_REMOVED' as any,
           title: 'Juez removido del sistema',
           body: `El juez ${judgeName} ha sido removido del sistema y ya no evaluará tu reto '${challengeTitle}'. Por favor, asigna un reemplazo si es necesario.`,
         },
+      });
+
+      await this.sendRealTimeNotification(companyUserId, {
+        id: notif.id,
+        type: 'JUDGE_REMOVED',
+        title: 'Juez removido del sistema',
+        body: `El juez ${judgeName} ha sido removido del sistema y ya no evaluará tu reto '${challengeTitle}'. Por favor, asigna un reemplazo si es necesario.`,
       });
 
       // 2. Get active tokens
@@ -112,13 +150,20 @@ export class NotificationService {
 
   async notifyRoleChanged(userId: string, newRole: string) {
     try {
-      await this.prisma.notification.create({
+      const notif = await this.prisma.notification.create({
         data: {
           userId,
           type: 'ROLE_UPDATE' as any,
           title: 'Rol Actualizado',
           body: `Tu rol en la plataforma ha sido actualizado a ${newRole}.`,
         },
+      });
+
+      await this.sendRealTimeNotification(userId, {
+        id: notif.id,
+        type: 'ROLE_UPDATE',
+        title: 'Rol Actualizado',
+        body: `Tu rol en la plataforma ha sido actualizado a ${newRole}.`,
       });
 
       const devices = await this.prisma.userDevice.findMany({
@@ -143,13 +188,20 @@ export class NotificationService {
 
   async notifyEvaluationReceived(authorId: string, judgeName: string, challengeTitle: string) {
     try {
-      await this.prisma.notification.create({
+      const notif = await this.prisma.notification.create({
         data: {
           userId: authorId,
           type: 'IDEA_EVALUATED' as any,
           title: 'Idea Evaluada',
           body: `El juez ${judgeName} ha evaluado tu idea en el reto '${challengeTitle}'.`,
         },
+      });
+
+      await this.sendRealTimeNotification(authorId, {
+        id: notif.id,
+        type: 'IDEA_EVALUATED',
+        title: 'Idea Evaluada',
+        body: `El juez ${judgeName} ha evaluado tu idea en el reto '${challengeTitle}'.`,
       });
 
       const devices = await this.prisma.userDevice.findMany({

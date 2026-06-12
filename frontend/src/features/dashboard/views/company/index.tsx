@@ -563,6 +563,11 @@ export const CompanyChallengesView = () => {
     if (readOnlyMode) {
       return;
     }
+    const statusUpper = challenge.status?.toUpperCase() || '';
+    if (statusUpper === 'EVALUATING' || statusUpper === 'CLOSED' || statusUpper === 'FINALIZADO' || statusUpper === 'EN_EVALUACION' || statusUpper === 'EN EVALUACIÓN') {
+      toast.error('Este reto está en fase de evaluación o finalizado y no puede ser modificado.');
+      return;
+    }
     const canEdit = !challenge.ideasCount || challenge.ideasCount === 0;
     if (!canEdit) {
       toast.error('Este reto ya tiene ideas asociadas y no puede ser editado.');
