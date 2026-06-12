@@ -255,6 +255,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                       showAll={showAllIdeas}
                       onToggleShowAll={() => setShowAllIdeas(!showAllIdeas)}
                       isVertical={true}
+                      challengeStatus={ds.selectedChallenge?.status}
                     />
                   </div>
                 )}
@@ -295,6 +296,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                     onSelectIdea={handleSelectIdea}
                     showAll={showAllIdeas}
                     onToggleShowAll={() => setShowAllIdeas(!showAllIdeas)}
+                    challengeStatus={ds.selectedChallenge?.status}
                   />
                 )}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>

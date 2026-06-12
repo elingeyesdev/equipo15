@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
 import { validateEnv } from './config/env.validation';
 import { DatabaseModule } from './infrastructure/database/database.module';
@@ -23,6 +24,7 @@ import { AdminModule } from './modules/admin/admin.module';
       validate: validateEnv,
     }),
     DatabaseModule,
+    ScheduleModule.forRoot(),
     FirebaseAdminModule,
     EventsModule,
     RedisModule,

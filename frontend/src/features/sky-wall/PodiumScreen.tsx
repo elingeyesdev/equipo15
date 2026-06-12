@@ -308,7 +308,13 @@ const PodiumScreen = memo(({ ideas, onSelectIdea }: PodiumScreenProps) => {
               <IdeaTitle $rank={i + 1}>{idea.title}</IdeaTitle>
               <Divider $rank={i + 1} />
               <AuthorName $rank={i + 1}>
-                {idea.authorRealName || idea.authorName}
+                {(() => {
+                  const real = idea.authorRealName || '';
+                  const resolved = idea.authorName || '';
+                  if (resolved && resolved !== 'Anonimo') return resolved;
+                  if (real) return real;
+                  return 'Participante';
+                })()}
               </AuthorName>
               <ScoreBadge $rank={i + 1}>
                 <Star size={13} fill="currentColor" />

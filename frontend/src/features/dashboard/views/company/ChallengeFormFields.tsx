@@ -16,7 +16,7 @@ import {
   LogoUploadArea, LogoThumb, LogoPlaceholder, UploadText,
   CriteriaToggleBtn, CriteriaPanel, CriterionRow, CriterionCheckbox,
   CriterionName, WeightInput, WeightUnit, AddCriterionBtn,
-  CustomCriterionInput, RemoveBtn, TotalWeightBar, BtnRow, Btn, ConfirmBanner, OptionalToggleBtn,
+  CustomCriterionInput, RemoveBtn, TotalWeightBar, BtnRow, Btn, ConfirmBanner, OptionalToggleBtn, InputWrapper
 } from './challengeFormStyles';
 
 const LightboxOverlay: React.FC<{ src: string; onClose: () => void }> = ({ src, onClose }) => (
@@ -323,20 +323,26 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             <div style={{ display: 'flex', gap: 12, width: '100%' }}>
               <FieldGroup style={{ marginBottom: 0, flex: 1, minWidth: 0 }}>
                 <Label $locked={locked('core')}>Fecha inicio *</Label>
-                <InputField type="datetime-local" min={today} $locked={locked('core')} $error={!!errors.startDate}
-                  value={form.startDate} readOnly={locked('core')}
-                  style={{ minWidth: 0, padding: '14px 10px', fontSize: 13 }}
-                  onChange={e => !locked('core') && updateField('startDate', e.target.value)} />
+                <InputWrapper $tooltipText="Mostrar el selector de fecha y hora locales" $tooltipPosition="bottom" $tooltipAlign="center">
+                  <InputField type="datetime-local" min={today} $locked={locked('core')} $error={!!errors.startDate}
+                    title=" "
+                    value={form.startDate} readOnly={locked('core')}
+                    style={{ minWidth: 0, padding: '14px 10px', fontSize: 13, width: '100%' }}
+                    onChange={e => !locked('core') && updateField('startDate', e.target.value)} />
+                </InputWrapper>
                 {errors.startDate && <ErrorText>{errors.startDate}</ErrorText>}
               </FieldGroup>
               <FieldGroup style={{ marginBottom: 0, flex: 1, minWidth: 0 }}>
                 <Label $locked={readOnlyMode}>Fecha cierre *{readOnlyMode && <LockedBadge>No editable</LockedBadge>}</Label>
-                <InputField type="datetime-local" min={form.startDate || today} $error={!!errors.endDate}
-                  value={form.endDate}
-                  readOnly={readOnlyMode}
-                  $locked={readOnlyMode}
-                  style={{ minWidth: 0, padding: '14px 10px', fontSize: 13 }}
-                  onChange={e => !readOnlyMode && updateField('endDate', e.target.value)} />
+                <InputWrapper $tooltipText="Mostrar el selector de fecha y hora locales" $tooltipPosition="bottom" $tooltipAlign="center">
+                  <InputField type="datetime-local" min={form.startDate || today} $error={!!errors.endDate}
+                    title=" "
+                    value={form.endDate}
+                    readOnly={readOnlyMode}
+                    $locked={readOnlyMode}
+                    style={{ minWidth: 0, padding: '14px 10px', fontSize: 13, width: '100%' }}
+                    onChange={e => !readOnlyMode && updateField('endDate', e.target.value)} />
+                </InputWrapper>
                 {errors.endDate && <ErrorText>{errors.endDate}</ErrorText>}
               </FieldGroup>
             </div>

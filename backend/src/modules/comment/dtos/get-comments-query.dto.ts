@@ -27,7 +27,7 @@ export class GetCommentsQueryDto extends PaginationDto {
   @IsIn(['newest', 'oldest'], {
     message: 'El orden permitido para comentarios es newest o oldest.',
   })
-  sort?: 'newest' | 'oldest' = undefined;
+  override sort?: 'newest' | 'oldest' = undefined;
 
   @ApiPropertyOptional({
     description: 'Máximo de comentarios por página',

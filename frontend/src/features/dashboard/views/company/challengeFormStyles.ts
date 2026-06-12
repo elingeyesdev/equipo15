@@ -1,5 +1,6 @@
 import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../../config/theme';
+import { premiumTooltip } from '../../styles/CommonStyles';
 
 export const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(10px); }
@@ -158,6 +159,13 @@ export const LockedBadge = styled.span`
   font-size: 10px; font-weight: 700; background: #f1f3f5;
   color: #9ca3af; padding: 2px 8px; border-radius: 20px;
   text-transform: none; letter-spacing: 0;
+`;
+
+export const InputWrapper = styled.div<{ $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
+  position: relative;
+  width: 100%;
+  display: flex;
+  ${premiumTooltip}
 `;
 
 export const InputField = styled.input<{ $error?: boolean; $locked?: boolean }>`

@@ -5,6 +5,7 @@ import {
   Logger,
   BadRequestException,
 } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { ChallengeRepository } from './challenge.repository';
 import { Challenge, IdeaStatus, WinnerCategory } from '@prisma/client';
 import { CreateChallengeDto } from './dtos/create-challenge.dto';
@@ -208,6 +209,27 @@ export class ChallengeService {
       topFacultades,
       topLeaders,
     };
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async handleExpiredChallenges() {
+    this.logger.log('Ejecutando cron para buscar retos expirados...');
+    try {
+      const result = await this.prisma.challenge.updateMany({
+        where: {
+          status: 'PUBLISHED',
+          submissionsCloseAt: { lt: new Date() },
+        },
+        data: {
+          status: 'EVALUATING',
+        },
+      });
+      if (result.count > 0) {
+        this.logger.log(`Cron: Se actualizaron ${result.count} retos expirados a estado EVALUATING.`);
+      }
+    } catch (error) {
+      this.logger.error('Error al actualizar retos expirados en el cron:', error);
+    }
   }
 
   async getChallengeStats(id: string) {

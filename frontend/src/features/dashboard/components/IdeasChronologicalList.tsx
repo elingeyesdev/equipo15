@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
 import { Sparkles, MessageSquare } from 'lucide-react';
@@ -340,6 +340,55 @@ const SpinnerText = styled.p`
   margin: 0;
 `;
 
+type AnimPhase = 'idle' | 'out-right' | 'banner' | 'hidden-left' | 'in-center';
+
+const SlideContainer = styled.div<{ $phase: AnimPhase }>`
+  transition: ${({ $phase }) => {
+    if ($phase === 'hidden-left') return 'none';
+    if ($phase === 'in-center') return 'transform 1000ms ease-out, opacity 1000ms ease-out';
+    return 'transform 500ms ease-in-out, opacity 500ms ease-in-out';
+  }};
+  transform: ${({ $phase }) => {
+    if ($phase === 'out-right') return 'translateX(100vw)';
+    if ($phase === 'banner') return 'translateX(100vw)';
+    if ($phase === 'hidden-left') return 'translateX(-100vw)';
+    return 'translateX(0)';
+  }};
+  opacity: ${({ $phase }) => ($phase === 'idle' || $phase === 'in-center' ? 1 : 0)};
+`;
+
+const bannerPulse = keyframes`
+  0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.85; transform: translate(-50%, -50%) scale(1.03); }
+`;
+
+const BannerOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+`;
+
+const BannerTitle = styled.h1`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(28px, 6vw, 72px);
+  font-weight: 900;
+  color: white;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  animation: ${bannerPulse} 1.5s ease-in-out infinite;
+  white-space: nowrap;
+  margin: 0;
+`;
+
 const formatRelative = (dateStr?: string): string => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
@@ -399,6 +448,7 @@ interface IdeasChronologicalListProps {
   showAll: boolean;
   onToggleShowAll: () => void;
   isVertical?: boolean;
+  challengeStatus?: string;
 }
 
 const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
@@ -409,9 +459,33 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
   showAll,
   onToggleShowAll,
   isVertical = false,
+  challengeStatus,
 }) => {
   const { userProfile } = useAuth();
   const [localIdeas, setLocalIdeas] = React.useState(ideas);
+  const [animPhase, setAnimPhase] = React.useState<AnimPhase>(
+    challengeStatus === 'EVALUATING' || challengeStatus === 'CLOSED' ? 'in-center' : 'idle'
+  );
+  const hasAnimatedRef = useRef(challengeStatus === 'EVALUATING' || challengeStatus === 'CLOSED');
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  React.useEffect(() => {
+    if (challengeStatus !== 'EVALUATING' || hasAnimatedRef.current) return;
+    hasAnimatedRef.current = true;
+
+    setAnimPhase('out-right');
+
+    const t1 = setTimeout(() => setAnimPhase('banner'), 500);
+    const t2 = setTimeout(() => setAnimPhase('hidden-left'), 3500);
+    const t3 = setTimeout(() => setAnimPhase('in-center'), 3600);
+
+    timersRef.current = [t1, t2, t3];
+
+    return () => {
+      timersRef.current.forEach(clearTimeout);
+      timersRef.current = [];
+    };
+  }, [challengeStatus]);
 
   React.useEffect(() => {
     setLocalIdeas(ideas);
@@ -461,6 +535,12 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
 
   return (
     <Wrapper>
+      {animPhase === 'banner' && (
+        <BannerOverlay>
+          <BannerTitle>EN EVALUACIÓN</BannerTitle>
+        </BannerOverlay>
+      )}
+      <SlideContainer $phase={animPhase}>
       <Header>
         <HeaderLeft>
           <Title>{sortLabel}</Title>
@@ -483,11 +563,11 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
       <TopGrid $count={top3.length} $isVertical={isVertical}>
         {top3.map((idea, i) => {
           const isCurrentUser = userProfile && idea.authorId === userProfile.id;
-          const authorName = idea.isAnonymous
+          const authorName = (idea.isAnonymous && challengeStatus !== 'CLOSED' && challengeStatus !== 'EVALUATING')
             ? 'Anónimo'
             : isCurrentUser && userProfile
-              ? userProfile.displayName || resolveDisplayName(userProfile as any)
-              : idea.author?.displayName || resolveDisplayName(idea.author);
+              ? resolveDisplayName(userProfile as any)
+              : resolveDisplayName(idea.author);
 
           return (
             <TopCard
@@ -523,11 +603,11 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
           {rest.map((idea, i) => {
             const idx = i + 3;
             const isCurrentUser = userProfile && idea.authorId === userProfile.id;
-            const authorName = idea.isAnonymous
+            const authorName = (idea.isAnonymous && challengeStatus !== 'CLOSED' && challengeStatus !== 'EVALUATING')
               ? 'Anónimo'
               : isCurrentUser && userProfile
-                ? userProfile.displayName || resolveDisplayName(userProfile as any)
-                : idea.author?.displayName || resolveDisplayName(idea.author);
+                ? resolveDisplayName(userProfile as any)
+                : resolveDisplayName(idea.author);
 
             return (
               <ExpandedCard
@@ -559,6 +639,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
           })}
         </ExpandedGrid>
       )}
+      </SlideContainer>
     </Wrapper>
   );
 };

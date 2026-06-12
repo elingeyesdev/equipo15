@@ -90,11 +90,12 @@ export class CommentService {
     if (
       normalized !== 'PUBLISHED' &&
       normalized !== 'FINALIST' &&
+      normalized !== 'PROPOSAL' &&
       status !== 'public' &&
       status !== 'top5'
     ) {
       throw new BadRequestException(
-        'Solo se puede comentar en ideas publicadas.',
+        'Solo se puede comentar en ideas publicadas o en propuesta.',
       );
     }
   }
@@ -523,7 +524,6 @@ export class CommentService {
     if (!idea) {
       throw new NotFoundException('La idea solicitada no existe.');
     }
-    this.ensureIdeaAllowsComments(idea.status);
 
     if (query.parentCommentId) {
       const parentComment = await this.commentRepository.findById(

@@ -720,7 +720,7 @@ const PendingBadge = styled.span`
   font-weight: 800;
 `;
 
-type PodiumPhase = 'select' | 'evaluate' | 'done';
+type PodiumPhase = 'select' | 'evaluate' | 'publish' | 'done';
 
 type PodiumStatus = {
   phase: 'SELECT_FINALISTS' | 'AWAITING_JUDGES' | 'COMPLETED';
@@ -966,10 +966,11 @@ export const CompanyPodiumView = () => {
 
   const isCompleted = phase === 'done';
   const canSendToJudges = phase === 'select' && actionLimit > 0 && !readOnlyMode && ideas.length > 0;
-  const canGenerateResults = phase === 'evaluate' && !readOnlyMode && Boolean(podiumStatus?.canGenerateResults) && actionLimit > 0;
-  const isResultsGenerated = phase === 'evaluate' && (podiumStatus?.winnerCount || 0) > 0;
+  const isResultsGenerated = (podiumStatus?.winnerCount || 0) > 0;
+  const effectivePhase: PodiumPhase = phase === 'evaluate' && isResultsGenerated ? 'publish' : phase;
+  const canGenerateResults = effectivePhase === 'evaluate' && !readOnlyMode && Boolean(podiumStatus?.canGenerateResults) && actionLimit > 0;
 
-  const stepIndex = phase === 'select' ? 0 : phase === 'evaluate' ? 1 : 2;
+  const stepIndex = effectivePhase === 'select' ? 0 : effectivePhase === 'evaluate' ? 1 : effectivePhase === 'publish' ? 2 : 3;
 
   const cutLabel = phase === 'select'
     ? 'Finalistas a enviar'
@@ -1040,9 +1041,19 @@ export const CompanyPodiumView = () => {
               </StepLabel>
             </StepItem>
             <StepConnector $done={stepIndex > 1} />
-            <StepItem $active={stepIndex === 2} $done={false}>
-              <StepCircle $active={stepIndex === 2} $done={false}>3</StepCircle>
-              <StepLabel $active={stepIndex === 2} $done={false}>
+            <StepItem $active={stepIndex === 2} $done={stepIndex > 2}>
+              <StepCircle $active={stepIndex === 2} $done={stepIndex > 2}>
+                {stepIndex > 2 ? <CheckCircle size={16} /> : '3'}
+              </StepCircle>
+              <StepLabel $active={stepIndex === 2} $done={stepIndex > 2}>
+                <strong>Publicación de resultados</strong>
+                <span>Declarar ganadores</span>
+              </StepLabel>
+            </StepItem>
+            <StepConnector $done={stepIndex > 2} />
+            <StepItem $active={stepIndex === 3} $done={false}>
+              <StepCircle $active={stepIndex === 3} $done={false}>4</StepCircle>
+              <StepLabel $active={stepIndex === 3} $done={false}>
                 <strong>Podio final</strong>
                 <span>Puntajes consolidados</span>
               </StepLabel>
@@ -1064,7 +1075,7 @@ export const CompanyPodiumView = () => {
           </EvaluationBanner>
         )}
 
-        {phase === 'evaluate' && (
+        {effectivePhase === 'evaluate' && (
           <>
             <EvaluationBanner>
               <BannerIcon><Gavel /></BannerIcon>
@@ -1088,6 +1099,18 @@ export const CompanyPodiumView = () => {
               </ProgressCard>
             )}
           </>
+        )}
+
+        {effectivePhase === 'publish' && (
+          <EvaluationBanner>
+            <BannerIcon><Trophy /></BannerIcon>
+            <BannerContent>
+              <BannerTitle>Publicación de resultados — Paso 3</BannerTitle>
+              <BannerText>
+                Los puntajes técnicos han sido calculados. Revisa el ranking y cuando estés listo, publica los resultados para cerrar el reto.
+              </BannerText>
+            </BannerContent>
+          </EvaluationBanner>
         )}
 
         {phase === 'done' && (
@@ -1147,26 +1170,24 @@ export const CompanyPodiumView = () => {
             </FinalizeBtn>
           )}
 
-          {phase === 'evaluate' && (
-            <>
-              {!isResultsGenerated ? (
-                <FinalizeBtn
-                  onClick={() => !readOnlyMode && podiumStatus?.canGenerateResults && setShowConfirm(true)}
-                  disabled={!canGenerateResults}
-                  title={!podiumStatus?.canGenerateResults ? 'Espera a que los jueces envíen al menos una evaluación' : undefined}
-                >
-                  <Calculator size={18} />
-                  {readOnlyMode ? 'Estás en modo lectura ahora' : 'Calcular puntajes y visualizar podio'}
-                </FinalizeBtn>
-              ) : (
-                <FinalizeBtn
-                  onClick={() => !readOnlyMode && setShowConfirmClose(true)}
-                >
-                  <Trophy size={18} />
-                  {readOnlyMode ? 'Estás en modo lectura ahora' : 'Publicar Resultados'}
-                </FinalizeBtn>
-              )}
-            </>
+          {effectivePhase === 'evaluate' && (
+            <FinalizeBtn
+              onClick={() => !readOnlyMode && podiumStatus?.canGenerateResults && setShowConfirm(true)}
+              disabled={!canGenerateResults}
+              title={!podiumStatus?.canGenerateResults ? 'Espera a que los jueces envíen al menos una evaluación' : undefined}
+            >
+              <Calculator size={18} />
+              {readOnlyMode ? 'Estás en modo lectura ahora' : 'Calcular puntajes y visualizar podio'}
+            </FinalizeBtn>
+          )}
+
+          {effectivePhase === 'publish' && (
+            <FinalizeBtn
+              onClick={() => !readOnlyMode && setShowConfirmClose(true)}
+            >
+              <Trophy size={18} />
+              {readOnlyMode ? 'Estás en modo lectura ahora' : 'Publicar Resultados'}
+            </FinalizeBtn>
           )}
 
           {phase === 'done' && (

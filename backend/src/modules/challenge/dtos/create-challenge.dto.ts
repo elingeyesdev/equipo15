@@ -14,7 +14,7 @@ import { ChallengeStatus } from '../../../common/enums/challenge-status.enum';
 import { IsWithinSixMonths } from '../../../common/validators/is-within-six-months.decorator';
 import { HasMinimumUniqueWords } from '../../../common/validators/has-unique-words.decorator';
 import { NoInsecureUrls } from '../../../common/validators/no-insecure-urls.decorator';
-import { NoNumbers } from '../../../common/validators/no-numbers.decorator';
+
 import { NoExcessiveSymbols } from '../../../common/validators/no-excessive-symbols.decorator';
 import { EvaluationCriteriaItemDto } from './evaluation-criteria-item.dto';
 import { TargetAudienceDto } from './target-audience.dto';
@@ -28,7 +28,6 @@ export class CreateChallengeDto {
   @IsNotEmpty()
   @HasMinimumUniqueWords(0.3)
   @NoInsecureUrls()
-  @NoNumbers()
   @NoExcessiveSymbols(0.3)
   title!: string;
 
