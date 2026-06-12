@@ -507,6 +507,7 @@ export class ChallengeRepository {
           title: true,
           likesCount: true,
           commentsCount: true,
+          finalScore: true,
           isAnonymous: true,
           author: {
             select: {
@@ -552,6 +553,7 @@ export class ChallengeRepository {
           title: i.title,
           likesCount: i.likesCount || 0,
           commentsCount: i.commentsCount || 0,
+          finalScore: i.finalScore || 0,
           impact: (i.likesCount || 0) + (i.commentsCount || 0),
           authorName,
           author: {

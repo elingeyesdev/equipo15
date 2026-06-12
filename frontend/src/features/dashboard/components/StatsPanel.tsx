@@ -197,8 +197,6 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
   const topIdeas = challengeStats?.topIdeas || [];
 
   const handlePodiumClick = (idea: any) => {
-    const el = document.getElementById('ideation-wall');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     onSelectIdea?.(idea);
   };
 
@@ -223,6 +221,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
       <PodiumSection
         topIdeas={topIdeas}
         onSelectIdea={handlePodiumClick}
+        challengeStatus={selectedChallenge?.status}
       />
     </div>
   );

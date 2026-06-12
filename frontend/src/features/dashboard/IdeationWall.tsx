@@ -70,10 +70,12 @@ const IdeationWall = () => {
 
   const handleSelectIdea = useCallback((idea: RawIdea) => {
     setSelectedListIdea(idea as PlaneIdea);
-    setHighlightedIdeaId(idea.id ?? null);
-    const el = document.getElementById('ideation-wall');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, []);
+    if (ds.selectedChallenge?.status !== 'CLOSED') {
+      setHighlightedIdeaId(idea.id ?? null);
+      const el = document.getElementById('ideation-wall');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [ds.selectedChallenge?.status]);
 
   const handleHighlightIdea = useCallback((idea: RawIdea) => {
     setHighlightedIdeaId(idea.id ?? null);
@@ -137,8 +139,9 @@ const IdeationWall = () => {
     if (advFilter.onlyMyIdeas && user) {
       ideas = ideas.filter(idea => (idea as any).authorId === (userProfile as any)?.id || (idea.author as any)?.firebaseUid === user.uid);
     }
-    if (ds.selectedChallenge?.id) {
-      ideas = ideas.filter(idea => idea.challengeId === ds.selectedChallenge.id);
+    const challengeId = ds.selectedChallenge?.id;
+    if (challengeId) {
+      ideas = ideas.filter(idea => idea.challengeId === challengeId);
     }
     if (advFilter.facultyId) {
       ideas = ideas.filter(idea => (idea as any).authorFacultyId === advFilter.facultyId || (idea.author as any)?.studentProfile?.facultyId === advFilter.facultyId || (idea.author as any)?.facultyId === advFilter.facultyId);

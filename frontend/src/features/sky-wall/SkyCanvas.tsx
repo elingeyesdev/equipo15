@@ -289,7 +289,7 @@ const SkyCanvasScene = memo(({ initialIdeas, isLoading = false, progress = 0, ch
             <RaceOverlay onShowPodium={handleShowPodium} />
           )}
 
-          {showPodium && <PodiumScreen ideas={displayIdeas} />}
+          {showPodium && <PodiumScreen ideas={ideas} onSelectIdea={setSelectedIdea} />}
         </Sky>
       </ScrollableSkyContainer>
 

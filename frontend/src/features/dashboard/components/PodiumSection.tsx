@@ -345,6 +345,7 @@ interface TopIdea {
 interface PodiumSectionProps {
   topIdeas: TopIdea[];
   onSelectIdea?: (idea: any) => void;
+  challengeStatus?: string;
 }
 
 const getRankDisplay = (rank: number) => {
@@ -354,8 +355,9 @@ const getRankDisplay = (rank: number) => {
   return { num: String(rank + 1), suffix: 'th' };
 };
 
-const PodiumSection: React.FC<PodiumSectionProps> = ({ topIdeas, onSelectIdea }) => {
+const PodiumSection: React.FC<PodiumSectionProps> = ({ topIdeas, onSelectIdea, challengeStatus }) => {
   const podiumEntries = topIdeas.slice(0, 3);
+  const isClosed = challengeStatus === 'CLOSED';
 
   if (podiumEntries.length === 0) {
     return (
@@ -380,7 +382,7 @@ const PodiumSection: React.FC<PodiumSectionProps> = ({ topIdeas, onSelectIdea })
   return (
     <Grid $count={podiumEntries.length}>
       {podiumEntries.map((idea, i) => {
-        const isEvaluated = idea.finalScore !== undefined && idea.finalScore > 0;
+        const isEvaluated = isClosed || (idea.finalScore !== undefined && idea.finalScore > 0);
         const totalInteractions = (idea.likesCount ?? 0) + (idea.commentsCount ?? 0);
         const authorName = (idea as any).authorName || idea.author?.nickname || idea.author?.name || 'Participante';
         const rankInfo = getRankDisplay(i);
@@ -445,9 +447,9 @@ const PodiumSection: React.FC<PodiumSectionProps> = ({ topIdeas, onSelectIdea })
                 ) : (
                   <FireSvg size={44} className="gradesIcon" id={`fireGradient-${idea.id}`} />
                 )}
-                <p className="gradesBoxLabel">{isEvaluated ? 'SCORE' : 'ON FIRE'}</p>
+                <p className="gradesBoxLabel">{isEvaluated ? 'CALIFICACIÓN' : 'ON FIRE'}</p>
                 <p className="gradesBoxNum">
-                  {isEvaluated ? idea.finalScore?.toFixed(1) : totalInteractions}
+                  {isEvaluated ? (idea.finalScore !== undefined && idea.finalScore > 0 ? idea.finalScore.toFixed(1) : '0.0') : totalInteractions}
                 </p>
               </div>
             </div>

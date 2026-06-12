@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import type { PlaneIdea } from './types';
 import { User, Trophy, Star } from 'lucide-react';
@@ -102,20 +102,53 @@ const PodiumRow = styled.div`
   pointer-events: auto;
 `;
 
-/* ─── card ─── */
+/* ─── card theme ─── */
 
-const glowFirst = css`
-  &::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: 22px;
-    background: linear-gradient(135deg, #FE410A, #FF8C00, #FE410A);
-    background-size: 200% 200%;
-    animation: ${shimmer} 3s linear infinite;
-    z-index: -1;
+const RANK_THEMES: Record<number, {
+  bg: string;
+  border: string;
+  shadow: string;
+  badgeBg: string;
+  textPrimary: string;
+  textSecondary: string;
+  scoreBg: string;
+  scoreText: string;
+  divider: string;
+}> = {
+  1: { // 1st Place (Oro)
+    bg: 'linear-gradient(135deg, #fffbf0, #ffdd87)',
+    border: '#ea9518',
+    shadow: '0 10px 25px rgba(234, 149, 24, 0.2), 0 4px 10px rgba(0,0,0,0.15)',
+    badgeBg: 'linear-gradient(135deg, #ea9518, #f4ea2a)',
+    textPrimary: '#1a1f22',
+    textSecondary: '#6b7578',
+    scoreBg: 'rgba(234, 149, 24, 0.12)',
+    scoreText: '#ea9518',
+    divider: '#ea9518',
+  },
+  2: { // 2nd Place (Plata)
+    bg: 'linear-gradient(135deg, #f3f4f6, #cfd5db)',
+    border: '#7f8c8d',
+    shadow: '0 10px 25px rgba(127, 140, 141, 0.15), 0 4px 10px rgba(0,0,0,0.15)',
+    badgeBg: 'linear-gradient(135deg, #7f8c8d, #bdc3c7)',
+    textPrimary: '#1a1f22',
+    textSecondary: '#6b7578',
+    scoreBg: 'rgba(127, 140, 141, 0.12)',
+    scoreText: '#7f8c8d',
+    divider: '#7f8c8d',
+  },
+  3: { // 3rd Place (Bronce)
+    bg: 'linear-gradient(135deg, #fff2e6, #e6b89c)',
+    border: '#d35400',
+    shadow: '0 10px 25px rgba(211, 84, 0, 0.15), 0 4px 10px rgba(0,0,0,0.15)',
+    badgeBg: 'linear-gradient(135deg, #d35400, #e67e22)',
+    textPrimary: '#1a1f22',
+    textSecondary: '#6b7578',
+    scoreBg: 'rgba(211, 84, 0, 0.12)',
+    scoreText: '#d35400',
+    divider: '#d35400',
   }
-`;
+};
 
 const PodiumCard = styled.div<{ $rank: number }>`
   display: flex;
@@ -124,20 +157,10 @@ const PodiumCard = styled.div<{ $rank: number }>`
   gap: 10px;
   width: ${p => p.$rank === 1 ? '230px' : '200px'};
   border-radius: 20px;
-  background: linear-gradient(
-    170deg,
-    ${p => p.$rank === 1
-      ? 'rgba(72, 80, 84, 0.75) 0%, rgba(30, 30, 30, 0.95) 100%'
-      : 'rgba(72, 80, 84, 0.55) 0%, rgba(38, 38, 38, 0.9) 100%'}
-  );
-  border: 2px solid ${p =>
-    p.$rank === 1 ? '#FE410A' :
-    p.$rank === 2 ? 'rgba(255,255,255,0.2)' :
-    'rgba(255,255,255,0.15)'};
+  background: ${p => RANK_THEMES[p.$rank]?.bg ?? 'white'};
+  border: 2px solid ${p => RANK_THEMES[p.$rank]?.border ?? '#eee'};
   position: relative;
-  box-shadow: ${p => p.$rank === 1
-    ? '0 20px 50px rgba(254, 65, 10, 0.3), 0 8px 20px rgba(0,0,0,0.4)'
-    : '0 20px 45px rgba(0,0,0,0.45)'};
+  box-shadow: ${p => RANK_THEMES[p.$rank]?.shadow ?? '0 10px 25px rgba(0,0,0,0.1)'};
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   padding: ${p => p.$rank === 1 ? '36px 22px 22px' : '32px 18px 18px'};
@@ -145,17 +168,13 @@ const PodiumCard = styled.div<{ $rank: number }>`
   transform-origin: bottom center;
   z-index: ${p => p.$rank === 1 ? 2 : 1};
 
-  ${p => p.$rank === 1 && glowFirst}
-
   ${p => p.$rank === 1 && `
     transform: scale(1.06);
   `}
 
   &:hover {
     transform: ${p => p.$rank === 1 ? 'scale(1.08)' : 'scale(1.03)'};
-    box-shadow: ${p => p.$rank === 1
-      ? '0 24px 56px rgba(254, 65, 10, 0.4), 0 10px 24px rgba(0,0,0,0.45)'
-      : '0 24px 52px rgba(0,0,0,0.5)'};
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
   }
 `;
 
@@ -166,10 +185,7 @@ const RankBadge = styled.div<{ $rank: number }>`
   top: -16px;
   left: 50%;
   transform: translateX(-50%);
-  background: ${p =>
-    p.$rank === 1 ? 'linear-gradient(135deg, #FE410A, #FF8C00)' :
-    p.$rank === 2 ? 'linear-gradient(135deg, #64748b, #485054)' :
-    'linear-gradient(135deg, #b45309, #78350f)'};
+  background: ${p => RANK_THEMES[p.$rank]?.badgeBg ?? '#333'};
   color: white;
   width: 36px;
   height: 36px;
@@ -179,10 +195,8 @@ const RankBadge = styled.div<{ $rank: number }>`
   justify-content: center;
   font-size: 1rem;
   font-weight: 900;
-  box-shadow: 0 4px 14px ${p =>
-    p.$rank === 1 ? 'rgba(254, 65, 10, 0.5)' :
-    'rgba(0,0,0,0.35)'};
-  border: 2px solid rgba(255,255,255,0.25);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  border: 2px solid white;
 `;
 
 /* ─── avatar ─── */
@@ -192,11 +206,8 @@ const AvatarContainer = styled.div<{ $rank: number }>`
   height: ${p => (p.$rank === 1 ? '72px' : '60px')};
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid ${p =>
-    p.$rank === 1 ? '#FE410A' :
-    p.$rank === 2 ? '#64748b' :
-    '#b45309'};
-  background: #485054;
+  border: 3px solid ${p => RANK_THEMES[p.$rank]?.border ?? '#333'};
+  background: #f3f4f6;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -211,10 +222,10 @@ const AvatarContainer = styled.div<{ $rank: number }>`
 
 /* ─── text ─── */
 
-const IdeaTitle = styled.h3`
+const IdeaTitle = styled.h3<{ $rank: number }>`
   font-size: 0.95rem;
-  font-weight: 700;
-  color: #FFFFFF;
+  font-weight: 800;
+  color: ${p => RANK_THEMES[p.$rank]?.textPrimary ?? '#111'};
   margin: 0;
   text-align: center;
   line-height: 1.35;
@@ -223,11 +234,11 @@ const IdeaTitle = styled.h3`
   max-width: 100%;
 `;
 
-const AuthorName = styled.p`
+const AuthorName = styled.p<{ $rank: number }>`
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: ${p => RANK_THEMES[p.$rank]?.textSecondary ?? '#666'};
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
   text-align: center;
 `;
 
@@ -235,20 +246,16 @@ const AuthorName = styled.p`
 
 const ScoreBadge = styled.div<{ $rank: number }>`
   margin-top: auto;
-  background: ${p => p.$rank === 1
-    ? 'linear-gradient(135deg, rgba(254,65,10,0.2), rgba(255,140,0,0.15))'
-    : 'rgba(255, 255, 255, 0.08)'};
+  background: ${p => RANK_THEMES[p.$rank]?.scoreBg ?? '#eee'};
   padding: 6px 16px;
   border-radius: 12px;
   font-size: 0.85rem;
   font-weight: 800;
-  color: ${p => p.$rank === 1 ? '#FF8C00' : 'rgba(255,255,255,0.7)'};
+  color: ${p => RANK_THEMES[p.$rank]?.scoreText ?? '#333'};
   display: flex;
   align-items: center;
   gap: 5px;
-  border: 1px solid ${p => p.$rank === 1
-    ? 'rgba(254,65,10,0.25)'
-    : 'rgba(255,255,255,0.08)'};
+  border: 1px solid ${p => RANK_THEMES[p.$rank]?.border ?? '#ccc'}20;
 `;
 
 /* ─── divider ─── */
@@ -257,18 +264,17 @@ const Divider = styled.div<{ $rank: number }>`
   width: 40px;
   height: 2px;
   border-radius: 2px;
-  background: ${p => p.$rank === 1
-    ? 'linear-gradient(90deg, transparent, #FE410A, transparent)'
-    : 'rgba(255,255,255,0.12)'};
+  background: ${p => RANK_THEMES[p.$rank]?.divider ?? '#eee'}40;
 `;
 
 /* ─── component ─── */
 
 interface PodiumScreenProps {
   ideas: PlaneIdea[];
+  onSelectIdea?: (idea: PlaneIdea) => void;
 }
 
-const PodiumScreen = memo(({ ideas }: PodiumScreenProps) => {
+const PodiumScreen = memo(({ ideas, onSelectIdea }: PodiumScreenProps) => {
   const top3 = useMemo(() => {
     const scored = [...ideas]
       .filter(idea => (idea.finalScore || 0) > 0)
@@ -295,18 +301,18 @@ const PodiumScreen = memo(({ ideas }: PodiumScreenProps) => {
       <PodiumContainer>
         <PodiumRow>
           {top3.map((idea, i) => (
-            <PodiumCard key={idea.id} $rank={i + 1}>
+            <PodiumCard key={idea.id} $rank={i + 1} onClick={() => onSelectIdea?.(idea)}>
               <RankBadge $rank={i + 1}>{i + 1}</RankBadge>
               <AvatarContainer $rank={i + 1}>
                 {idea.authorAvatar ? (
                   <img src={idea.authorAvatar} alt={idea.authorName} />
                 ) : (
-                  <User size={i === 0 ? 32 : 26} color="rgba(255,255,255,0.5)" />
+                  <User size={i === 0 ? 32 : 26} color={RANK_THEMES[i + 1]?.textSecondary ?? '#64748b'} />
                 )}
               </AvatarContainer>
-              <IdeaTitle>{idea.title}</IdeaTitle>
+              <IdeaTitle $rank={i + 1}>{idea.title}</IdeaTitle>
               <Divider $rank={i + 1} />
-              <AuthorName>
+              <AuthorName $rank={i + 1}>
                 {idea.authorRealName || idea.authorName}
               </AuthorName>
               <ScoreBadge $rank={i + 1}>

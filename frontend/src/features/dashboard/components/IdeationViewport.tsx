@@ -171,8 +171,25 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
             </S.DetailCardBody>
             <S.DetailActions>
               {ds.selectedChallenge.status === 'CLOSED' ? (
-                <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                <div style={{ 
+                  padding: '12px 18px', 
+                  background: 'linear-gradient(135deg, #fcfcfc 0%, #f7f9fa 100%)', 
+                  borderRadius: '10px', 
+                  border: '1px solid rgba(72, 80, 84, 0.12)', 
+                  borderLeft: '4px solid #FE410A', 
+                  color: '#475569', 
+                  fontSize: '13.5px', 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '10px', 
+                  fontWeight: 600,
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.03)',
+                  letterSpacing: '0.2px'
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FE410A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
                   Reto finalizado: modo lectura histórica
                 </div>
               ) : (
@@ -260,7 +277,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
               <StatsPanel
                 selectedChallenge={ds.selectedChallenge}
                 challengeStats={ds.challengeStats}
-                onSelectIdea={handleHighlightIdea}
+                onSelectIdea={handleSelectIdea}
                 style={{ marginTop: 32 }}
               />
             </>
@@ -314,7 +331,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                   <StatsPanel
                     selectedChallenge={ds.selectedChallenge}
                     challengeStats={ds.challengeStats}
-                    onSelectIdea={handleHighlightIdea}
+                    onSelectIdea={handleSelectIdea}
                   />
                 </div>
               </S.SplitGridEqual>

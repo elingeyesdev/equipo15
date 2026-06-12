@@ -4,7 +4,7 @@ import { computeSize, computeXPosition, computeScale, computeFloatDuration } fro
 import { Pista8Theme } from '../../config/theme';
 import { FACULTIES } from '../../config/faculties';
 import type { PlaneIdea, WallPhase } from './types';
-import { Flame } from 'lucide-react';
+import { Flame, Star } from 'lucide-react';
 import planeImg from '../../assets/logo_avion.png';
 
 const float = keyframes`
@@ -40,6 +40,13 @@ const badgePop = keyframes`
   60%  { transform: translateX(-50%) scale(1.15); opacity: 1; }
   100% { transform: translateX(-50%) scale(1);   opacity: 1; }
 `;
+
+const highlightWinnerAnim = keyframes`
+  0%   { filter: drop-shadow(0 0 0px rgba(254, 65, 10, 0)); transform: scale(1); }
+  50%  { filter: drop-shadow(0 0 25px rgba(254, 65, 10, 0.9)); transform: scale(1.15); }
+  100% { filter: drop-shadow(0 0 0px rgba(254, 65, 10, 0)); transform: scale(1); }
+`;
+
 
 const PlaneWrapper = styled.div<{
   $x: number;
@@ -132,6 +139,11 @@ const PlaneWrapper = styled.div<{
   &:hover {
     transform: scale(${p => p.$scale * 1.05});
   }
+
+  &.highlight-winner {
+    animation: ${highlightWinnerAnim} 2.5s ease-in-out;
+    z-index: 9999 !important;
+  }
 `;
 
 const AvatarLabel = styled.div<{ $size: number }>`
@@ -185,6 +197,27 @@ const FireBadge = styled.div<{ $size: number }>`
   align-items: center;
   gap: 4px;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+`;
+
+const StarBadge = styled.div<{ $size: number }>`
+  position: absolute;
+  top: calc(100% + 22px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: ${p => Math.max(10, p.$size * 0.15)}px;
+  font-weight: 900;
+  color: #FF8C00;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 3px 8px;
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+  border: 1px solid rgba(255, 140, 0, 0.2);
 `;
 
 const NewBadge = styled.span<{ $intensity: number }>`
@@ -300,9 +333,12 @@ const Plane = memo(
     const zIndex = BASE_Z_INDEX + idea.likesCount;
 
     const facultyFilter = getFacultyFilter(idea.authorFacultyId, idea.authorFacultyName);
+    const showFinalScore = idea.challengeStatus === 'CLOSED';
+    const hasBadge = showFinalScore ? (idea.finalScore ?? 0) > 0 : (idea.fireScore ?? 0) > 0;
 
     return (
       <PlaneWrapper
+        id={`idea-${idea.id}`}
         $x={x}
         $y={idea.laneY}
         $size={size}
@@ -321,14 +357,19 @@ const Plane = memo(
         {idea.createdAt && (
           <DateLabel $size={size}>{formatRelativeDate(idea.createdAt)}</DateLabel>
         )}
-        {(idea.fireScore ?? 0) > 0 && (
+        {showFinalScore && (idea.finalScore ?? 0) > 0 ? (
+          <StarBadge $size={size}>
+            <Star size={Math.max(12, size * 0.18)} fill="#FF8C00" stroke="#FF8C00" />
+            {idea.finalScore?.toFixed(2)}
+          </StarBadge>
+        ) : (idea.fireScore ?? 0) > 0 ? (
           <FireBadge $size={size}>
             <Flame size={Math.max(12, size * 0.18)} fill="#ef4444" stroke="#ef4444" />
             {idea.fireScore}
           </FireBadge>
-        )}
-        {glowIntensity > 0 && <NewBadge $intensity={glowIntensity} style={{ top: (idea.fireScore ?? 0) > 0 ? 'calc(100% + 44px)' : 'calc(100% + 20px)' }}>NUEVA</NewBadge>}
-        {isHighlighted && <NewBadge $intensity={1} style={{ top: (idea.fireScore ?? 0) > 0 ? 'calc(100% + 44px)' : 'calc(100% + 20px)' }}>✦ SELECCIONADA</NewBadge>}
+        ) : null}
+        {glowIntensity > 0 && <NewBadge $intensity={glowIntensity} style={{ top: hasBadge ? 'calc(100% + 48px)' : 'calc(100% + 20px)' }}>NUEVA</NewBadge>}
+        {isHighlighted && <NewBadge $intensity={1} style={{ top: hasBadge ? 'calc(100% + 48px)' : 'calc(100% + 20px)' }}>✦ SELECCIONADA</NewBadge>}
       </PlaneWrapper>
     );
   },
