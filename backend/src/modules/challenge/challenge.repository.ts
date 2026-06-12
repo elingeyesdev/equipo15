@@ -200,6 +200,7 @@ export class ChallengeRepository {
         likesCount: true,
         commentsCount: true,
         createdAt: true,
+        authorId: true,
       },
       orderBy: [{ finalScore: 'desc' }, { createdAt: 'asc' }],
     });
@@ -502,6 +503,12 @@ export class ChallengeRepository {
   }
 
   async getChallengeImpactStats(challengeId: string) {
+    const challenge = await this.prisma.challenge.findUnique({
+      where: { id: challengeId },
+      select: { status: true }
+    });
+    const isClosed = challenge?.status === 'CLOSED';
+
     const activeStatuses: IdeaStatus[] = [
       IdeaStatus.PUBLISHED,
       IdeaStatus.FINALIST,
@@ -541,7 +548,9 @@ export class ChallengeRepository {
       }),
       this.prisma.idea.findMany({
         where: { challengeId, status: { in: activeStatuses }, deletedAt: null },
-        orderBy: [{ likesCount: 'desc' }, { commentsCount: 'desc' }],
+        orderBy: isClosed 
+          ? [{ finalScore: 'desc' }, { likesCount: 'desc' }]
+          : [{ likesCount: 'desc' }, { commentsCount: 'desc' }],
         take: 5,
         select: {
           id: true,

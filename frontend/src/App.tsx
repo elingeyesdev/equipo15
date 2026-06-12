@@ -4,12 +4,14 @@ import { Toaster } from 'sonner';
 import { GlobalErrorBoundary } from './components/errors/GlobalErrorBoundary';
 import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
+import { FCMListener } from './components/FCMListener';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <GlobalErrorBoundary>
+          <FCMListener />
           <SocketBridge />
           <AppRoutes />
           <Toaster

@@ -254,13 +254,11 @@ const DateLabel = styled.span`
   color: #c0c8d0;
 `;
 
-const ExpandedGrid = styled(motion.div)`
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 1.5rem;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding-bottom: 16px;
+const ExpandedGrid = styled(motion.div)<{ $isVertical?: boolean }>`
+  display: grid;
+  grid-template-columns: ${({ $isVertical }) => $isVertical ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))'};
+  gap: 20px;
+  width: 100%;
   animation: ${fadeIn} 0.35s ease both;
 
   &::-webkit-scrollbar {
@@ -406,11 +404,9 @@ const formatRelative = (dateStr?: string): string => {
 
 const rawToPlane = (idea: RawIdea, index: number, userProfile?: any): PlaneIdea => {
   const isCurrentUser = userProfile && idea.authorId === userProfile.id;
-  const authorName = idea.isAnonymous
-    ? 'Anónimo'
-    : isCurrentUser && userProfile
-      ? userProfile.displayName || resolveDisplayName(userProfile as any)
-      : idea.author?.displayName || resolveDisplayName(idea.author);
+  const authorName = isCurrentUser && userProfile
+    ? userProfile.displayName || resolveDisplayName(userProfile as any)
+    : idea.author?.displayName || resolveDisplayName(idea.author);
 
   return {
   id: idea.id ?? idea._id ?? String(index),
@@ -532,6 +528,8 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
 
   const top3 = localIdeas.slice(0, 3);
   const rest = localIdeas.slice(3);
+  const hasScores = localIdeas.some(idea => (idea.fireScore || 0) > 0);
+  const shouldShowPodiumCards = challengeStatus !== 'EVALUATING' && (challengeStatus !== 'CLOSED' || hasScores);
 
   return (
     <Wrapper>
@@ -560,65 +558,100 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
         )}
       </Header>
 
-      <TopGrid $count={top3.length} $isVertical={isVertical}>
-        {top3.map((idea, i) => {
-          const isCurrentUser = userProfile && idea.authorId === userProfile.id;
-          const authorName = (idea.isAnonymous && challengeStatus !== 'CLOSED' && challengeStatus !== 'EVALUATING')
-            ? 'Anónimo'
-            : isCurrentUser && userProfile
-              ? resolveDisplayName(userProfile as any)
-              : resolveDisplayName(idea.author);
-
-          return (
-            <TopCard
-              key={idea.id ?? idea._id ?? i}
-              $rank={i}
-              $idx={i}
-              $isVertical={isVertical}
-              onClick={() => onSelectIdea?.(rawToPlane(idea, i, userProfile))}
-            >
-              <MedalBadge $rank={i}>{medalStyles[i]?.label}</MedalBadge>
-
-              <CardTitle>{idea.title}</CardTitle>
-              <CardAuthor>por {authorName}</CardAuthor>
-
-              <CardStats $isVertical={isVertical}>
-                <StatItem $tooltipText="Interacciones totales">
-                  <Sparkles size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
-                  <StatValue>{idea.likesCount ?? 0}</StatValue>
-                </StatItem>
-                <StatItem $tooltipText="Comentarios">
-                  <MessageSquare size={14} />
-                  <StatValue>{idea.commentsCount ?? 0}</StatValue>
-                </StatItem>
-                <DateLabel>{formatRelative(idea.createdAt)}</DateLabel>
-              </CardStats>
-            </TopCard>
-          );
-        })}
-      </TopGrid>
-
-      {showAll && rest.length > 0 && (
-        <ExpandedGrid layout>
-          {rest.map((idea, i) => {
-            const idx = i + 3;
-            const isCurrentUser = userProfile && idea.authorId === userProfile.id;
-            const authorName = (idea.isAnonymous && challengeStatus !== 'CLOSED' && challengeStatus !== 'EVALUATING')
-              ? 'Anónimo'
-              : isCurrentUser && userProfile
+      {shouldShowPodiumCards ? (
+        <>
+          <TopGrid $count={top3.length} $isVertical={isVertical}>
+            {top3.map((idea, i) => {
+              const isCurrentUser = userProfile && idea.authorId === userProfile.id;
+              const authorName = isCurrentUser && userProfile
                 ? resolveDisplayName(userProfile as any)
                 : resolveDisplayName(idea.author);
+
+              return (
+                <TopCard
+                  key={idea.id ?? idea._id ?? i}
+                  $rank={i}
+                  $idx={i}
+                  $isVertical={isVertical}
+                  onClick={() => onSelectIdea?.(rawToPlane(idea, i, userProfile))}
+                >
+                  <MedalBadge $rank={i}>{medalStyles[i]?.label}</MedalBadge>
+
+                  <CardTitle>{idea.title}</CardTitle>
+                  <CardAuthor>por {authorName}</CardAuthor>
+
+                  <CardStats $isVertical={isVertical}>
+                    <StatItem $tooltipText="Interacciones totales">
+                      <Sparkles size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
+                      <StatValue>{idea.likesCount ?? 0}</StatValue>
+                    </StatItem>
+                    <StatItem $tooltipText="Comentarios">
+                      <MessageSquare size={14} />
+                      <StatValue>{idea.commentsCount ?? 0}</StatValue>
+                    </StatItem>
+                    <DateLabel>{formatRelative(idea.createdAt)}</DateLabel>
+                  </CardStats>
+                </TopCard>
+              );
+            })}
+          </TopGrid>
+
+          {showAll && rest.length > 0 && (
+            <ExpandedGrid layout $isVertical={isVertical}>
+              {rest.map((idea, i) => {
+                const idx = i + 3;
+                const isCurrentUser = userProfile && idea.authorId === userProfile.id;
+                const authorName = isCurrentUser && userProfile
+                  ? resolveDisplayName(userProfile as any)
+                  : resolveDisplayName(idea.author);
+
+                return (
+                  <ExpandedCard
+                    layout
+                    key={idea.id ?? idea._id ?? idx}
+                    $rank={idx}
+                    $idx={i}
+                    onClick={() => onSelectIdea?.(rawToPlane(idea, idx, userProfile))}
+                  >
+                    <ExpandedBadge $rank={idx}>#{idx + 1}</ExpandedBadge>
+                    
+                    <CardTitle>{idea.title}</CardTitle>
+                    <CardAuthor>por {authorName}</CardAuthor>
+
+                    <CardStats>
+                      <StatItem $tooltipText="Interacciones totales">
+                        <Sparkles size={14} fill={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'none'} stroke={(idea.likesCount ?? 0) > 0 ? '#ef4444' : 'currentColor'} />
+                        <StatValue>{idea.likesCount ?? 0}</StatValue>
+                      </StatItem>
+                      <StatItem $tooltipText="Comentarios">
+                        <MessageSquare size={14} />
+                        <StatValue>{idea.commentsCount ?? 0}</StatValue>
+                      </StatItem>
+                    </CardStats>
+
+                    <DateLabel>{formatRelative(idea.createdAt)}</DateLabel>
+                  </ExpandedCard>
+                );
+              })}
+            </ExpandedGrid>
+          )}
+        </>
+      ) : (
+        <ExpandedGrid layout $isVertical={!showAll}>
+          {(showAll ? localIdeas : top3).map((idea, i) => {
+            const isCurrentUser = userProfile && idea.authorId === userProfile.id;
+            const authorName = isCurrentUser && userProfile
+              ? resolveDisplayName(userProfile as any)
+              : resolveDisplayName(idea.author);
 
             return (
               <ExpandedCard
                 layout
-                key={idea.id ?? idea._id ?? idx}
-                $rank={idx}
+                key={idea.id ?? idea._id ?? i}
+                $rank={i}
                 $idx={i}
-                onClick={() => onSelectIdea?.(rawToPlane(idea, idx, userProfile))}
+                onClick={() => onSelectIdea?.(rawToPlane(idea, i, userProfile))}
               >
-                <ExpandedBadge $rank={idx}>#{idx + 1}</ExpandedBadge>
-                
                 <CardTitle>{idea.title}</CardTitle>
                 <CardAuthor>por {authorName}</CardAuthor>
 

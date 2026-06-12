@@ -83,6 +83,7 @@ enum NotifType {
   CHALLENGE_CLOSED
   WINNER_ANNOUNCED
   PENALTY_APPLIED
+  JUDGE_REMOVED
 }
 
 enum PenaltyReason {

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { EvaluationRepository } from './evaluation.repository';
 import { UserService } from '../user/user.service';
+import { NotificationService } from '../notification/notification.service';
 
 type EvaluationScoreRow = {
   score: number;
@@ -38,6 +39,7 @@ export class EvaluationService {
   constructor(
     private readonly evaluationRepository: EvaluationRepository,
     private readonly userService: UserService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async evaluateIdea(evaluationData: any, userRole: string): Promise<any> {
@@ -57,6 +59,18 @@ export class EvaluationService {
     this.logger.log(
       `Idea evaluada: ID ${evaluation.ideaId} por Juez ${evaluation.judgeId} con ${evaluation.scores?.length || 0} criterios evaluados`,
     );
+
+    try {
+      const ideaContext = await this.evaluationRepository.findIdeaContext(evaluation.ideaId);
+      if (ideaContext?.authorId) {
+        const judgeName = evaluation.judge?.displayName || 'Un juez';
+        const challengeTitle = ideaContext.challenge?.title || 'un reto';
+        await this.notificationService.notifyEvaluationReceived(ideaContext.authorId, judgeName, challengeTitle);
+      }
+    } catch (error) {
+      this.logger.error('Error enviando notificación de evaluación:', error);
+    }
+
     return evaluation;
   }
 

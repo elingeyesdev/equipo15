@@ -45,6 +45,7 @@ export class EvaluationRepository {
       where: { id: ideaId, deletedAt: null },
       select: {
         id: true,
+        authorId: true,
         title: true,
         finalScore: true,
         challenge: {

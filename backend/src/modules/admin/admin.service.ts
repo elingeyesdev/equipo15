@@ -11,6 +11,7 @@ import { CreateFacultyDto } from './dto/create-faculty.dto';
 import { UpdateFacultyDto } from './dto/update-faculty.dto';
 import { CreateAllowedDomainDto } from './dto/create-allowed-domain.dto';
 import { RedisService } from '../../infrastructure/redis/redis.module';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class AdminService {
@@ -19,6 +20,7 @@ export class AdminService {
   constructor(
     private readonly adminRepository: AdminRepository,
     private readonly redisService: RedisService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async getGlobalAnalytics() {
@@ -99,6 +101,19 @@ export class AdminService {
       if (result.user.firebaseUid) {
         await this.redisService.del(`role:${result.user.firebaseUid}`);
       }
+
+      await this.notificationService.notifyRoleChanged(userId, newRole);
+
+      if (result.removedChallenges && result.removedChallenges.length > 0) {
+        for (const challenge of result.removedChallenges) {
+          await this.notificationService.notifyJudgeRemoved(
+            challenge.companyUserId,
+            result.user.displayName || 'Un juez',
+            challenge.challengeTitle
+          );
+        }
+      }
+
       this.logger.log(
         `[ROLE_CHANGE] Usuario "${result.user.email}" (${userId}): ${result.previousRole} → ${result.newRole}`,
       );

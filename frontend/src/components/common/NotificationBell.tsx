@@ -1,0 +1,282 @@
+import React, { useState, useEffect, useRef } from 'react';
+import styled, { keyframes, css } from 'styled-components';
+import { Bell, Loader2 } from 'lucide-react';
+import { notificationService } from '@/services/notification.service';
+import type { Notification } from '@/services/notification.service';
+import { Pista8Theme } from '@/config/theme';
+import { useNavigate } from 'react-router-dom';
+
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+const Container = styled.div`
+  position: relative;
+  display: inline-block;
+  z-index: 9999;
+`;
+
+const bellRing = keyframes`
+  0%, 100% { transform-origin: top; }
+  15% { transform: rotateZ(10deg); }
+  30% { transform: rotateZ(-10deg); }
+  45% { transform: rotateZ(5deg); }
+  60% { transform: rotateZ(-5deg); }
+  75% { transform: rotateZ(2deg); }
+`;
+
+const BellButton = styled.button<{ $hasUnread: boolean }>`
+  width: 44px;
+  height: 44px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FE410A;
+  border-radius: 50%;
+  cursor: pointer;
+  transition-duration: .3s;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.13);
+  border: none;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    path {
+      fill: white;
+    }
+  }
+
+  &:hover {
+    background-color: #e53a09;
+    svg {
+      animation: ${bellRing} 0.9s both;
+    }
+  }
+
+  &:active {
+    transform: scale(0.8);
+  }
+
+  ${({ $hasUnread }) =>
+    $hasUnread &&
+    css`
+      svg {
+        animation: ${bellRing} 2s ease-in-out infinite;
+      }
+    `}
+`;
+
+const Badge = styled.span`
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  background-color: #fff;
+  color: #FE410A;
+  border: 2px solid #FE410A;
+  font-size: 10px;
+  font-weight: 800;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const Dropdown = styled.div<{ $open: boolean }>`
+  position: absolute;
+  top: 100%;
+  right: -50px;
+  width: 320px;
+  max-height: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
+  overflow-y: auto;
+  z-index: 9999;
+  display: ${({ $open }) => ($open ? 'block' : 'none')};
+  margin-top: 15px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+`;
+
+const Header = styled.div`
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 800;
+  font-size: 14px;
+  color: #0f172a;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+`;
+
+const NotificationList = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const NotificationItem = styled.div<{ $unread: boolean }>`
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  background: ${({ $unread }) => ($unread ? '#f8fafc' : 'white')};
+  transition: background 0.2s;
+
+  &:hover {
+    background: #f1f5f9;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const NotificationTitle = styled.div`
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+`;
+
+const NotificationBody = styled.div`
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+`;
+
+const NotificationTime = styled.div`
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 6px;
+`;
+
+const EmptyState = styled.div`
+  padding: 30px 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+`;
+
+export const NotificationBell: React.FC = () => {
+  const [open, setOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  const fetchUnreadCount = async () => {
+    try {
+      const count = await notificationService.getUnreadCount();
+      setUnreadCount(count);
+    } catch (error) {
+      console.error('Error fetching unread count', error);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const data = await notificationService.getMyInbox();
+      setNotifications(data);
+    } catch (error) {
+      console.error('Error fetching notifications', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 10000); // Poll every 10 seconds for real-time feel
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      fetchNotifications();
+    }
+  }, [open]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleNotificationClick = async (notif: Notification) => {
+    if (!notif.readAt) {
+      try {
+        await notificationService.markAsRead(notif.id);
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === notif.id ? { ...n, readAt: new Date().toISOString() } : n))
+        );
+      } catch (error) {
+        console.error('Error marking as read', error);
+      }
+    }
+
+    setOpen(false);
+
+    if (notif.referenceType === 'IDEA' && notif.referenceId) {
+      // You can implement custom routing logic here
+      navigate('/dashboard/ideacion');
+    }
+  };
+
+  return (
+    <Container ref={dropdownRef}>
+      <BellButton $hasUnread={unreadCount > 0} onClick={() => setOpen(!open)}>
+        <svg viewBox="0 0 448 512" className="bell"><path d="M224 0c-17.7 0-32 14.3-32 32V49.9C119.5 61.4 64 124.2 64 200v33.4c0 45.4-15.5 89.5-43.8 124.9L5.3 377c-5.8 7.2-6.9 17.1-2.9 25.4S14.8 416 24 416H424c9.2 0 17.6-5.3 21.6-13.6s2.9-18.2-2.9-25.4l-14.9-18.6C399.5 322.9 384 278.8 384 233.4V200c0-75.8-55.5-138.6-128-150.1V32c0-17.7-14.3-32-32-32zm0 96h8c57.4 0 104 46.6 104 104v33.4c0 47.9 13.9 94.6 39.7 134.6H72.3C98.1 328 112 281.3 112 233.4V200c0-57.4 46.6-104 104-104h8zm64 352H224 160c0 17 6.7 33.3 18.7 45.3s28.3 18.7 45.3 18.7s33.3-6.7 45.3-18.7s18.7-28.3 18.7-45.3z" /></svg>
+        {unreadCount > 0 && <Badge>{unreadCount > 9 ? '9+' : unreadCount}</Badge>}
+      </BellButton>
+
+      <Dropdown $open={open}>
+        <Header>Notificaciones</Header>
+        {loading ? (
+          <EmptyState>
+            <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+          </EmptyState>
+        ) : !Array.isArray(notifications) || notifications.length === 0 ? (
+          <EmptyState>No tienes notificaciones.</EmptyState>
+        ) : (
+          <NotificationList>
+            {notifications.map((notif) => (
+              <NotificationItem
+                key={notif.id}
+                $unread={!notif.readAt}
+                onClick={() => handleNotificationClick(notif)}
+              >
+                <NotificationTitle>{notif.title}</NotificationTitle>
+                <NotificationBody>{notif.body}</NotificationBody>
+                <NotificationTime>
+                  {new Date(notif.createdAt).toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </NotificationTime>
+              </NotificationItem>
+            ))}
+          </NotificationList>
+        )}
+      </Dropdown>
+    </Container>
+  );
+};

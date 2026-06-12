@@ -245,6 +245,36 @@ export class AdminRepository {
         };
       }
 
+      let removedChallenges: Array<{ challengeTitle: string; companyUserId: string }> = [];
+
+      if (previousRole === 'JUDGE' && newRole === 'USER') {
+        const assignments = await tx.challengeJudge.findMany({
+          where: { judgeId: userId },
+          include: { challenge: { select: { id: true, title: true, authorId: true } } },
+        });
+
+        for (const assignment of assignments) {
+          const hasEvaluations = await tx.evaluation.findFirst({
+            where: { judgeId: userId, idea: { challengeId: assignment.challengeId } },
+          });
+
+          if (!hasEvaluations) {
+            await tx.challengeJudge.delete({
+              where: {
+                challengeId_judgeId: {
+                  challengeId: assignment.challengeId,
+                  judgeId: userId,
+                },
+              },
+            });
+            removedChallenges.push({
+              challengeTitle: assignment.challenge.title,
+              companyUserId: assignment.challenge.authorId,
+            });
+          }
+        }
+      }
+
       const updatedUser = await tx.user.update({
         where: { id: userId },
         data: { role: newRole },
@@ -268,6 +298,7 @@ export class AdminRepository {
         previousRole,
         newRole,
         changed: true,
+        removedChallenges,
       };
     });
   }

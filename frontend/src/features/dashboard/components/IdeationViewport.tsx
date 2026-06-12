@@ -11,6 +11,7 @@ import PenaltyBanner from '../../../components/common/PenaltyBanner';
 import Pista8Logo from '../../../components/icons/Pista8Logo';
 import AdvancedFilter from './AdvancedFilter';
 import InfoTooltip from '../../../components/common/InfoTooltip';
+import { NotificationBell } from '../../../components/common/NotificationBell';
 import type { AdvancedFilterState } from './AdvancedFilter';
 import type { RawIdea } from '../../../features/sky-wall/types';
 import type { Challenge } from '../../../types/models';
@@ -125,6 +126,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
             value={ds.searchQuery}
             onChange={ds.setSearchQuery}
           />
+          <NotificationBell />
           <S.HamburgerBtn onClick={() => ds.setSidebarOpen(true)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" />

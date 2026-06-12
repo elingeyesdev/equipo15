@@ -15,6 +15,7 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 import { UserService, UserResponse } from '../user/user.service';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { RedisService } from '../../infrastructure/redis/redis.module';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class ChallengeService {
@@ -25,6 +26,7 @@ export class ChallengeService {
     private readonly userService: UserService,
     private readonly prisma: PrismaService,
     private readonly redisService: RedisService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async getUserByUid(uid: string): Promise<UserResponse | null> {
@@ -439,7 +441,8 @@ export class ChallengeService {
         );
       }
     } else {
-      sortedIdeas = [...ideas].sort((a, b) => {
+      sortedIdeas = [...ideas] as any;
+      sortedIdeas.sort((a: any, b: any) => {
         let valA = 0;
         let valB = 0;
 
@@ -511,6 +514,14 @@ export class ChallengeService {
         `Failed to invalidate public ideas cache: ${err.message}`,
       );
     });
+
+    if (isGeneratingResults && officialPodium.length > 0) {
+      const winnersToNotify = officialPodium.map(idea => ({
+        userId: idea.authorId,
+        ideaId: idea.id,
+      }));
+      await this.notificationService.notifyWinners(winnersToNotify, challenge.id, challenge.title);
+    }
 
     return {
       success: true,

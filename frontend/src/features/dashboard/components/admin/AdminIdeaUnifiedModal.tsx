@@ -16,6 +16,7 @@ import { ideaService } from '@/services/idea.service';
 import { evaluationService, type IdeaEvaluationBreakdown } from '@/services/evaluation.service';
 import { commentService } from '@/services/comment.service';
 import { CommentModerationModal } from './CommentModerationModal';
+import { premiumTooltip, fadeUp } from '../../styles/CommonStyles';
 
 import {
   AdminModalOverlay,
@@ -84,6 +85,7 @@ const TabContent = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
+  animation: ${fadeUp} 0.3s ease-out;
 `;
 
 const StatusBadge = styled.span<{ $tone: string }>`
@@ -372,7 +374,8 @@ const CommentText = styled.p`
   word-break: break-word;
 `;
 
-const CommentActionBtn = styled.button`
+const CommentActionBtn = styled.button<{ $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
+  ${premiumTooltip}
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -637,7 +640,9 @@ export function AdminIdeaUnifiedModal({
           </CommentContentCol>
           <CommentActionBtn
             type="button"
-            title="Moderar"
+            $tooltipText="Moderar"
+            $tooltipPosition="top"
+            $tooltipAlign="center"
             onClick={() => setSelectedCommentIdForMod(node.id)}
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 69 14" className="svgIcon bin-top">
@@ -716,7 +721,7 @@ export function AdminIdeaUnifiedModal({
             </TabButton>
           </TabBar>
 
-          <TabContent>
+          <TabContent key={activeTab}>
             {/* TABS 1: PROPUESTA */}
             {activeTab === 'propuesta' && (
               <>
