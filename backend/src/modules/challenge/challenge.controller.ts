@@ -146,9 +146,13 @@ export class ChallengesController {
   @Roles('judge')
   @ApiOperation({
     summary: 'Get challenges assigned to the authenticated judge (E3.2)',
-    description: 'Returns all challenges where the current user is assigned as a judge.',
+    description:
+      'Returns all challenges where the current user is assigned as a judge.',
   })
-  @ApiResponse({ status: 200, description: 'Assigned challenges returned successfully.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Assigned challenges returned successfully.',
+  })
   getAssignedChallengesForJudge(@Request() req: AuthenticatedRequest) {
     return this.challengeService.getAssignedChallengesForJudge(req.user.uid);
   }
@@ -163,7 +167,10 @@ export class ChallengesController {
     description:
       'Returns ideas with FINALIST status from challenges where the current user is assigned as a judge. Includes an "evaluated" flag per idea.',
   })
-  @ApiResponse({ status: 200, description: 'Finalist ideas returned successfully.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Finalist ideas returned successfully.',
+  })
   getFinalistIdeasForJudge(@Request() req: AuthenticatedRequest) {
     return this.challengeService.getFinalistIdeasForJudge(req.user.uid);
   }
@@ -203,8 +210,13 @@ export class ChallengesController {
   @Get(':id/criteria')
   @UseGuards(RolesGuard)
   @Roles('judge', 'company', 'admin')
-  @ApiOperation({ summary: 'Get active evaluation criteria for a challenge (E3.1)' })
-  @ApiResponse({ status: 200, description: 'Active criteria returned successfully.' })
+  @ApiOperation({
+    summary: 'Get active evaluation criteria for a challenge (E3.1)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Active criteria returned successfully.',
+  })
   getCriteriaForChallenge(@Param('id') id: string) {
     return this.challengeService.getCriteriaForChallenge(id);
   }
@@ -237,8 +249,13 @@ export class ChallengesController {
   @Get(':id/podium-ideas')
   @UseGuards(RolesGuard)
   @Roles('company')
-  @ApiOperation({ summary: 'Get ideas for company podium management (Company only)' })
-  @ApiResponse({ status: 200, description: 'Podium ideas returned successfully.' })
+  @ApiOperation({
+    summary: 'Get ideas for company podium management (Company only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Podium ideas returned successfully.',
+  })
   getPodiumIdeas(
     @Param('id') id: string,
     @Request() req: AuthenticatedRequest,
@@ -249,8 +266,13 @@ export class ChallengesController {
   @Get(':id/podium-status')
   @UseGuards(RolesGuard)
   @Roles('company')
-  @ApiOperation({ summary: 'Get podium workflow status for a challenge (Company only)' })
-  @ApiResponse({ status: 200, description: 'Podium status returned successfully.' })
+  @ApiOperation({
+    summary: 'Get podium workflow status for a challenge (Company only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Podium status returned successfully.',
+  })
   getPodiumStatus(
     @Param('id') id: string,
     @Request() req: AuthenticatedRequest,
@@ -280,19 +302,33 @@ export class ChallengesController {
   @Roles('company')
   @ApiOperation({
     summary: 'Export raw evaluation data as Excel (E3.3)',
-    description: 'Generates an .xlsx file with all disaggregated scores and judge feedback for a challenge.',
+    description:
+      'Generates an .xlsx file with all disaggregated scores and judge feedback for a challenge.',
   })
-  @ApiResponse({ status: 200, description: 'Excel file downloaded successfully.' })
-  @Header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+  @ApiResponse({
+    status: 200,
+    description: 'Excel file downloaded successfully.',
+  })
+  @Header(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  )
   async exportEvaluations(
     @Param('id') id: string,
     @Request() req: AuthenticatedRequest,
     @Res() res: Response,
   ) {
     try {
-      const { buffer, fileName } = await this.challengeService.generateEvaluationExcel(id, req.user.uid);
-      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      const { buffer, fileName } =
+        await this.challengeService.generateEvaluationExcel(id, req.user.uid);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${fileName}"`,
+      );
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
       res.send(buffer);
     } catch (error) {
       console.error('Error exporting evaluations:', error);
@@ -304,8 +340,13 @@ export class ChallengesController {
   @Patch(':id/close')
   @UseGuards(RolesGuard)
   @Roles('company', 'admin')
-  @ApiOperation({ summary: 'Close a challenge indefinitely (Company/Admin only)' })
-  @ApiResponse({ status: 200, description: 'The challenge has been marked as CLOSED.' })
+  @ApiOperation({
+    summary: 'Close a challenge indefinitely (Company/Admin only)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'The challenge has been marked as CLOSED.',
+  })
   closeChallenge(
     @Param('id') id: string,
     @Request() req: AuthenticatedRequest,

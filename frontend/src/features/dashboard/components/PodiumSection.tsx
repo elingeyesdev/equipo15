@@ -384,7 +384,7 @@ const PodiumSection: React.FC<PodiumSectionProps> = ({ topIdeas, onSelectIdea, c
       {podiumEntries.map((idea, i) => {
         const isEvaluated = isClosed || (idea.finalScore !== undefined && idea.finalScore > 0);
         const totalInteractions = (idea.likesCount ?? 0) + (idea.commentsCount ?? 0);
-        const authorName = (idea as any).authorName || idea.author?.nickname || idea.author?.name || 'Participante';
+        const authorName = (idea as any).authorRealName || (idea.author as any)?.displayName || (idea as any).authorName || idea.author?.nickname || idea.author?.name || 'Participante';
         const rankInfo = getRankDisplay(i);
         const config = RANK_CONFIG[i] || RANK_CONFIG[0];
         const medal = config.medal;

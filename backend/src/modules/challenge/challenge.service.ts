@@ -255,12 +255,20 @@ export class ChallengeService {
     const challenge = await this.challengeRepository.findById(challengeId);
     if (!challenge) throw new NotFoundException('Reto no encontrado');
 
-    if (challenge.authorId !== user.id && (user.role as any) !== 'admin' && user.role !== 'ADMIN') {
-      throw new ForbiddenException('No tienes permisos para asignar jueces a este reto.');
+    if (
+      challenge.authorId !== user.id &&
+      (user.role as any) !== 'admin' &&
+      user.role !== 'ADMIN'
+    ) {
+      throw new ForbiddenException(
+        'No tienes permisos para asignar jueces a este reto.',
+      );
     }
 
     if (dto.judgeIds.length > 5) {
-      throw new ForbiddenException('No se pueden asignar más de 5 jueces a un reto.');
+      throw new ForbiddenException(
+        'No se pueden asignar más de 5 jueces a un reto.',
+      );
     }
 
     return this.challengeRepository.assignJudges(
@@ -309,7 +317,8 @@ export class ChallengeService {
 
     const stats = await this.challengeRepository.getPodiumStatus(challengeId);
 
-    let phase: 'SELECT_FINALISTS' | 'AWAITING_JUDGES' | 'COMPLETED' = 'SELECT_FINALISTS';
+    let phase: 'SELECT_FINALISTS' | 'AWAITING_JUDGES' | 'COMPLETED' =
+      'SELECT_FINALISTS';
     if (challenge.status === 'CLOSED') {
       phase = 'COMPLETED';
     } else if (challenge.status === 'EVALUATING') {
@@ -381,8 +390,9 @@ export class ChallengeService {
       );
     }
 
-    let scoreSummary: Awaited<ReturnType<typeof this.recalculateFinalScores>> | null =
-      null;
+    let scoreSummary: Awaited<
+      ReturnType<typeof this.recalculateFinalScores>
+    > | null = null;
     let sortedIdeas: Awaited<
       ReturnType<ChallengeRepository['getRankedIdeasByFinalScore']>
     > = [];
@@ -475,7 +485,9 @@ export class ChallengeService {
     }
 
     await this.redisService.delByPrefix('public:').catch((err) => {
-      this.logger.error(`Failed to invalidate public ideas cache: ${err.message}`);
+      this.logger.error(
+        `Failed to invalidate public ideas cache: ${err.message}`,
+      );
     });
 
     return {
@@ -638,7 +650,7 @@ export class ChallengeService {
       await this.challengeRepository.getEvaluationDataForExport(challengeId);
 
     // 3. Build workbook
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+
     const ExcelJS = require('exceljs');
     const workbook = new (ExcelJS.Workbook || ExcelJS.default?.Workbook)();
     workbook.creator = 'Pista8';
@@ -657,7 +669,7 @@ export class ChallengeService {
 
     // ── Sheet 1: Evaluaciones Detalladas ──
     const detailSheet = workbook.addWorksheet('Evaluaciones Detalladas');
-    
+
     // Base columns
     const columns: any[] = [
       { header: 'Posición', key: 'position', width: 10 },
@@ -672,7 +684,11 @@ export class ChallengeService {
 
     // Dynamic criteria columns
     dynamicCriteria.forEach((cName) => {
-      columns.push({ header: `Nota: ${cName}`, key: `crit_${cName}`, width: 18 });
+      columns.push({
+        header: `Nota: ${cName}`,
+        key: `crit_${cName}`,
+        width: 18,
+      });
     });
 
     columns.push(
@@ -769,7 +785,10 @@ export class ChallengeService {
           finalScore: idea.finalScore ?? 0,
           judgeName: evaluation.judge?.displayName || '—',
           judgeEmail: evaluation.judge?.email || '—',
-          judgeTotalScore: evaluation.scores.length > 0 ? Math.round(judgeTotalScore * 100) / 100 : '—',
+          judgeTotalScore:
+            evaluation.scores.length > 0
+              ? Math.round(judgeTotalScore * 100) / 100
+              : '—',
           feedback: evaluation.feedback || '—',
           evaluationDate: evaluation.createdAt
             ? new Date(evaluation.createdAt).toLocaleDateString('es')
@@ -840,9 +859,15 @@ export class ChallengeService {
         status: STATUS_LABELS[idea.status] || idea.status,
         finalScore: idea.finalScore ?? 0,
         evalCount: idea.evaluations.length,
-        impactArea: idea.impactArea ? (IMPACT_LABELS[idea.impactArea] || idea.impactArea) : '—',
-        improvementType: idea.improvementType ? (IMPROV_LABELS[idea.improvementType] || idea.improvementType) : '—',
-        effortLevel: idea.effortLevel ? (EFFORT_LABELS[idea.effortLevel] || idea.effortLevel) : '—',
+        impactArea: idea.impactArea
+          ? IMPACT_LABELS[idea.impactArea] || idea.impactArea
+          : '—',
+        improvementType: idea.improvementType
+          ? IMPROV_LABELS[idea.improvementType] || idea.improvementType
+          : '—',
+        effortLevel: idea.effortLevel
+          ? EFFORT_LABELS[idea.effortLevel] || idea.effortLevel
+          : '—',
         problem: idea.problem || '—',
       });
     });
@@ -913,7 +938,9 @@ export class ChallengeService {
     });
 
     await this.redisService.delByPrefix('public:').catch((err) => {
-      this.logger.error(`Failed to invalidate public ideas cache: ${err.message}`);
+      this.logger.error(
+        `Failed to invalidate public ideas cache: ${err.message}`,
+      );
     });
 
     return updated;

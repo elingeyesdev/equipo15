@@ -22,13 +22,14 @@ export class FirebaseAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    
+
     // 1. Check for impersonation token first
     const impToken = request.headers['x-impersonation-token'] as string;
     if (impToken) {
       try {
         const impersonationToken = verifyImpersonationToken(impToken);
-        request.user = impersonationToken as unknown as AuthenticatedRequest['user'];
+        request.user =
+          impersonationToken as unknown as AuthenticatedRequest['user'];
 
         const unsafeMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
         if (unsafeMethods.has((request.method || '').toUpperCase())) {
@@ -54,8 +55,12 @@ export class FirebaseAuthGuard implements CanActivate {
       const decodedToken = await this.firebaseAdmin.auth().verifyIdToken(token);
       request.user = decodedToken;
       return true;
-    } catch (firebaseError: any) {
-      this.logger.error(`[FirebaseAuthGuard] Error verificando token: ${firebaseError.message}`);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `[FirebaseAuthGuard] Error verificando token: ${errorMessage}`,
+      );
       throw new UnauthorizedException('Token inválido');
     }
   }

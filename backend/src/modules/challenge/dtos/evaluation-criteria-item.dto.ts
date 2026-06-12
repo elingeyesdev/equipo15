@@ -1,4 +1,12 @@
-import { IsString, IsNotEmpty, IsNumber, Min, Max, IsOptional, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  Min,
+  Max,
+  IsOptional,
+  IsBoolean,
+} from 'class-validator';
 
 export class EvaluationCriteriaItemDto {
   // Ignoraremos el ID del cliente para generar uno nuevo en el backend o manejarlo sin confiar en él

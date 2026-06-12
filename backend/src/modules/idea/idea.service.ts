@@ -4,6 +4,7 @@ import {
   ConflictException,
   ForbiddenException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { IdeaRepository } from './idea.repository';
 import { ChallengeRepository } from '../challenge/challenge.repository';
@@ -57,7 +58,9 @@ export class IdeaService {
   private async ensureChallengeNotClosed(challengeId: string): Promise<void> {
     const challenge = await this.challengeRepository.findById(challengeId);
     if (challenge?.status === 'CLOSED') {
-      throw new ForbiddenException('Operación denegada. El reto ya ha finalizado y se encuentra en la biblioteca histórica');
+      throw new ForbiddenException(
+        'Operación denegada. El reto ya ha finalizado y se encuentra en la biblioteca histórica',
+      );
     }
   }
 
@@ -102,7 +105,10 @@ export class IdeaService {
     ensureActiveChallengeStatus(challenge.status);
     await this.ensureChallengeNotClosed(challenge.id);
 
-    if (challenge.submissionsCloseAt && new Date() > new Date(challenge.submissionsCloseAt)) {
+    if (
+      challenge.submissionsCloseAt &&
+      new Date() > new Date(challenge.submissionsCloseAt)
+    ) {
       this.logger.warn(
         `Intento de creación de idea en reto expirado: ${challenge.title}`,
       );
@@ -111,7 +117,12 @@ export class IdeaService {
       );
     }
 
-    const mappedStatus = createIdeaDto.status === 'public' ? 'PUBLISHED' : (createIdeaDto.status === 'draft' ? 'DRAFT' : 'PUBLISHED');
+    const mappedStatus =
+      createIdeaDto.status === 'public'
+        ? 'PUBLISHED'
+        : createIdeaDto.status === 'draft'
+          ? 'DRAFT'
+          : 'PUBLISHED';
 
     const createdIdea = await this.ideaRepository.create({
       title: createIdeaDto.title,
@@ -364,7 +375,11 @@ export class IdeaService {
     });
   }
 
-  async addLike(ideaId: string, firebaseUid: string, rawType?: string | null): Promise<Idea | any> {
+  async addLike(
+    ideaId: string,
+    firebaseUid: string,
+    rawType?: string | null,
+  ): Promise<Idea | any> {
     const [userId, idea] = await Promise.all([
       this.resolveAuthorId(firebaseUid),
       this.ideaRepository.findById(ideaId),
@@ -389,10 +404,15 @@ export class IdeaService {
       future: 'FUTURE',
       complex: 'COMPLEX',
     };
-    const targetReaction = rawType && reactionMap[rawType] ? reactionMap[rawType] : 'GOOD';
+    const targetReaction =
+      rawType && reactionMap[rawType] ? reactionMap[rawType] : 'GOOD';
 
     try {
-      const { updatedIdea, hasVoted } = await this.ideaRepository.upsertLike(ideaId, userId, targetReaction);
+      const { updatedIdea, hasVoted } = await this.ideaRepository.upsertLike(
+        ideaId,
+        userId,
+        targetReaction,
+      );
       this.invalidateCache();
 
       if (!hasVoted) {
@@ -412,13 +432,17 @@ export class IdeaService {
           },
         );
       } else {
-        this.eventBus.emitToRoom(`challenge:${idea.challengeId}`, 'idea:voted', {
-          ideaId: idea.id,
-          likesCount: updatedIdea.likesCount,
-          fireScore: updatedIdea.fireScore,
-          challengeId: idea.challengeId,
-          authorId: userId,
-        });
+        this.eventBus.emitToRoom(
+          `challenge:${idea.challengeId}`,
+          'idea:voted',
+          {
+            ideaId: idea.id,
+            likesCount: updatedIdea.likesCount,
+            fireScore: updatedIdea.fireScore,
+            challengeId: idea.challengeId,
+            authorId: userId,
+          },
+        );
       }
 
       return {
@@ -426,8 +450,13 @@ export class IdeaService {
         hasVoted,
       };
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new ConflictException('Reacción ya registrada o en proceso concurrente');
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictException(
+          'Reacción ya registrada o en proceso concurrente',
+        );
       }
       throw error;
     }
@@ -463,13 +492,16 @@ export class IdeaService {
       throw new BadRequestException('La idea no existe.');
     }
 
-    const hasFavorited = await this.ideaRepository.toggleFavoriteAtomic(ideaId, userId);
+    const hasFavorited = await this.ideaRepository.toggleFavoriteAtomic(
+      ideaId,
+      userId,
+    );
     this.invalidateCache();
-    
+
     return {
       ...idea,
       hasFavorited,
-      favoritesCount: idea.favoritesCount + (hasFavorited ? 1 : -1)
+      favoritesCount: idea.favoritesCount + (hasFavorited ? 1 : -1),
     };
   }
 
@@ -500,7 +532,9 @@ export class IdeaService {
     const existingIdea = await this.ideaRepository.findById(ideaId);
 
     if (!existingIdea || existingIdea.deletedAt) {
-      throw new BadRequestException('El borrador que intentas editar no existe.');
+      throw new BadRequestException(
+        'El borrador que intentas editar no existe.',
+      );
     }
 
     if (existingIdea.authorId !== authorId) {
@@ -508,7 +542,9 @@ export class IdeaService {
     }
 
     if (existingIdea.status !== 'DRAFT') {
-      throw new BadRequestException('Solo puedes editar ideas en estado borrador.');
+      throw new BadRequestException(
+        'Solo puedes editar ideas en estado borrador.',
+      );
     }
 
     if (updateDraftDto.challengeId) {
@@ -538,20 +574,29 @@ export class IdeaService {
     return updatedDraft;
   }
 
-  async deleteDraft(ideaId: string, firebaseUid: string): Promise<{ id: string }> {
+  async deleteDraft(
+    ideaId: string,
+    firebaseUid: string,
+  ): Promise<{ id: string }> {
     const authorId = await this.resolveAuthorId(firebaseUid);
     const existingIdea = await this.ideaRepository.findById(ideaId);
 
     if (!existingIdea || existingIdea.deletedAt) {
-      throw new BadRequestException('El borrador que intentas eliminar no existe.');
+      throw new BadRequestException(
+        'El borrador que intentas eliminar no existe.',
+      );
     }
 
     if (existingIdea.authorId !== authorId) {
-      throw new ForbiddenException('Solo el autor puede eliminar este borrador.');
+      throw new ForbiddenException(
+        'Solo el autor puede eliminar este borrador.',
+      );
     }
 
     if (existingIdea.status !== 'DRAFT') {
-      throw new BadRequestException('Solo puedes eliminar ideas en estado borrador.');
+      throw new BadRequestException(
+        'Solo puedes eliminar ideas en estado borrador.',
+      );
     }
 
     await this.ideaRepository.softDeleteDraft(ideaId);
@@ -563,5 +608,13 @@ export class IdeaService {
   async findMyFavorites(firebaseUid: string) {
     const userId = await this.resolveAuthorId(firebaseUid);
     return this.ideaRepository.findFavoritedByUser(userId);
+  }
+
+  async findOne(id: string) {
+    const idea = await this.ideaRepository.findById(id);
+    if (!idea) {
+      throw new NotFoundException('Idea no encontrada.');
+    }
+    return idea;
   }
 }

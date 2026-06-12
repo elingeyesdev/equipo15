@@ -15,7 +15,7 @@ export function HasMinimumUniqueWords(
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate(value: any, args: ValidationArguments) {
+        validate(value: any, _args: ValidationArguments) {
           if (typeof value !== 'string') return false;
 
           const words = value.toLowerCase().match(/\b[\wáéíóúüñ]+\b/g) || [];
@@ -26,7 +26,7 @@ export function HasMinimumUniqueWords(
 
           return ratio >= minUniqueRatio;
         },
-        defaultMessage(args: ValidationArguments) {
+        defaultMessage(_args: ValidationArguments) {
           return 'El texto introducido es demasiado repetitivo ("Spam"). Escriba oraciones humanas coherentes.';
         },
       },

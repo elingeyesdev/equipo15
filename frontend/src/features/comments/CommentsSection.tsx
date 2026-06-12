@@ -374,7 +374,7 @@ export const CommentsSection = ({
         ideaId,
         includeReplies: true,
         page: 1,
-        limit: 500,
+        limit: 100,
         sort: 'oldest',
       });
 

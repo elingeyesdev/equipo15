@@ -12,11 +12,11 @@ export function NoNumbers(validationOptions?: ValidationOptions) {
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate(value: any, args: ValidationArguments) {
+        validate(value: any, _args: ValidationArguments) {
           if (typeof value !== 'string' || value.length === 0) return true;
           return !/\d/.test(value);
         },
-        defaultMessage(args: ValidationArguments) {
+        defaultMessage(_args: ValidationArguments) {
           return 'Este campo no permite números. Utiliza únicamente texto descriptivo.';
         },
       },

@@ -153,4 +153,10 @@ export const ideaService = {
     const response = await axiosInstance.get('/ideas/me');
     return response.data;
   },
+
+  getIdeaById: async (ideaId: string): Promise<any> => {
+    const response = await axiosInstance.get(`/ideas/${ideaId}`);
+    const body = response.data;
+    return body?.data || body;
+  },
 };

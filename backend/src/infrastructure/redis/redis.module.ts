@@ -38,9 +38,10 @@ export class RedisService implements OnModuleDestroy {
       // Handle both ESM and CJS interop: default may be the constructor itself
       // or a nested module object with its own .default
       const RedisConstructor = (ioredis as any).default ?? ioredis;
-      const RedisCls = typeof RedisConstructor === 'function'
-        ? RedisConstructor
-        : RedisConstructor.default;
+      const RedisCls =
+        typeof RedisConstructor === 'function'
+          ? RedisConstructor
+          : RedisConstructor.default;
       this.client = new RedisCls(redisUrl) as RedisClient;
       this.logger.log('Redis client connected');
     } catch {

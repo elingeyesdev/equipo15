@@ -12,7 +12,7 @@ export function NoInsecureUrls(validationOptions?: ValidationOptions) {
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate(value: any, args: ValidationArguments) {
+        validate(value: any, _args: ValidationArguments) {
           if (typeof value !== 'string') return true;
 
           const insecureUrlRegex = /http:\/\/[^\s]+/i;
@@ -21,7 +21,7 @@ export function NoInsecureUrls(validationOptions?: ValidationOptions) {
           }
           return true;
         },
-        defaultMessage(args: ValidationArguments) {
+        defaultMessage(_args: ValidationArguments) {
           return 'No se permiten enlaces inseguros. Utiliza únicamente enlaces HTTPS en tu contenido.';
         },
       },

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsUUID, Max, Min, IsBoolean } from 'class-validator';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
 
 export class GetCommentsQueryDto extends PaginationDto {
@@ -51,5 +51,6 @@ export class GetCommentsQueryDto extends PaginationDto {
   })
   @IsOptional()
   @Transform(({ value }) => value === true || value === 'true')
+  @IsBoolean()
   includeReplies?: boolean;
 }

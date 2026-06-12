@@ -16,16 +16,16 @@ export function NoExcessiveSymbols(
       constraints: [maxRatio],
       options: validationOptions,
       validator: {
-        validate(value: any, args: ValidationArguments) {
+        validate(value: any, _args: ValidationArguments) {
           if (typeof value !== 'string' || value.length === 0) return true;
 
           const cleanChars =
-            value.match(/[a-záéíóúüñA-ZÁÉÍÓÚÜÑ\s.,;:¿?¡!()"'\-]/g) || [];
+            value.match(/[a-záéíóúüñA-ZÁÉÍÓÚÜÑ\s.,;:¿?¡!()"'-]/g) || [];
           const ratio = cleanChars.length / value.length;
 
           return ratio >= 1 - maxRatio;
         },
-        defaultMessage(args: ValidationArguments) {
+        defaultMessage(_args: ValidationArguments) {
           return 'El texto contiene demasiados símbolos o caracteres especiales. Escribe oraciones descriptivas.';
         },
       },

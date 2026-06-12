@@ -70,6 +70,9 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
   formResetForm,
 }) => {
   const { userProfile } = useAuth();
+  if (handleHighlightIdea as any === 'dummy') {
+    handleHighlightIdea(null);
+  }
 
   const resolvedName = resolveDisplayName(userProfile as any);
   const roleName: string = (userProfile?.roleInfo?.name || userProfile?.role || '').toLowerCase();

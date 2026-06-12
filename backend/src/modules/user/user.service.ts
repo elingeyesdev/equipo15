@@ -4,21 +4,17 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { UserRepository } from './user.repository';
-import { User, UserStatus } from '@prisma/client';
+import { UserRepository, UserWithProfile } from './user.repository';
+import { Prisma, User, UserStatus } from '@prisma/client';
 import { extractFacultyFromEmail } from './utils/email-parser.util';
-import {
-  getRoleFromEmail,
-  isAuthorizedEmail,
-} from './utils/user-metadata.util';
+import { getRoleFromEmail } from './utils/user-metadata.util';
 import { EventsGateway } from '../../infrastructure/events/events.gateway';
-import {
-  extractEmailDomain,
-  normalizeEmail,
-} from '../../common/utils/email-domain.util';
+import { normalizeEmail } from '../../common/utils/email-domain.util';
 
-export interface UserResponse extends User {
+export interface UserResponse extends Omit<User, 'role'> {
+  role: string;
   roleName: string;
+  facultyName?: string | null;
 }
 
 @Injectable()
@@ -28,7 +24,9 @@ export class UserService {
     private readonly eventsGateway: EventsGateway,
   ) {}
 
-  private async ensureUserCanWrite(firebaseUid: string): Promise<User> {
+  private async ensureUserCanWrite(
+    firebaseUid: string,
+  ): Promise<UserWithProfile> {
     const user = await this.userRepository.findByUid(firebaseUid);
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
@@ -61,7 +59,9 @@ export class UserService {
     if (!user && normalizedEmail) {
       user = await this.userRepository.findByEmail(normalizedEmail);
       if (user) {
-        await this.userRepository.updateByEmail(normalizedEmail, { firebaseUid });
+        await this.userRepository.updateByEmail(normalizedEmail, {
+          firebaseUid,
+        });
       }
     }
 
@@ -69,10 +69,11 @@ export class UserService {
       user = await this.syncUserStatus(user);
 
       if (forceUpdate) {
-        const refreshed = await this.userRepository.updateByUid(firebaseUid, {
+        await this.userRepository.updateByUid(firebaseUid, {
           displayName: createUserDto.displayName,
           avatarUrl: createUserDto.avatarUrl,
         });
+        const refreshed = await this.userRepository.findByUid(firebaseUid);
         return this.formatUserResponse(refreshed ?? user);
       }
 
@@ -96,18 +97,19 @@ export class UserService {
 
     const role = getRoleFromEmail(normalizedEmail);
 
-    const userData: any = {
+    const userData: Prisma.UserCreateInput | Prisma.UserUncheckedCreateInput = {
       firebaseUid,
       email: normalizedEmail,
-      displayName: createUserDto.displayName,
+      displayName: createUserDto.displayName || '',
       avatarUrl: createUserDto.avatarUrl,
       role,
     };
 
-    user = await this.userRepository.upsert(firebaseUid, userData, {
+    await this.userRepository.upsert(firebaseUid, userData, {
       displayName: createUserDto.displayName,
       avatarUrl: createUserDto.avatarUrl,
     });
+    user = await this.userRepository.findByUid(firebaseUid);
 
     const detectedFacultyId = extractFacultyFromEmail(normalizedEmail);
     if (detectedFacultyId !== null && user) {
@@ -123,7 +125,9 @@ export class UserService {
     return this.formatUserResponse(user);
   }
 
-  private formatUserResponse(user: any | null): UserResponse | null {
+  private formatUserResponse(
+    user: UserWithProfile | null,
+  ): UserResponse | null {
     if (!user) return null;
 
     const roleMapping: Record<string, string> = {
@@ -137,13 +141,15 @@ export class UserService {
 
     return {
       ...user,
-      role: mappedRole as any,
+      role: mappedRole,
       roleName: mappedRole,
       facultyName: user.studentProfile?.faculty?.name || null,
     };
   }
 
-  private async syncUserStatus(user: User | null): Promise<User | null> {
+  private async syncUserStatus(
+    user: User | null,
+  ): Promise<UserWithProfile | null> {
     if (!user) return null;
     await this.userRepository.syncUserStatusFromPenalties(user.id);
     return this.userRepository.findByUid(user.firebaseUid);
@@ -198,7 +204,8 @@ export class UserService {
         });
     }
 
-    return this.formatUserResponse(updatedUser);
+    const updatedUserWithProfile = await this.userRepository.findByUid(firebaseUid);
+    return this.formatUserResponse(updatedUserWithProfile!);
   }
 
   async updateFaculty(

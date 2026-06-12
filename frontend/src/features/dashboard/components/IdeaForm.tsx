@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { createPortal } from 'react-dom';
 import * as S from '../styles/FormStyles';
 import * as FM from '../styles/FeedbackAndMiscStyles';
@@ -106,7 +107,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
   const checklist = [
     { id: 'challengeField', label: 'Reto asignado', done: !!challenge },
     { id: 'ideaNameField', label: 'Nombre de la idea (2-10 palabras)', done: form.isTitleValid },
-    { id: 'ideaSolutionField', label: 'Solución propuesta (10-200 palabras)', done: form.isSolutionValid },
+    { id: 'ideaSolutionField', label: 'La Propuesta (10-200 palabras)', done: form.isSolutionValid },
     { id: 'impactAreaField', label: 'Área de impacto', done: Boolean(form.impactArea) },
     { id: 'improvementTypeField', label: 'Tipo de mejora', done: Boolean(form.improvementType) },
     { id: 'effortLevelField', label: 'Nivel de esfuerzo', done: Boolean(form.effortLevel) },
@@ -164,6 +165,11 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
   };
 
   const handleSaveDraft = () => {
+    const isEmpty = !form.ideaName.trim() && !form.ideaSolution.trim() && form.tags.length === 0;
+    if (isEmpty) {
+      toast.error('No puedes guardar un borrador vacío. Escribe al menos un título o propuesta.');
+      return;
+    }
     form.handleIdeaSubmit('draft', challenge, fetchDrafts);
   };
 

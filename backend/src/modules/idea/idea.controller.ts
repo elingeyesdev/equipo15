@@ -60,7 +60,9 @@ export class IdeasController {
   }
 
   @Get('me/drafts')
-  @ApiOperation({ summary: 'Get draft ideas of the current authenticated user' })
+  @ApiOperation({
+    summary: 'Get draft ideas of the current authenticated user',
+  })
   findMyDrafts(@Req() request: AuthenticatedRequest) {
     return this.ideaService.findMyDrafts(request.user.uid);
   }
@@ -92,10 +94,7 @@ export class IdeasController {
   @UseGuards(RolesGuard)
   @Roles('admin')
   @ApiOperation({ summary: 'Update the status of an idea (Admin only)' })
-  updateStatus(
-    @Param('id') id: string,
-    @Body() dto: UpdateIdeaStatusDto,
-  ) {
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateIdeaStatusDto) {
     return this.ideaService.updateStatus(id, dto.status);
   }
 
@@ -111,10 +110,7 @@ export class IdeasController {
 
   @Delete(':id/draft')
   @ApiOperation({ summary: 'Delete a draft idea (author only)' })
-  deleteDraft(
-    @Param('id') id: string,
-    @Req() request: AuthenticatedRequest,
-  ) {
+  deleteDraft(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
     return this.ideaService.deleteDraft(id, request.user.uid);
   }
 
@@ -131,9 +127,9 @@ export class IdeasController {
   @Post(':id/like')
   @ApiOperation({ summary: 'Like or unlike an idea' })
   addLike(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @Req() request: AuthenticatedRequest,
-    @Body('reactionType') reactionType?: string
+    @Body('reactionType') reactionType?: string,
   ) {
     return this.ideaService.addLike(id, request.user.uid, reactionType);
   }
@@ -151,5 +147,11 @@ export class IdeasController {
   @ApiOperation({ summary: 'Get ideas favorited by the current user' })
   findMyFavorites(@Req() request: AuthenticatedRequest) {
     return this.ideaService.findMyFavorites(request.user.uid);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a single idea by ID' })
+  findOne(@Param('id') id: string) {
+    return this.ideaService.findOne(id);
   }
 }

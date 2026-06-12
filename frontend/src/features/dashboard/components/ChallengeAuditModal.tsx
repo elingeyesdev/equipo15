@@ -5,7 +5,7 @@ import { ClipboardList, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Pista8Theme } from '@/config/theme';
 import { adminService } from '@/services/admin.service';
-import { EvaluationScoresModal } from './EvaluationScoresModal';
+import { AdminIdeaUnifiedModal } from './admin/AdminIdeaUnifiedModal';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -177,6 +177,10 @@ interface AuditIdea {
   finalScore: number;
   authorName: string;
   evaluationsCount: number;
+  problem?: string;
+  solution?: string;
+  tags?: string[];
+  createdAt?: string;
 }
 
 interface ChallengeAuditModalProps {
@@ -252,10 +256,9 @@ export function ChallengeAuditModal({
                     </IdeaMeta>
                     <AuditBtn
                       type="button"
-                      disabled={idea.evaluationsCount === 0}
                       onClick={() => setSelectedIdea(idea)}
                     >
-                      Ver evaluaciones
+                      Gestionar
                     </AuditBtn>
                   </IdeaRow>
                 ))
@@ -267,10 +270,10 @@ export function ChallengeAuditModal({
       )}
 
       {selectedIdea && (
-        <EvaluationScoresModal
+        <AdminIdeaUnifiedModal
           ideaId={selectedIdea.id}
           ideaTitle={selectedIdea.title}
-          auditMode
+          defaultTab="evaluaciones"
           onClose={() => setSelectedIdea(null)}
         />
       )}

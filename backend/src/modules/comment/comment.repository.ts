@@ -16,7 +16,9 @@ const commentInclude = {
       displayName: true,
       nickname: true,
       avatarUrl: true,
-      studentProfile: { select: { facultyId: true, faculty: { select: { name: true } } } },
+      studentProfile: {
+        select: { facultyId: true, faculty: { select: { name: true } } },
+      },
     },
   },
 } as const;
@@ -38,7 +40,9 @@ const commentListSelect = Prisma.validator<Prisma.CommentSelect>()({
       displayName: true,
       nickname: true,
       avatarUrl: true,
-      studentProfile: { select: { facultyId: true, faculty: { select: { name: true } } } },
+      studentProfile: {
+        select: { facultyId: true, faculty: { select: { name: true } } },
+      },
     },
   },
 });
@@ -55,7 +59,11 @@ export class CommentRepository {
     ideaId: string,
   ): Promise<Array<Pick<Comment, 'id' | 'parentCommentId' | 'status'>>> {
     return this.prisma.comment.findMany({
-      where: { ideaId },
+      where: {
+        ideaId,
+        deletedAt: null,
+        status: 'VISIBLE',
+      },
       select: {
         id: true,
         parentCommentId: true,
@@ -185,6 +193,7 @@ export class CommentRepository {
     const where: Prisma.CommentWhereInput = {
       ideaId: params.ideaId,
       status: 'VISIBLE',
+      deletedAt: null,
     };
 
     if (!params.includeReplies || params.parentCommentId !== undefined) {

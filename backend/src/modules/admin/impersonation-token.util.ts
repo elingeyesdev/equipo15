@@ -37,7 +37,9 @@ const base64UrlEncode = (value: Buffer | string) =>
     .replace(/\//g, '_');
 
 const base64UrlDecode = (value: string) =>
-  Buffer.from(value.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+  Buffer.from(value.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString(
+    'utf8',
+  );
 
 let cachedSecret: string | null = null;
 
@@ -71,10 +73,21 @@ const getImpersonationSecret = () => {
 };
 
 const sign = (input: string) =>
-  createHmac('sha256', getImpersonationSecret()).update(input).digest('base64url');
+  createHmac('sha256', getImpersonationSecret())
+    .update(input)
+    .digest('base64url');
 
 export const createImpersonationToken = (
-  payload: Omit<ImpersonationTokenPayload, 'tokenType' | 'aud' | 'iss' | 'iat' | 'exp' | 'impersonationReadOnly' | 'sessionMode'>,
+  payload: Omit<
+    ImpersonationTokenPayload,
+    | 'tokenType'
+    | 'aud'
+    | 'iss'
+    | 'iat'
+    | 'exp'
+    | 'impersonationReadOnly'
+    | 'sessionMode'
+  >,
   ttlSeconds = DEFAULT_TTL_SECONDS,
 ): ImpersonationTokenResult => {
   const issuedAt = Math.floor(Date.now() / 1000);
@@ -100,7 +113,9 @@ export const createImpersonationToken = (
   };
 };
 
-export const verifyImpersonationToken = (token: string): ImpersonationTokenPayload => {
+export const verifyImpersonationToken = (
+  token: string,
+): ImpersonationTokenPayload => {
   const [headerPart, payloadPart, signaturePart] = token.split('.');
 
   if (!headerPart || !payloadPart || !signaturePart) {
@@ -111,11 +126,16 @@ export const verifyImpersonationToken = (token: string): ImpersonationTokenPaylo
   const received = Buffer.from(signaturePart);
   const expected = Buffer.from(expectedSignature);
 
-  if (received.length !== expected.length || !timingSafeEqual(received, expected)) {
+  if (
+    received.length !== expected.length ||
+    !timingSafeEqual(received, expected)
+  ) {
     throw new Error('Firma de impersonación inválida');
   }
 
-  const payload = JSON.parse(base64UrlDecode(payloadPart)) as ImpersonationTokenPayload;
+  const payload = JSON.parse(
+    base64UrlDecode(payloadPart),
+  ) as ImpersonationTokenPayload;
 
   if (
     payload.tokenType !== 'impersonation' ||

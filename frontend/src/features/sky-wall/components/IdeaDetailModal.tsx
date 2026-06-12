@@ -454,17 +454,20 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
                   </StatPill>
                 </StatsContainer>
               ) : (
-                idea.challengeStatus !== 'CLOSED' && (
-                  <>
-                    <FavoriteButton ideaId={idea.id} hasFavorited={idea.hasFavorited} />
-                    <LikeButton 
-                      ideaId={idea.id} 
-                      initialLikes={idea.likesCount} 
-                      hasVoted={idea.hasVoted}
-                      isAuthor={isAuthor}
-                    />
-                  </>
-                )
+                <>
+                  <FavoriteButton 
+                    ideaId={idea.id} 
+                    hasFavorited={idea.hasFavorited} 
+                    disabled={idea.challengeStatus === 'CLOSED'} 
+                  />
+                  <LikeButton 
+                    ideaId={idea.id} 
+                    initialLikes={idea.likesCount} 
+                    hasVoted={idea.hasVoted}
+                    isAuthor={isAuthor}
+                    disabled={idea.challengeStatus === 'CLOSED'}
+                  />
+                </>
               )}
 
               <CommentTooltipContainer>

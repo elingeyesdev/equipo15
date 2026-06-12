@@ -22,7 +22,7 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   body {
-    font-family: 'Space Grotesk', 'Chivo', 'Segoe UI', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--p8-bg);
     color: var(--p8-ink);
     -webkit-font-smoothing: antialiased;

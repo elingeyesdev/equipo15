@@ -1,21 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
-import { User } from '@prisma/client';
-import { WHITELISTED_EMAILS, BLOCKED_EMAIL_DOMAINS, ALLOWED_EMAIL_DOMAINS } from '../../common/constants/email-domains';
-import { extractEmailDomain, normalizeEmail } from '../../common/utils/email-domain.util';
+import { Prisma, User, UserStatus } from '@prisma/client';
+
+export type UserWithProfile = Prisma.UserGetPayload<{
+  include: { studentProfile: { include: { faculty: true } } };
+}>;
+import {
+  WHITELISTED_EMAILS,
+  BLOCKED_EMAIL_DOMAINS,
+  ALLOWED_EMAIL_DOMAINS,
+} from '../../common/constants/email-domains';
+import {
+  extractEmailDomain,
+  normalizeEmail,
+} from '../../common/utils/email-domain.util';
 
 @Injectable()
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByUid(firebaseUid: string): Promise<any | null> {
+  async findByUid(firebaseUid: string): Promise<UserWithProfile | null> {
     return this.prisma.user.findUnique({
       where: { firebaseUid },
       include: { studentProfile: { include: { faculty: true } } },
     });
   }
 
-  async findByEmail(email: string): Promise<any | null> {
+  async findByEmail(email: string): Promise<UserWithProfile | null> {
     return this.prisma.user.findUnique({
       where: { email },
       include: { studentProfile: { include: { faculty: true } } },
@@ -28,27 +39,38 @@ export class UserRepository {
     });
   }
 
-  async create(data: any): Promise<User> {
+  async create(
+    data: Prisma.UserCreateInput | Prisma.UserUncheckedCreateInput,
+  ): Promise<User> {
     return this.prisma.user.create({
       data,
     });
   }
 
-  async update(id: string, data: any): Promise<User> {
+  async update(
+    id: string,
+    data: Prisma.UserUpdateInput | Prisma.UserUncheckedUpdateInput,
+  ): Promise<User> {
     return this.prisma.user.update({
       where: { id },
       data,
     });
   }
 
-  async updateByUid(firebaseUid: string, data: any): Promise<User> {
+  async updateByUid(
+    firebaseUid: string,
+    data: Prisma.UserUpdateInput | Prisma.UserUncheckedUpdateInput,
+  ): Promise<User> {
     return this.prisma.user.update({
       where: { firebaseUid },
       data,
     });
   }
 
-  async updateByEmail(email: string, data: any): Promise<User> {
+  async updateByEmail(
+    email: string,
+    data: Prisma.UserUpdateInput | Prisma.UserUncheckedUpdateInput,
+  ): Promise<User> {
     return this.prisma.user.update({
       where: { email },
       data,
@@ -57,8 +79,8 @@ export class UserRepository {
 
   async upsert(
     firebaseUid: string,
-    createData: any,
-    updateData: any,
+    createData: Prisma.UserCreateInput | Prisma.UserUncheckedCreateInput,
+    updateData: Prisma.UserUpdateInput | Prisma.UserUncheckedUpdateInput,
   ): Promise<User> {
     try {
       return await this.prisma.user.upsert({
@@ -66,27 +88,36 @@ export class UserRepository {
         update: updateData,
         create: createData,
       });
-    } catch (err: any) {
-      if (err?.code === 'P2002' && createData?.email) {
-        const existing = await this.prisma.user.findUnique({
-          where: { email: createData.email },
-        });
-        if (existing) {
-          const merged = {
-            ...(updateData || {}),
-            firebaseUid,
-          } as any;
-          return this.prisma.user.update({ where: { id: existing.id }, data: merged });
+    } catch (err: unknown) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002' &&
+        createData &&
+        typeof createData === 'object' &&
+        'email' in createData
+      ) {
+        const email = createData.email;
+        if (email) {
+          const existing = await this.prisma.user.findUnique({
+            where: { email },
+          });
+          if (existing) {
+            const merged = {
+              ...(updateData || {}),
+              firebaseUid,
+            };
+            return this.prisma.user.update({
+              where: { id: existing.id },
+              data: merged,
+            });
+          }
         }
       }
       throw err;
     }
   }
 
-  async updateStatus(
-    id: string,
-    status: any,
-  ): Promise<User> {
+  async updateStatus(id: string, status: UserStatus): Promise<User> {
     return this.prisma.user.update({
       where: { id },
       data: { status },
@@ -106,26 +137,32 @@ export class UserRepository {
     });
   }
 
-  async isDomainListedButInactive(domain: string): Promise<boolean> {
+  isDomainListedButInactive(domain: string): boolean {
     if (!domain) return false;
 
     const normalized =
       normalizeEmail(domain).split('@').pop() || domain.toLowerCase();
 
-    const isAllowed = ALLOWED_EMAIL_DOMAINS.some(
-      (d) => normalized.endsWith(d.replace('@', '')),
+    const isAllowed = ALLOWED_EMAIL_DOMAINS.some((d) =>
+      normalized.endsWith(d.replace('@', '')),
     );
 
     return !isAllowed;
   }
 
-  async createStudentProfile(userId: string, data: { studentCode?: string; facultyId?: string; enrollmentYear?: number }) {
+  async createStudentProfile(
+    userId: string,
+    data: { studentCode?: string; facultyId?: string; enrollmentYear?: number },
+  ) {
     return this.prisma.studentProfile.create({
       data: { userId, ...data },
     });
   }
 
-  async updateStudentProfile(userId: string, data: { studentCode?: string; facultyId?: string; enrollmentYear?: number }) {
+  async updateStudentProfile(
+    userId: string,
+    data: { studentCode?: string; facultyId?: string; enrollmentYear?: number },
+  ) {
     return this.prisma.studentProfile.upsert({
       where: { userId },
       update: data,
@@ -139,10 +176,7 @@ export class UserRepository {
       where: {
         userId,
         revokedAt: null,
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: now } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
       },
     });
   }
@@ -162,9 +196,7 @@ export class UserRepository {
     const domain = extractEmailDomain(normalized);
     if (!domain) return false;
 
-    const isAllowed = ALLOWED_EMAIL_DOMAINS.some(
-      (d) => normalized.endsWith(d),
-    );
+    const isAllowed = ALLOWED_EMAIL_DOMAINS.some((d) => normalized.endsWith(d));
     if (isAllowed) return true;
 
     const found = await this.prisma.allowedDomain.findFirst({
@@ -184,10 +216,7 @@ export class UserRepository {
       where: {
         userId,
         revokedAt: null,
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: now } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -201,7 +230,10 @@ export class UserRepository {
     }
 
     const hasSuspension = activePenalties.some(
-      (p) => p.reason === 'ADMIN_MANUAL' || p.reason === 'COMMENT_ABUSE' || p.reason === 'SPAM'
+      (p) =>
+        p.reason === 'ADMIN_MANUAL' ||
+        p.reason === 'COMMENT_ABUSE' ||
+        p.reason === 'SPAM',
     );
 
     const newStatus = hasSuspension ? 'SUSPENDED' : 'SOFT_BLOCK';

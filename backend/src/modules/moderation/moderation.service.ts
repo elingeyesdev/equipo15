@@ -116,9 +116,11 @@ export class ModerationService {
     await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({ where: { id: userId } });
       if (!user || user.status === UserStatus.SUSPENDED) return;
-      if (status === 'SOFT_BLOCK' && user.status === UserStatus.SOFT_BLOCK) return;
+      if (status === 'SOFT_BLOCK' && user.status === UserStatus.SOFT_BLOCK)
+        return;
 
-      const prismaStatus = status === 'SOFT_BLOCK' ? UserStatus.SOFT_BLOCK : UserStatus.SUSPENDED;
+      const prismaStatus =
+        status === 'SOFT_BLOCK' ? UserStatus.SOFT_BLOCK : UserStatus.SUSPENDED;
 
       await tx.user.update({
         where: { id: userId },

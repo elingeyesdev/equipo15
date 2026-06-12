@@ -11,19 +11,20 @@ export class EvaluationRepository {
       data: {
         ...evaluationData,
         scores: {
-          create: scores.map(
-            (s: { criterionId: string; score: number }) => ({
-              criterionId: s.criterionId,
-              score: s.score,
-            }),
-          ),
+          create: scores.map((s: { criterionId: string; score: number }) => ({
+            criterionId: s.criterionId,
+            score: s.score,
+          })),
         },
       },
       include: { scores: { include: { criterion: true } } },
     });
   }
 
-  async checkJudgeAssignment(ideaId: string, judgeId: string): Promise<boolean> {
+  async checkJudgeAssignment(
+    ideaId: string,
+    judgeId: string,
+  ): Promise<boolean> {
     const idea = await this.prisma.idea.findUnique({
       where: { id: ideaId },
       select: { challengeId: true },

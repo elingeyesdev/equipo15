@@ -31,7 +31,11 @@ export const ensureActiveChallengeStatus = (
   status: string | null | undefined,
 ): void => {
   const normalized = (status || '').trim().toLowerCase();
-  if (normalized !== 'activo' && normalized !== 'active' && normalized !== 'published') {
+  if (
+    normalized !== 'activo' &&
+    normalized !== 'active' &&
+    normalized !== 'published'
+  ) {
     throw new BadRequestException({
       message: 'El reto no está activo y no acepta nuevas ideas.',
       details: {

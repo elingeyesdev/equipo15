@@ -57,38 +57,43 @@ export class AdminRepository {
   }
 
   async getGlobalAnalytics() {
-    const [totalCompanies, totalChallenges, activeChallenges, totalIdeas, rawChallenges] =
-      await Promise.all([
-        this.prisma.user.count({ where: { role: 'COMPANY' } }),
-        this.prisma.challenge.count(),
-        this.prisma.challenge.count({
-          where: { status: 'PUBLISHED' },
-        }),
-        this.prisma.idea.count(),
-        this.prisma.challenge.findMany({
-          select: {
-            id: true,
-            title: true,
-            status: true,
-            submissionsCloseAt: true,
-            author: {
-              select: {
-                displayName: true,
-              }
+    const [
+      totalCompanies,
+      totalChallenges,
+      activeChallenges,
+      totalIdeas,
+      rawChallenges,
+    ] = await Promise.all([
+      this.prisma.user.count({ where: { role: 'COMPANY' } }),
+      this.prisma.challenge.count(),
+      this.prisma.challenge.count({
+        where: { status: 'PUBLISHED' },
+      }),
+      this.prisma.idea.count(),
+      this.prisma.challenge.findMany({
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          submissionsCloseAt: true,
+          author: {
+            select: {
+              displayName: true,
             },
-            ideas: {
-              select: {
-                likesCount: true,
-                commentsCount: true,
-                finalScore: true,
-              }
-            }
           },
-          orderBy: { createdAt: 'desc' }
-        })
-      ]);
+          ideas: {
+            select: {
+              likesCount: true,
+              commentsCount: true,
+              finalScore: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
 
-    const challengesPerformance = rawChallenges.map(challenge => {
+    const challengesPerformance = rawChallenges.map((challenge) => {
       const companyName = challenge.author.displayName || 'Compañía';
 
       let totalInteractions = 0;
@@ -96,19 +101,23 @@ export class AdminRepository {
       let sumScores = 0;
 
       for (const idea of challenge.ideas) {
-        totalInteractions += (idea.likesCount + idea.commentsCount);
+        totalInteractions += idea.likesCount + idea.commentsCount;
         if (idea.finalScore > 0) {
           sumScores += idea.finalScore;
           evaluatedIdeasCount++;
         }
       }
 
-      const averageScore = evaluatedIdeasCount > 0
-        ? Number((sumScores / evaluatedIdeasCount).toFixed(1))
-        : null;
+      const averageScore =
+        evaluatedIdeasCount > 0
+          ? Number((sumScores / evaluatedIdeasCount).toFixed(1))
+          : null;
 
       let displayStatus = challenge.status;
-      if (challenge.submissionsCloseAt && new Date(challenge.submissionsCloseAt) < new Date()) {
+      if (
+        challenge.submissionsCloseAt &&
+        new Date(challenge.submissionsCloseAt) < new Date()
+      ) {
         displayStatus = ChallengeStatus.CLOSED;
       }
 
@@ -159,12 +168,7 @@ export class AdminRepository {
     });
   }
 
-  async searchUsers(
-    query?: string,
-    roleFilter?: string,
-    page = 1,
-    limit = 20,
-  ) {
+  async searchUsers(query?: string, roleFilter?: string, page = 1, limit = 20) {
     const where: any = {};
 
     if (query && query.trim().length > 0) {
@@ -174,7 +178,10 @@ export class AdminRepository {
       ];
     }
 
-    if (roleFilter && ['ADMIN', 'COMPANY', 'JUDGE', 'USER'].includes(roleFilter.toUpperCase())) {
+    if (
+      roleFilter &&
+      ['ADMIN', 'COMPANY', 'JUDGE', 'USER'].includes(roleFilter.toUpperCase())
+    ) {
       where.role = roleFilter.toUpperCase();
     }
 
@@ -191,7 +198,9 @@ export class AdminRepository {
           avatarUrl: true,
           role: true,
           status: true,
-          studentProfile: { select: { faculty: { select: { id: true, name: true } } } },
+          studentProfile: {
+            select: { faculty: { select: { id: true, name: true } } },
+          },
           createdAt: true,
           updatedAt: true,
         },
@@ -205,11 +214,20 @@ export class AdminRepository {
     return { users, total, page, limit };
   }
 
-  async updateUserRole(userId: string, newRole: 'ADMIN' | 'COMPANY' | 'JUDGE' | 'USER') {
+  async updateUserRole(
+    userId: string,
+    newRole: 'ADMIN' | 'COMPANY' | 'JUDGE' | 'USER',
+  ) {
     return this.prisma.$transaction(async (tx) => {
       const existingUser = await tx.user.findUnique({
         where: { id: userId },
-        select: { id: true, firebaseUid: true, role: true, displayName: true, email: true },
+        select: {
+          id: true,
+          firebaseUid: true,
+          role: true,
+          displayName: true,
+          email: true,
+        },
       });
 
       if (!existingUser) {
@@ -238,7 +256,9 @@ export class AdminRepository {
           role: true,
           status: true,
           avatarUrl: true,
-          studentProfile: { select: { faculty: { select: { id: true, name: true } } } },
+          studentProfile: {
+            select: { faculty: { select: { id: true, name: true } } },
+          },
           updatedAt: true,
         },
       });
@@ -353,6 +373,9 @@ export class AdminRepository {
         status: true,
         finalScore: true,
         createdAt: true,
+        problem: true,
+        solution: true,
+        tags: true,
         author: {
           select: {
             displayName: true,
@@ -374,12 +397,52 @@ export class AdminRepository {
         status: idea.status,
         finalScore: idea.finalScore,
         createdAt: idea.createdAt,
+        problem: idea.problem,
+        solution: idea.solution,
+        tags: idea.tags,
         authorName:
-          idea.author?.nickname ||
-          idea.author?.displayName ||
-          'Participante',
+          idea.author?.nickname || idea.author?.displayName || 'Participante',
         evaluationsCount: idea._count.evaluations,
       })),
     };
+  }
+
+  async moderateComment(commentId: string, adminId: string, reason: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const comment = await tx.comment.findUnique({
+        where: { id: commentId },
+        select: { id: true, deletedAt: true, ideaId: true },
+      });
+
+      if (!comment || comment.deletedAt) {
+        return null;
+      }
+
+      const updatedComment = await tx.comment.update({
+        where: { id: commentId },
+        data: {
+          deletedAt: new Date(),
+          deletedById: adminId,
+          deleteReason: reason,
+        },
+      });
+
+      await tx.idea.update({
+        where: { id: comment.ideaId },
+        data: { commentsCount: { decrement: 1 } },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          adminId,
+          action: 'DELETE_COMMENT',
+          targetType: 'COMMENT',
+          targetId: commentId,
+          reason,
+        },
+      });
+
+      return updatedComment;
+    });
   }
 }

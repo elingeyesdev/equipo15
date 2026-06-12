@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { AdminRepository } from './admin.repository';
 import { createImpersonationToken } from './impersonation-token.util';
 import type { UserRoleEnum } from './dto/update-user-role.dto';
@@ -114,8 +119,12 @@ export class AdminService {
     }
 
     const totalIdeas = result.ideas.length;
-    const finalistIdeas = result.ideas.filter((i) => i.status === 'FINALIST').length;
-    const winnerIdeas = result.ideas.filter((i) => i.status === 'WINNER').length;
+    const finalistIdeas = result.ideas.filter(
+      (i) => i.status === 'FINALIST',
+    ).length;
+    const winnerIdeas = result.ideas.filter(
+      (i) => i.status === 'WINNER',
+    ).length;
     const avgFireScore =
       totalIdeas > 0
         ? result.ideas.reduce((sum, i) => sum + i.fireScore, 0) / totalIdeas
@@ -169,10 +178,50 @@ export class AdminService {
   }
 
   async getChallengeAuditIdeas(challengeId: string) {
-    const result = await this.adminRepository.getChallengeAuditIdeas(challengeId);
+    const result =
+      await this.adminRepository.getChallengeAuditIdeas(challengeId);
     if (!result) {
       throw new NotFoundException('Reto no encontrado');
     }
+    return result;
+  }
+
+  async moderateComment(
+    commentId: string,
+    adminFirebaseUid: string,
+    reason: string,
+  ) {
+    if (!reason || reason.trim().length < 10) {
+      throw new BadRequestException(
+        'La justificación debe tener al menos 10 caracteres.',
+      );
+    }
+
+    // El frontend nos manda el Firebase UID en el token, buscamos el UUID de la base de datos
+    const adminUser = await this.adminRepository['prisma'].user.findUnique({
+      where: { firebaseUid: adminFirebaseUid },
+      select: { id: true },
+    });
+
+    if (!adminUser) {
+      throw new NotFoundException(
+        'Administrador no encontrado en la base de datos.',
+      );
+    }
+
+    const result = await this.adminRepository.moderateComment(
+      commentId,
+      adminUser.id,
+      reason,
+    );
+    if (!result) {
+      throw new NotFoundException(
+        'Comentario no encontrado o ya fue eliminado.',
+      );
+    }
+    this.logger.log(
+      `[MODERATE_COMMENT] Admin ${adminUser.id} eliminó comentario ${commentId}. Razón: ${reason}`,
+    );
     return result;
   }
 }

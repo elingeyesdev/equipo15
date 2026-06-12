@@ -13,7 +13,7 @@ export const FIREBASE_ADMIN_TOKEN = 'FIREBASE_ADMIN';
       useFactory: () => {
         const serviceAccount = JSON.parse(
           readFileSync(join(process.cwd(), 'firebase-admin.json'), 'utf8'),
-        );
+        ) as admin.ServiceAccount;
         return admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),
         });

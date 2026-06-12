@@ -1,6 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
-import { Challenge, Prisma, UserRole, IdeaStatus, WinnerCategory } from '@prisma/client';
+import {
+  Challenge,
+  Prisma,
+  UserRole,
+  IdeaStatus,
+  WinnerCategory,
+} from '@prisma/client';
 
 @Injectable()
 export class ChallengeRepository {
@@ -9,18 +15,18 @@ export class ChallengeRepository {
 
   private normalizeStatus(status: string): string {
     const map: Record<string, string> = {
-      'activo': 'PUBLISHED',
-      'active': 'PUBLISHED',
-      'finalizado': 'CLOSED',
-      'cerrado': 'CLOSED',
-      'closed': 'CLOSED',
+      activo: 'PUBLISHED',
+      active: 'PUBLISHED',
+      finalizado: 'CLOSED',
+      cerrado: 'CLOSED',
+      closed: 'CLOSED',
       'en evaluación': 'EVALUATING',
-      'evaluating': 'EVALUATING',
-      'evaluation': 'EVALUATING',
-      'borrador': 'DRAFT',
-      'draft': 'DRAFT',
-      'publicado': 'PUBLISHED',
-      'published': 'PUBLISHED',
+      evaluating: 'EVALUATING',
+      evaluation: 'EVALUATING',
+      borrador: 'DRAFT',
+      draft: 'DRAFT',
+      publicado: 'PUBLISHED',
+      published: 'PUBLISHED',
     };
     const validValues = ['DRAFT', 'PUBLISHED', 'EVALUATING', 'CLOSED'];
     if (validValues.includes(status)) return status;
@@ -124,28 +130,33 @@ export class ChallengeRepository {
   }
 
   async getPodiumStatus(challengeId: string) {
-    const [finalistCount, winnerCount, evaluationCount, assignedJudgesCount, ideasWithEvaluations] =
-      await Promise.all([
-        this.prisma.idea.count({
-          where: { challengeId, status: 'FINALIST', deletedAt: null },
-        }),
-        this.prisma.idea.count({
-          where: { challengeId, status: 'WINNER', deletedAt: null },
-        }),
-        this.prisma.evaluation.count({
-          where: { idea: { challengeId, deletedAt: null } },
-        }),
-        this.prisma.challengeJudge.count({
-          where: { challengeId },
-        }),
-        this.prisma.idea.count({
-          where: {
-            challengeId,
-            deletedAt: null,
-            evaluations: { some: {} },
-          },
-        }),
-      ]);
+    const [
+      finalistCount,
+      winnerCount,
+      evaluationCount,
+      assignedJudgesCount,
+      ideasWithEvaluations,
+    ] = await Promise.all([
+      this.prisma.idea.count({
+        where: { challengeId, status: 'FINALIST', deletedAt: null },
+      }),
+      this.prisma.idea.count({
+        where: { challengeId, status: 'WINNER', deletedAt: null },
+      }),
+      this.prisma.evaluation.count({
+        where: { idea: { challengeId, deletedAt: null } },
+      }),
+      this.prisma.challengeJudge.count({
+        where: { challengeId },
+      }),
+      this.prisma.idea.count({
+        where: {
+          challengeId,
+          deletedAt: null,
+          evaluations: { some: {} },
+        },
+      }),
+    ]);
 
     return {
       finalistCount,
@@ -263,7 +274,10 @@ export class ChallengeRepository {
       prepared.submissionsCloseAt = prepared.endDate;
       delete prepared.endDate;
     }
-    if ('publicationDate' in prepared && prepared.publicationDate !== undefined) {
+    if (
+      'publicationDate' in prepared &&
+      prepared.publicationDate !== undefined
+    ) {
       prepared.publishedAt = prepared.publicationDate;
       delete prepared.publicationDate;
     }
@@ -272,7 +286,11 @@ export class ChallengeRepository {
       prepared.status = this.normalizeStatus(prepared.status);
     }
 
-    const dateFields = ['publishedAt', 'submissionsOpenAt', 'submissionsCloseAt'];
+    const dateFields = [
+      'publishedAt',
+      'submissionsOpenAt',
+      'submissionsCloseAt',
+    ];
     for (const field of dateFields) {
       if (prepared[field]) {
         prepared[field] = new Date(prepared[field] as string | number | Date);
@@ -335,10 +353,17 @@ export class ChallengeRepository {
    * This guarantees FK integrity for EvaluationScore at write time,
    * not at read time (GET /criteria).
    */
-  private async syncCriteriaToTable(challengeId: string, evaluationCriteria: any) {
+  private async syncCriteriaToTable(
+    challengeId: string,
+    evaluationCriteria: any,
+  ) {
     if (!evaluationCriteria) return;
-    const criteriaList = Array.isArray(evaluationCriteria) ? evaluationCriteria : [];
-    const active = criteriaList.filter((c: any) => c.enabled !== false && c.weight > 0 && c.id);
+    const criteriaList = Array.isArray(evaluationCriteria)
+      ? evaluationCriteria
+      : [];
+    const active = criteriaList.filter(
+      (c: any) => c.enabled !== false && c.weight > 0 && c.id,
+    );
 
     if (active.length === 0) return;
 
@@ -364,11 +389,15 @@ export class ChallengeRepository {
             },
           });
         } catch (err) {
-          this.logger.warn(`syncCriteriaToTable: failed upsert for ${c.id}: ${err}`);
+          this.logger.warn(
+            `syncCriteriaToTable: failed upsert for ${c.id}: ${err}`,
+          );
         }
       }),
     );
-    this.logger.log(`Synced ${active.length} criteria to table for challenge ${challengeId}`);
+    this.logger.log(
+      `Synced ${active.length} criteria to table for challenge ${challengeId}`,
+    );
   }
 
   async delete(id: string): Promise<Challenge> {
@@ -473,7 +502,11 @@ export class ChallengeRepository {
   }
 
   async getChallengeImpactStats(challengeId: string) {
-    const activeStatuses: IdeaStatus[] = [IdeaStatus.PUBLISHED, IdeaStatus.FINALIST, IdeaStatus.WINNER];
+    const activeStatuses: IdeaStatus[] = [
+      IdeaStatus.PUBLISHED,
+      IdeaStatus.FINALIST,
+      IdeaStatus.WINNER,
+    ];
     const [agg, ideas, allAuthors, topIdeas] = await Promise.all([
       this.prisma.idea.aggregate({
         where: { challengeId, status: { in: activeStatuses }, deletedAt: null },
@@ -483,12 +516,20 @@ export class ChallengeRepository {
       this.prisma.idea.findMany({
         where: { challengeId, status: { in: activeStatuses }, deletedAt: null },
         select: {
-          author: { select: { studentProfile: { select: { facultyId: true } } } },
+          author: {
+            select: { studentProfile: { select: { facultyId: true } } },
+          },
         },
       }),
       this.prisma.user.findMany({
         where: {
-          ideas: { some: { challengeId, status: { in: activeStatuses }, deletedAt: null } },
+          ideas: {
+            some: {
+              challengeId,
+              status: { in: activeStatuses },
+              deletedAt: null,
+            },
+          },
         },
         select: {
           id: true,
@@ -509,12 +550,29 @@ export class ChallengeRepository {
           commentsCount: true,
           finalScore: true,
           isAnonymous: true,
+          problem: true,
+          solution: true,
+          createdAt: true,
+          challengeId: true,
+          authorId: true,
           author: {
             select: {
               nickname: true,
               displayName: true,
               email: true,
               avatarUrl: true,
+              phone: true,
+              studentProfile: {
+                select: {
+                  studentCode: true,
+                  facultyId: true,
+                  faculty: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -522,7 +580,9 @@ export class ChallengeRepository {
     ]);
 
     const uniqueFaculties = new Set(
-      ideas.map((i) => i.author?.studentProfile?.facultyId).filter((f) => f != null),
+      ideas
+        .map((i) => i.author?.studentProfile?.facultyId)
+        .filter((f) => f != null),
     );
 
     return {
@@ -544,22 +604,37 @@ export class ChallengeRepository {
         const isAnon = i.isAnonymous;
         const authorName = isAnon
           ? 'Participante'
-          : (i.author?.nickname ||
-             i.author?.displayName ||
-             i.author?.email?.split('@')[0] ||
-             'Participante');
+          : i.author?.nickname ||
+            i.author?.displayName ||
+            i.author?.email?.split('@')[0] ||
+            'Participante';
+        const authorRealName = i.author?.displayName || undefined;
         return {
           id: i.id,
           title: i.title,
+          challengeId: i.challengeId,
+          problem: i.problem,
+          solution: i.solution,
+          createdAt: i.createdAt,
+          authorId: i.authorId,
           likesCount: i.likesCount || 0,
           commentsCount: i.commentsCount || 0,
           finalScore: i.finalScore || 0,
           impact: (i.likesCount || 0) + (i.commentsCount || 0),
           authorName,
+          authorRealName,
+          authorAvatar: isAnon ? undefined : i.author?.avatarUrl || undefined,
+          authorStudentCode: isAnon ? undefined : i.author?.studentProfile?.studentCode || undefined,
+          authorPhone: isAnon ? undefined : i.author?.phone || undefined,
+          authorFacultyId: i.author?.studentProfile?.facultyId,
+          authorFacultyName: i.author?.studentProfile?.faculty?.name,
           author: {
             name: authorName,
-            nickname: isAnon ? undefined : (i.author?.nickname || undefined),
-            avatar: isAnon ? undefined : (i.author?.avatarUrl || undefined),
+            nickname: isAnon ? undefined : i.author?.nickname || undefined,
+            avatar: isAnon ? undefined : i.author?.avatarUrl || undefined,
+            displayName: authorRealName,
+            studentCode: isAnon ? undefined : i.author?.studentProfile?.studentCode || undefined,
+            phone: isAnon ? undefined : i.author?.phone || undefined,
           },
         };
       }),
@@ -636,7 +711,10 @@ export class ChallengeRepository {
 
     const groupedIdeasByAuthor = await this.prisma.idea.groupBy({
       by: ['authorId'],
-      where: { challengeId: { in: challengeIds }, status: { in: activeStatuses } },
+      where: {
+        challengeId: { in: challengeIds },
+        status: { in: activeStatuses },
+      },
       _count: { _all: true },
       _sum: { finalScore: true },
     });
@@ -812,7 +890,10 @@ export class ChallengeRepository {
 
     const groupedIdeasByAuthor = await this.prisma.idea.groupBy({
       by: ['authorId'],
-      where: { challengeId: { in: challengeIds }, status: { in: activeStatuses } },
+      where: {
+        challengeId: { in: challengeIds },
+        status: { in: activeStatuses },
+      },
       _count: { _all: true },
       _sum: { finalScore: true },
     });
@@ -992,7 +1073,11 @@ export class ChallengeRepository {
     return judgeRecords.map((r) => r.judge);
   }
 
-  async assignJudges(challengeId: string, judgeIds: string[], assignedById: string) {
+  async assignJudges(
+    challengeId: string,
+    judgeIds: string[],
+    assignedById: string,
+  ) {
     await this.prisma.$transaction([
       this.prisma.challengeJudge.deleteMany({ where: { challengeId } }),
       this.prisma.challengeJudge.createMany({
@@ -1095,7 +1180,7 @@ export class ChallengeRepository {
       impactArea: (idea as any).impactArea || null,
       improvementType: (idea as any).improvementType || null,
       effortLevel: (idea as any).effortLevel || null,
-      tags: idea.tags?.map(t => t.tag.name) || [],
+      tags: idea.tags?.map((t) => t.tag.name) || [],
       likesCount: idea.likesCount,
       commentsCount: idea.commentsCount,
       createdAt: idea.createdAt,
@@ -1119,7 +1204,7 @@ export class ChallengeRepository {
 
     // evaluationCriteria is stored as JSON array of objects
     const criteriaList = challenge.evaluationCriteria as any[];
-    
+
     if (!Array.isArray(criteriaList)) {
       return [];
     }
@@ -1163,7 +1248,7 @@ export class ChallengeRepository {
           } catch (e) {
             this.logger.error(`Error syncing criterion ${c.id}:`, e);
           }
-        })
+        }),
       );
     }
 

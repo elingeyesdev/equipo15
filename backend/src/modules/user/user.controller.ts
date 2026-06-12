@@ -104,7 +104,7 @@ export class UsersController {
         email: user.email || '',
         displayName:
           body.displayName ||
-          user.displayName ||
+          (user as { displayName?: string }).displayName ||
           user.email?.split('@')[0] ||
           'Usuario de Pista 8',
         avatarUrl: body.avatarUrl,
@@ -135,10 +135,14 @@ export class UsersController {
   }
 
   @Get('faculties')
-  @ApiOperation({ summary: 'Get faculties (active for users, full catalog for admin)' })
+  @ApiOperation({
+    summary: 'Get faculties (active for users, full catalog for admin)',
+  })
   async getFaculties(@Request() req: AuthenticatedRequest) {
     const profile = await this.userService.findByUid(req.user.uid);
-    const isAdmin = String(profile?.role ?? profile?.roleName ?? '').toLowerCase() === 'admin';
+    const isAdmin =
+      String(profile?.role ?? profile?.roleName ?? '').toLowerCase() ===
+      'admin';
     return this.userService.getAllFaculties(!isAdmin);
   }
 

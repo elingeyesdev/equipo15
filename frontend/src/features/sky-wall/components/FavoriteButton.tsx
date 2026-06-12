@@ -87,9 +87,10 @@ const TooltipText = styled.span`
 interface FavoriteButtonProps {
   ideaId: string;
   hasFavorited?: boolean;
+  disabled?: boolean;
 }
 
-export const FavoriteButton = ({ ideaId, hasFavorited }: FavoriteButtonProps) => {
+export const FavoriteButton = ({ ideaId, hasFavorited, disabled }: FavoriteButtonProps) => {
   const { userProfile } = useAuth();
   const [isFavorite, setIsFavorite] = useState(Boolean(hasFavorited));
   const [isUpdating, setIsUpdating] = useState(false);
@@ -104,7 +105,7 @@ export const FavoriteButton = ({ ideaId, hasFavorited }: FavoriteButtonProps) =>
       return;
     }
 
-    if (isUpdating) return;
+    if (isUpdating || disabled) return;
 
     const nextFavoriteState = !isFavorite;
     setIsFavorite(nextFavoriteState);
@@ -129,7 +130,8 @@ export const FavoriteButton = ({ ideaId, hasFavorited }: FavoriteButtonProps) =>
         onClick={handleToggleFavorite}
         type="button"
         aria-label="Marcar como favorito"
-        disabled={isUpdating}
+        disabled={isUpdating || disabled}
+        style={disabled ? { cursor: 'not-allowed', opacity: 0.5, filter: 'grayscale(1)' } : {}}
       >
         <svg
           width="16"
@@ -144,7 +146,9 @@ export const FavoriteButton = ({ ideaId, hasFavorited }: FavoriteButtonProps) =>
           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
         </svg>
       </Button>
-      <TooltipText className="custom-tooltip">{isFavorite ? 'Marcado' : 'Guardar'}</TooltipText>
+      <TooltipText className="custom-tooltip">
+        {disabled ? 'Fase de evaluación técnica' : isFavorite ? 'Marcado' : 'Guardar'}
+      </TooltipText>
     </TooltipContainer>
   );
 };

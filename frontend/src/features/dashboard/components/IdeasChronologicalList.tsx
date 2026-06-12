@@ -360,8 +360,8 @@ const rawToPlane = (idea: RawIdea, index: number, userProfile?: any): PlaneIdea 
   const authorName = idea.isAnonymous
     ? 'Anónimo'
     : isCurrentUser && userProfile
-      ? resolveDisplayName(userProfile as any)
-      : resolveDisplayName(idea.author);
+      ? userProfile.displayName || resolveDisplayName(userProfile as any)
+      : idea.author?.displayName || resolveDisplayName(idea.author);
 
   return {
   id: idea.id ?? idea._id ?? String(index),
@@ -486,8 +486,8 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
           const authorName = idea.isAnonymous
             ? 'Anónimo'
             : isCurrentUser && userProfile
-              ? resolveDisplayName(userProfile as any)
-              : resolveDisplayName(idea.author);
+              ? userProfile.displayName || resolveDisplayName(userProfile as any)
+              : idea.author?.displayName || resolveDisplayName(idea.author);
 
           return (
             <TopCard
@@ -526,8 +526,8 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
             const authorName = idea.isAnonymous
               ? 'Anónimo'
               : isCurrentUser && userProfile
-                ? resolveDisplayName(userProfile as any)
-                : resolveDisplayName(idea.author);
+                ? userProfile.displayName || resolveDisplayName(userProfile as any)
+                : idea.author?.displayName || resolveDisplayName(idea.author);
 
             return (
               <ExpandedCard

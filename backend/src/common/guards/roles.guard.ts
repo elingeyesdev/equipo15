@@ -40,11 +40,11 @@ export class RolesGuard implements CanActivate {
     const firebaseUser = request.user;
 
     const cacheKey = `role:${firebaseUser.uid}`;
-    let prismaRole = await this.redisService.get(cacheKey);
+    let prismaRole: string = (await this.redisService.get(cacheKey)) as string;
 
     if (!prismaRole) {
       const user = await this.userRepository.findByUid(firebaseUser.uid);
-      prismaRole = String(user?.role ?? '');
+      prismaRole = String((user as { role?: string })?.role ?? '');
       await this.redisService.set(cacheKey, prismaRole, ROLE_CACHE_TTL_MS);
     }
 

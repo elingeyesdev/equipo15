@@ -36,7 +36,10 @@ export class IdeaRepository {
               nickname: true,
               role: true,
               studentProfile: {
-                select: { facultyId: true, faculty: { select: { name: true } } },
+                select: {
+                  facultyId: true,
+                  faculty: { select: { name: true } },
+                },
               },
             },
           },
@@ -48,10 +51,7 @@ export class IdeaRepository {
     return { data, total };
   }
 
-  private buildWhereClause(
-    challengeId?: string,
-    search?: string,
-  ): any {
+  private buildWhereClause(challengeId?: string, search?: string): any {
     const where: any = { status: { in: ['PUBLISHED', 'FINALIST', 'WINNER'] } };
     if (challengeId) where.challengeId = challengeId;
 
@@ -124,14 +124,20 @@ export class IdeaRepository {
               role: true,
               avatarUrl: true,
               studentProfile: {
-                select: { facultyId: true, faculty: { select: { name: true } } },
+                select: {
+                  facultyId: true,
+                  faculty: { select: { name: true } },
+                },
               },
             },
           },
           challenge: { select: { status: true } },
           ...(userId
             ? {
-                reactions: { where: { userId }, select: { id: true, type: true } },
+                reactions: {
+                  where: { userId },
+                  select: { id: true, type: true },
+                },
               }
             : {}),
         },
@@ -143,8 +149,12 @@ export class IdeaRepository {
       const { reactions, ...rest } = idea as any;
       return {
         ...rest,
-        hasVoted: Array.isArray(reactions) && reactions.some((r: any) => r.type === 'LIKE'),
-        hasFavorited: Array.isArray(reactions) && reactions.some((r: any) => r.type === 'FAVORITE'),
+        hasVoted:
+          Array.isArray(reactions) &&
+          reactions.some((r: any) => r.type === 'LIKE'),
+        hasFavorited:
+          Array.isArray(reactions) &&
+          reactions.some((r: any) => r.type === 'FAVORITE'),
       } as IdeaWithVoteStatus;
     });
 
@@ -188,9 +198,18 @@ export class IdeaRepository {
     });
   }
 
-  async upsertLike(ideaId: string, userId: string, targetReaction: string): Promise<any> {
+  async upsertLike(
+    ideaId: string,
+    userId: string,
+    targetReaction: string,
+  ): Promise<any> {
     const fireDelta = targetReaction === 'COMPLEX' ? 0.5 : 2;
-    const countField = targetReaction === 'GOOD' ? 'goodCount' : targetReaction === 'FUTURE' ? 'futureCount' : 'complexCount';
+    const countField =
+      targetReaction === 'GOOD'
+        ? 'goodCount'
+        : targetReaction === 'FUTURE'
+          ? 'futureCount'
+          : 'complexCount';
 
     try {
       // Usar transaction para intentar crear y si falla (P2002), actualizar en otra petición no es atómico.
@@ -207,8 +226,14 @@ export class IdeaRepository {
             await tx.ideaReaction.delete({
               where: { id: existing.id },
             });
-            const oldFireDelta = existing.reactionType === 'COMPLEX' ? -0.5 : -2;
-            const oldField = existing.reactionType === 'GOOD' ? 'goodCount' : existing.reactionType === 'FUTURE' ? 'futureCount' : 'complexCount';
+            const oldFireDelta =
+              existing.reactionType === 'COMPLEX' ? -0.5 : -2;
+            const oldField =
+              existing.reactionType === 'GOOD'
+                ? 'goodCount'
+                : existing.reactionType === 'FUTURE'
+                  ? 'futureCount'
+                  : 'complexCount';
             const updatedIdea = await tx.idea.update({
               where: { id: ideaId },
               data: {
@@ -224,8 +249,14 @@ export class IdeaRepository {
               where: { id: existing.id },
               data: { reactionType: targetReaction },
             });
-            const oldFireDelta = existing.reactionType === 'COMPLEX' ? -0.5 : -2;
-            const oldField = existing.reactionType === 'GOOD' ? 'goodCount' : existing.reactionType === 'FUTURE' ? 'futureCount' : 'complexCount';
+            const oldFireDelta =
+              existing.reactionType === 'COMPLEX' ? -0.5 : -2;
+            const oldField =
+              existing.reactionType === 'GOOD'
+                ? 'goodCount'
+                : existing.reactionType === 'FUTURE'
+                  ? 'futureCount'
+                  : 'complexCount';
             const updatedIdea = await tx.idea.update({
               where: { id: ideaId },
               data: {
@@ -239,7 +270,12 @@ export class IdeaRepository {
         } else {
           // Crear reacción (puede lanzar P2002 si hay concurrencia extrema, el service lo capturará)
           await tx.ideaReaction.create({
-            data: { ideaId, userId, type: 'LIKE', reactionType: targetReaction },
+            data: {
+              ideaId,
+              userId,
+              type: 'LIKE',
+              reactionType: targetReaction,
+            },
           });
           const updatedIdea = await tx.idea.update({
             where: { id: ideaId },
@@ -253,7 +289,10 @@ export class IdeaRepository {
         }
       });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
         throw error; // Re-throw to be caught by service
       }
       throw error;
@@ -389,7 +428,10 @@ export class IdeaRepository {
                 phone: true,
                 role: true,
                 studentProfile: {
-                  select: { facultyId: true, faculty: { select: { name: true } } },
+                  select: {
+                    facultyId: true,
+                    faculty: { select: { name: true } },
+                  },
                 },
               },
             },

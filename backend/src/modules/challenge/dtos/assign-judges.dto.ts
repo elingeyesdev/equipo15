@@ -9,6 +9,8 @@ export class AssignJudgesDto {
   })
   @IsArray()
   @IsString({ each: true })
-  @ArrayMaxSize(5, { message: 'No se pueden asignar más de 5 jueces a un reto.' })
+  @ArrayMaxSize(5, {
+    message: 'No se pueden asignar más de 5 jueces a un reto.',
+  })
   judgeIds: string[];
 }

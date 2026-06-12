@@ -40,7 +40,7 @@ export class EventsGateway
         return;
       }
       const decodedToken = await admin.auth().verifyIdToken(token);
-      client.join(`user:${decodedToken.uid}`);
+      void client.join(`user:${decodedToken.uid}`);
       this.logger.log(
         `Client authenticated and connected: ${client.id} to room user:${decodedToken.uid}`,
       );
@@ -57,14 +57,14 @@ export class EventsGateway
   @SubscribeMessage('join_challenge')
   handleJoinChallenge(client: Socket, challengeId: string) {
     const room = `challenge:${challengeId}`;
-    client.join(room);
+    void client.join(room);
     this.logger.log(`Client ${client.id} joined room ${room}`);
   }
 
   @SubscribeMessage('leave_challenge')
   handleLeaveChallenge(client: Socket, challengeId: string) {
     const room = `challenge:${challengeId}`;
-    client.leave(room);
+    void client.leave(room);
     this.logger.log(`Client ${client.id} left room ${room}`);
   }
 

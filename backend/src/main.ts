@@ -15,7 +15,10 @@ async function bootstrap() {
   // Forzar redirección HTTPS en producción
   app.use((req: any, res: any, next: any) => {
     if (process.env.NODE_ENV === 'production') {
-      if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
+      if (
+        req.headers['x-forwarded-proto'] &&
+        req.headers['x-forwarded-proto'] !== 'https'
+      ) {
         return res.redirect(301, `https://${req.headers.host}${req.url}`);
       }
     }

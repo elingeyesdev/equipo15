@@ -45,15 +45,18 @@ export class HttpExceptionFilter implements ExceptionFilter {
           ? exceptionResponse.message.join(', ')
           : exceptionResponse.message || exceptionResponse.error || 'Error';
 
-    if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (status === 500) {
       this.logger.error(
         `[${request.method}] ${request.url} - ${message}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
 
       if (process.env['NODE_ENV'] === 'production') {
-        message = 'Ha ocurrido un error interno. Por favor, inténtalo más tarde.';
+        message =
+          'Ha ocurrido un error interno. Por favor, inténtalo más tarde.';
       }
+    } else if (status === 400) {
+      this.logger.warn(`[400 Bad Request] ${request.url} - ${message}`);
     }
 
     response.status(status).json({

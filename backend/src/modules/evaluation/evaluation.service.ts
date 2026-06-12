@@ -47,7 +47,9 @@ export class EvaluationService {
         evaluationData.judgeId,
       );
       if (!isAssigned) {
-        throw new ForbiddenException('No estás asignado a este reto como juez.');
+        throw new ForbiddenException(
+          'No estás asignado a este reto como juez.',
+        );
       }
     }
 
@@ -65,12 +67,15 @@ export class EvaluationService {
     }, 0);
   }
 
-  private buildBreakdown(evaluations: EvaluationRow[], idea: {
-    id: string;
-    title: string;
-    finalScore: number;
-    challenge: { id: string; title: string };
-  }) {
+  private buildBreakdown(
+    evaluations: EvaluationRow[],
+    idea: {
+      id: string;
+      title: string;
+      finalScore: number;
+      challenge: { id: string; title: string };
+    },
+  ) {
     const enrichedEvaluations = evaluations.map((evaluation) => ({
       id: evaluation.id,
       feedback: evaluation.feedback,
@@ -86,7 +91,8 @@ export class EvaluationService {
     const judgeScores = enrichedEvaluations.map((item) => item.judgeScore);
     const averageJudgeScore =
       judgeScores.length > 0
-        ? judgeScores.reduce((sum, score) => sum + score, 0) / judgeScores.length
+        ? judgeScores.reduce((sum, score) => sum + score, 0) /
+          judgeScores.length
         : 0;
 
     const criteriaMap = new Map<

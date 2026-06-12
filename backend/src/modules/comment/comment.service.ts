@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Comment } from '@prisma/client';
+import { Comment, UserRole } from '@prisma/client';
 import { EventBus } from '../../infrastructure/events/event-bus';
 import { RedisService } from '../../infrastructure/redis/redis.module';
 import { ChallengeRepository } from '../challenge/challenge.repository';
@@ -87,7 +87,12 @@ export class CommentService {
 
   private ensureIdeaAllowsComments(status: string) {
     const normalized = (status || '').toUpperCase();
-    if (normalized !== 'PUBLISHED' && normalized !== 'FINALIST' && status !== 'public' && status !== 'top5') {
+    if (
+      normalized !== 'PUBLISHED' &&
+      normalized !== 'FINALIST' &&
+      status !== 'public' &&
+      status !== 'top5'
+    ) {
       throw new BadRequestException(
         'Solo se puede comentar en ideas publicadas.',
       );
@@ -97,7 +102,9 @@ export class CommentService {
   private async ensureChallengeNotClosed(challengeId: string): Promise<void> {
     const challenge = await this.challengeRepository.findById(challengeId);
     if (challenge?.status === 'CLOSED') {
-      throw new ForbiddenException('Operación denegada. El reto ya ha finalizado y se encuentra en la biblioteca histórica');
+      throw new ForbiddenException(
+        'Operación denegada. El reto ya ha finalizado y se encuentra en la biblioteca histórica',
+      );
     }
   }
 
@@ -381,14 +388,16 @@ export class CommentService {
       throw new NotFoundException('El reto asociado a la idea no existe.');
     }
     if (challenge.status === 'CLOSED') {
-      throw new ForbiddenException('Operación denegada. El reto ya ha finalizado y se encuentra en la biblioteca histórica');
+      throw new ForbiddenException(
+        'Operación denegada. El reto ya ha finalizado y se encuentra en la biblioteca histórica',
+      );
     }
 
-    const requesterRole = (requester as any).role ?? 'student';
+    const requesterRole = requester.role ?? UserRole.USER;
     const isAuthor = requester.id === comment.authorId;
-    const isAdmin = requesterRole === 'admin';
+    const isAdmin = requesterRole === UserRole.ADMIN;
     const isCompanyOwnerOfChallenge =
-      requesterRole === 'company' && requester.id === challenge.authorId;
+      requesterRole === UserRole.COMPANY && requester.id === challenge.authorId;
 
     if (!isAuthor && !isAdmin && !isCompanyOwnerOfChallenge) {
       throw new ForbiddenException(
@@ -431,8 +440,9 @@ export class CommentService {
     );
 
     if (isAuthor) {
-      this.moderationService.trackCommentAction(requester.id).catch((err) => {
-      });
+      this.moderationService
+        .trackCommentAction(requester.id)
+        .catch((err) => {});
     }
 
     return {
@@ -558,7 +568,7 @@ export class CommentService {
         await this.userRepository.findByUid(requesterFirebaseUid);
       if (requester) {
         requesterId = requester.id;
-        requesterRole = (requester as any).role ?? 'student';
+        requesterRole = requester.role ?? 'student';
       }
     }
 

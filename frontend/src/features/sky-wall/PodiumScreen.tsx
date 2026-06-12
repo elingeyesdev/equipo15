@@ -1,5 +1,5 @@
-import { memo, useMemo, useCallback } from 'react';
-import styled, { keyframes, css } from 'styled-components';
+import { memo, useMemo } from 'react';
+import styled, { keyframes } from 'styled-components';
 import type { PlaneIdea } from './types';
 import { User, Trophy, Star } from 'lucide-react';
 
@@ -20,11 +20,6 @@ const fadeInOut = keyframes`
 const riseIn = keyframes`
   from { opacity: 0; transform: translateY(40px) scale(0.95); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
-`;
-
-const shimmer = keyframes`
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
 `;
 
 /* ─── layout ─── */

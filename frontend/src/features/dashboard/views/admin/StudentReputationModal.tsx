@@ -1,34 +1,13 @@
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
-import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Pista8Theme } from '@/config/theme';
 import { adminService } from '@/services/admin.service';
 import type { UserReputation, ReputationIdea } from '@/types/models';
-import { EvaluationScoresModal } from '../../components/EvaluationScoresModal';
-import { LightbulbIcon } from '../../components/shared/icons/LightbulbIcon';
-import { ScaleIcon } from '../../components/shared/icons/ScaleIcon';
+import { AdminIdeaUnifiedModal } from '../../components/admin/AdminIdeaUnifiedModal';
+
+import { Eye } from 'lucide-react';
 import { premiumTooltip } from '../../styles/CommonStyles';
-import {
-  AdminCloseBtn,
-  AdminDetailLabel,
-  AdminDetailSection,
-  AdminDetailText,
-  AdminHeaderContent,
-  AdminModalBody,
-  AdminModalCard,
-  AdminModalHeader,
-  AdminModalOverlay,
-  AdminModalSubtitle,
-  AdminModalTitle,
-  AdminSummaryCard,
-  AdminSummaryGrid,
-  AdminSummaryLabel,
-  AdminSummaryValue,
-  AdminTag,
-  AdminTagsRow,
-} from '../../components/admin/AdminModalStyles';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -361,11 +340,6 @@ const IconAction = styled.button<{ $disabled?: boolean; $tooltipText?: string }>
   ${premiumTooltip}
 `;
 
-const TooltipWrap = styled.span<{ $tooltipText?: string }>`
-  display: inline-flex;
-  position: relative;
-  ${premiumTooltip}
-`;
 
 const EmptyIdeas = styled.div`
   padding: 40px 32px;
@@ -468,7 +442,6 @@ const CancelBtn = styled.button`
   }
 `;
 
-const isFinalistIdea = (status: string) => status === 'FINALIST' || status === 'WINNER';
 
 const LoadingContainer = styled.div`
   display: flex;
@@ -552,71 +525,7 @@ const formatDate = (value?: string | Date | null) => {
   return new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium' }).format(date);
 };
 
-const IdeaDetailModal = ({ idea, onClose }: { idea: ReputationIdea; onClose: () => void }) =>
-  createPortal(
-    <AdminModalOverlay onClick={onClose}>
-      <AdminModalCard onClick={(e) => e.stopPropagation()}>
-        <AdminModalHeader>
-          <AdminHeaderContent>
-            <AdminModalTitle>{idea.title}</AdminModalTitle>
-            <AdminModalSubtitle>{idea.challenge.title}</AdminModalSubtitle>
-          </AdminHeaderContent>
-          <AdminCloseBtn type="button" onClick={onClose} aria-label="Cerrar">
-            <X size={18} />
-          </AdminCloseBtn>
-        </AdminModalHeader>
 
-        <AdminModalBody>
-          <AdminSummaryGrid>
-            <AdminSummaryCard $accent="#e11d48">
-              <AdminSummaryValue $accent="#e11d48">{idea.likesCount}</AdminSummaryValue>
-              <AdminSummaryLabel>Likes</AdminSummaryLabel>
-            </AdminSummaryCard>
-            <AdminSummaryCard $accent="#2563eb">
-              <AdminSummaryValue $accent="#2563eb">{idea.commentsCount}</AdminSummaryValue>
-              <AdminSummaryLabel>Comentarios</AdminSummaryLabel>
-            </AdminSummaryCard>
-            <AdminSummaryCard $accent={Pista8Theme.primary}>
-              <AdminSummaryValue $accent={Pista8Theme.primary}>
-                {idea.finalScore > 0 ? idea.finalScore.toFixed(1) : '—'}
-              </AdminSummaryValue>
-              <AdminSummaryLabel>Puntaje</AdminSummaryLabel>
-            </AdminSummaryCard>
-          </AdminSummaryGrid>
-
-          <AdminDetailSection>
-            <AdminDetailLabel>Estado</AdminDetailLabel>
-            <StatusBadge $tone={STATUS_TONES[idea.status] || 'slate'}>
-              {STATUS_LABELS[idea.status] || idea.status}
-            </StatusBadge>
-          </AdminDetailSection>
-
-
-          <AdminDetailSection>
-            <AdminDetailLabel>Propuesta</AdminDetailLabel>
-            <AdminDetailText>{idea.solution}</AdminDetailText>
-          </AdminDetailSection>
-
-          {idea.tags.length > 0 && (
-            <AdminDetailSection>
-              <AdminDetailLabel>Tags</AdminDetailLabel>
-              <AdminTagsRow>
-                {idea.tags.map((tag) => (
-                  <AdminTag key={tag}>{tag}</AdminTag>
-                ))}
-              </AdminTagsRow>
-            </AdminDetailSection>
-          )}
-
-          <AdminDetailSection>
-            <AdminDetailLabel>Fecha de publicación</AdminDetailLabel>
-            <AdminDetailText>{formatDate(idea.createdAt)}</AdminDetailText>
-          </AdminDetailSection>
-        </AdminModalBody>
-      </AdminModalCard>
-    </AdminModalOverlay>,
-    document.body,
-  );
 
 interface StudentReputationModalProps {
   userId: string;
@@ -789,33 +698,12 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
                             <ActionBtnGroup>
                               <IconAction
                                 type="button"
-                                aria-label="Detalles de la Idea"
-                                $tooltipText="Detalles de la Idea"
+                                aria-label="Auditar Propuesta"
+                                $tooltipText="Auditar Propuesta"
                                 onClick={() => setDetailIdea(idea)}
                               >
-                                <LightbulbIcon color="white" size={16} />
+                                <Eye color="white" size={16} />
                               </IconAction>
-                              {isFinalistIdea(idea.status) ? (
-                                <IconAction
-                                  type="button"
-                                  aria-label="Resultados"
-                                  $tooltipText="Resultados"
-                                  onClick={() => setEvaluationIdea(idea)}
-                                >
-                                  <ScaleIcon color="white" size={16} />
-                                </IconAction>
-                              ) : (
-                                <TooltipWrap $tooltipText="Esta idea no clasificó como finalista">
-                                  <IconAction
-                                    type="button"
-                                    aria-label="Resultados no disponibles"
-                                    disabled
-                                    $disabled
-                                  >
-                                    <ScaleIcon color="white" size={16} />
-                                  </IconAction>
-                                </TooltipWrap>
-                              )}
                             </ActionBtnGroup>
                           </ITD>
                         </ITR>
@@ -852,13 +740,21 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
       </Overlay>
 
       {detailIdea && (
-        <IdeaDetailModal idea={detailIdea} onClose={() => setDetailIdea(null)} />
+        <AdminIdeaUnifiedModal
+          ideaId={detailIdea.id}
+          ideaTitle={detailIdea.title}
+          initialIdea={detailIdea}
+          defaultTab="propuesta"
+          onClose={() => setDetailIdea(null)}
+        />
       )}
 
       {evaluationIdea && (
-        <EvaluationScoresModal
+        <AdminIdeaUnifiedModal
           ideaId={evaluationIdea.id}
           ideaTitle={evaluationIdea.title}
+          initialIdea={evaluationIdea}
+          defaultTab="evaluaciones"
           onClose={() => setEvaluationIdea(null)}
         />
       )}

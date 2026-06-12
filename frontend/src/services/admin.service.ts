@@ -135,4 +135,9 @@ export const adminService = {
     const response = await axiosInstance.get(`/admin/challenges/${challengeId}/audit-ideas`);
     return unwrapApiData(response.data);
   },
+
+  async moderateComment(commentId: string, reason: string): Promise<any> {
+    const response = await axiosInstance.patch(`/admin/comments/${commentId}/moderate`, { reason });
+    return unwrapApiData(response.data);
+  },
 };

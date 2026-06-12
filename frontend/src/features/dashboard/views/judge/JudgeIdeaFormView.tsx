@@ -651,20 +651,13 @@ const JudgeIdeaFormView: React.FC<JudgeIdeaFormViewProps> = ({ isReadOnlyMode = 
 
             <Divider />
 
-            {idea.problem === idea.solution ? (
-              <>
-                <SectionLabel>Propuesta</SectionLabel>
-                <SectionContent>{idea.problem}</SectionContent>
-              </>
-            ) : (
-              <>
-                <SectionLabel>Problema que resuelve</SectionLabel>
-                <SectionContent>{idea.problem}</SectionContent>
-                <Divider />
-                <SectionLabel>Solución propuesta</SectionLabel>
-                <SectionContent>{idea.solution}</SectionContent>
-              </>
-            )}
+            <SectionLabel>Propuesta</SectionLabel>
+            <SectionContent>
+              {idea.problem === idea.solution 
+                ? idea.problem 
+                : `${idea.problem || ''}\n\n${idea.solution || ''}`.trim()
+              }
+            </SectionContent>
 
             {/* ── Tags ── */}
             {idea.tags && idea.tags.length > 0 && (

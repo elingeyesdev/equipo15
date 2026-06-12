@@ -1,6 +1,22 @@
-import { Controller, Delete, Get, Patch, Post, Put, Param, Query, Request, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  Put,
+  Param,
+  Query,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { Body } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/guards/roles.decorator';
@@ -25,7 +41,9 @@ export class AdminController {
   }
 
   @Post('companies/:id/impersonate')
-  @ApiOperation({ summary: 'Create a temporary read-only session for a company' })
+  @ApiOperation({
+    summary: 'Create a temporary read-only session for a company',
+  })
   async impersonateCompany(
     @Param('id') companyId: string,
     @Request() req: AuthenticatedRequest,
@@ -38,22 +56,31 @@ export class AdminController {
   }
 
   @Get('global')
-  @ApiOperation({ summary: 'Get global platform analytics for admin dashboard' })
+  @ApiOperation({
+    summary: 'Get global platform analytics for admin dashboard',
+  })
   @ApiResponse({ status: 200, type: GlobalAnalyticsResponseDto })
   async getGlobalAnalytics() {
     return this.adminService.getGlobalAnalytics();
   }
 
   @Get('analytics/global')
-  @ApiOperation({ summary: 'Get global platform analytics for admin dashboard (legacy route)' })
+  @ApiOperation({
+    summary: 'Get global platform analytics for admin dashboard (legacy route)',
+  })
   @ApiResponse({ status: 200, type: GlobalAnalyticsResponseDto })
   async getGlobalAnalyticsLegacy() {
     return this.adminService.getGlobalAnalytics();
   }
 
   @Get('users')
-  @ApiOperation({ summary: 'Search users by name or email with optional role filter' })
-  @ApiResponse({ status: 200, description: 'Paginated list of users matching the search criteria' })
+  @ApiOperation({
+    summary: 'Search users by name or email with optional role filter',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated list of users matching the search criteria',
+  })
   async searchUsers(
     @Query('search') search?: string,
     @Query('role') role?: string,
@@ -69,8 +96,13 @@ export class AdminController {
   }
 
   @Get('users/:id/reputation')
-  @ApiOperation({ summary: 'Get student reputation profile for judge promotion evaluation' })
-  @ApiResponse({ status: 200, description: 'Student reputation profile with metrics and idea history' })
+  @ApiOperation({
+    summary: 'Get student reputation profile for judge promotion evaluation',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Student reputation profile with metrics and idea history',
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   async getUserReputation(@Param('id') userId: string) {
     return this.adminService.getUserReputation(userId);
@@ -95,7 +127,9 @@ export class AdminController {
   }
 
   @Get('whitelist')
-  @ApiOperation({ summary: 'List all allowed email domains (whitelist) — legacy alias' })
+  @ApiOperation({
+    summary: 'List all allowed email domains (whitelist) — legacy alias',
+  })
   async getWhitelistDomainsLegacy() {
     return this.adminService.getAllowedDomains();
   }
@@ -116,7 +150,9 @@ export class AdminController {
   }
 
   @Get('challenges/:id/audit-ideas')
-  @ApiOperation({ summary: 'List finalist ideas for rubric audit in global dashboard' })
+  @ApiOperation({
+    summary: 'List finalist ideas for rubric audit in global dashboard',
+  })
   async getChallengeAuditIdeas(@Param('id') challengeId: string) {
     return this.adminService.getChallengeAuditIdeas(challengeId);
   }
@@ -125,5 +161,18 @@ export class AdminController {
   @ApiOperation({ summary: 'Remove a domain from the whitelist' })
   async removeWhitelistDomain(@Param('id') id: string) {
     return this.adminService.removeAllowedDomain(id);
+  }
+
+  @Patch('comments/:id/moderate')
+  @ApiOperation({
+    summary: 'Soft delete a comment for moderation and add an audit log',
+  })
+  @ApiResponse({ status: 200, description: 'Comment successfully hidden' })
+  async moderateComment(
+    @Param('id') commentId: string,
+    @Body('reason') reason: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.adminService.moderateComment(commentId, req.user.uid, reason);
   }
 }

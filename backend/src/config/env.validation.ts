@@ -1,5 +1,4 @@
-const DEFAULT_DATABASE_URL =
-  'postgresql://user:password@localhost:5432/pista8';
+const DEFAULT_DATABASE_URL = 'postgresql://user:password@localhost:5432/pista8';
 const DEFAULT_PORT = 3000;
 
 export function validateEnv(config: Record<string, unknown>) {
