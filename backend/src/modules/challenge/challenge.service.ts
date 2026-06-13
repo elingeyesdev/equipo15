@@ -29,6 +29,30 @@ export class ChallengeService {
     private readonly notificationService: NotificationService,
   ) {}
 
+  private processEvaluationCriteria(evaluationCriteria?: any[]): any[] {
+    const active = (evaluationCriteria || []).filter((c: any) => c.enabled !== false);
+
+    if (active.length === 0) {
+      return [
+        { id: 'desirability', name: 'Deseabilidad', description: 'Valor real para personas o negocio', enabled: true, weight: 33, isOptional: false },
+        { id: 'feasibility',  name: 'Factibilidad', description: 'Posibilidad real de implementar', enabled: true, weight: 33, isOptional: false },
+        { id: 'alignment',    name: 'Alineación',   description: 'Coherencia con el reto y la estrategia', enabled: true, weight: 34, isOptional: false },
+        { id: 'viability',    name: 'Viabilidad',    description: 'Sostenibilidad en el tiempo y en recursos', enabled: false, weight: 0, isOptional: true },
+        { id: 'speed',        name: 'Rapidez',       description: 'Velocidad estimada de implementación', enabled: false, weight: 0, isOptional: true },
+        { id: 'scalability',  name: 'Escalabilidad', description: 'Potencial de crecimiento más allá del piloto', enabled: false, weight: 0, isOptional: true },
+      ];
+    }
+
+    const totalWeight = active.reduce((sum, c) => sum + (Number(c.weight) || 0), 0);
+    if (totalWeight !== 100) {
+      throw new BadRequestException(
+        `El peso total de los criterios de evaluación habilitados debe sumar exactamente 100% (actual: ${totalWeight}%).`,
+      );
+    }
+
+    return evaluationCriteria || [];
+  }
+
   async getUserByUid(uid: string): Promise<UserResponse | null> {
     return this.userService.findByUid(uid);
   }
@@ -83,15 +107,34 @@ export class ChallengeService {
       }
     }
 
+    const normalizedCriteria = this.processEvaluationCriteria(createChallengeDto.evaluationCriteria);
+
     const payload: Record<string, any> = {
       ...rest,
+      evaluationCriteria: normalizedCriteria,
       status: finalStatus,
       submissionsOpenAt: finalStart,
       submissionsCloseAt: finalEnd,
       publishedAt: finalStatus === 'PUBLISHED' ? now : undefined,
     };
 
-    payload.facultyId = await this.resolveFacultyId(payload.facultyId);
+    const facultyIdsList: string[] = [];
+    if (Array.isArray(payload.facultyIds)) {
+      for (const fId of payload.facultyIds) {
+        const resolved = await this.resolveFacultyId(fId);
+        if (resolved) {
+          facultyIdsList.push(resolved);
+        }
+      }
+    }
+    if (payload.facultyId) {
+      const resolved = await this.resolveFacultyId(payload.facultyId);
+      if (resolved && !facultyIdsList.includes(resolved)) {
+        facultyIdsList.push(resolved);
+      }
+    }
+    delete payload.facultyId;
+    payload.facultyIds = facultyIdsList;
 
     const createdChallenge = await this.challengeRepository.create({
       ...payload,
@@ -184,9 +227,12 @@ export class ChallengeService {
     if (uid && challenge.isPrivate) {
       const user = await this.userService.findByUid(uid);
       if (user && ((user.role as any) === 'student' || user.role === 'USER')) {
+        const userFacultyId = (user as any).studentProfile?.facultyId;
+        const challengeFaculties = (challenge as any).faculties || [];
+        const hasFaculties = challengeFaculties.length > 0;
         if (
-          challenge.facultyId !== null &&
-          challenge.facultyId !== (user as any).studentProfile?.facultyId
+          hasFaculties &&
+          (!userFacultyId || !challengeFaculties.some((f: any) => f.id === userFacultyId))
         ) {
           throw new NotFoundException(
             `El reto es privado y no pertenece a tu facultad.`,
@@ -251,6 +297,9 @@ export class ChallengeService {
     const criteriaOnlyPhase = this.isCriteriaOnlyPhase(existing);
 
     if (updateChallengeDto.evaluationCriteria !== undefined) {
+      const normalizedCriteria = this.processEvaluationCriteria(updateChallengeDto.evaluationCriteria);
+      updateChallengeDto.evaluationCriteria = normalizedCriteria;
+
       const existingCriteria = JSON.stringify(existing.evaluationCriteria ?? []);
       const newCriteria = JSON.stringify(updateChallengeDto.evaluationCriteria ?? []);
       if (existingCriteria !== newCriteria) {
@@ -335,7 +384,28 @@ export class ChallengeService {
       publishedAt: finalStatus === 'PUBLISHED' && !existing.publishedAt ? now : undefined,
     };
 
-    payload.facultyId = await this.resolveFacultyId(payload.facultyId);
+    const facultyIdsList: string[] = [];
+    if (Array.isArray(payload.facultyIds)) {
+      for (const fId of payload.facultyIds) {
+        const resolved = await this.resolveFacultyId(fId);
+        if (resolved) {
+          facultyIdsList.push(resolved);
+        }
+      }
+    }
+    if (payload.facultyId) {
+      const resolved = await this.resolveFacultyId(payload.facultyId);
+      if (resolved && !facultyIdsList.includes(resolved)) {
+        facultyIdsList.push(resolved);
+      }
+    }
+    const hasFacultyInput = ('facultyIds' in payload) || ('facultyId' in payload);
+    if (hasFacultyInput) {
+      payload.facultyIds = facultyIdsList;
+    } else {
+      delete payload.facultyIds;
+    }
+    delete payload.facultyId;
 
     const updatedChallenge = await this.challengeRepository.update(id, payload);
     this.logger.log(
@@ -476,7 +546,6 @@ export class ChallengeService {
           id: true,
           title: true,
           isPrivate: true,
-          facultyId: true,
         },
       });
 

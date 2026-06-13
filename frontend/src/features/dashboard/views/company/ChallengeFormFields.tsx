@@ -309,38 +309,42 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <FieldGroup style={{ marginBottom: 0 }}>
               <Label $locked={locked('core')}>
-                Facultad dirigida
+                Áreas de interés
                 {locked('core') && <LockedBadge>No editable</LockedBadge>}
               </Label>
-              <select
-                value={form.facultyId || ''}
-                onChange={e => !locked('core') && updateField('facultyId', e.target.value || null)}
-                disabled={locked('core')}
-                style={{
-                  width: '100%', padding: '12px 14px', borderRadius: 12,
-                  border: '1.5px solid rgba(72,80,84,0.18)', outline: 'none',
-                  fontSize: 13.5, fontWeight: 500, color: '#1a1f22',
-                  backgroundColor: locked('core') ? '#f8f9fa' : 'white',
-                  cursor: locked('core') ? 'not-allowed' : 'pointer',
-                  appearance: 'none',
-                  backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23485054%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 14px center',
-                }}
-              >
-                <option value="">Todas las Facultades</option>
-                {dbFaculties.length > 0 ? (
-                  dbFaculties.filter((f: any) => f.name !== 'Todas').map((f: any) => (
-                    <option key={f.id} value={f.id}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                {(dbFaculties.length > 0 ? dbFaculties.filter((f: any) => f.name !== 'Todas') : FACULTIES).map((f: any) => {
+                  const sel = form.facultyIds?.includes(f.id);
+                  return (
+                    <button
+                      key={f.id}
+                      type="button"
+                      disabled={locked('core')}
+                      onClick={() => {
+                        if (locked('core')) return;
+                        const next = sel
+                          ? form.facultyIds.filter(id => id !== f.id)
+                          : [...form.facultyIds, f.id];
+                        updateField('facultyIds', next);
+                      }}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: 999,
+                        border: `1.5px solid ${sel ? Pista8Theme.primary : 'rgba(72,80,84,0.15)'}`,
+                        background: sel ? Pista8Theme.primary : 'white',
+                        color: sel ? 'white' : '#485054',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: locked('core') ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.15s',
+                        opacity: locked('core') && !sel ? 0.6 : 1,
+                      }}
+                    >
                       {f.name.startsWith('Facultad') ? f.name : `Facultad de ${f.name}`}
-                    </option>
-                  ))
-                ) : (
-                  FACULTIES.map(f => (
-                    <option key={f.id} value={f.id}>{f.name}</option>
-                  ))
-                )}
-              </select>
+                    </button>
+                  );
+                })}
+              </div>
             </FieldGroup>
 
             <div style={{ display: 'flex', gap: 12, width: '100%' }}>
@@ -385,51 +389,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               Reto privado
             </CheckboxRow>
 
-            <FieldGroup style={{ marginBottom: 0 }}>
-              <Label>Audiencia objetivo</Label>
-              <div style={{ background: '#f8f9fa', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div>
-                  <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a8b0b8', margin: '0 0 6px' }}>Rango de edad</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {['18-22', '23-27', '28-35', '36+'].map(range => {
-                      const sel = form.targetAudience.ageRanges.includes(range);
-                      return (
-                        <button key={range} type="button" onClick={() => {
-                          const next = sel
-                            ? form.targetAudience.ageRanges.filter(r => r !== range)
-                            : [...form.targetAudience.ageRanges, range];
-                          updateField('targetAudience', { ...form.targetAudience, ageRanges: next });
-                        }} style={{
-                          padding: '5px 12px', borderRadius: 999, border: `1.5px solid ${sel ? Pista8Theme.primary : 'rgba(72,80,84,0.15)'}`,
-                          background: sel ? Pista8Theme.primary : 'white', color: sel ? 'white' : '#485054',
-                          fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
-                        }}>{range} años</button>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div>
-                  <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a8b0b8', margin: '0 0 6px' }}>Tipo de participante</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {['Universidades', 'Empresas'].map(pType => {
-                      const sel = form.targetAudience.participantTypes.includes(pType);
-                      return (
-                        <button key={pType} type="button" onClick={() => {
-                          const next = sel
-                            ? form.targetAudience.participantTypes.filter(t => t !== pType)
-                            : [...form.targetAudience.participantTypes, pType];
-                          updateField('targetAudience', { ...form.targetAudience, participantTypes: next });
-                        }} style={{
-                          padding: '5px 12px', borderRadius: 999, border: `1.5px solid ${sel ? Pista8Theme.primary : 'rgba(72,80,84,0.15)'}`,
-                          background: sel ? Pista8Theme.primary : 'white', color: sel ? 'white' : '#485054',
-                          fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
-                        }}>{pType}</button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </FieldGroup>
+
           </div>
         </FormGrid>
 
@@ -449,6 +409,13 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                 <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
                   Criterios bloqueados porque el reto ya finalizó.
                 </p>
+              )}
+
+              {!form.evaluationCriteria.some(c => c.enabled) && (
+                <div style={{ background: 'rgba(72,80,84,0.05)', border: '1px dashed rgba(72,80,84,0.25)', borderRadius: 10, padding: 12, marginBottom: 14, fontSize: 12, color: '#485054', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>ℹ️</span>
+                  <span><strong>Reparto automático por defecto:</strong> Al no habilitar ningún criterio, el sistema aplicará automáticamente: Deseabilidad (33%), Factibilidad (33%) y Alineación (34%).</span>
+                </div>
               )}
 
               <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a8b0b8', margin: '0 0 6px' }}>Obligatorios</p>
@@ -603,14 +570,16 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
         <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 800, color: Pista8Theme.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 12, marginTop: -4, wordBreak: 'break-word' }}>
           {(() => {
-            if (!form.facultyId) return 'Todas las Facultades';
+            if (!form.facultyIds || form.facultyIds.length === 0) return 'Todas las Áreas';
             
-            const dbFac = dbFaculties?.find((f: any) => f.id === form.facultyId);
-            if (dbFac) {
-              return dbFac.name.startsWith('Facultad') ? dbFac.name : `Facultad de ${dbFac.name}`;
-            }
-
-            return getFacultyName(form.facultyId) || 'Facultad';
+            const names = form.facultyIds.map(id => {
+              const dbFac = dbFaculties?.find((f: any) => f.id === id);
+              if (dbFac) {
+                return dbFac.name.startsWith('Facultad') ? dbFac.name : `Facultad de ${dbFac.name}`;
+              }
+              return getFacultyName(id) || 'Facultad';
+            });
+            return names.join(', ');
           })()}
         </div>
 
@@ -629,19 +598,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
           </PreviewTypeBadge>
         </div>
 
-        {(form.targetAudience.ageRanges.length > 0 || form.targetAudience.participantTypes.length > 0) && (
-          <PreviewSection>
-            <PreviewSectionLabel>Audiencia objetivo</PreviewSectionLabel>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
-              {form.targetAudience.ageRanges.map(r => (
-                <span key={r} style={{ fontSize: 10, fontWeight: 700, background: `${Pista8Theme.primary}15`, color: Pista8Theme.primary, padding: '3px 10px', borderRadius: 6 }}>{r} años</span>
-              ))}
-              {form.targetAudience.participantTypes.map(t => (
-                <span key={t} style={{ fontSize: 10, fontWeight: 700, background: `${Pista8Theme.primary}15`, color: Pista8Theme.primary, padding: '3px 10px', borderRadius: 6 }}>{t}</span>
-              ))}
-            </div>
-          </PreviewSection>
-        )}
+
 
         {form.problemDescription && (
           <PreviewSection>
@@ -664,19 +621,35 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
           </PreviewSection>
         )}
 
-        {form.evaluationCriteria.some(c => c.enabled) && (
-          <PreviewSection>
-            <PreviewSectionLabel>Criterios de evaluación</PreviewSectionLabel>
-            <PreviewCriteriaList>
-              {form.evaluationCriteria.filter(c => c.enabled).map(c => (
+        <PreviewSection>
+          <PreviewSectionLabel>Criterios de evaluación</PreviewSectionLabel>
+          <PreviewCriteriaList>
+            {form.evaluationCriteria.some(c => c.enabled) ? (
+              form.evaluationCriteria.filter(c => c.enabled).map(c => (
                 <PreviewCriteriaChip key={c.id}>
                   <span>{c.name}</span>
                   <PreviewWeightBadge>{c.weight}%</PreviewWeightBadge>
                 </PreviewCriteriaChip>
-              ))}
-            </PreviewCriteriaList>
-          </PreviewSection>
-        )}
+              ))
+            ) : (
+              <>
+                <span style={{ fontSize: 11, color: '#888', display: 'block', width: '100%', textAlign: 'center', marginBottom: 6, fontStyle: 'italic' }}>Reparto automático por defecto:</span>
+                <PreviewCriteriaChip>
+                  <span>Deseabilidad</span>
+                  <PreviewWeightBadge>33%</PreviewWeightBadge>
+                </PreviewCriteriaChip>
+                <PreviewCriteriaChip>
+                  <span>Factibilidad</span>
+                  <PreviewWeightBadge>33%</PreviewWeightBadge>
+                </PreviewCriteriaChip>
+                <PreviewCriteriaChip>
+                  <span>Alineación</span>
+                  <PreviewWeightBadge>34%</PreviewWeightBadge>
+                </PreviewCriteriaChip>
+              </>
+            )}
+          </PreviewCriteriaList>
+        </PreviewSection>
 
         {!form.title && !form.problemDescription && !form.companyContext && (
           <p style={{ fontSize: 13, color: '#c0c8d0', textAlign: 'center', marginTop: 32 }}>

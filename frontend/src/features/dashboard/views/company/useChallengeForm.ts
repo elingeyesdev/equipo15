@@ -19,7 +19,7 @@ export interface ChallengeFormData {
   status: ChallengeStatus;
   logoUrl: string;
   evaluationCriteria: EvaluationCriterion[];
-  facultyId: string | number | null;
+  facultyIds: string[];
   targetAudience: TargetAudience;
 }
 
@@ -56,7 +56,7 @@ export const emptyForm: ChallengeFormData = {
   participationRules: '', startDate: '', endDate: '',
   isPrivate: false, status: 'Borrador', logoUrl: '',
   evaluationCriteria: DEFAULT_CRITERIA,
-  facultyId: null,
+  facultyIds: [],
   targetAudience: { ageRanges: [], participantTypes: [] },
 };
 
@@ -186,7 +186,7 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
       evaluationCriteria: (challenge.evaluationCriteria && challenge.evaluationCriteria.length > 0)
         ? challenge.evaluationCriteria
         : DEFAULT_CRITERIA,
-      facultyId: challenge.facultyId || null,
+      facultyIds: challenge.faculties ? challenge.faculties.map((f: any) => f.id) : (challenge.facultyId ? [String(challenge.facultyId)] : []),
       targetAudience: (challenge as any).targetAudience || { ageRanges: [], participantTypes: [] },
     } as ChallengeFormData : emptyForm;
 
@@ -337,21 +337,19 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     const forDraft = status === 'Borrador' || status === 'DRAFT';
     if (!validate(forDraft)) return;
 
-    if (!forDraft) {
-      const enabledCriteria = form.evaluationCriteria.filter(c => c.enabled);
-      if (enabledCriteria.length > 0) {
-        if (enabledCriteria.some(c => c.weight === 0)) {
-          toast.error('Criterio sin valor', {
-            description: 'No puedes enviar un criterio de evaluación con 0% de peso. Asígnale un valor o desmárcalo.',
-          });
-          return;
-        }
-        if (totalWeight !== 100) {
-          toast.error('Pesos inválidos', {
-            description: `El peso total de los criterios debe sumar exactamente 100% (actual: ${totalWeight}%).`,
-          });
-          return;
-        }
+    const enabledCriteria = form.evaluationCriteria.filter(c => c.enabled);
+    if (enabledCriteria.length > 0) {
+      if (enabledCriteria.some(c => c.weight === 0)) {
+        toast.error('Criterio sin valor', {
+          description: 'No puedes enviar un criterio de evaluación con 0% de peso. Asígnale un valor o desmárcalo.',
+        });
+        return;
+      }
+      if (totalWeight !== 100) {
+        toast.error('Pesos inválidos', {
+          description: `El peso total de los criterios debe sumar exactamente 100% (actual: ${totalWeight}%).`,
+        });
+        return;
       }
     }
 

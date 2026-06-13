@@ -308,7 +308,10 @@ export const ChallengeVinculacionView = () => {
   }
 
   const sc = getStatusConfig(challenge.status);
-  const facultyName = (challenge as any).faculty?.name || (challenge as any).facultyName || 'Todas las facultades';
+  const faculties = (challenge as any).faculties;
+  const facultyName = Array.isArray(faculties) && faculties.length > 0
+    ? faculties.map((f: any) => f.name.startsWith('Facultad') ? f.name : `Facultad de ${f.name}`).join(', ')
+    : (challenge as any).faculty?.name || (challenge as any).facultyName || 'Todas las facultades';
   const ideasCount = (challenge as any)._count?.ideas ?? challenge.ideasCount ?? 0;
 
   return (

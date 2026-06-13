@@ -82,6 +82,11 @@ export class CreateChallengeDto {
   @IsOptional()
   facultyId?: string | number;
 
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  facultyIds?: string[];
+
   @IsEnum(ChallengeStatus)
   @IsOptional()
   status?: ChallengeStatus;

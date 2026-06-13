@@ -82,8 +82,8 @@ export class ChallengeRepository {
       where.status = { in: ['PUBLISHED', 'EVALUATING', 'CLOSED'] };
 
       const facultyCondition: Prisma.ChallengeWhereInput[] = [
-        { facultyId: null },
-        ...(facultyId ? [{ facultyId }] : []),
+        { faculties: { none: {} } },
+        ...(facultyId ? [{ faculties: { some: { id: facultyId } } }] : []),
       ];
 
       where.OR = [
@@ -109,7 +109,7 @@ export class ChallengeRepository {
         skip,
         take,
         include: {
-          faculty: true,
+          faculties: true,
           _count: {
             select: { ideas: true },
           },
@@ -128,8 +128,17 @@ export class ChallengeRepository {
     return this.prisma.challenge.findUnique({
       where: { id },
       include: {
-        faculty: true,
-        ideas: true,
+        faculties: true,
+        ideas: {
+          where: { deletedAt: null },
+        },
+        _count: {
+          select: {
+            ideas: {
+              where: { deletedAt: null },
+            },
+          },
+        },
       },
     });
   }
@@ -310,10 +319,10 @@ export class ChallengeRepository {
     data: { authorId: string } & Partial<Challenge>,
   ): Promise<Challenge> {
     const prepared = this.prepareData(data);
-    const { authorId, facultyId, ...challengeData } = prepared;
+    const { authorId, facultyIds, ...challengeData } = prepared as any;
 
     this.logger.log(`Prisma Create Challenge by Author: ${authorId}`);
-    this.logger.log(`Faculty ID to connect: ${facultyId}`);
+    this.logger.log(`Faculty IDs to connect: ${JSON.stringify(facultyIds)}`);
 
     const created = await this.prisma.challenge.create({
       data: {
@@ -321,7 +330,9 @@ export class ChallengeRepository {
         author: {
           connect: { id: authorId },
         },
-        ...(facultyId ? { faculty: { connect: { id: facultyId } } } : {}),
+        ...(facultyIds && facultyIds.length > 0
+          ? { faculties: { connect: facultyIds.map((fId: string) => ({ id: fId })) } }
+          : {}),
       },
     });
 
@@ -332,19 +343,17 @@ export class ChallengeRepository {
 
   async update(id: string, data: Partial<Challenge>): Promise<Challenge> {
     const prepared = this.prepareData(data);
-    const { facultyId, ...challengeData } = prepared;
+    const { facultyIds, ...challengeData } = prepared as any;
 
     this.logger.log(`Prisma Update Challenge ID: ${id}`);
-    this.logger.log(`Faculty ID to connect: ${facultyId}`);
+    this.logger.log(`Faculty IDs to connect: ${JSON.stringify(facultyIds)}`);
 
     const updated = await this.prisma.challenge.update({
       where: { id },
       data: {
         ...(challengeData as Prisma.ChallengeUpdateInput),
-        ...(facultyId !== undefined
-          ? facultyId
-            ? { faculty: { connect: { id: facultyId } } }
-            : { faculty: { disconnect: true } }
+        ...(facultyIds !== undefined
+          ? { faculties: { set: facultyIds.map((fId: string) => ({ id: fId })) } }
           : {}),
       },
     });

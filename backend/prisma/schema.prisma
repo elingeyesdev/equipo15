@@ -168,7 +168,10 @@ model User {
   bio         String?
   avatarUrl   String?
   nickname    String?
-  phone       String?
+  phone       String?    @unique
+  institucion_educativa String?
+  ocupacion_laboral      String?
+  codigo_estudiantil     String?
   role        UserRole   @default(USER)
   // CACHÉ de point_transactions. Solo escribe point_transactions.service.ts.
   // Job CRON diario: UPDATE users SET totalPoints = (SELECT COALESCE(SUM(delta),0)
@@ -375,7 +378,6 @@ model Challenge {
   isPrivate          Boolean         @default(false)
   // UNIQUE nullable: PostgreSQL permite múltiples NULL (retos públicos), correcto.
   accessToken        String?         @unique
-  facultyId          String?
   status             ChallengeStatus @default(DRAFT)
   authorId           String
   podiumSize         Int?
@@ -385,7 +387,7 @@ model Challenge {
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
-  faculty  Faculty? @relation(fields: [facultyId], references: [id], onDelete: SetNull)
+  faculties Faculty[]
   // RESTRICT: no se puede eliminar un usuario con retos activos
   author   User     @relation(fields: [authorId], references: [id], onDelete: Restrict)
 

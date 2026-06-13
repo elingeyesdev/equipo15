@@ -359,8 +359,7 @@ export class IdeaRepository {
             id: true,
             title: true,
             status: true,
-            facultyId: true,
-            faculty: { select: { id: true, name: true } },
+            faculties: { select: { id: true, name: true } },
           },
         },
         tags: {

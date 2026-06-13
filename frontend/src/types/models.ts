@@ -16,6 +16,9 @@ export interface UserProfile {
   bio?: string;
   nickname?: string;
   phone?: string;
+  institucion_educativa?: string | null;
+  ocupacion_laboral?: string | null;
+  codigo_estudiantil?: string | null;
   studentCode?: string;
   studentProfile?: { studentCode?: string; facultyId?: string; enrollmentYear?: number; faculty?: { id: string; name: string } | null; };
   facultyName?: string;
@@ -58,6 +61,7 @@ export interface Challenge {
   status: ChallengeStatus;
   facultyId?: string | number | null;
   faculty?: { id: string; name: string } | null;
+  faculties?: { id: string; name: string }[];
 
   category?: string;
   badge?: string;

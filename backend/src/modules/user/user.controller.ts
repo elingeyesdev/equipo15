@@ -15,6 +15,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import type { UserResponse } from './user.service';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { SyncUserDto } from './dtos/sync-user.dto';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
 import type { AuthenticatedRequest } from '../../common/types/authenticated-request.interface';
 import { AdminService } from '../admin/admin.service';
@@ -94,13 +95,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Force sync user profile with Firebase' })
   async syncUser(
     @Request() req: AuthenticatedRequest,
-    @Body()
-    body: {
-      displayName?: string;
-      avatarUrl?: string;
-      preventCreation?: boolean;
-      phone?: string;
-    },
+    @Body() body: SyncUserDto,
   ) {
     const { user } = req;
     return this.userService.findOrCreate(
