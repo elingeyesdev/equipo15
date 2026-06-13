@@ -13,6 +13,8 @@ const Grid = styled.div<{ $count?: number; $isNarrow?: boolean }>`
     gap: 16px;
     width: 100%;
     justify-content: flex-start;
+    flex: 1;
+    min-height: 0;
   ` : css`
     display: grid;
     grid-template-columns: ${p.$count === 1 ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))'};
@@ -116,6 +118,15 @@ const PodiumCard = styled.div<{ $rank: number; $idx: number; $isNarrow?: boolean
     display: flex;
     flex-direction: column;
     transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    flex: 1;
+    min-height: 90px;
+    max-height: 240px;
+
+    &:hover {
+      flex: 1.8;
+      min-height: 200px;
+      max-height: 300px;
+    }
 
     &:hover .detailPage {
       display: flex;
@@ -132,8 +143,10 @@ const PodiumCard = styled.div<{ $rank: number; $idx: number; $isNarrow?: boolean
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 24px 28px;
+      padding: 18px 24px;
       box-sizing: border-box;
+      flex: 1;
+      min-height: 90px;
     }
 
     .detailPage {
@@ -176,7 +189,7 @@ const PodiumCard = styled.div<{ $rank: number; $idx: number; $isNarrow?: boolean
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 24px 28px;
+      padding: 18px 24px;
       box-sizing: border-box;
     }
 
@@ -206,7 +219,7 @@ const PodiumCard = styled.div<{ $rank: number; $idx: number; $isNarrow?: boolean
   .splitLine {
     width: 70%;
     height: 10px;
-    margin: 14px 0;
+    margin: 10px 0;
     align-self: center;
     background-image: linear-gradient(
       to right,
@@ -217,6 +230,7 @@ const PodiumCard = styled.div<{ $rank: number; $idx: number; $isNarrow?: boolean
       transparent 90%
     );
     z-index: 1;
+    flex-shrink: 0;
   }
 
   .trophy {

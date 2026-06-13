@@ -23,6 +23,7 @@ import {
   ensureActiveChallengeStatus,
 } from './utils/idea-validation.util';
 import { ModerationService } from '../moderation/moderation.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class IdeaService {
@@ -37,6 +38,7 @@ export class IdeaService {
     private readonly eventBus: EventBus,
     private readonly redisService: RedisService,
     private readonly moderationService: ModerationService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   private async resolveAuthorId(firebaseUid: string): Promise<string> {
@@ -443,6 +445,15 @@ export class IdeaService {
             authorId: userId,
           },
         );
+
+        if (idea.authorId !== userId) {
+          const challengeTitle = (idea as any).challenge?.title || 'un reto';
+          await this.notificationService.notifyIdeaReaction(
+            idea.authorId,
+            idea.id,
+            challengeTitle,
+          );
+        }
       }
 
       return {

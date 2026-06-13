@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 import { fadeUp, premiumTooltip } from './CommonStyles';
 
-export const LeftPanel = styled.div`
+export const LeftPanel = styled.div<{ $visibleLimit?: number }>`
   background: ${Pista8Theme.white};
   border-radius: 24px;
   padding: 28px 28px;
@@ -11,6 +11,9 @@ export const LeftPanel = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
+  ${p => p.$visibleLimit === 4 && `
+    min-height: 850px;
+  `}
 `;
 
 export const PanelHeader = styled.div`
@@ -119,7 +122,7 @@ export const ChallengeCard = styled.div<{ $active: boolean }>`
   position: relative;
   background: ${Pista8Theme.white};
   border-radius: 20px;
-  padding: 32px 24px;
+  padding: 24px 24px;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   border: 1.5px solid ${p => p.$active ? Pista8Theme.primary : 'rgba(72,80,84,0.08)'};
@@ -324,7 +327,7 @@ export const LikesChip = StatChip;
 export const CommentsChip = StatChip;
 export const CardActionRow = CardBottomRow;
 
-export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?: boolean; $flexCards?: boolean; $cardCount?: number; $visibleLimit?: number }>`
+export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?: boolean; $flexCards?: boolean; $cardCount?: number; $visibleLimit?: number; $podiumCount?: number }>`
   display: flex;
   flex-direction: ${p => (p.$forceColumn || !p.$isFullWidth) ? 'column' : 'row'};
   flex-wrap: ${p => (!p.$forceColumn && p.$isFullWidth) ? 'wrap' : 'nowrap'};
@@ -343,18 +346,22 @@ export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?:
   ${p => (p.$forceColumn || !p.$isFullWidth) && `
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
+    height: ${p.$visibleLimit === 4 && p.$podiumCount === 3 ? 'calc(100% - 50px)' : 'auto'};
+    max-height: ${p.$visibleLimit === 1 ? '200px' : p.$visibleLimit === 4 ? (p.$podiumCount === 3 ? '100%' : '762px') : '414px'};
+    overflow-y: ${p.$cardCount && p.$visibleLimit && p.$cardCount > p.$visibleLimit ? 'auto' : 'hidden'};
     padding-right: 6px;
 
-    ${p.$cardCount && p.$cardCount > (p.$visibleLimit || 3) ? `
+    ${p.$visibleLimit === 4 && p.$podiumCount === 3 ? `
       > * {
-        height: calc((100% - ${((p.$visibleLimit || 3) - 1) * 14}px) / ${p.$visibleLimit || 3});
+        height: calc((100% - ((${Math.min(p.$cardCount || 4, 4)} - 1) * 14px)) / ${Math.min(p.$cardCount || 4, 4)});
+        min-height: 180px;
+        max-height: 240px;
         flex-shrink: 0;
       }
     ` : `
       > * {
-        flex: 1;
-        min-height: 180px;
+        height: 200px;
+        flex-shrink: 0;
       }
     `}
 

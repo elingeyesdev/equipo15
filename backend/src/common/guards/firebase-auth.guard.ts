@@ -11,6 +11,7 @@ import * as admin from 'firebase-admin';
 import { FIREBASE_ADMIN_TOKEN } from '../../infrastructure/firebase/firebase-admin.module';
 import { AuthenticatedRequest } from '../types/authenticated-request.interface';
 import { verifyImpersonationToken } from '../../modules/admin/impersonation-token.util';
+import { PrismaService } from '../../infrastructure/database/prisma.service';
 
 @Injectable()
 export class FirebaseAuthGuard implements CanActivate {
@@ -18,6 +19,7 @@ export class FirebaseAuthGuard implements CanActivate {
 
   constructor(
     @Inject(FIREBASE_ADMIN_TOKEN) private readonly firebaseAdmin: admin.app.App,
+    private readonly prisma: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -28,8 +30,16 @@ export class FirebaseAuthGuard implements CanActivate {
     if (impToken) {
       try {
         const impersonationToken = verifyImpersonationToken(impToken);
-        request.user =
-          impersonationToken as unknown as AuthenticatedRequest['user'];
+        const dbUser = await this.prisma.user.findUnique({
+          where: { firebaseUid: impersonationToken.uid },
+          select: { id: true, role: true, status: true },
+        });
+        request.user = {
+          ...(impersonationToken as any),
+          id: dbUser?.id,
+          role: dbUser?.role,
+          status: dbUser?.status,
+        };
 
         const unsafeMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
         if (unsafeMethods.has((request.method || '').toUpperCase())) {
@@ -53,7 +63,18 @@ export class FirebaseAuthGuard implements CanActivate {
     const token = authHeader.split(' ')[1];
     try {
       const decodedToken = await this.firebaseAdmin.auth().verifyIdToken(token);
-      request.user = decodedToken;
+      
+      const dbUser = await this.prisma.user.findUnique({
+        where: { firebaseUid: decodedToken.uid },
+        select: { id: true, role: true, status: true },
+      });
+
+      request.user = {
+        ...decodedToken,
+        id: dbUser?.id,
+        role: dbUser?.role,
+        status: dbUser?.status,
+      } as any;
       return true;
     } catch (error) {
       const errorMessage =

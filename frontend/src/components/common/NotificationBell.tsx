@@ -219,7 +219,7 @@ export const NotificationBell: React.FC = () => {
         ...prev,
       ]);
 
-      if (notif.type === 'ROLE_UPDATE') {
+      if (notif.type === 'ROLE_UPDATE' || notif.type === 'ROLE_UPDATED') {
         void refetchProfile();
       }
     };
@@ -263,8 +263,9 @@ export const NotificationBell: React.FC = () => {
     setOpen(false);
 
     if (notif.referenceType === 'IDEA' && notif.referenceId) {
-      // You can implement custom routing logic here
-      navigate('/dashboard/ideacion');
+      navigate(`/dashboard?ideaId=${notif.referenceId}`);
+    } else if (notif.referenceType === 'CHALLENGE' && notif.referenceId) {
+      navigate(`/dashboard?challengeId=${notif.referenceId}`);
     }
   };
 

@@ -93,8 +93,8 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
     : null;
 
   const visibleLimit = (!showAllIdeas && displayedWallIdeas && displayedWallIdeas.length > 0)
-    ? Math.min(displayedWallIdeas.length, 3)
-    : 3;
+    ? Math.min(displayedWallIdeas.length, 2)
+    : 2;
 
   return (
     <S.Page>
@@ -251,7 +251,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
 
           {!showAllIdeas ? (
             <>
-              <S.SplitGrid style={{ marginTop: '24px', alignItems: 'start', height: visibleLimit === 1 ? '280px' : visibleLimit === 2 ? '480px' : '680px' }}>
+              <S.SplitGrid style={{ marginTop: '24px', alignItems: 'stretch', height: visibleLimit === 1 ? '300px' : '520px' }}>
                 {ds.sortOrder && (
                   <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <IdeasChronologicalList
@@ -324,32 +324,29 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
               </S.FullWidthContainer>
 
               <S.SplitGridEqual style={{ marginTop: '24px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <ChallengeList
-                    loading={ds.loading}
-                    challenges={ds.challenges}
-                    activeFilter={ds.activeFilter}
-                    onFilterChange={ds.setActiveFilter}
-                    filterOpen={ds.filterOpen}
-                    setFilterOpen={ds.setFilterOpen}
-                    selectedChallengeId={ds.selectedChallenge?.id || ''}
-                    onSelectChallenge={ds.selectChallenge}
-                    onRespond={(c: Challenge) => ds.handleOpenForm(c, formResetForm)}
-                    onClearSelection={ds.clearSelectedChallenge}
-                    searchQuery={ds.debouncedSearch}
-                    userFacultyId={userProfile?.facultyId}
-                    forceColumn
-                    visibleChallengesLimit={visibleLimit}
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <StatsPanel
-                    selectedChallenge={ds.selectedChallenge}
-                    challengeStats={ds.challengeStats}
-                    onSelectIdea={handleSelectIdea}
-                    isNarrow={true}
-                  />
-                </div>
+                <ChallengeList
+                  loading={ds.loading}
+                  challenges={ds.challenges}
+                  activeFilter={ds.activeFilter}
+                  onFilterChange={ds.setActiveFilter}
+                  filterOpen={ds.filterOpen}
+                  setFilterOpen={ds.setFilterOpen}
+                  selectedChallengeId={ds.selectedChallenge?.id || ''}
+                  onSelectChallenge={ds.selectChallenge}
+                  onRespond={(c: Challenge) => ds.handleOpenForm(c, formResetForm)}
+                  onClearSelection={ds.clearSelectedChallenge}
+                  searchQuery={ds.debouncedSearch}
+                  userFacultyId={userProfile?.facultyId}
+                  forceColumn
+                  visibleChallengesLimit={4}
+                  podiumCount={ds.challengeStats?.topIdeas?.length || 0}
+                />
+                <StatsPanel
+                  selectedChallenge={ds.selectedChallenge}
+                  challengeStats={ds.challengeStats}
+                  onSelectIdea={handleSelectIdea}
+                  isNarrow={true}
+                />
               </S.SplitGridEqual>
             </>
           )}

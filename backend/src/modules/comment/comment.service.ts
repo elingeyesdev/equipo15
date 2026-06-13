@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { Comment, UserRole } from '@prisma/client';
 import { EventBus } from '../../infrastructure/events/event-bus';
@@ -18,6 +19,7 @@ import {
   COMMENT_CONTENT_RULES,
 } from './utils/comment-validation.util';
 import { ModerationService } from '../moderation/moderation.service';
+import { NotificationService } from '../notification/notification.service';
 
 export interface CreateCommentInput {
   content: string;
@@ -47,6 +49,7 @@ export interface UpdateCommentInput {
 
 @Injectable()
 export class CommentService {
+  private readonly logger = new Logger(CommentService.name);
   private readonly duplicateWindowMs = COMMENT_CONTENT_RULES.duplicateWindowMs;
   private readonly maxCommentsPerMinute =
     COMMENT_CONTENT_RULES.maxCommentsPerMinute;
@@ -60,6 +63,7 @@ export class CommentService {
     private readonly eventBus: EventBus,
     private readonly redisService: RedisService,
     private readonly moderationService: ModerationService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   private async ensureUserCanWrite(firebaseUid: string): Promise<string> {
@@ -295,6 +299,33 @@ export class CommentService {
       },
     );
 
+    try {
+      if (input.parentCommentId) {
+        const parentComment = await this.commentRepository.findById(input.parentCommentId);
+        if (parentComment && parentComment.authorId !== authorId) {
+          const replier = await this.userRepository.findById(authorId);
+          const replierName = replier?.displayName || 'Un participante';
+          await this.notificationService.notifyCommentReply(
+            parentComment.authorId,
+            replierName,
+            idea.id,
+          );
+        }
+      } else {
+        if (idea.authorId !== authorId) {
+          const challenge = await this.challengeRepository.findById(idea.challengeId);
+          const challengeTitle = challenge?.title || 'un reto';
+          await this.notificationService.notifyNewComment(
+            idea.authorId,
+            idea.id,
+            challengeTitle,
+          );
+        }
+      }
+    } catch (err) {
+      this.logger.error('Error sending comment notifications:', err);
+    }
+
     return createdComment;
   }
 
@@ -358,6 +389,20 @@ export class CommentService {
         authorId,
       },
     );
+
+    try {
+      if (parentComment.authorId !== authorId) {
+        const replier = await this.userRepository.findById(authorId);
+        const replierName = replier?.displayName || 'Un participante';
+        await this.notificationService.notifyCommentReply(
+          parentComment.authorId,
+          replierName,
+          idea.id,
+        );
+      }
+    } catch (err) {
+      this.logger.error('Error sending reply notification:', err);
+    }
 
     return createdComment;
   }

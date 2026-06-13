@@ -25,14 +25,14 @@ export const BaseSkeleton = styled.div`
 
 export const CardSkeleton = styled.div`
   position: relative;
-  padding: 20px 22px;
+  padding: 24px 24px;
   border-radius: 18px;
   border: 1.5px solid rgba(72,80,84,0.05);
   background: white;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: 160px;
+  height: 180px;
 `;
 
 export const SkeletonTag = styled(BaseSkeleton)`

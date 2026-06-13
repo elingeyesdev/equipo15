@@ -247,7 +247,7 @@ export class AdminRepository {
 
       let removedChallenges: Array<{ challengeTitle: string; companyUserId: string }> = [];
 
-      if (previousRole === 'JUDGE' && newRole === 'USER') {
+      if (previousRole === 'JUDGE' && newRole !== 'JUDGE') {
         const assignments = await tx.challengeJudge.findMany({
           where: { judgeId: userId },
           include: { challenge: { select: { id: true, title: true, authorId: true } } },

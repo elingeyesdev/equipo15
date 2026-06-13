@@ -12,5 +12,6 @@ export interface ImpersonationClaims {
 }
 
 export interface AuthenticatedRequest extends Request {
-  user: DecodedIdToken & ImpersonationClaims;
+  user: DecodedIdToken & ImpersonationClaims & { id?: string; role?: string; status?: string };
 }
+

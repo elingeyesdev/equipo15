@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ChallengeRepository } from './challenge.repository';
-import { Challenge, IdeaStatus, WinnerCategory } from '@prisma/client';
+import { Challenge, IdeaStatus, WinnerCategory, ReferenceType } from '@prisma/client';
 import { CreateChallengeDto } from './dtos/create-challenge.dto';
 import { UpdateChallengeDto } from './dtos/update-challenge.dto';
 import { FinalizePodiumDto, RankingCategory } from './dtos/finalize-podium.dto';
@@ -64,6 +64,29 @@ export class ChallengeService {
     this.logger.log(
       `Nuevo reto creado: "${createdChallenge.title}" con ID: ${createdChallenge.id} por autor: ${authorId}`,
     );
+
+    if (createdChallenge.status === 'PUBLISHED') {
+      try {
+        const company = await this.prisma.user.findUnique({
+          where: { id: authorId },
+          select: { displayName: true },
+        });
+        const companyName = company?.displayName || 'Una empresa';
+        const participants = await this.prisma.user.findMany({
+          where: { role: 'USER' },
+          select: { id: true },
+        });
+        await this.notificationService.notifyNewChallenge(
+          participants.map((p) => p.id),
+          createdChallenge.id,
+          createdChallenge.title,
+          companyName,
+        );
+      } catch (error) {
+        this.logger.error('Error sending new challenge notification on create:', error);
+      }
+    }
+
     return createdChallenge;
   }
 
@@ -186,6 +209,33 @@ export class ChallengeService {
     this.logger.log(
       `Reto actualizado: "${updatedChallenge.title}" con ID: ${id}`,
     );
+
+    if (payload.status === 'PUBLISHED' && existing.status !== 'PUBLISHED') {
+      try {
+        const company = await this.prisma.user.findUnique({
+          where: { id: existing.authorId },
+          select: { displayName: true },
+        });
+        const companyName = company?.displayName || 'Una empresa';
+        const participants = await this.prisma.user.findMany({
+          where: { role: 'USER' },
+          select: { id: true },
+        });
+        await this.notificationService.notifyNewChallenge(
+          participants.map((p) => p.id),
+          updatedChallenge.id,
+          updatedChallenge.title,
+          companyName,
+        );
+      } catch (error) {
+        this.logger.error('Error sending new challenge notification on update:', error);
+      }
+    }
+
+    if (payload.status === 'EVALUATING' && existing.status !== 'EVALUATING') {
+      await this.notifyEvaluationStarted(id, updatedChallenge.title);
+    }
+
     return updatedChallenge;
   }
 
@@ -226,20 +276,131 @@ export class ChallengeService {
   async handleExpiredChallenges() {
     this.logger.log('Ejecutando cron para buscar retos expirados...');
     try {
-      const result = await this.prisma.challenge.updateMany({
+      const now = new Date();
+      const expiredChallenges = await this.prisma.challenge.findMany({
         where: {
           status: 'PUBLISHED',
-          submissionsCloseAt: { lt: new Date() },
+          submissionsCloseAt: { lt: now },
         },
-        data: {
-          status: 'EVALUATING',
+        select: {
+          id: true,
+          title: true,
         },
       });
-      if (result.count > 0) {
-        this.logger.log(`Cron: Se actualizaron ${result.count} retos expirados a estado EVALUATING.`);
+
+      for (const challenge of expiredChallenges) {
+        await this.prisma.challenge.update({
+          where: { id: challenge.id },
+          data: { status: 'EVALUATING' },
+        });
+        this.logger.log(`Cron: Reto '${challenge.title}' (${challenge.id}) cambiado a estado EVALUATING.`);
+
+        // Notify authors of ideas in this challenge
+        await this.notifyEvaluationStarted(challenge.id, challenge.title);
       }
     } catch (error) {
       this.logger.error('Error al actualizar retos expirados en el cron:', error);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async handleExpiringChallenges() {
+    this.logger.log('Ejecutando cron para buscar retos por expirar (24 horas)...');
+    try {
+      const now = new Date();
+      const targetMin = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+      const targetMax = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+
+      const expiringChallenges = await this.prisma.challenge.findMany({
+        where: {
+          status: 'PUBLISHED',
+          submissionsCloseAt: {
+            gte: targetMin,
+            lte: targetMax,
+          },
+        },
+        select: {
+          id: true,
+          title: true,
+          isPrivate: true,
+          facultyId: true,
+        },
+      });
+
+      for (const challenge of expiringChallenges) {
+        let candidateUsers: { id: string }[] = [];
+        if (challenge.isPrivate) {
+          candidateUsers = await this.prisma.user.findMany({
+            where: {
+              role: 'USER',
+              privateAccesses: { some: { challengeId: challenge.id } },
+            },
+            select: { id: true },
+          });
+        } else {
+          candidateUsers = await this.prisma.user.findMany({
+            where: { role: 'USER' },
+            select: { id: true },
+          });
+        }
+
+        const submittedUsers = await this.prisma.idea.findMany({
+          where: {
+            challengeId: challenge.id,
+            deletedAt: null,
+          },
+          select: { authorId: true },
+        });
+        const submittedUserIds = new Set(submittedUsers.map(i => i.authorId));
+
+        const usersToNotify = candidateUsers.filter(u => !submittedUserIds.has(u.id));
+
+        for (const user of usersToNotify) {
+          const alreadyNotified = await this.prisma.notification.findFirst({
+            where: {
+              userId: user.id,
+              type: 'CHALLENGE_EXPIRING',
+              referenceId: challenge.id,
+            },
+          });
+
+          if (!alreadyNotified) {
+            await this.notificationService.createNotification(
+              user.id,
+              'CHALLENGE_EXPIRING' as any,
+              '¡Últimas 24 horas!',
+              `¡Últimas 24 horas! El reto ${challenge.title} está por cerrar, envía tu propuesta antes de que se agote el tiempo.`,
+              challenge.id,
+              ReferenceType.CHALLENGE,
+            );
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error('Error al notificar retos por expirar en el cron:', error);
+    }
+  }
+
+  async notifyEvaluationStarted(challengeId: string, challengeTitle: string) {
+    try {
+      const ideas = await this.prisma.idea.findMany({
+        where: { challengeId, deletedAt: null },
+        select: { authorId: true },
+      });
+      const authorIds = Array.from(new Set(ideas.map((idea) => idea.authorId)));
+
+      for (const authorId of authorIds) {
+        await this.notificationService.createNotification(
+          authorId,
+          'EVALUATION_STARTED' as any,
+          'Periodo de ideación finalizado',
+          'El periodo de ideación ha finalizado. Tu propuesta se encuentra ahora bajo evaluación rigurosa del jurado.',
+          challengeId,
+          ReferenceType.CHALLENGE,
+        );
+      }
+    } catch (error) {
+      this.logger.error(`Error notifying evaluation started for challenge ${challengeId}:`, error);
     }
   }
 
@@ -304,11 +465,27 @@ export class ChallengeService {
       );
     }
 
-    return this.challengeRepository.assignJudges(
+    const result = await this.challengeRepository.assignJudges(
       challengeId,
       dto.judgeIds,
       user.id,
     );
+
+    for (const judgeId of dto.judgeIds) {
+      try {
+        await this.notificationService.notifyJudgeAssigned(
+          judgeId,
+          challengeId,
+          challenge.title,
+        );
+      } catch (err) {
+        this.logger.error(
+          `Error notifying assigned judge ${judgeId} for challenge ${challengeId}: ${err.message}`,
+        );
+      }
+    }
+
+    return result;
   }
 
   // ─── Judge Inbox: Assigned Challenges (E3.2) ───────────────────────────────

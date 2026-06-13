@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../hooks/useSocket';
 import { useWallEventListener } from '../../hooks/useWallEvents';
+import api from '../../api/axiosConfig';
 
 import * as S from './styles/LayoutStyles';
 
@@ -131,6 +132,58 @@ const IdeationWall = () => {
       return () => { socket.emit('leave_challenge', challengeId); };
     }
   }, [socket, ds.selectedChallenge?.id]);
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const ideaIdFromUrl = queryParams.get('ideaId');
+    const challengeIdFromUrl = queryParams.get('challengeId');
+
+    if (challengeIdFromUrl && ds.challenges.length > 0) {
+      const matchedChallenge = ds.challenges.find(c => c.id === challengeIdFromUrl);
+      if (matchedChallenge && ds.selectedChallenge?.id !== challengeIdFromUrl) {
+        ds.selectChallenge(matchedChallenge);
+        // Clear param
+        const url = new URL(window.location.href);
+        url.searchParams.delete('challengeId');
+        window.history.replaceState({}, document.title, url.pathname + url.search);
+      }
+    }
+
+    if (ideaIdFromUrl && ds.challenges.length > 0) {
+      (async () => {
+        try {
+          const response = await api.get(`/ideas/${ideaIdFromUrl}`);
+          const ideaData = response.data?.data || response.data;
+          if (ideaData && ideaData.challengeId) {
+            const matchedChallenge = ds.challenges.find(c => c.id === ideaData.challengeId);
+            if (matchedChallenge) {
+              if (ds.selectedChallenge?.id !== ideaData.challengeId) {
+                ds.selectChallenge(matchedChallenge);
+              }
+              const timer = setInterval(() => {
+                setWallIdeas((currentIdeas) => {
+                  const matchedIdea = currentIdeas.find(idea => idea.id === ideaIdFromUrl || idea._id === ideaIdFromUrl);
+                  if (matchedIdea) {
+                    clearInterval(timer);
+                    handleSelectIdea(matchedIdea);
+                    // Clear param
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('ideaId');
+                    window.history.replaceState({}, document.title, url.pathname + url.search);
+                  }
+                  return currentIdeas;
+                });
+              }, 300);
+
+              setTimeout(() => clearInterval(timer), 6000);
+            }
+          }
+        } catch (error) {
+          console.error('Error auto-selecting idea from URL:', error);
+        }
+      })();
+    }
+  }, [ds.challenges, ds.selectedChallenge?.id, handleSelectIdea]);
 
   const displayedWallIdeas = (() => {
     let ideas = advFilter.onlyFavorites

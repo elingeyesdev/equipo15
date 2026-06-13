@@ -21,6 +21,7 @@ interface ChallengeListProps {
   userFacultyId?: number | string | null;
   forceColumn?: boolean;
   visibleChallengesLimit?: number;
+  podiumCount?: number;
 }
 
 const ChallengeList: React.FC<ChallengeListProps> = ({
@@ -28,6 +29,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
   selectedChallengeId, onSelectChallenge, onRespond, onClearSelection, searchQuery = '', userFacultyId,
   forceColumn = false,
   visibleChallengesLimit,
+  podiumCount = 0,
 }) => {
   const userSlug = getFacultySlug(userFacultyId || null);
   const filters = ['Activos', 'En Evaluación', 'Finalizados', 'Mis Retos'];
@@ -68,7 +70,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
   else if (currentFilter === 'Mis Retos') title = 'Mis Retos';
 
   return (
-    <S.LeftPanel>
+    <S.LeftPanel $visibleLimit={visibleChallengesLimit}>
       <S.PanelHeader>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <S.PanelTitle>{title}</S.PanelTitle>
@@ -111,9 +113,10 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
       <S.ChallengeList
         $isFullWidth={!selectedChallengeId}
         $forceColumn={forceColumn}
-        $flexCards={(forceColumn || !!selectedChallengeId) && filtered.length > 0 && filtered.length <= (visibleChallengesLimit || 3)}
+        $flexCards={(forceColumn || !!selectedChallengeId) && filtered.length > 0 && filtered.length <= (visibleChallengesLimit || 3) && visibleChallengesLimit !== 4}
         $cardCount={filtered.length}
         $visibleLimit={visibleChallengesLimit}
+        $podiumCount={podiumCount}
       >
         {loading ? (
           <>

@@ -66,6 +66,7 @@ export class EvaluationService {
         const judgeName = evaluation.judge?.displayName || 'Un juez';
         const challengeTitle = ideaContext.challenge?.title || 'un reto';
         await this.notificationService.notifyEvaluationReceived(ideaContext.authorId, judgeName, challengeTitle);
+        await this.notificationService.notifyEvaluationSubmitted(ideaContext.challenge.authorId, judgeName, evaluation.ideaId);
       }
     } catch (error) {
       this.logger.error('Error enviando notificación de evaluación:', error);

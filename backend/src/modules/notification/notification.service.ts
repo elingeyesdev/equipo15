@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
-import { ReferenceType } from '@prisma/client';
+import { ReferenceType, NotifType } from '@prisma/client';
 import { EventsGateway } from '../../infrastructure/events/events.gateway';
 
 @Injectable()
@@ -13,215 +13,258 @@ export class NotificationService {
     private readonly eventsGateway: EventsGateway,
   ) {}
 
+  async getUserByFirebaseUid(firebaseUid: string) {
+    return this.prisma.user.findUnique({
+      where: { firebaseUid },
+      select: { id: true, email: true },
+    });
+  }
+
   private async sendRealTimeNotification(userId: string, notificationData: any) {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
-        select: { firebaseUid: true },
+        select: { firebaseUid: true, email: true },
       });
+
+      this.logger.log(
+        `[WS_NOTIF_PREPARE] Preparando envío WS. userId (DB): ${userId}, firebaseUid: ${user?.firebaseUid}, email: ${user?.email}`,
+      );
+
       if (user?.firebaseUid) {
+        const roomName = `user:${user.firebaseUid}`;
         this.eventsGateway.server
-          .to(`user:${user.firebaseUid}`)
+          .to(roomName)
           .emit('notification:received', {
             ...notificationData,
             createdAt: new Date().toISOString(),
           });
-      }
-    } catch (error) {
-      this.logger.error('Error sending real-time notification via WebSocket:', error);
-    }
-  }
-
-  async notifyWinners(winners: { userId: string; ideaId: string }[], challengeId: string, challengeTitle: string) {
-    if (winners.length === 0) return;
-
-    try {
-      const winnerIds = winners.map((w) => w.userId);
-
-      await this.prisma.notification.createMany({
-        data: winners.map((w) => ({
-          userId: w.userId,
-          type: 'WINNER_ANNOUNCED' as any,
-          title: '¡Felicidades! 🎉',
-          body: `Tu idea ha sido seleccionada como ganadora en el reto: ${challengeTitle}`,
-          referenceType: ReferenceType.IDEA,
-          referenceId: w.ideaId,
-        })),
-      });
-
-      for (const w of winners) {
-        await this.sendRealTimeNotification(w.userId, {
-          type: 'WINNER_ANNOUNCED',
-          title: '¡Felicidades! 🎉',
-          body: `Tu idea ha sido seleccionada como ganadora en el reto: ${challengeTitle}`,
-          referenceType: 'IDEA',
-          referenceId: w.ideaId,
-        });
-      }
-
-      // 2. Get active tokens for winners
-      const devices = await this.prisma.userDevice.findMany({
-        where: {
-          userId: { in: winnerIds },
-          fcmToken: { not: '' },
-        },
-        select: { fcmToken: true },
-      });
-
-      const tokens = devices.map((d) => d.fcmToken);
-
-      // 3. Send Push Notifications via FCM
-      if (tokens.length > 0) {
-        const payload = {
-          notification: {
-            title: '¡Felicidades! 🎉',
-            body: `Tu idea es ganadora en el reto: ${challengeTitle}`,
-          },
-          data: {
-            type: 'WINNER_ANNOUNCED',
-            challengeId,
-          },
-        };
-
-        const response = await admin.messaging().sendEachForMulticast({
-          tokens,
-          ...payload,
-        });
-
         this.logger.log(
-          `Notificaciones FCM enviadas: ${response.successCount} exitosas, ${response.failureCount} fallidas.`,
+          `[WS_NOTIF_SENT] Emitido evento "notification:received" a sala "${roomName}". Contenido: ${JSON.stringify(notificationData)}`,
+        );
+      } else {
+        this.logger.warn(
+          `[WS_NOTIF_CANCELLED] No se pudo enviar notificación en tiempo real. Usuario no encontrado o sin firebaseUid para userId: ${userId}`,
         );
       }
     } catch (error) {
-      this.logger.error('Error notificando a los ganadores:', error);
+      this.logger.error('Error enviando notificación en tiempo real via WebSocket:', error);
     }
   }
 
-  async notifyJudgeRemoved(companyUserId: string, judgeName: string, challengeTitle: string) {
+  async createNotification(
+    userId: string,
+    type: NotifType,
+    title: string,
+    body: string,
+    referenceId?: string,
+    referenceType?: ReferenceType,
+  ) {
     try {
-      const notif = await this.prisma.notification.create({
-        data: {
-          userId: companyUserId,
-          type: 'JUDGE_REMOVED' as any,
-          title: 'Juez removido del sistema',
-          body: `El juez ${judgeName} ha sido removido del sistema y ya no evaluará tu reto '${challengeTitle}'. Por favor, asigna un reemplazo si es necesario.`,
-        },
-      });
+      this.logger.log(
+        `[NOTIF_CREATE_START] Solicitud de creación de notificación. userId: ${userId}, tipo: ${type}, título: "${title}"`,
+      );
 
-      await this.sendRealTimeNotification(companyUserId, {
-        id: notif.id,
-        type: 'JUDGE_REMOVED',
-        title: 'Juez removido del sistema',
-        body: `El juez ${judgeName} ha sido removido del sistema y ya no evaluará tu reto '${challengeTitle}'. Por favor, asigna un reemplazo si es necesario.`,
-      });
-
-      // 2. Get active tokens
-      const devices = await this.prisma.userDevice.findMany({
-        where: {
-          userId: companyUserId,
-          fcmToken: { not: '' },
-        },
-        select: { fcmToken: true },
-      });
-
-      const tokens = devices.map((d) => d.fcmToken);
-
-      // 3. Send Push Notifications via FCM
-      if (tokens.length > 0) {
-        const payload = {
-          notification: {
-            title: 'Juez removido del sistema',
-            body: `El juez ${judgeName} ha sido removido del sistema y ya no evaluará tu reto '${challengeTitle}'.`,
-          },
-          data: {
-            type: 'JUDGE_REMOVED',
-          },
-        };
-
-        await admin.messaging().sendEachForMulticast({
-          tokens,
-          ...payload,
-        });
-      }
-    } catch (error) {
-      this.logger.error('Error notificando a la empresa sobre juez removido:', error);
-    }
-  }
-
-  async notifyRoleChanged(userId: string, newRole: string) {
-    try {
       const notif = await this.prisma.notification.create({
         data: {
           userId,
-          type: 'ROLE_UPDATE' as any,
-          title: 'Rol Actualizado',
-          body: `Tu rol en la plataforma ha sido actualizado a ${newRole}.`,
+          type,
+          title,
+          body,
+          referenceId,
+          referenceType,
         },
       });
 
+      this.logger.log(
+        `[NOTIF_CREATE_SUCCESS] Notificación guardada en BD. notifId: ${notif.id}`,
+      );
+
       await this.sendRealTimeNotification(userId, {
         id: notif.id,
-        type: 'ROLE_UPDATE',
-        title: 'Rol Actualizado',
-        body: `Tu rol en la plataforma ha sido actualizado a ${newRole}.`,
+        type,
+        title,
+        body,
+        referenceId,
+        referenceType,
       });
 
+      // Find FCM devices
       const devices = await this.prisma.userDevice.findMany({
         where: { userId, fcmToken: { not: '' } },
         select: { fcmToken: true },
       });
       const tokens = devices.map((d) => d.fcmToken);
 
+      this.logger.log(
+        `[NOTIF_FCM_CHECK] Dispositivos móviles/tokens FCM encontrados para userId ${userId}: ${tokens.length}`,
+      );
+
       if (tokens.length > 0) {
-        await admin.messaging().sendEachForMulticast({
+        const response = await admin.messaging().sendEachForMulticast({
           tokens,
           notification: {
-            title: 'Rol Actualizado',
-            body: `Tu rol en la plataforma ha sido actualizado a ${newRole}.`,
+            title,
+            body,
+          },
+          data: {
+            type,
+            referenceId: referenceId || '',
+            referenceType: referenceType || '',
           },
         });
+        this.logger.log(
+          `[NOTIF_FCM_SENT] Intentos de multicast FCM terminados. Éxitos: ${response.successCount}, Fallidos: ${response.failureCount}`,
+        );
       }
+
+      return notif;
     } catch (error) {
-      this.logger.error('Error notificando cambio de rol:', error);
+      this.logger.error(`Error creando notificación de tipo ${type} para el usuario ${userId}:`, error);
     }
   }
 
+  async notifyWinners(winners: { userId: string; ideaId: string }[], challengeId: string, challengeTitle: string) {
+    for (const w of winners) {
+      await this.createNotification(
+        w.userId,
+        NotifType.WINNER_ANNOUNCED,
+        '¡Felicidades! 🎉',
+        '¡Felicidades! Tu propuesta ha sido seleccionada como ganadora en el podio.',
+        w.ideaId,
+        ReferenceType.IDEA,
+      );
+    }
+  }
+
+  async notifyJudgeRemoved(companyUserId: string, judgeName: string, challengeTitle: string) {
+    await this.createNotification(
+      companyUserId,
+      NotifType.JUDGE_REMOVED,
+      'Alerta de Sistema',
+      `Alerta de Sistema: El juez ${judgeName} ha perdido sus credenciales y fue desvinculado de la evaluación de tu reto.`,
+      undefined,
+      undefined,
+    );
+  }
+
+  async notifyJudgeAssigned(judgeUserId: string, challengeId: string, challengeTitle: string) {
+    await this.createNotification(
+      judgeUserId,
+      NotifType.JUDGE_ASSIGNED,
+      'Nuevo Reto Asignado',
+      `Te han asignado como jurado para evaluar las propuestas finalistas del reto '${challengeTitle}'.`,
+      challengeId,
+      ReferenceType.CHALLENGE,
+    );
+  }
+
+  async notifyRoleChanged(userId: string, newRole: string) {
+    const roleNames: Record<string, string> = {
+      ADMIN: 'Administrador',
+      COMPANY: 'Empresa',
+      JUDGE: 'Juez',
+      USER: 'Participante',
+    };
+    const roleNameSp = roleNames[newRole] || newRole;
+
+    await this.createNotification(
+      userId,
+      NotifType.ROLE_UPDATED,
+      'Rol Actualizado',
+      `Tu cuenta ha sido actualizada. Ahora tienes permisos de ${roleNameSp}.`,
+      undefined,
+      undefined,
+    );
+  }
+
   async notifyEvaluationReceived(authorId: string, judgeName: string, challengeTitle: string) {
+    await this.createNotification(
+      authorId,
+      NotifType.EVALUATION_COMPLETE,
+      'Idea Evaluada',
+      `El juez ${judgeName} ha evaluado tu idea en el reto '${challengeTitle}'.`,
+      undefined,
+      undefined,
+    );
+  }
+
+  async notifyEvaluationSubmitted(companyUserId: string, judgeName: string, ideaId: string) {
+    // Notify challenge owner
+    await this.createNotification(
+      companyUserId,
+      NotifType.EVALUATION_SUBMITTED,
+      'Nueva Evaluación Registrada',
+      `El juez ${judgeName} ha completado la evaluación de una idea.`,
+      ideaId,
+      ReferenceType.IDEA,
+    );
+
+    // Notify all admins
     try {
-      const notif = await this.prisma.notification.create({
-        data: {
-          userId: authorId,
-          type: 'IDEA_EVALUATED' as any,
-          title: 'Idea Evaluada',
-          body: `El juez ${judgeName} ha evaluado tu idea en el reto '${challengeTitle}'.`,
-        },
+      const admins = await this.prisma.user.findMany({
+        where: { role: 'ADMIN' },
+        select: { id: true },
       });
-
-      await this.sendRealTimeNotification(authorId, {
-        id: notif.id,
-        type: 'IDEA_EVALUATED',
-        title: 'Idea Evaluada',
-        body: `El juez ${judgeName} ha evaluado tu idea en el reto '${challengeTitle}'.`,
-      });
-
-      const devices = await this.prisma.userDevice.findMany({
-        where: { userId: authorId, fcmToken: { not: '' } },
-        select: { fcmToken: true },
-      });
-      const tokens = devices.map((d) => d.fcmToken);
-
-      if (tokens.length > 0) {
-        await admin.messaging().sendEachForMulticast({
-          tokens,
-          notification: {
-            title: 'Idea Evaluada',
-            body: `El juez ${judgeName} ha evaluado tu idea en el reto '${challengeTitle}'.`,
-          },
-        });
+      for (const adminUser of admins) {
+        await this.createNotification(
+          adminUser.id,
+          NotifType.EVALUATION_SUBMITTED,
+          'Nueva Evaluación Registrada',
+          `El juez ${judgeName} ha completado la evaluación de una idea.`,
+          ideaId,
+          ReferenceType.IDEA,
+        );
       }
     } catch (error) {
-      this.logger.error('Error notificando evaluación recibida:', error);
+      this.logger.error('Error sending evaluation submitted notification to admins:', error);
     }
+  }
+
+  async notifyNewChallenge(userIds: string[], challengeId: string, challengeTitle: string, companyName: string) {
+    for (const userId of userIds) {
+      await this.createNotification(
+        userId,
+        NotifType.NEW_CHALLENGE_PUBLISHED,
+        'Nuevo desafío disponible',
+        `Nuevo desafío disponible: ${companyName} está buscando tu talento.`,
+        challengeId,
+        ReferenceType.CHALLENGE,
+      );
+    }
+  }
+
+  async notifyIdeaReaction(authorId: string, ideaId: string, challengeTitle: string) {
+    await this.createNotification(
+      authorId,
+      NotifType.IDEA_REACTION,
+      '¡Tu idea está ganando tracción! 🔥',
+      `¡Tu idea está ganando tracción! Alguien ha reaccionado a tu propuesta en ${challengeTitle}.`,
+      ideaId,
+      ReferenceType.IDEA,
+    );
+  }
+
+  async notifyNewComment(authorId: string, ideaId: string, challengeTitle: string) {
+    await this.createNotification(
+      authorId,
+      NotifType.NEW_COMMENT,
+      'Comentario recibido 💬',
+      'Alguien ha dejado un comentario en tu idea. ¡Entra a revisar el feedback!',
+      ideaId,
+      ReferenceType.IDEA,
+    );
+  }
+
+  async notifyCommentReply(commentAuthorId: string, replierName: string, ideaId: string) {
+    await this.createNotification(
+      commentAuthorId,
+      NotifType.COMMENT_REPLY,
+      'Respuesta a tu comentario ↩️',
+      `${replierName} ha respondido a tu comentario.`,
+      ideaId,
+      ReferenceType.IDEA,
+    );
   }
 
   async getMyInbox(userId: string) {
