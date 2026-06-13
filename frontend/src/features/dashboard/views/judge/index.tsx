@@ -56,7 +56,7 @@ const TopBar = styled.div`
 `;
 
 const Title = styled.h2`
-  font-size: 22px;
+  font-size: clamp(18px, 3.5vw, 22px);
   font-weight: 900;
   color: ${Pista8Theme.secondary};
   margin: 0;
@@ -104,6 +104,16 @@ const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 16px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 `;
 
 const Card = styled.div<{ $index: number; $evaluated?: boolean }>`

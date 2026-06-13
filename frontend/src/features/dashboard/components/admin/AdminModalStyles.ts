@@ -22,6 +22,15 @@ export const AdminModalOverlay = styled.div`
   z-index: 1200;
   animation: ${fadeIn} 0.2s ease;
   padding: 24px;
+
+  @media (max-width: 768px) {
+    padding: 12px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0;
+    align-items: flex-end;
+  }
 `;
 
 export const AdminModalCard = styled.div`
@@ -35,6 +44,18 @@ export const AdminModalCard = styled.div`
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
   animation: ${slideUp} 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    max-height: 95vh;
+    border-radius: 20px;
+  }
+
+  @media (max-width: 480px) {
+    max-height: 100vh;
+    border-radius: 16px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
 `;
 
 export const AdminAuditBanner = styled.div`
@@ -55,6 +76,14 @@ export const AdminModalHeader = styled.div`
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+
+  @media (max-width: 768px) {
+    padding: 18px 20px 14px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 14px 16px 12px;
+  }
 `;
 
 export const AdminHeaderContent = styled.div`
@@ -113,6 +142,14 @@ export const AdminModalBody = styled.div`
     background: rgba(15, 23, 42, 0.15);
     border-radius: 99px;
   }
+
+  @media (max-width: 768px) {
+    padding: 16px 16px 20px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 14px 14px 18px;
+  }
 `;
 
 export const AdminSummaryGrid = styled.div`
@@ -123,6 +160,10 @@ export const AdminSummaryGrid = styled.div`
   width: 100%;
 
   @media (max-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 480px) {
     grid-template-columns: 1fr;
   }
 `;

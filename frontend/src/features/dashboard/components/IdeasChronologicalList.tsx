@@ -39,6 +39,10 @@ const Wrapper = styled.div<{ $showAll?: boolean }>`
   scrollbar-width: none;
   -ms-overflow-style: none;
   &::-webkit-scrollbar { display: none; }
+
+  @media (max-width: 640px) {
+    padding: ${p => p.$showAll ? '20px 0' : '20px 16px'};
+  }
 `;
 
 const Header = styled.div<{ $showAll?: boolean }>`
@@ -51,11 +55,16 @@ const Header = styled.div<{ $showAll?: boolean }>`
   flex-shrink: 0;
   position: sticky;
   top: 0;
-  background: ${(p: { $showAll?: boolean }) => p.$showAll ? 'transparent' : 'white'};
-  z-index: 2;
-  padding-top: 4px;
-  padding-bottom: 8px;
-  margin-top: -4px;
+  background: ${(p: { $showAll?: boolean }) => p.$showAll ? Pista8Theme.background : 'white'};
+  z-index: 10;
+  padding-top: 8px;
+  padding-bottom: 12px;
+  margin-top: -8px;
+
+  @media (max-width: 640px) {
+    padding-left: 0;
+    padding-right: 0;
+  }
 `;
 
 const HeaderLeft = styled.div`
@@ -146,6 +155,14 @@ const TopPodiumGrid = styled.div`
   width: 100%;
   height: 240px;
   margin-bottom: 24px;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    gap: 16px;
+    margin-top: 16px;
+  }
 `;
 
 const PodiumIdeaCard = styled(motion.div)<{ $rank: number }>`
@@ -172,6 +189,14 @@ const PodiumIdeaCard = styled(motion.div)<{ $rank: number }>`
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(72, 80, 84, 0.12);
     border-color: rgba(72, 80, 84, 0.14);
+  }
+
+  @media (max-width: 640px) {
+    order: ${p => p.$rank}; /* Keep natural order 1, 2, 3 on mobile */
+    height: auto;
+    padding: 24px 16px 16px;
+    width: 100%;
+    box-sizing: border-box;
   }
 `;
 

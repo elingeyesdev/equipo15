@@ -36,6 +36,8 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
+    boxSizing: 'border-box',
+    width: '100%',
   },
   header: {
     display: 'flex',

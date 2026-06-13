@@ -71,7 +71,19 @@ export const TableRow = styled.div`
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
     gap: ${Pista8Theme.spacing.sm}px;
-    padding: ${Pista8Theme.spacing.lg}px;
+    padding: ${Pista8Theme.spacing.md}px ${Pista8Theme.spacing.lg}px;
+    border-bottom: none;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  @media (max-width: 480px) {
+    padding: 12px 14px;
+    border-radius: 10px;
+    gap: 6px;
   }
 
   & > div:not(:first-child) {

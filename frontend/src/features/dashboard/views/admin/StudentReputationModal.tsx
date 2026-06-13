@@ -35,6 +35,15 @@ const Overlay = styled.div`
   z-index: 1100;
   animation: ${fadeIn} 0.2s ease;
   padding: 24px;
+
+  @media (max-width: 768px) {
+    padding: 12px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0;
+    align-items: flex-end;
+  }
 `;
 
 const ModalCard = styled.div`
@@ -48,12 +57,33 @@ const ModalCard = styled.div`
   box-shadow: 0 16px 48px rgba(72, 80, 84, 0.14), 0 0 0 1px rgba(72, 80, 84, 0.06);
   animation: ${slideUp} 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    max-height: 95vh;
+    border-radius: 20px;
+  }
+
+  @media (max-width: 480px) {
+    max-height: 100vh;
+    border-radius: 16px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-top: auto;
+  }
 `;
 
 const ModalHeader = styled.div`
   padding: 28px 32px 20px;
   border-bottom: 1px solid rgba(72, 80, 84, 0.08);
   flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    padding: 20px 20px 16px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 16px 16px 14px;
+  }
 `;
 
 const HeaderTop = styled.div`
@@ -218,6 +248,20 @@ const SectionCount = styled.span`
 const IdeaTable = styled.table`
   width: 100%;
   border-collapse: collapse;
+  min-width: 500px;
+`;
+
+const IdeaTableWrapper = styled.div`
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(72, 80, 84, 0.2);
+    border-radius: 4px;
+  }
 `;
 
 const ITH = styled.th`
@@ -388,6 +432,12 @@ const ModalFooter = styled.div`
   gap: 12px;
   flex-shrink: 0;
   background: #fafbfc;
+  flex-wrap: wrap;
+
+  @media (max-width: 480px) {
+    padding: 16px;
+    gap: 8px;
+  }
 `;
 
 const WarningBanner = styled.div`
@@ -660,6 +710,7 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
                 {data.ideas.length === 0 ? (
                   <EmptyIdeas>Este participante aún no ha publicado ideas.</EmptyIdeas>
                 ) : (
+                  <IdeaTableWrapper>
                   <IdeaTable>
                     <thead>
                       <tr>
@@ -708,6 +759,7 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
                       ))}
                     </tbody>
                   </IdeaTable>
+                  </IdeaTableWrapper>
                 )}
               </ModalBody>
 

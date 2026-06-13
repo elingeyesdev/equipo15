@@ -8,12 +8,15 @@ export const Root = styled.div`
   background: ${Pista8Theme.background};
   position: relative;
   overflow-x: hidden;
+  box-sizing: border-box;
 `;
 
 export const Page = styled.div`
   padding: 2.5rem 4%;
   max-width: 1400px;
   margin: 0 auto;
+  box-sizing: border-box;
+  width: 100%;
 
   @media (min-width: 1025px) {
     padding: 2.5rem calc(2% + 300px) 2.5rem 4%;
@@ -291,13 +294,17 @@ export const DetailStatusBadge = styled.span<{ $active?: boolean }>`
 `;
 
 export const DetailTitle = styled.h2`
-  font-size: 22px;
+  font-size: clamp(17px, 3.5vw, 22px);
   font-weight: 900;
   color: ${Pista8Theme.secondary};
   margin: 0;
   line-height: 1.35;
   letter-spacing: -0.3px;
   word-break: break-word;
+
+  @media (max-width: ${breakpoints.small}) {
+    font-size: 16px;
+  }
 `;
 
 export const DetailFaculty = styled.span`
@@ -323,6 +330,11 @@ export const DetailDescription = styled.p`
   max-width: 720px;
   word-break: break-word;
   white-space: pre-wrap;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    font-size: 13px;
+    line-height: 1.65;
+  }
 `;
 
 export const DetailMeta = styled.div`
@@ -373,6 +385,7 @@ export const RespondBtn = styled.button`
   box-shadow: 0 6px 20px ${Pista8Theme.primary}30;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   letter-spacing: 0.02em;
 
@@ -382,4 +395,10 @@ export const RespondBtn = styled.button`
   }
 
   &:active { transform: scale(0.97); }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    width: 100%;
+    padding: 13px 20px;
+    font-size: 13px;
+  }
 `;

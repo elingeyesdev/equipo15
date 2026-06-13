@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Pista8Theme } from '../../../config/theme';
+import { Pista8Theme, breakpoints } from '../../../config/theme';
 import { fadeUp, premiumTooltip } from './CommonStyles';
 
 export const LeftPanel = styled.div<{ $visibleLimit?: number }>`
@@ -22,6 +22,15 @@ export const LeftPanel = styled.div<{ $visibleLimit?: number }>`
   ${p => p.$visibleLimit === 4 && `
     min-height: 850px;
   `}
+
+  @media (max-width: ${breakpoints.mobile}) {
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+
+  @media (max-width: ${breakpoints.small}) {
+    padding: 16px 14px;
+  }
 `;
 
 export const PanelHeader = styled.div`
@@ -139,6 +148,8 @@ export const ChallengeCard = styled.div<{ $active: boolean }>`
   background: ${Pista8Theme.white};
   border-radius: 20px;
   padding: 24px 20px 24px 20px;
+  box-sizing: border-box;
+  width: 100%;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   border: 1.5px solid ${p => p.$active ? Pista8Theme.primary : 'rgba(72,80,84,0.08)'};
@@ -153,6 +164,15 @@ export const ChallengeCard = styled.div<{ $active: boolean }>`
     border-color: ${p => p.$active ? Pista8Theme.primary : 'rgba(72,80,84,0.18)'};
     box-shadow: 0 6px 24px ${Pista8Theme.shadow};
     transform: translateY(-1px);
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    padding: 18px 16px;
+    border-radius: 16px;
+  }
+
+  @media (max-width: ${breakpoints.small}) {
+    padding: 16px 14px;
   }
 `;
 
@@ -225,7 +245,7 @@ export const StatusBadge = styled.span<{ expired?: boolean }>`
 
 
 export const CardTitle = styled.p`
-  font-size: 14.5px;
+  font-size: clamp(13px, 2.5vw, 14.5px);
   font-weight: 700;
   color: ${Pista8Theme.secondary};
   margin: 0 0 10px;
@@ -264,6 +284,14 @@ export const CardBottomRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  @media (max-width: ${breakpoints.small}) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
 `;
 
 export const StatsRow = styled.div`
@@ -307,6 +335,7 @@ export const RespondButton = styled.button<{ disabled?: boolean }>`
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   cursor: ${p => p.disabled ? 'not-allowed' : 'pointer'};
   box-shadow: ${p => p.disabled ? 'none' : `0 8px 22px ${Pista8Theme.primary}30`};
@@ -321,6 +350,12 @@ export const RespondButton = styled.button<{ disabled?: boolean }>`
     width: 12px;
     height: 12px;
     stroke-width: 3;
+  }
+
+  @media (max-width: ${breakpoints.small}) {
+    width: 100%;
+    padding: 11px 16px;
+    font-size: 12px;
   }
 `;
 
@@ -354,8 +389,17 @@ export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?:
     ${p => (!p.$forceColumn && p.$isFullWidth) && `
       width: calc(33.33% - 10px);
       min-width: min(100%, 300px);
+
+      @media (max-width: ${breakpoints.tablet}) {
+        width: calc(50% - 7px);
+      }
+      
+      @media (max-width: ${breakpoints.mobile}) {
+        width: 100%;
+      }
     `}
     ${p => p.$forceColumn && 'width: 100%;'}
+    box-sizing: border-box;
   }
 
   ${p => (p.$forceColumn || !p.$isFullWidth) && `

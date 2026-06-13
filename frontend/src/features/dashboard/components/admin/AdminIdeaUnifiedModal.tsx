@@ -226,6 +226,10 @@ const ScoreGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
 `;
 
 const ScoreCard = styled.div`
