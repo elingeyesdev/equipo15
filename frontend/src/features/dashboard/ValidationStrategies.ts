@@ -25,6 +25,43 @@ export class MaxLengthValidation implements ValidationStrategy {
   }
 }
 
+// ─── Conteo de palabras ────────────────────────────────────────────────────
+function countWords(value: string): number {
+  return value.trim().split(/\s+/).filter(Boolean).length;
+}
+
+/** Validación por rango de palabras para campos de contenido (10–250 palabras) */
+export class WordCountValidation implements ValidationStrategy {
+  private min: number;
+  private max: number;
+  private fieldLabel: string;
+  constructor(min: number, max: number, fieldLabel = 'Este campo') {
+    this.min = min;
+    this.max = max;
+    this.fieldLabel = fieldLabel;
+  }
+  validate(value: unknown): string | null {
+    if (!value || typeof value !== 'string' || value.trim() === '') return null;
+    const words = countWords(value);
+    if (words < this.min || words > this.max) {
+      return `${this.fieldLabel} debe tener entre ${this.min} y ${this.max} palabras (llevas ${words})`;
+    }
+    return null;
+  }
+}
+
+/** Validación de palabras estricta para el Título (2–15 palabras) */
+export class TitleWordCountValidation implements ValidationStrategy {
+  validate(value: unknown): string | null {
+    if (!value || typeof value !== 'string' || value.trim() === '') return null;
+    const words = countWords(value);
+    if (words < 2 || words > 15) {
+      return `El título debe tener entre 2 y 15 palabras (llevas ${words})`;
+    }
+    return null;
+  }
+}
+
 export class RichTextRequiredValidation implements ValidationStrategy {
   validate(value: unknown): string | null {
     if (typeof value !== 'string' || !value || value.trim() === '') {

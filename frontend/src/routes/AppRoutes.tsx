@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext';
 import AuthPage from '../pages/AuthPage';
 import ResetPasswordPage from '../pages/ResetPasswordPage';
 import ProfilePage from '../pages/ProfilePage';
-import CompleteProfilePage from '../pages/CompleteProfilePage';
 import MyIdeasPage from '../pages/MyIdeasPage';
 import MyFavoritesPage from '../pages/MyFavoritesPage';
 import IdeationWall from '../features/dashboard/IdeationWall';
@@ -12,18 +11,13 @@ import RunwayLoader from '../components/common/RunwayLoader';
 import NotFoundPage from '../components/errors/NotFoundPage';
 
 const RoleRouter = () => {
-  const { user, userProfile, refetchProfile } = useAuth();
+  const { user, userProfile } = useAuth();
   const location = useLocation();
 
   if (!user) return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   if (!userProfile) return <Navigate to="/auth" replace />;
 
   const role = (userProfile.roleInfo?.name || userProfile.role || '').toLowerCase();
-  const hasNoFaculty = !userProfile.studentProfile?.facultyId && (userProfile.facultyId === null || userProfile.facultyId === undefined);
-
-  if (hasNoFaculty && role === 'student') {
-    return <CompleteProfilePage onComplete={refetchProfile} />;
-  }
 
   if (role === 'student') {
     const isOtherRolePath =

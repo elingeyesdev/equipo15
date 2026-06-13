@@ -454,7 +454,6 @@ const JudgeIdeaFormView: React.FC<JudgeIdeaFormViewProps> = ({ isReadOnlyMode = 
   const [criteria, setCriteria] = useState<CriterionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [scores, setScores] = useState<Record<string, number>>({});
-  const [touchedSliders, setTouchedSliders] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [readOnly, setReadOnly] = useState(isReadOnlyMode);
@@ -527,17 +526,14 @@ const JudgeIdeaFormView: React.FC<JudgeIdeaFormViewProps> = ({ isReadOnlyMode = 
     ? criteria.reduce((sum, c) => sum + (scores[c.id] || 0) * (c.weight / 100), 0)
     : 0;
 
-  // Form validation: all sliders touched + feedback >= 10 words
-  const missingSlidersCount = criteria.length > 0 ? criteria.length - touchedSliders.size : 0;
-  const allSlidersTouched = missingSlidersCount === 0;
+  // Validación del formulario: feedback ≥ 10 palabras (los sliders tienen valor inicial válido)
   const feedbackWordsCount = feedback.trim() ? feedback.trim().split(/\s+/).length : 0;
   const feedbackValid = feedbackWordsCount >= 10;
-  const canSubmit = allSlidersTouched && feedbackValid && criteria.length > 0 && !submitting && !readOnly;
+  const canSubmit = feedbackValid && criteria.length > 0 && !submitting && !readOnly;
 
   const handleScoreChange = (criterionId: string, value: number) => {
     if (readOnly) return;
     setScores(prev => ({ ...prev, [criterionId]: value }));
-    setTouchedSliders(prev => new Set(prev).add(criterionId));
   };
 
   const handleSubmit = async () => {
@@ -831,9 +827,6 @@ const JudgeIdeaFormView: React.FC<JudgeIdeaFormViewProps> = ({ isReadOnlyMode = 
                   </svg>
                   Para habilitar el envío debes:
                 </strong>
-                {!allSlidersTouched && (
-                  <span style={{ marginLeft: 20 }}>• Calificar todos los criterios (te {missingSlidersCount === 1 ? 'falta' : 'faltan'} {missingSlidersCount} por mover).</span>
-                )}
                 {!feedbackValid && (
                   <span style={{ marginLeft: 20 }}>• Escribir al menos 10 palabras en la justificación.</span>
                 )}

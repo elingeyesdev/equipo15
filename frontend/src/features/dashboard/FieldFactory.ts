@@ -1,4 +1,7 @@
-import { Validator, RequiredValidation, MaxLengthValidation, RichTextRequiredValidation, MinDateValidation } from './ValidationStrategies';
+import {
+  Validator, RequiredValidation, MinDateValidation,
+  WordCountValidation, TitleWordCountValidation,
+} from './ValidationStrategies';
 
 export type FieldType = 'text' | 'rich-text' | 'date' | 'image' | 'radio';
 
@@ -27,7 +30,7 @@ export class FieldFactory {
       disabled: hasPostulations,
       validator: new Validator([
         new RequiredValidation(),
-        new MaxLengthValidation(100)
+        new TitleWordCountValidation(),   // 2–15 palabras
       ])
     };
   }
@@ -38,7 +41,7 @@ export class FieldFactory {
       label: 'Descripción del Problema',
       type: 'rich-text',
       validator: new Validator([
-        new RichTextRequiredValidation()
+        new WordCountValidation(10, 250, 'La descripción del problema'),
       ])
     };
   }
@@ -49,7 +52,7 @@ export class FieldFactory {
       label: 'Contexto de la Empresa',
       type: 'rich-text',
       validator: new Validator([
-        new RichTextRequiredValidation()
+        new WordCountValidation(10, 250, 'El contexto de la empresa'),
       ])
     };
   }
@@ -60,7 +63,7 @@ export class FieldFactory {
       label: 'Reglas de Participación',
       type: 'rich-text',
       validator: new Validator([
-        new RichTextRequiredValidation()
+        new WordCountValidation(10, 250, 'Las reglas de participación'),
       ])
     };
   }

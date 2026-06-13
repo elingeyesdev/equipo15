@@ -32,7 +32,15 @@ export interface Errors {
   endDate?: string;
 }
 
-export const LIMITS = { title: 80, problemDescription: 500, companyContext: 500, participationRules: 500 };
+export const WORD_LIMITS = {
+  title: { min: 2, max: 15 },
+  content: { min: 10, max: 250 },
+};
+
+/** Cuenta palabras reales en un string */
+function countWords(value: string): number {
+  return value.trim().split(/\s+/).filter(Boolean).length;
+}
 
 export const DEFAULT_CRITERIA: EvaluationCriterion[] = [
   { id: 'desirability', name: 'Deseabilidad', description: 'Valor real para personas o negocio', enabled: false, weight: 33, isOptional: false },
@@ -264,9 +272,16 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
 
   const validate = (forDraft: boolean): boolean => {
     const errs: Errors = {};
-    if (!form.title.trim()) errs.title = 'El título es obligatorio';
-    else if (form.title.length > LIMITS.title) errs.title = `Máximo ${LIMITS.title} caracteres`;
 
+    // ─ Título: obligatorio siempre, 2–15 palabras ─
+    const titleWords = countWords(form.title);
+    if (!form.title.trim()) {
+      errs.title = 'El título es obligatorio';
+    } else if (titleWords < WORD_LIMITS.title.min || titleWords > WORD_LIMITS.title.max) {
+      errs.title = `El título debe tener entre ${WORD_LIMITS.title.min} y ${WORD_LIMITS.title.max} palabras (llevas ${titleWords})`;
+    }
+
+    // ─ Los demás campos solo se validan al publicar ─
     if (!forDraft) {
       if ((form.startDate && !form.endDate) || (!form.startDate && form.endDate)) {
         if (!form.startDate) errs.startDate = 'Debes ingresar ambas fechas o dejarlas vacías para activación inmediata';
@@ -283,18 +298,28 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
         }
       }
 
-      if (!form.problemDescription.trim()) errs.problemDescription = 'La descripción del problema es obligatoria';
-      else if (form.problemDescription.length > LIMITS.problemDescription)
-        errs.problemDescription = `Máximo ${LIMITS.problemDescription} caracteres`;
+      const descWords = countWords(form.problemDescription);
+      if (!form.problemDescription.trim()) {
+        errs.problemDescription = 'La descripción del problema es obligatoria';
+      } else if (descWords < WORD_LIMITS.content.min || descWords > WORD_LIMITS.content.max) {
+        errs.problemDescription = `La descripción debe tener entre ${WORD_LIMITS.content.min} y ${WORD_LIMITS.content.max} palabras (llevas ${descWords})`;
+      }
 
-      if (!form.companyContext.trim()) errs.companyContext = 'El contexto de la empresa es obligatorio';
-      else if (form.companyContext.length > LIMITS.companyContext)
-        errs.companyContext = `Máximo ${LIMITS.companyContext} caracteres`;
+      const ctxWords = countWords(form.companyContext);
+      if (!form.companyContext.trim()) {
+        errs.companyContext = 'El contexto de la empresa es obligatorio';
+      } else if (ctxWords < WORD_LIMITS.content.min || ctxWords > WORD_LIMITS.content.max) {
+        errs.companyContext = `El contexto debe tener entre ${WORD_LIMITS.content.min} y ${WORD_LIMITS.content.max} palabras (llevas ${ctxWords})`;
+      }
 
-      if (!form.participationRules.trim()) errs.participationRules = 'Las reglas de participación son obligatorias';
-      else if (form.participationRules.length > LIMITS.participationRules)
-        errs.participationRules = `Máximo ${LIMITS.participationRules} caracteres`;
+      const rulesWords = countWords(form.participationRules);
+      if (!form.participationRules.trim()) {
+        errs.participationRules = 'Las reglas de participación son obligatorias';
+      } else if (rulesWords < WORD_LIMITS.content.min || rulesWords > WORD_LIMITS.content.max) {
+        errs.participationRules = `Las reglas deben tener entre ${WORD_LIMITS.content.min} y ${WORD_LIMITS.content.max} palabras (llevas ${rulesWords})`;
+      }
     }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };

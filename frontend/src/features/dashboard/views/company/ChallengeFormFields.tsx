@@ -3,7 +3,8 @@ import { Pista8Theme } from '../../../../config/theme';
 import { FACULTIES, getFacultyName } from '../../../../config/faculties';
 import type { ChallengeStatus } from '../../../../types/models';
 import type { ChallengeFormData, Errors } from './useChallengeForm';
-import { LIMITS, formatDate } from './useChallengeForm';
+import { WORD_LIMITS, formatDate } from './useChallengeForm';
+
 import BackButton from '../../../../components/common/BackButton';
 import InfoTooltip from '../../../../components/common/InfoTooltip';
 import {
@@ -112,6 +113,10 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
   readOnlyMode,
 }) => {
   const [showOptionals, setShowOptionals] = React.useState(false);
+
+  /** Cuenta palabras reales en un string */
+  const countWords = (val: string) =>
+    val.trim().split(/\s+/).filter(Boolean).length;
 
   return (
   <>
@@ -240,8 +245,8 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                 onChange={e => !locked('core') && updateField('title', e.target.value)} />
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 {errors.title ? <ErrorText>{errors.title}</ErrorText> : <span />}
-                <CharCount $over={form.title.length > LIMITS.title}>
-                  {form.title.length}/{LIMITS.title}
+                <CharCount $over={countWords(form.title) > WORD_LIMITS.title.max}>
+                  {countWords(form.title)}/{WORD_LIMITS.title.max} palabras
                 </CharCount>
               </div>
             </FieldGroup>
@@ -258,8 +263,8 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               onChange={e => !locked('core') && updateField('problemDescription', e.target.value)} />
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               {errors.problemDescription ? <ErrorText>{errors.problemDescription}</ErrorText> : <span />}
-              <CharCount $over={form.problemDescription.length > LIMITS.problemDescription}>
-                {form.problemDescription.length}/{LIMITS.problemDescription}
+              <CharCount $over={countWords(form.problemDescription) > WORD_LIMITS.content.max}>
+                {countWords(form.problemDescription)}/{WORD_LIMITS.content.max} palabras
               </CharCount>
             </div>
           </FieldGroup>
@@ -275,8 +280,8 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               onChange={e => !locked('core') && updateField('companyContext', e.target.value)} />
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               {errors.companyContext ? <ErrorText>{errors.companyContext}</ErrorText> : <span />}
-              <CharCount $over={form.companyContext.length > LIMITS.companyContext}>
-                {form.companyContext.length}/{LIMITS.companyContext}
+              <CharCount $over={countWords(form.companyContext) > WORD_LIMITS.content.max}>
+                {countWords(form.companyContext)}/{WORD_LIMITS.content.max} palabras
               </CharCount>
             </div>
           </FieldGroup>
@@ -295,8 +300,8 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               onChange={e => !locked('core') && updateField('participationRules', e.target.value)} />
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               {errors.participationRules ? <ErrorText>{errors.participationRules}</ErrorText> : <span />}
-              <CharCount $over={form.participationRules.length > LIMITS.participationRules}>
-                {form.participationRules.length}/{LIMITS.participationRules}
+              <CharCount $over={countWords(form.participationRules) > WORD_LIMITS.content.max}>
+                {countWords(form.participationRules)}/{WORD_LIMITS.content.max} palabras
               </CharCount>
             </div>
           </FieldGroup>

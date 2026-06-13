@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 import { ideaService } from '../../../services/idea.service';
@@ -7,6 +7,7 @@ import type { AxiosLikeError } from '../types';
 import { useAuth } from '../../../context/AuthContext';
 import { wallEvents } from '../../../hooks/useWallEvents';
 import { Sparkles, Lightbulb, Flame, Brain } from 'lucide-react';
+import { useClickOutside } from '../../../hooks/useClickOutside';
 
 const pop = keyframes`
   0%   { transform: scale(1); }
@@ -21,20 +22,13 @@ const Container = styled.div`
   position: relative;
   display: inline-flex;
   align-items: center;
-
-  &:hover .reactions-bar {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(0);
-    pointer-events: auto;
-  }
 `;
 
-const ReactionsBar = styled.div`
+const ReactionsBar = styled.div<{ $open: boolean }>`
   position: absolute;
   bottom: calc(100% + 12px);
   left: 50%;
-  transform: translateX(-50%) translateY(10px);
+  transform: translateX(-50%) ${p => p.$open ? 'translateY(0)' : 'translateY(10px)'};
   background: ${Pista8Theme.white};
   border-radius: 99px;
   padding: 6px;
@@ -42,9 +36,9 @@ const ReactionsBar = styled.div`
   gap: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(72, 80, 84, 0.08);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+  opacity: ${p => p.$open ? 1 : 0};
+  visibility: ${p => p.$open ? 'visible' : 'hidden'};
+  pointer-events: ${p => p.$open ? 'auto' : 'none'};
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 50;
 
@@ -232,6 +226,11 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
   const [likes, setLikes] = useState(initialLikes);
   const [reaction, setReaction] = useState<string | null>(() => getLocalReaction(ideaId, currentUserId));
   const [hasVoted, setHasVoted] = useState(() => serverVoted || !!reaction);
+  const [reactionsOpen, setReactionsOpen] = useState(false);
+
+  // Cierra el menú al hacer clic fuera del contenedor
+  const handleClickOutside = useCallback(() => setReactionsOpen(false), []);
+  const containerRef = useClickOutside<HTMLDivElement>(handleClickOutside, reactionsOpen);
 
   useEffect(() => {
     setLikes(initialLikes);
@@ -307,11 +306,9 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
   };
 
   const handleToggle = () => {
-    if (hasVoted) {
-      executeVote(null); // Unvote
-    } else {
-      executeVote('good'); // Default vote if clicking main button
-    }
+    if (disabled || isSoftBlocked || isAuthor) return;
+    // Si el menú está abierto, lo cierra; si no, lo abre para elegir reacción
+    setReactionsOpen(prev => !prev);
   };
 
   const isSoftBlocked = userProfile?.status === 'SOFT_BLOCK' || userProfile?.status === 'SUSPENDED';
@@ -331,9 +328,9 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
   const activeColor = activeConfig?.color;
 
   return (
-    <Container>
+    <Container ref={containerRef}>
       {!disabled && !isAuthor && !isSoftBlocked && (
-        <ReactionsBar className="reactions-bar">
+        <ReactionsBar $open={reactionsOpen}>
           {(Object.entries(REACTION_CONFIG) as [keyof typeof REACTION_CONFIG, typeof REACTION_CONFIG['good']][]).map(([key, config]) => {
             const Icon = config.icon;
             return (
@@ -342,6 +339,7 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
                 $color={config.color}
                 onClick={(e) => {
                   e.stopPropagation();
+                  setReactionsOpen(false);
                   executeVote(key);
                 }}
               >

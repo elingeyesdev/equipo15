@@ -160,6 +160,90 @@ const sortByCreatedAtAsc = (a: Comment, b: Comment) => {
   return aMs - bMs;
 };
 
+/* ─── Modal de confirmación ──────────────────────────────────────────────── */
+const ModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 31, 34, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.18s ease;
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+`;
+
+const ModalCard = styled.div`
+  background: white;
+  border-radius: 20px;
+  padding: 28px 28px 24px;
+  max-width: 400px;
+  width: calc(100% - 32px);
+  box-shadow: 0 16px 48px rgba(26, 31, 34, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: slideUp 0.22s cubic-bezier(0.22, 0.68, 0, 1.1);
+  @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+`;
+
+const ModalIcon = styled.div`
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(198, 40, 40, 0.08);
+  border: 1.5px solid rgba(198, 40, 40, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+`;
+
+const ModalTitle = styled.h3`
+  margin: 0;
+  font-size: 17px;
+  font-weight: 900;
+  color: #1a1f22;
+  text-align: center;
+`;
+
+const ModalBody = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.65;
+  text-align: center;
+`;
+
+const ModalActions = styled.div`
+  display: flex;
+  gap: 10px;
+`;
+
+const ModalBtn = styled.button<{ $danger?: boolean }>`
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1.5px solid ${p => p.$danger ? '#c62828' : 'rgba(72,80,84,0.18)'};
+  background: ${p => p.$danger ? '#c62828' : 'white'};
+  color: ${p => p.$danger ? 'white' : '#485054'};
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  &:hover {
+    background: ${p => p.$danger ? '#b71c1c' : '#f8f9fa'};
+    transform: translateY(-1px);
+  }
+  &:active { transform: translateY(0); }
+`;
+
+interface ConfirmState {
+  resolve: (confirmed: boolean) => void;
+}
+
+
 const buildCommentTreeFromFlatList = (comments: Comment[]): CommentTreeNode[] => {
   const byId = new Map<string, FlatCommentNode>();
   const roots: CommentTreeNode[] = [];
@@ -353,6 +437,27 @@ export const CommentsSection = ({
   const isReadOnlyByPenalty = userProfile?.status === 'SOFT_BLOCK' || userProfile?.status === 'SUSPENDED';
   const isReadOnlyMode = disabled || isReadOnlyByPenalty || !isAuthenticated;
 
+  // Estado del modal de confirmación
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
+
+  /** Muestra el modal y retorna una promesa que se resuelve con true/false */
+  const showConfirm = useCallback((): Promise<boolean> => {
+    return new Promise<boolean>((resolve) => {
+      setConfirmState({ resolve });
+    });
+  }, []);
+
+  const handleConfirmYes = useCallback(() => {
+    confirmState?.resolve(true);
+    setConfirmState(null);
+  }, [confirmState]);
+
+  const handleConfirmNo = useCallback(() => {
+    confirmState?.resolve(false);
+    setConfirmState(null);
+  }, [confirmState]);
+
+
   const loadComments = useCallback(async () => {
     if (authLoading) {
       return;
@@ -506,10 +611,8 @@ export const CommentsSection = ({
   const handleWithdraw = useCallback(async (commentId: string) => {
     setSubmitSuccess(null);
 
-    const confirmMsg = 'Estás a punto de borrar este comentario. Si borras o editas muchos comentarios en poco tiempo, tu cuenta podría ser desactivada temporalmente. ¿Deseas continuar?';
-    if (!window.confirm(confirmMsg)) {
-      return;
-    }
+    const confirmed = await showConfirm();
+    if (!confirmed) return;
 
     const currentComments = commentsRef.current;
     const commentToRemove = findCommentInTree(currentComments, commentId);
@@ -578,6 +681,30 @@ export const CommentsSection = ({
 
   return (
     <Wrapper>
+      {/* ─── Modal de confirmación de borrado ───────────────────────── */}
+      {confirmState && (
+        <ModalOverlay>
+          <ModalCard>
+            <ModalIcon>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c62828" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6M14 11v6" />
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>
+            </ModalIcon>
+            <ModalTitle>Borrar comentario</ModalTitle>
+            <ModalBody>
+              Estás a punto de borrar este comentario. Si borras o editas muchos en poco tiempo, tu cuenta podría ser desactivada temporalmente.
+            </ModalBody>
+            <ModalActions>
+              <ModalBtn type="button" onClick={handleConfirmNo}>Cancelar</ModalBtn>
+              <ModalBtn type="button" $danger onClick={handleConfirmYes}>Sí, borrar</ModalBtn>
+            </ModalActions>
+          </ModalCard>
+        </ModalOverlay>
+      )}
+
       <Header>
         <TitleBlock>
           <Eyebrow>Debate y feedback</Eyebrow>
