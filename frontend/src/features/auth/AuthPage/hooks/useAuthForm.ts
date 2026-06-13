@@ -3,9 +3,13 @@ import { authService } from '../../../../services/auth.service';
 import { useAuth } from '../../../../context/AuthContext';
 
 export const useAuthForm = () => {
-  const { setSuppressAuth } = useAuth();
+  const { user, userProfile, refetchProfile, setSuppressAuth } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ email: '', password: '', name: '', phone: '' });
+  const isGoogleCompletingProfile = user !== null && userProfile === null;
+  const [isLinkingAccount, setIsLinkingAccount] = useState(false);
+  const [pendingGoogleCredential, setPendingGoogleCredential] = useState<any>(null);
+  const [googleEmail, setGoogleEmail] = useState('');
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorVisible, setErrorVisible] = useState<string | null>(null);
@@ -42,6 +46,16 @@ export const useAuthForm = () => {
       if (successTimerRef.current) clearTimeout(successTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (user && !userProfile) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email || '',
+        name: prev.name || user.displayName || '',
+      }));
+    }
+  }, [user, userProfile]);
 
   const passwordChecks = {
     length: formData.password.length >= 8,
@@ -93,6 +107,7 @@ export const useAuthForm = () => {
       case 'auth/user-not-found': return 'No existe una cuenta con este correo.';
       case 'auth/popup-closed-by-user': return 'El login de Google fue cancelado.';
       case 'auth/network-request-failed': return 'Error de red. Verifica tu conexión.';
+      case 'auth/account-exists-with-different-credential': return 'Ya existe una cuenta registrada con este correo en la plataforma.';
       case '403':
       case 'ERR_BAD_REQUEST':
         return (
@@ -162,8 +177,86 @@ export const useAuthForm = () => {
     setLoading(true);
     clearError();
     clearSuccess();
+    setSuppressAuth(true);
     try {
       await authService.loginWithGoogle();
+      setSuppressAuth(false);
+    } catch (error: any) {
+      const code = error?.code || error?.response?.data?.code || '';
+      if (code === 'auth/account-exists-with-different-credential') {
+        const { GoogleAuthProvider } = await import('firebase/auth');
+        const credential = GoogleAuthProvider.credentialFromError(error);
+        setPendingGoogleCredential(credential);
+        setGoogleEmail(error.customData?.email || '');
+        setIsLinkingAccount(true);
+      } else if (error.message === 'USER_NOT_FOUND') {
+        setSuppressAuth(false);
+      } else {
+        setSuppressAuth(false);
+        showError(getFriendlyError(error));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompleteGoogleRegistration = async () => {
+    const rawPhone = formData.phone.replace(/\D/g, '');
+    if (rawPhone.length !== 8) {
+      setPhoneError(`Tu número debe tener 8 dígitos. Te faltan ${8 - rawPhone.length} números.`);
+      return;
+    }
+    if (!isPasswordValid) {
+      showError('Por favor asegúrate de cumplir con los requisitos de la contraseña.');
+      return;
+    }
+    setLoading(true);
+    clearError();
+    clearSuccess();
+    try {
+      const fullPhone = `+591${rawPhone}`;
+      await authService.completeGoogleRegistration(formData.name, fullPhone, formData.password);
+      showSuccess('Registro completado correctamente.');
+      await refetchProfile();
+      setSuppressAuth(false);
+    } catch (error: any) {
+      showError(getFriendlyError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLinkGoogleAccount = async () => {
+    if (!formData.password) {
+      showError('Por favor ingresa tu contraseña.');
+      return;
+    }
+    setLoading(true);
+    clearError();
+    clearSuccess();
+    try {
+      await authService.linkGoogleAccountWithPassword(googleEmail, formData.password, pendingGoogleCredential);
+      showSuccess('Cuenta vinculada con éxito. Sesión iniciada.');
+      await refetchProfile();
+      setIsLinkingAccount(false);
+      setPendingGoogleCredential(null);
+      setSuppressAuth(false);
+    } catch (error: any) {
+      showError(getFriendlyError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelGoogleFlow = async () => {
+    setLoading(true);
+    try {
+      await authService.logout();
+      setIsLinkingAccount(false);
+      setPendingGoogleCredential(null);
+      setSuppressAuth(false);
+      setFormData({ email: '', password: '', name: '', phone: '' });
+      setPhoneError(null);
     } catch (error: any) {
       showError(getFriendlyError(error));
     } finally {
@@ -200,5 +293,11 @@ export const useAuthForm = () => {
     setIsResetMode,
     handleResetPassword,
     phoneError,
+    isGoogleCompletingProfile,
+    isLinkingAccount,
+    googleEmail,
+    handleCompleteGoogleRegistration,
+    handleLinkGoogleAccount,
+    handleCancelGoogleFlow,
   };
 };

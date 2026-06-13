@@ -4,6 +4,7 @@ import { API_URL } from '@/config/constants';
 import {
   clearStoredImpersonationToken,
   getStoredImpersonationSession,
+  getStoredImpersonationToken,
 } from '@/utils/impersonation-session';
 
 const instance = axios.create({
@@ -13,15 +14,11 @@ const instance = axios.create({
 instance.interceptors.request.use(
   async (config) => {
     const impersonationSession = getStoredImpersonationSession();
-    if (impersonationSession?.token) {
-      const hasAuthHeader = !!(
-        (config.headers && (config.headers.Authorization || config.headers.authorization))
-      );
-      if (!hasAuthHeader) {
-        config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${impersonationSession.token}`;
-        return config;
-      }
+    const isSyncRequest = config.url?.includes('/users/sync');
+    
+    if (impersonationSession?.token && !isSyncRequest) {
+      config.headers = config.headers || {};
+      config.headers['x-impersonation-token'] = impersonationSession.token;
     }
 
     const user = auth.currentUser;
@@ -50,8 +47,17 @@ instance.interceptors.response.use(
     const status = error?.response?.status as number | undefined;
     const backendMessage = String(error?.response?.data?.message || '').toLowerCase();
 
-    if (status === 401 && backendMessage.includes('token de impersonación expirado')) {
+    if (status === 401 && (
+      backendMessage.includes('impersonación') || 
+      backendMessage.includes('impersonacion') ||
+      backendMessage.includes('espejo') ||
+      getStoredImpersonationToken()
+    )) {
       clearStoredImpersonationToken();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/dashboard/admin/clients';
+      }
+      return new Promise(() => {});
     }
 
     if (status === 401) {

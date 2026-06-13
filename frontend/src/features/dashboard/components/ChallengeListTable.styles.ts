@@ -117,14 +117,22 @@ export const StatusBadge = styled.span<{ $status: string }>`
   text-transform: uppercase;
 
   ${({ $status }) => {
-    switch ($status) {
-      case 'Activo':
+    const s = $status?.toLowerCase();
+    switch (s) {
+      case 'activo':
+      case 'published':
         return `background: #dcfce7; color: #166534;`;
-      case 'Borrador':
+      case 'borrador':
+      case 'draft':
         return `background: #f1f5f9; color: #475569;`;
-      case 'En Evaluación':
+      case 'agendado':
+      case 'scheduled':
+        return `background: #eff6ff; color: #1e40af;`;
+      case 'en evaluación':
+      case 'evaluating':
         return `background: #fef9c3; color: #854d0e;`;
-      case 'Finalizado':
+      case 'finalizado':
+      case 'closed':
         return `background: #fee2e2; color: #991b1b;`;
       default:
         return `background: #f1f5f9; color: #475569;`;

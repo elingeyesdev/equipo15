@@ -64,18 +64,22 @@ export class UsersController {
   @ApiOperation({ summary: 'Get current authorized user' })
   async getMe(@Request() req: AuthenticatedRequest) {
     const { user } = req;
-    const profile = await this.userService.findOrCreate({
-      firebaseUid: user.uid,
-      email: user.email || '',
-      displayName:
-        (user as { name?: string }).name ||
-        (user as { displayName?: string }).displayName ||
-        user.email?.split('@')[0] ||
-        'Usuario de Pista 8',
-      avatarUrl:
-        (user as { picture?: string }).picture ||
-        (user as { photoURL?: string }).photoURL,
-    });
+    const profile = await this.userService.findOrCreate(
+      {
+        firebaseUid: user.uid,
+        email: user.email || '',
+        displayName:
+          (user as { name?: string }).name ||
+          (user as { displayName?: string }).displayName ||
+          user.email?.split('@')[0] ||
+          'Usuario de Pista 8',
+        avatarUrl:
+          (user as { picture?: string }).picture ||
+          (user as { photoURL?: string }).photoURL,
+      },
+      false,
+      true,
+    );
 
     return this.applySessionContext(profile, req);
   }
@@ -95,6 +99,7 @@ export class UsersController {
       displayName?: string;
       avatarUrl?: string;
       preventCreation?: boolean;
+      phone?: string;
     },
   ) {
     const { user } = req;
@@ -108,6 +113,7 @@ export class UsersController {
           user.email?.split('@')[0] ||
           'Usuario de Pista 8',
         avatarUrl: body.avatarUrl,
+        phone: body.phone,
       },
       true,
       body.preventCreation,

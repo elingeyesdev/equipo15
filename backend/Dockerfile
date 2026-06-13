@@ -11,7 +11,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 RUN npx prisma generate
 RUN pnpm build
-RUN pnpm prune --prod
+RUN pnpm prune --prod --ignore-scripts
 
 # ── ETAPA PRODUCTION ────────────────────────────────────────────────────────────
 FROM node:20-alpine AS production

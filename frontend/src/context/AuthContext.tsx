@@ -64,7 +64,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await axiosInstance.post<ApiResponse<UserProfile>>('/users/sync', {
         firebaseUid: firebaseUser.uid,
         email: firebaseUser.email,
-        displayName: firebaseUser.displayName || ''
+        displayName: firebaseUser.displayName || '',
+        preventCreation: true,
       });
       return response.data?.data || null;
     } catch {
@@ -98,10 +99,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (suppressAuthRef.current) {
-        return;
-      }
-
       setUser(currentUser);
       if (currentUser) {
         setLoading(true);
@@ -111,18 +108,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             profile = await syncProfile(currentUser);
           }
 
-          if (suppressAuthRef.current) {
-            return;
-          }
-
           if (profile) {
             setUserProfile(profile);
           } else {
-            await auth.signOut();
             setUserProfile(null);
           }
         } catch (error) {
-          await auth.signOut();
+          console.error('Auth context load error:', error);
+          setUserProfile(null);
         }
       } else {
         setUserProfile(null);

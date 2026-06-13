@@ -37,23 +37,59 @@ export class ChallengeService {
     createChallengeDto: CreateChallengeDto,
     authorId: string,
   ): Promise<Challenge> {
-    const { submissionsOpenAt, submissionsCloseAt, publishedAt, ...rest } =
+    const { submissionsOpenAt, submissionsCloseAt, publishedAt, startDate, endDate, status, ...rest } =
       createChallengeDto;
+
+    const now = new Date();
+
+    let finalStatus = status ? this.challengeRepository.normalizeStatus(status) : 'PUBLISHED';
+
+    let finalStart: Date | null = null;
+    if (startDate) {
+      finalStart = new Date(startDate);
+    } else if (submissionsOpenAt) {
+      finalStart = new Date(submissionsOpenAt);
+    }
+
+    let finalEnd: Date | null = null;
+    if (endDate) {
+      finalEnd = new Date(endDate);
+    } else if (submissionsCloseAt) {
+      finalEnd = new Date(submissionsCloseAt);
+    }
+
+    if (finalStatus !== 'DRAFT') {
+      if (!finalStart && !finalEnd) {
+        finalStart = new Date(now);
+        finalEnd = new Date(now);
+        finalEnd.setHours(23, 59, 59, 999);
+      }
+
+      if (finalStart) {
+        const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+        if (finalStart < fiveMinutesAgo) {
+          throw new BadRequestException('La fecha de inicio no puede ser anterior a la fecha actual.');
+        }
+      }
+
+      if (finalStart && finalEnd && finalEnd <= finalStart) {
+        throw new BadRequestException('La fecha de cierre debe ser posterior a la fecha de inicio.');
+      }
+    }
+
+    if (finalStatus === 'PUBLISHED') {
+      if (finalStart && finalStart > now) {
+        finalStatus = 'SCHEDULED';
+      }
+    }
 
     const payload: Record<string, any> = {
       ...rest,
-      submissionsOpenAt: submissionsOpenAt
-        ? new Date(submissionsOpenAt)
-        : undefined,
-      submissionsCloseAt: submissionsCloseAt
-        ? new Date(submissionsCloseAt)
-        : undefined,
-      publishedAt: publishedAt ? new Date(publishedAt) : undefined,
+      status: finalStatus,
+      submissionsOpenAt: finalStart,
+      submissionsCloseAt: finalEnd,
+      publishedAt: finalStatus === 'PUBLISHED' ? now : undefined,
     };
-
-    if (payload.status === 'PUBLISHED' && !payload.publishedAt) {
-      payload.publishedAt = new Date();
-    }
 
     payload.facultyId = await this.resolveFacultyId(payload.facultyId);
 
@@ -62,7 +98,7 @@ export class ChallengeService {
       authorId,
     } as any);
     this.logger.log(
-      `Nuevo reto creado: "${createdChallenge.title}" con ID: ${createdChallenge.id} por autor: ${authorId}`,
+      `Nuevo reto creado: "${createdChallenge.title}" con ID: ${createdChallenge.id} en estado: ${createdChallenge.status}`,
     );
 
     if (createdChallenge.status === 'PUBLISHED') {
@@ -172,38 +208,134 @@ export class ChallengeService {
     return challenge;
   }
 
+  private isCriteriaOnlyPhase(challenge: Challenge & { ideas?: { id: string }[] }): boolean {
+    const statusUpper = challenge.status?.toUpperCase() || '';
+    if (
+      statusUpper === 'EVALUATING' ||
+      statusUpper === 'EN_EVALUACION' ||
+      statusUpper === 'EN EVALUACIÓN' ||
+      statusUpper === 'FINALIZADO'
+    ) {
+      return true;
+    }
+
+    const closeDate = challenge.submissionsCloseAt;
+    if (closeDate && new Date(closeDate) < new Date()) {
+      return true;
+    }
+
+    const ideasCount = challenge.ideas?.length ?? 0;
+    if (
+      ideasCount > 0 &&
+      statusUpper !== 'DRAFT' &&
+      statusUpper !== 'SCHEDULED' &&
+      statusUpper !== 'BORRADOR' &&
+      statusUpper !== 'AGENDADO'
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
   async update(id: string, updateChallengeDto: UpdateChallengeDto) {
     const existing = await this.challengeRepository.findById(id);
     if (!existing) {
       throw new NotFoundException('Reto no encontrado.');
     }
     const statusUpper = existing.status?.toUpperCase() || '';
-    if (statusUpper === 'EVALUATING' || statusUpper === 'CLOSED' || statusUpper === 'EN_EVALUACION' || statusUpper === 'FINALIZADO') {
-      throw new ForbiddenException('No se puede modificar un reto en fase de evaluación o cerrado.');
+    if (statusUpper === 'CLOSED') {
+      throw new ForbiddenException('No se puede modificar un reto cerrado.');
     }
 
-    const { submissionsOpenAt, submissionsCloseAt, publishedAt, ...rest } =
+    const criteriaOnlyPhase = this.isCriteriaOnlyPhase(existing);
+
+    if (updateChallengeDto.evaluationCriteria !== undefined) {
+      const existingCriteria = JSON.stringify(existing.evaluationCriteria ?? []);
+      const newCriteria = JSON.stringify(updateChallengeDto.evaluationCriteria ?? []);
+      if (existingCriteria !== newCriteria) {
+        await this.challengeRepository.resetEvaluationsForChallenge(id);
+      }
+    }
+
+    if (criteriaOnlyPhase) {
+      if (updateChallengeDto.evaluationCriteria === undefined) {
+        throw new BadRequestException('Debes enviar los criterios de evaluación.');
+      }
+      const updatedChallenge = await this.challengeRepository.update(id, {
+        evaluationCriteria: updateChallengeDto.evaluationCriteria as any,
+      });
+      this.logger.log(
+        `Criterios de evaluación actualizados para reto "${updatedChallenge.title}" (ID: ${id})`,
+      );
+      return updatedChallenge;
+    }
+
+    const { submissionsOpenAt, submissionsCloseAt, publishedAt, startDate, endDate, status, ...rest } =
       updateChallengeDto;
+
+    const now = new Date();
+    let finalStatus = status ? this.challengeRepository.normalizeStatus(status) : undefined;
+    const resolvedStatus = finalStatus || existing.status;
+
+    let finalStart: Date | null | undefined = undefined;
+    if (startDate !== undefined) {
+      finalStart = startDate ? new Date(startDate) : null;
+    } else if (submissionsOpenAt !== undefined) {
+      finalStart = submissionsOpenAt ? new Date(submissionsOpenAt) : null;
+    }
+
+    let finalEnd: Date | null | undefined = undefined;
+    if (endDate !== undefined) {
+      finalEnd = endDate ? new Date(endDate) : null;
+    } else if (submissionsCloseAt !== undefined) {
+      finalEnd = submissionsCloseAt ? new Date(submissionsCloseAt) : null;
+    }
+
+    if (resolvedStatus !== 'DRAFT') {
+      let checkStart = finalStart !== undefined ? finalStart : existing.submissionsOpenAt;
+      let checkEnd = finalEnd !== undefined ? finalEnd : existing.submissionsCloseAt;
+
+      if (!checkStart && !checkEnd) {
+        checkStart = new Date(now);
+        checkEnd = new Date(now);
+        checkEnd.setHours(23, 59, 59, 999);
+        finalStart = checkStart;
+        finalEnd = checkEnd;
+      }
+
+      const existingStart = existing.submissionsOpenAt ? new Date(existing.submissionsOpenAt) : null;
+      const finalStartVal = finalStart !== undefined ? finalStart : existingStart;
+      const startChanged = !existingStart || (finalStartVal && finalStartVal.getTime() !== existingStart.getTime());
+
+      if (startChanged && finalStartVal) {
+        const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+        if (finalStartVal < fiveMinutesAgo) {
+          throw new BadRequestException('La fecha de inicio no puede ser anterior a la fecha actual.');
+        }
+      }
+
+      if (checkStart && checkEnd && checkEnd <= checkStart) {
+        throw new BadRequestException('La fecha de cierre debe ser posterior a la fecha de inicio.');
+      }
+    }
+
+    if (finalStatus === 'PUBLISHED') {
+      const checkStart = finalStart !== undefined ? finalStart : existing.submissionsOpenAt;
+      if (checkStart && checkStart > now) {
+        finalStatus = 'SCHEDULED';
+      }
+    }
 
     const payload: Record<string, any> = {
       ...rest,
-      submissionsOpenAt: submissionsOpenAt
-        ? new Date(submissionsOpenAt)
-        : undefined,
-      submissionsCloseAt: submissionsCloseAt
-        ? new Date(submissionsCloseAt)
-        : undefined,
-      publishedAt: publishedAt ? new Date(publishedAt) : undefined,
+      status: finalStatus,
+      submissionsOpenAt: finalStart !== undefined ? finalStart : undefined,
+      submissionsCloseAt: finalEnd !== undefined ? finalEnd : undefined,
+      publishedAt: finalStatus === 'PUBLISHED' && !existing.publishedAt ? now : undefined,
     };
 
     payload.facultyId = await this.resolveFacultyId(payload.facultyId);
-
-    if (payload.status === 'PUBLISHED') {
-      const existing = await this.challengeRepository.findById(id);
-      if (existing && !(existing as any).publishedAt) {
-        payload.publishedAt = new Date();
-      }
-    }
 
     const updatedChallenge = await this.challengeRepository.update(id, payload);
     this.logger.log(
@@ -239,7 +371,28 @@ export class ChallengeService {
     return updatedChallenge;
   }
 
-  async delete(id: string) {
+  async delete(id: string, uid: string) {
+    const user = await this.userService.findByUid(uid);
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado.');
+    }
+
+    const challenge = await this.challengeRepository.findById(id);
+    if (!challenge) {
+      throw new NotFoundException('Reto no encontrado.');
+    }
+
+    if (challenge.authorId !== user.id) {
+      throw new ForbiddenException('No tienes permisos para eliminar este reto.');
+    }
+
+    const statusUpper = challenge.status?.toUpperCase() || '';
+    if (statusUpper !== 'DRAFT' && statusUpper !== 'SCHEDULED') {
+      throw new ForbiddenException(
+        'Solo se pueden eliminar retos en estado borrador o agendado.',
+      );
+    }
+
     const deletedChallenge = await this.challengeRepository.delete(id);
     this.logger.log(
       `Reto eliminado: "${deletedChallenge.title}" con ID: ${id}`,
@@ -401,6 +554,44 @@ export class ChallengeService {
       }
     } catch (error) {
       this.logger.error(`Error notifying evaluation started for challenge ${challengeId}:`, error);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async handleScheduledChallenges() {
+    this.logger.log('Ejecutando cron para activar retos agendados...');
+    try {
+      const now = new Date();
+      const scheduledChallenges = await this.prisma.challenge.findMany({
+        where: {
+          status: 'SCHEDULED',
+          submissionsOpenAt: { lte: now },
+        },
+      });
+
+      if (scheduledChallenges.length > 0) {
+        const ids = scheduledChallenges.map((c) => c.id);
+
+        await this.prisma.challenge.updateMany({
+          where: {
+            id: { in: ids },
+          },
+          data: {
+            status: 'PUBLISHED',
+            publishedAt: now,
+          },
+        });
+
+        this.logger.log(
+          `Cron: Se activaron automáticamente ${scheduledChallenges.length} retos programados: [${ids.join(', ')}]`,
+        );
+
+        await this.redisService.delByPrefix('public:').catch((err) => {
+          this.logger.error(`Error al invalidar caché de retos en Redis: ${err.message}`);
+        });
+      }
+    } catch (error) {
+      this.logger.error('Error al actualizar retos programados en el cron:', error);
     }
   }
 

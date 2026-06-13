@@ -223,8 +223,10 @@ const GoBackBtn = styled.button`
 `;
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; dot: string }> = {
-  Borrador: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
-  DRAFT: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
+  Borrador: { label: 'Borrador', bg: '#f1f5f9', color: '#475569', dot: '#94a3b8' },
+  DRAFT: { label: 'Borrador', bg: '#f1f5f9', color: '#475569', dot: '#94a3b8' },
+  Agendado: { label: 'Agendado', bg: '#eff6ff', color: '#1e40af', dot: '#3b82f6' },
+  SCHEDULED: { label: 'Agendado', bg: '#eff6ff', color: '#1e40af', dot: '#3b82f6' },
   Activo: { label: 'Activo', bg: '#dcfce7', color: '#166534', dot: '#22c55e' },
   PUBLISHED: { label: 'Activo', bg: '#dcfce7', color: '#166534', dot: '#22c55e' },
   'En Evaluación': { label: 'En Evaluación', bg: '#fef3c7', color: '#92400e', dot: '#f59e0b' },

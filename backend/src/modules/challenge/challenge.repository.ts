@@ -13,7 +13,7 @@ export class ChallengeRepository {
   private readonly logger = new Logger(ChallengeRepository.name);
   constructor(private readonly prisma: PrismaService) {}
 
-  private normalizeStatus(status: string): string {
+  public normalizeStatus(status: string): string {
     const map: Record<string, string> = {
       activo: 'PUBLISHED',
       active: 'PUBLISHED',
@@ -27,8 +27,11 @@ export class ChallengeRepository {
       draft: 'DRAFT',
       publicado: 'PUBLISHED',
       published: 'PUBLISHED',
+      agendado: 'SCHEDULED',
+      programado: 'SCHEDULED',
+      scheduled: 'SCHEDULED',
     };
-    const validValues = ['DRAFT', 'PUBLISHED', 'EVALUATING', 'CLOSED'];
+    const validValues = ['DRAFT', 'SCHEDULED', 'PUBLISHED', 'EVALUATING', 'CLOSED'];
     if (validValues.includes(status)) return status;
     return map[status?.toLowerCase()?.trim()] || status;
   }
@@ -76,6 +79,8 @@ export class ChallengeRepository {
     }
 
     if (userRole === 'student' || userRole === UserRole.USER) {
+      where.status = { in: ['PUBLISHED', 'EVALUATING', 'CLOSED'] };
+
       const facultyCondition: Prisma.ChallengeWhereInput[] = [
         { facultyId: null },
         ...(facultyId ? [{ facultyId }] : []),
@@ -399,6 +404,28 @@ export class ChallengeRepository {
     this.logger.log(
       `Synced ${active.length} criteria to table for challenge ${challengeId}`,
     );
+  }
+
+  async resetEvaluationsForChallenge(challengeId: string): Promise<number> {
+    const result = await this.prisma.evaluation.deleteMany({
+      where: {
+        idea: { challengeId, deletedAt: null },
+      },
+    });
+
+    await this.prisma.idea.updateMany({
+      where: { challengeId, deletedAt: null },
+      data: { finalScore: 0 },
+    });
+
+    await this.prisma.criteria.deleteMany({
+      where: { challengeId },
+    });
+
+    this.logger.log(
+      `Reset ${result.count} judge evaluation(s) for challenge ${challengeId} after criteria change`,
+    );
+    return result.count;
   }
 
   async delete(id: string): Promise<Challenge> {

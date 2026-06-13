@@ -4,7 +4,7 @@ import { Pista8Theme } from '@/config/theme';
 import { interactiveHover, premiumTooltip } from '../styles/CommonStyles';
 
 export type ChallengeSortMode = 'newest' | 'oldest' | 'interactions' | 'score';
-export type ChallengeStatusFilter = 'ALL' | 'Activo' | 'Borrador' | 'En Evaluación' | 'Finalizado';
+export type ChallengeStatusFilter = 'ALL' | 'Activo' | 'Borrador' | 'Agendado' | 'En Evaluación' | 'Finalizado';
 
 export interface AdminChallengeFilterState {
   sortOrder: ChallengeSortMode;
@@ -144,6 +144,7 @@ const SORT_OPTIONS: { label: string; value: ChallengeSortMode }[] = [
 const STATUS_OPTIONS: { label: string; value: ChallengeStatusFilter }[] = [
   { label: 'Todos',          value: 'ALL' },
   { label: 'Activos',        value: 'Activo' },
+  { label: 'Agendados',      value: 'Agendado' },
   { label: 'Borradores',     value: 'Borrador' },
   { label: 'En Evaluación',  value: 'En Evaluación' },
   { label: 'Finalizados',    value: 'Finalizado' },

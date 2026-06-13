@@ -21,8 +21,10 @@ const fadeUp = keyframes`
 `;
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; dot: string }> = {
-  Borrador: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
-  DRAFT: { label: 'Borrador', bg: '#f1f3f5', color: '#6b7280', dot: '#9ca3af' },
+  Borrador: { label: 'Borrador', bg: '#f1f5f9', color: '#475569', dot: '#94a3b8' },
+  DRAFT: { label: 'Borrador', bg: '#f1f5f9', color: '#475569', dot: '#94a3b8' },
+  Agendado: { label: 'Agendado', bg: '#eff6ff', color: '#1e40af', dot: '#3b82f6' },
+  SCHEDULED: { label: 'Agendado', bg: '#eff6ff', color: '#1e40af', dot: '#3b82f6' },
   Activo: { label: 'Activo', bg: '#dcfce7', color: '#166534', dot: '#22c55e' },
   PUBLISHED: { label: 'Activo', bg: '#dcfce7', color: '#166534', dot: '#22c55e' },
   'En Evaluación': { label: 'En Evaluación', bg: '#fef3c7', color: '#92400e', dot: '#f59e0b' },
@@ -32,6 +34,8 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; 
 };
 
 const deriveDisplayStatus = (challenge: Challenge): string => {
+  const statusUpper = challenge.status?.toUpperCase() || '';
+  if (statusUpper === 'CLOSED') return 'Finalizado';
   const closeDate = challenge.endDate || challenge.submissionsCloseAt;
   if (closeDate && new Date(closeDate) < new Date()) {
     return 'Finalizado';
@@ -40,8 +44,62 @@ const deriveDisplayStatus = (challenge: Challenge): string => {
   return STATUS_CONFIG[status]?.label || status;
 };
 
+const isChallengeClosed = (challenge: Challenge): boolean => {
+  const statusUpper = challenge.status?.toUpperCase() || '';
+  return statusUpper === 'CLOSED';
+};
+
+const canEditCriteria = (challenge: Challenge): boolean => !isChallengeClosed(challenge);
+
+const canEditFullChallenge = (challenge: Challenge): boolean => {
+  if (isChallengeClosed(challenge)) return false;
+  if (challenge.ideasCount && challenge.ideasCount > 0) return false;
+  const displayStatus = deriveDisplayStatus(challenge);
+  return displayStatus !== 'Finalizado' && displayStatus !== 'En Evaluación';
+};
+
 const getStatusConfig = (status: string) =>
   STATUS_CONFIG[status] || STATUS_CONFIG['Borrador'];
+
+const ConfirmOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.66);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+`;
+
+const ConfirmCard = styled.div`
+  background: white;
+  padding: 32px;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(72, 80, 84, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: ${fadeUp} 0.25s ease both;
+`;
+
+const WarningIconWrap = styled.div`
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: #fef2f2;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+`;
 
 const Container = styled.div`
   animation: ${fadeUp} 0.4s ease both;
@@ -512,6 +570,8 @@ export const CompanyChallengesView = () => {
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
   const [copyChallenge, setCopyChallenge] = useState<Challenge | null>(null);
   const [viewChallenge, setViewChallenge] = useState<Challenge | null>(null);
+  const [deleteChallengeConfirm, setDeleteChallengeConfirm] = useState<Challenge | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const readOnlyMode = Boolean(impersonationSession);
 
   const [, setTick] = useState(0);
@@ -541,7 +601,7 @@ export const CompanyChallengesView = () => {
     ? challenges
     : challenges.filter(c => {
       const displayStatus = deriveDisplayStatus(c);
-      return displayStatus === filter || (filter === 'Borrador' && displayStatus === 'DRAFT');
+      return displayStatus === filter;
     });
 
   const handleSave = async (formData: ChallengePayload) => {
@@ -564,13 +624,8 @@ export const CompanyChallengesView = () => {
       return;
     }
     const statusUpper = challenge.status?.toUpperCase() || '';
-    if (statusUpper === 'EVALUATING' || statusUpper === 'CLOSED' || statusUpper === 'FINALIZADO' || statusUpper === 'EN_EVALUACION' || statusUpper === 'EN EVALUACIÓN') {
-      toast.error('Este reto está en fase de evaluación o finalizado y no puede ser modificado.');
-      return;
-    }
-    const canEdit = !challenge.ideasCount || challenge.ideasCount === 0;
-    if (!canEdit) {
-      toast.error('Este reto ya tiene ideas asociadas y no puede ser editado.');
+    if (statusUpper === 'CLOSED' || statusUpper === 'FINALIZADO') {
+      toast.error('Este reto ya está finalizado y no puede ser modificado.');
       return;
     }
     setEditingChallenge(challenge);
@@ -585,6 +640,26 @@ export const CompanyChallengesView = () => {
     setModalOpen(true);
   };
 
+  const handleDeleteChallenge = (challenge: Challenge) => {
+    if (readOnlyMode) return;
+    setDeleteChallengeConfirm(challenge);
+  };
+
+  const confirmDeleteChallenge = async () => {
+    if (!deleteChallengeConfirm || readOnlyMode) return;
+    setDeletingId(deleteChallengeConfirm.id);
+    try {
+      await challengeService.deleteChallenge(deleteChallengeConfirm.id);
+      toast.success('Reto eliminado correctamente.');
+      setDeleteChallengeConfirm(null);
+      await fetchChallenges();
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const handleFormBack = () => {
     setModalOpen(false);
     setEditingChallenge(null);
@@ -597,6 +672,7 @@ export const CompanyChallengesView = () => {
   const filters: { value: FilterValue; label: string }[] = [
     { value: 'all', label: 'Todos' },
     { value: 'Borrador', label: 'Borradores' },
+    { value: 'Agendado', label: 'Agendados' },
     { value: 'Activo', label: 'Activos' },
     { value: 'Finalizado', label: 'Finalizados' },
   ];
@@ -680,7 +756,8 @@ export const CompanyChallengesView = () => {
           {filtered.map((challenge, i) => {
             const displayStatus = deriveDisplayStatus(challenge);
             const sc = getStatusConfig(displayStatus);
-            const canEdit = (!challenge.ideasCount || challenge.ideasCount === 0) && displayStatus !== 'Finalizado';
+            const showFullEdit = canEditFullChallenge(challenge);
+            const showCriteriaEdit = canEditCriteria(challenge) && !showFullEdit;
             return (
               <Card key={challenge.id} $index={i}>
                 <CardHeader>
@@ -740,9 +817,14 @@ export const CompanyChallengesView = () => {
                   <ViewBtn type="button" onClick={() => handleViewChallenge(challenge)}>
                     Ver Reto
                   </ViewBtn>
-                  {canEdit && !readOnlyMode && (
-                    <ActionBtn onClick={() => handleEdit(challenge)} $tooltipText="Editar reto">
+                  {(showFullEdit || showCriteriaEdit) && !readOnlyMode && (
+                    <ActionBtn onClick={() => handleEdit(challenge)} $tooltipText={showFullEdit ? "Editar reto" : "Editar criterios de evaluación"}>
                       Editar
+                    </ActionBtn>
+                  )}
+                  {(challenge.status === 'DRAFT' || challenge.status === 'SCHEDULED' || challenge.status === 'Borrador' || challenge.status === 'Agendado') && !readOnlyMode && (
+                    <ActionBtn $danger onClick={() => handleDeleteChallenge(challenge)} $tooltipText="Eliminar reto">
+                      Eliminar
                     </ActionBtn>
                   )}
                   {(displayStatus === 'Finalizado' || displayStatus === 'En Evaluación' || displayStatus === 'EVALUATION') && (
@@ -750,7 +832,7 @@ export const CompanyChallengesView = () => {
                       Gestionar Podio
                     </ActionBtn>
                   )}
-                  {displayStatus !== 'Borrador' && displayStatus !== 'DRAFT' && (
+                  {challenge.status !== 'DRAFT' && challenge.status !== 'SCHEDULED' && challenge.status !== 'Borrador' && challenge.status !== 'Agendado' && (
                     <ActionBtn
                       onClick={() => navigate(`/dashboard/company/judges?challengeId=${challenge.id}`)}
                       disabled={readOnlyMode}
@@ -870,6 +952,72 @@ export const CompanyChallengesView = () => {
             </ViewModalFooter>
           </ViewModal>
         </ViewModalOverlay>,
+        document.body
+      )}
+
+      {deleteChallengeConfirm && createPortal(
+        <ConfirmOverlay onClick={() => !deletingId && setDeleteChallengeConfirm(null)}>
+          <ConfirmCard onClick={e => e.stopPropagation()}>
+            <WarningIconWrap>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18" />
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
+            </WarningIconWrap>
+            <h3 style={{ margin: '0 0 12px', fontSize: '18px', fontWeight: 900, color: '#1a1f22' }}>
+              ¿Eliminar este reto?
+            </h3>
+            <p style={{ margin: '0 0 28px', fontSize: '13.5px', color: '#6b7280', lineHeight: 1.6 }}>
+              ¿Estás seguro de que deseas eliminar el reto <strong>"{deleteChallengeConfirm.title}"</strong>? Esta acción es irreversible y borrará toda la información del borrador.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+              <button
+                disabled={!!deletingId}
+                onClick={() => setDeleteChallengeConfirm(null)}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  background: '#f1f3f5',
+                  color: '#485054',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: 800,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  transition: 'all 0.18s',
+                }}
+                onMouseOver={e => (e.currentTarget.style.background = '#e5e7eb')}
+                onMouseOut={e => (e.currentTarget.style.background = '#f1f3f5')}
+              >
+                Cancelar
+              </button>
+              <button
+                disabled={!!deletingId}
+                onClick={confirmDeleteChallenge}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: 800,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  transition: 'all 0.18s',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)',
+                }}
+                onMouseOver={e => (e.currentTarget.style.background = '#dc2626')}
+                onMouseOut={e => (e.currentTarget.style.background = '#ef4444')}
+              >
+                {deletingId ? 'Eliminando...' : 'Sí, eliminar'}
+              </button>
+            </div>
+          </ConfirmCard>
+        </ConfirmOverlay>,
         document.body
       )}
     </Container>

@@ -47,6 +47,7 @@ export class UserService {
       email: string;
       displayName: string;
       avatarUrl?: string;
+      phone?: string;
     },
     forceUpdate = false,
     preventCreation = false,
@@ -69,10 +70,14 @@ export class UserService {
       user = await this.syncUserStatus(user);
 
       if (forceUpdate) {
-        await this.userRepository.updateByUid(firebaseUid, {
+        const updateData: Record<string, any> = {
           displayName: createUserDto.displayName,
           avatarUrl: createUserDto.avatarUrl,
-        });
+        };
+        if (createUserDto.phone !== undefined) {
+          updateData.phone = createUserDto.phone;
+        }
+        await this.userRepository.updateByUid(firebaseUid, updateData);
         const refreshed = await this.userRepository.findByUid(firebaseUid);
         return this.formatUserResponse(refreshed ?? user);
       }
@@ -103,6 +108,7 @@ export class UserService {
       displayName: createUserDto.displayName || '',
       avatarUrl: createUserDto.avatarUrl,
       role,
+      phone: createUserDto.phone || null,
     };
 
     await this.userRepository.upsert(firebaseUid, userData, {

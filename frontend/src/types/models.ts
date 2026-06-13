@@ -33,7 +33,7 @@ export interface UserProfile {
   impersonationReadOnly?: boolean;
 }
 
-export type ChallengeStatus = 'Borrador' | 'Activo' | 'Finalizado' | 'En Evaluación' | 'DRAFT' | 'PUBLISHED' | 'EVALUATING' | 'CLOSED';
+export type ChallengeStatus = 'Borrador' | 'Activo' | 'Finalizado' | 'En Evaluación' | 'Agendado' | 'DRAFT' | 'PUBLISHED' | 'EVALUATING' | 'CLOSED' | 'SCHEDULED';
 
 export interface EvaluationCriterion {
   id: string;           // 'desirability' | 'feasibility' | 'alignment' | 'viability' | 'speed' | 'scalability' | custom uuid

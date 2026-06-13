@@ -12,6 +12,7 @@ import {
   updatePassword,
   verifyPasswordResetCode,
   confirmPasswordReset,
+  linkWithCredential,
 } from 'firebase/auth';
 import axiosInstance from '@/api/axiosConfig';
 import { auth, googleProvider } from '@/config/firebase';
@@ -55,6 +56,7 @@ export const authService = {
   },
 
   login: async (email: string, pass: string) => {
+    clearStoredImpersonationToken();
     const userCredential = await signInWithEmailAndPassword(auth, email, pass);
 
     try {
@@ -70,6 +72,7 @@ export const authService = {
   },
 
   loginWithGoogle: async () => {
+    clearStoredImpersonationToken();
     const result = await signInWithPopup(auth, googleProvider);
 
     try {
@@ -81,7 +84,7 @@ export const authService = {
       });
     } catch (error: any) {
       if (error.response?.status === 404) {
-        await signOut(auth);
+        // Do NOT signOut here! We need to keep auth.currentUser for updatePassword.
         const customError = new Error('USER_NOT_FOUND');
         (customError as any).code = 'auth/user-not-found-in-db';
         throw customError;
@@ -91,6 +94,34 @@ export const authService = {
       }
       throw error;
     }
+  },
+
+  completeGoogleRegistration: async (displayName: string, phone: string, pass: string) => {
+    const user = auth.currentUser;
+    if (!user || !user.email) throw new Error('No user authenticated or email missing');
+
+    await updatePassword(user, pass);
+
+    return await axiosInstance.post('/users/sync', {
+      firebaseUid: user.uid,
+      email: user.email,
+      displayName,
+      phone,
+      preventCreation: false,
+    });
+  },
+
+  linkGoogleAccountWithPassword: async (email: string, pass: string, pendingCred: any) => {
+    clearStoredImpersonationToken();
+    const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+    await linkWithCredential(userCredential.user, pendingCred);
+
+    return await axiosInstance.post('/users/sync', {
+      firebaseUid: userCredential.user.uid,
+      email,
+      displayName: userCredential.user.displayName || 'Usuario',
+      preventCreation: false,
+    });
   },
 
   logout: async () => {

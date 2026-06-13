@@ -60,9 +60,10 @@ export interface ChallengeFormFieldsProps {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   isEditMode: boolean;
   hasIdeas: boolean;
+  criteriaOnlyMode: boolean;
   today: string;
   totalWeight: number;
-  locked: (field: 'core' | 'flexible') => boolean;
+  locked: (field: 'core' | 'flexible' | 'criteria') => boolean;
   updateField: <K extends keyof ChallengeFormData>(key: K, val: ChallengeFormData[K]) => void;
   handleLogoChange: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   updateCriterion: (id: string, patch: Partial<import('../../../../types/models').EvaluationCriterion>) => void;
@@ -95,6 +96,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
   fileInputRef,
   isEditMode,
   hasIdeas,
+  criteriaOnlyMode,
   today,
   totalWeight,
   locked,
@@ -130,7 +132,13 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
     )}
     <TopRow>
       <BackButton onClick={handleBack} />
-      <FormTitle>{isEditMode ? 'Editar Reto' : 'Crear Nuevo Reto'}</FormTitle>
+      <FormTitle>
+        {isEditMode
+          ? criteriaOnlyMode
+            ? 'Editar criterios de evaluación'
+            : 'Editar Reto'
+          : 'Crear Nuevo Reto'}
+      </FormTitle>
     </TopRow>
 
     {showConfirm && (
@@ -145,10 +153,17 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
       </ConfirmBanner>
     )}
 
-    {hasIdeas && isEditMode && (
+    {hasIdeas && isEditMode && !criteriaOnlyMode && (
       <div style={{ background: '#fef3c7', border: '2px solid #f59e0b', borderRadius: 14,
         padding: '12px 20px', marginBottom: 20, fontSize: 13, fontWeight: 600, color: '#92400e' }}>
-        Este reto ya tiene ideas postuladas. Título, descripción, contexto y criterios están bloqueados.
+        Este reto ya tiene ideas postuladas. Título, descripción y contexto están bloqueados, pero puedes editar los criterios de evaluación.
+      </div>
+    )}
+
+    {criteriaOnlyMode && (
+      <div style={{ background: '#eff6ff', border: '2px solid #3b82f6', borderRadius: 14,
+        padding: '12px 20px', marginBottom: 20, fontSize: 13, fontWeight: 600, color: '#1e40af' }}>
+        Solo puedes modificar los criterios de evaluación. Si los cambias, las evaluaciones de los jueces se reiniciarán.
       </div>
     )}
 
@@ -160,7 +175,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
           <FullSpan>
             <FieldGroup>
               <Label>Logo del reto</Label>
-              <LogoUploadArea $hasImage={!!form.logoUrl} onClick={() => !readOnlyMode && fileInputRef.current?.click()} style={{ cursor: readOnlyMode ? 'not-allowed' : 'pointer', opacity: readOnlyMode ? 0.92 : 1 }}>
+              <LogoUploadArea $hasImage={!!form.logoUrl} onClick={() => !locked('core') && fileInputRef.current?.click()} style={{ cursor: locked('core') ? 'not-allowed' : 'pointer', opacity: locked('core') ? 0.92 : 1 }}>
                 {form.logoUrl
                   ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
@@ -267,14 +282,17 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
           </FieldGroup>
 
           <FieldGroup style={{ display: 'flex', flexDirection: 'column' }}>
-            <Label $locked={readOnlyMode}>Reglas de participación{readOnlyMode && <LockedBadge>No editable</LockedBadge>}</Label>
+            <Label $locked={locked('core')}>
+              Reglas de participación
+              {locked('core') && <LockedBadge>No editable</LockedBadge>}
+            </Label>
             <TextAreaField placeholder="Reglas o restricciones para las ideas..."
               value={form.participationRules}
               style={{ flex: 1, resize: 'none' }}
-              readOnly={readOnlyMode}
+              readOnly={locked('core')}
               $error={!!errors.participationRules}
-              $locked={readOnlyMode}
-              onChange={e => !readOnlyMode && updateField('participationRules', e.target.value)} />
+              $locked={locked('core')}
+              onChange={e => !locked('core') && updateField('participationRules', e.target.value)} />
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               {errors.participationRules ? <ErrorText>{errors.participationRules}</ErrorText> : <span />}
               <CharCount $over={form.participationRules.length > LIMITS.participationRules}>
@@ -322,7 +340,10 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
             <div style={{ display: 'flex', gap: 12, width: '100%' }}>
               <FieldGroup style={{ marginBottom: 0, flex: 1, minWidth: 0 }}>
-                <Label $locked={locked('core')}>Fecha inicio *</Label>
+                <Label $locked={locked('core')} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  Fecha inicio
+                  <InfoTooltip text="Opcional. Si no seleccionas una fecha, el reto se publicará de inmediato." size={14} />
+                </Label>
                 <InputWrapper $tooltipText="Mostrar el selector de fecha y hora locales" $tooltipPosition="bottom" $tooltipAlign="center">
                   <InputField type="datetime-local" min={today} $locked={locked('core')} $error={!!errors.startDate}
                     title=" "
@@ -333,24 +354,28 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                 {errors.startDate && <ErrorText>{errors.startDate}</ErrorText>}
               </FieldGroup>
               <FieldGroup style={{ marginBottom: 0, flex: 1, minWidth: 0 }}>
-                <Label $locked={readOnlyMode}>Fecha cierre *{readOnlyMode && <LockedBadge>No editable</LockedBadge>}</Label>
+                <Label $locked={locked('core')} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  Fecha cierre
+                  {locked('core') && <LockedBadge>No editable</LockedBadge>}
+                  <InfoTooltip text="Opcional. Si no seleccionas una fecha, el reto cerrará automáticamente hoy a las 23:59." size={14} />
+                </Label>
                 <InputWrapper $tooltipText="Mostrar el selector de fecha y hora locales" $tooltipPosition="bottom" $tooltipAlign="center">
                   <InputField type="datetime-local" min={form.startDate || today} $error={!!errors.endDate}
                     title=" "
                     value={form.endDate}
-                    readOnly={readOnlyMode}
-                    $locked={readOnlyMode}
+                    readOnly={locked('core')}
+                    $locked={locked('core')}
                     style={{ minWidth: 0, padding: '14px 10px', fontSize: 13, width: '100%' }}
-                    onChange={e => !readOnlyMode && updateField('endDate', e.target.value)} />
+                    onChange={e => !locked('core') && updateField('endDate', e.target.value)} />
                 </InputWrapper>
                 {errors.endDate && <ErrorText>{errors.endDate}</ErrorText>}
               </FieldGroup>
             </div>
 
-              <CheckboxRow $locked={readOnlyMode} style={{ marginTop: 2, padding: '14px', border: '1.5px solid rgba(72,80,84,0.18)', borderRadius: 12 }}>
+              <CheckboxRow $locked={locked('core')} style={{ marginTop: 2, padding: '14px', border: '1.5px solid rgba(72,80,84,0.18)', borderRadius: 12 }}>
               <input type="checkbox" checked={form.isPrivate}
-                disabled={readOnlyMode}
-                onChange={e => !readOnlyMode && updateField('isPrivate', e.target.checked)}
+                disabled={locked('core')}
+                onChange={e => !locked('core') && updateField('isPrivate', e.target.checked)}
                 style={{ width: 18, height: 18, accentColor: Pista8Theme.primary }} />
               Reto privado
             </CheckboxRow>
@@ -415,9 +440,9 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
           {criteriaOpen && (
             <CriteriaPanel style={{ marginTop: 12 }}>
-              {locked('core') && (
+              {locked('criteria') && (
                 <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>
-                  Criterios bloqueados porque ya hay ideas postuladas.
+                  Criterios bloqueados porque el reto ya finalizó.
                 </p>
               )}
 
@@ -425,9 +450,9 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               {form.evaluationCriteria.filter(c => !c.isOptional && !c.isCustom).map(c => (
                 <CriterionRow key={c.id}>
                   <CriterionCheckbox type="checkbox" checked={c.enabled}
-                    disabled={locked('core')}
+                    disabled={locked('criteria')}
                     onChange={e => updateCriterion(c.id, { enabled: e.target.checked })} />
-                  <CriterionName $enabled={c.enabled} $locked={locked('core')}>{c.name}</CriterionName>
+                  <CriterionName $enabled={c.enabled} $locked={locked('criteria')}>{c.name}</CriterionName>
                   {c.description && (
                     <span style={{ marginLeft: 2, display: 'inline-flex', alignItems: 'center' }}>
                       <InfoTooltip text={c.description} size={16} />
@@ -435,7 +460,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                   )}
                   <WeightInput type="number" min={0} max={100}
                     value={c.weight === 0 ? '' : c.weight}
-                    disabled={!c.enabled || locked('core')} placeholder="0"
+                    disabled={!c.enabled || locked('criteria')} placeholder="0"
                     onChange={e => {
                       const raw = e.target.value;
                       if (raw === '') { updateCriterion(c.id, { weight: 0 }); return; }
@@ -457,9 +482,9 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                   {showOptionals && form.evaluationCriteria.filter(c => c.isOptional).map(c => (
                     <CriterionRow key={c.id}>
                       <CriterionCheckbox type="checkbox" checked={c.enabled}
-                        disabled={locked('core')}
+                        disabled={locked('criteria')}
                         onChange={e => updateCriterion(c.id, { enabled: e.target.checked })} />
-                      <CriterionName $enabled={c.enabled} $locked={locked('core')}>{c.name}</CriterionName>
+                      <CriterionName $enabled={c.enabled} $locked={locked('criteria')}>{c.name}</CriterionName>
                       {c.description && (
                         <span style={{ marginLeft: 2, display: 'inline-flex', alignItems: 'center' }}>
                           <InfoTooltip text={c.description} size={16} />
@@ -467,7 +492,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                       )}
                       <WeightInput type="number" min={0} max={100}
                         value={c.weight === 0 ? '' : c.weight}
-                        disabled={!c.enabled || locked('core')} placeholder="0"
+                        disabled={!c.enabled || locked('criteria')} placeholder="0"
                         onChange={e => {
                           const raw = e.target.value;
                           if (raw === '') { updateCriterion(c.id, { weight: 0 }); return; }
@@ -483,12 +508,12 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               {form.evaluationCriteria.filter(c => c.isCustom).map(c => (
                 <CriterionRow key={c.id}>
                   <CriterionCheckbox type="checkbox" checked={c.enabled}
-                    disabled={locked('core')}
+                    disabled={locked('criteria')}
                     onChange={e => updateCriterion(c.id, { enabled: e.target.checked })} />
-                  <CriterionName $enabled={c.enabled} $locked={locked('core')}>{c.name}</CriterionName>
+                  <CriterionName $enabled={c.enabled} $locked={locked('criteria')}>{c.name}</CriterionName>
                   <WeightInput type="number" min={0} max={100}
                     value={c.weight === 0 ? '' : c.weight}
-                    disabled={!c.enabled || locked('core')} placeholder="0"
+                    disabled={!c.enabled || locked('criteria')} placeholder="0"
                     onChange={e => {
                       const raw = e.target.value;
                       if (raw === '') { updateCriterion(c.id, { weight: 0 }); return; }
@@ -496,7 +521,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                       if (!isNaN(v)) updateCriterion(c.id, { weight: Math.min(100, v) });
                     }} />
                   <WeightUnit>%</WeightUnit>
-                  {!locked('core') && (
+                  {!locked('criteria') && (
                     <RemoveBtn type="button" onClick={() => removeCriterion(c.id)}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -515,7 +540,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                 </TotalWeightBar>
               )}
 
-              {!locked('core') && !readOnlyMode && (
+              {!locked('criteria') && !readOnlyMode && (
                 addingCustom ? (
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <CustomCriterionInput autoFocus placeholder="Nombre del criterio (máx. 10 palabras)"
@@ -543,13 +568,19 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
         <BtnRow>
           <Btn type="button" onClick={handleBack} disabled={readOnlyMode}>Cancelar</Btn>
-          {!isEditMode && (
+          {(!isEditMode || form.status === 'Borrador' || form.status === 'DRAFT') && (
             <Btn $outline disabled={saving || readOnlyMode} onClick={() => handleSave('Borrador')}>
               Guardar borrador
             </Btn>
           )}
-          <Btn $primary disabled={saving || readOnlyMode} onClick={() => handleSave('Activo')}>
-            {saving ? 'Guardando...' : isEditMode ? 'Guardar cambios' : 'Publicar reto'}
+          <Btn $primary disabled={saving || readOnlyMode} onClick={() => handleSave((form.status === 'Borrador' || form.status === 'DRAFT') ? 'Activo' : form.status)}>
+            {saving
+              ? 'Guardando...'
+              : criteriaOnlyMode
+                ? 'Guardar criterios'
+                : (isEditMode && form.status !== 'Borrador' && form.status !== 'DRAFT')
+                  ? 'Guardar cambios'
+                  : 'Publicar reto'}
           </Btn>
         </BtnRow>
       </FormCard>

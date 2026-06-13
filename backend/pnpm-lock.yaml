@@ -62,9 +62,6 @@ importers:
       joi:
         specifier: ^18.2.1
         version: 18.2.1
-      prisma:
-        specifier: 6.2.1
-        version: 6.2.1
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -132,6 +129,9 @@ importers:
       prettier:
         specifier: ^3.4.2
         version: 3.8.1
+      prisma:
+        specifier: 6.2.1
+        version: 6.2.1
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21

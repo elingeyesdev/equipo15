@@ -650,8 +650,8 @@ export const AdminUsersView = () => {
                         {user.avatarUrl
                           ? <img src={user.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           : <span style={{ fontSize: 16, fontWeight: 800, color: '#94a3b8' }}>
-                              {user.displayName?.[0]?.toUpperCase() || '?'}
-                            </span>
+                            {user.displayName?.[0]?.toUpperCase() || '?'}
+                          </span>
                         }
                       </div>
                       <div>

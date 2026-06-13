@@ -14,6 +14,8 @@ const getStatusLabel = (status: string) => {
     case 'PUBLISHED': return 'Activo';
     case 'Borrador':
     case 'DRAFT': return 'Borrador';
+    case 'Agendado':
+    case 'SCHEDULED': return 'Agendado';
     case 'En Evaluación':
     case 'EVALUATING': return 'En Evaluación';
     case 'Finalizado':
@@ -40,12 +42,11 @@ export function ChallengeListTable({ challenges }: Props) {
     status: 'ALL',
   });
   const [auditChallenge, setAuditChallenge] = useState<ChallengePerformance | null>(null);
-
   const filteredAndSortedChallenges = useMemo(() => {
     let result = [...challenges];
 
     if (filter.status !== 'ALL') {
-      result = result.filter(c => c.status === filter.status);
+      result = result.filter(c => getStatusLabel(c.status) === filter.status);
     }
 
     if (filter.sortOrder === 'oldest') {

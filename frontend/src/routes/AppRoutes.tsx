@@ -16,7 +16,7 @@ const RoleRouter = () => {
   const location = useLocation();
 
   if (!user) return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
-  if (!userProfile) return <RunwayLoader />;
+  if (!userProfile) return <Navigate to="/auth" replace />;
 
   const role = (userProfile.roleInfo?.name || userProfile.role || '').toLowerCase();
   const hasNoFaculty = !userProfile.studentProfile?.facultyId && (userProfile.facultyId === null || userProfile.facultyId === undefined);
@@ -69,7 +69,7 @@ const PrivateChallengeRedirect = () => {
 };
 
 const AppContent = () => {
-  const { user, loading } = useAuth();
+  const { user, userProfile, loading } = useAuth();
   const location = useLocation();
 
   if (loading) return <RunwayLoader />;
@@ -79,11 +79,11 @@ const AppContent = () => {
 
   return (
     <Routes>
-      <Route path="/auth" element={user ? <Navigate to={redirectTo} replace /> : <AuthPage />} />
+      <Route path="/auth" element={user && userProfile ? <Navigate to={redirectTo} replace /> : <AuthPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/reto/privado/:challengeId" element={<PrivateChallengeRedirect />} />
       <Route path="/dashboard/*" element={<RoleRouter />} />
-      <Route path="/" element={<Navigate to={user ? '/dashboard' : '/auth'} />} />
+      <Route path="/" element={<Navigate to={user && userProfile ? '/dashboard' : '/auth'} />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

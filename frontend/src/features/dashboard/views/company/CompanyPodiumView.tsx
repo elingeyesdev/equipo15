@@ -212,6 +212,7 @@ const IdeaCard = styled.div<{
   &:hover {
     transform: translateX(6px);
     border-color: ${p => p.$isFinalist ? Pista8Theme.primary : 'rgba(0,0,0,0.12)'};
+    z-index: 200;
   }
 
   @media (max-width: ${breakpoints.mobile}) {

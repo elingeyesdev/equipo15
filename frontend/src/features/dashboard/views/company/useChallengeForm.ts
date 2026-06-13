@@ -111,6 +111,22 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
   const isEditMode = !!challenge;
   const hasIdeas   = (challenge?.ideasCount ?? 0) > 0;
 
+  const statusUpper = challenge?.status?.toUpperCase() || '';
+  const isClosed = statusUpper === 'CLOSED';
+  const isDraftOrScheduled =
+    statusUpper === 'DRAFT' ||
+    statusUpper === 'SCHEDULED' ||
+    statusUpper === 'BORRADOR' ||
+    statusUpper === 'AGENDADO';
+  const isEvaluating = statusUpper === 'EVALUATING' || statusUpper === 'EN_EVALUACION' || statusUpper === 'EN EVALUACIÓN';
+  const closeDate = challenge?.endDate || challenge?.submissionsCloseAt;
+  const isPastEnd = closeDate ? new Date(closeDate) < new Date() : false;
+  const criteriaOnlyMode =
+    isEditMode &&
+    !isClosed &&
+    !isDraftOrScheduled &&
+    (hasIdeas || isEvaluating || isPastEnd);
+
   useEffect(() => {
     const fetchFacs = async () => {
       try {
@@ -126,13 +142,21 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     fetchFacs();
   }, []);
 
-  const locked = (field: 'core' | 'flexible') => {
+  const locked = (field: 'core' | 'flexible' | 'criteria') => {
     if (readOnlyMode) return true;
     if (!isEditMode) return false;
-    if (field === 'core')     return hasIdeas;
-    if (field === 'flexible') return false;
+    const restrictCore = !isDraftOrScheduled && (hasIdeas || isEvaluating || isPastEnd);
+    if (field === 'core') return restrictCore;
+    if (field === 'flexible') return !isDraftOrScheduled && (isEvaluating || isPastEnd);
+    if (field === 'criteria') return isClosed;
     return false;
   };
+
+  useEffect(() => {
+    if (criteriaOnlyMode) {
+      setCriteriaOpen(true);
+    }
+  }, [criteriaOnlyMode, challenge?.id]);
 
   useEffect(() => {
     const toDatetimeLocal = (d?: string | Date) => {
@@ -243,12 +267,22 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     if (!form.title.trim()) errs.title = 'El título es obligatorio';
     else if (form.title.length > LIMITS.title) errs.title = `Máximo ${LIMITS.title} caracteres`;
 
-    if (!form.startDate) errs.startDate = 'La fecha de inicio es obligatoria';
-    if (!form.endDate) errs.endDate = 'La fecha fin es obligatoria';
-    else if (form.startDate && form.endDate && new Date(form.endDate) <= new Date(form.startDate))
-      errs.endDate = 'La fecha fin debe ser posterior al inicio';
-
     if (!forDraft) {
+      if ((form.startDate && !form.endDate) || (!form.startDate && form.endDate)) {
+        if (!form.startDate) errs.startDate = 'Debes ingresar ambas fechas o dejarlas vacías para activación inmediata';
+        if (!form.endDate) errs.endDate = 'Debes ingresar ambas fechas o dejarlas vacías para activación inmediata';
+      } else if (form.startDate && form.endDate) {
+        const startD = new Date(form.startDate);
+        const now = new Date();
+        const startChanged = !initialForm.startDate || new Date(form.startDate).getTime() !== new Date(initialForm.startDate).getTime();
+        if (startChanged && startD < new Date(now.getTime() - 5 * 60 * 1000)) {
+          errs.startDate = 'La fecha de inicio no puede ser anterior a la fecha actual';
+        }
+        if (new Date(form.endDate) <= startD) {
+          errs.endDate = 'La fecha fin debe ser posterior al inicio';
+        }
+      }
+
       if (!form.problemDescription.trim()) errs.problemDescription = 'La descripción del problema es obligatoria';
       else if (form.problemDescription.length > LIMITS.problemDescription)
         errs.problemDescription = `Máximo ${LIMITS.problemDescription} caracteres`;
@@ -275,7 +309,7 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
       toast.info('Estás en modo lectura ahora. No puedes guardar cambios.');
       return;
     }
-    const forDraft = status === 'Borrador';
+    const forDraft = status === 'Borrador' || status === 'DRAFT';
     if (!validate(forDraft)) return;
 
     if (!forDraft) {
@@ -296,16 +330,34 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
       }
     }
 
+    const criteriaChanged =
+      JSON.stringify(form.evaluationCriteria) !== JSON.stringify(initialForm.evaluationCriteria);
+    if (criteriaOnlyMode && criteriaChanged) {
+      toast.info('Al guardar, las evaluaciones de los jueces se reiniciarán con los nuevos criterios.');
+    }
+
     setSaving(true);
     try {
       const payload = { ...form, status };
-      if (payload.startDate) {
+      if (payload.startDate && payload.startDate.trim() !== '') {
         const d = new Date(payload.startDate);
-        if (!isNaN(d.getTime())) payload.startDate = d.toISOString();
+        if (!isNaN(d.getTime())) {
+          payload.startDate = d.toISOString();
+        } else {
+          (payload as any).startDate = null;
+        }
+      } else {
+        (payload as any).startDate = null;
       }
-      if (payload.endDate) {
+      if (payload.endDate && payload.endDate.trim() !== '') {
         const d = new Date(payload.endDate);
-        if (!isNaN(d.getTime())) payload.endDate = d.toISOString();
+        if (!isNaN(d.getTime())) {
+          payload.endDate = d.toISOString();
+        } else {
+          (payload as any).endDate = null;
+        }
+      } else {
+        (payload as any).endDate = null;
       }
       await onSave(payload);
     }
@@ -340,6 +392,7 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     fileInputRef,
     isEditMode,
     hasIdeas,
+    criteriaOnlyMode,
     today,
     totalWeight,
     locked,

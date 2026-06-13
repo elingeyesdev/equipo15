@@ -242,8 +242,11 @@ export class ChallengesController {
   @UseGuards(RolesGuard)
   @Roles('company')
   @ApiOperation({ summary: 'Delete a challenge (Company only)' })
-  remove(@Param('id') id: string) {
-    return this.challengeService.delete(id);
+  remove(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.challengeService.delete(id, req.user.uid);
   }
 
   @Get(':id/podium-ideas')

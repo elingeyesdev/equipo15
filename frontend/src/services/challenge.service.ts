@@ -72,6 +72,11 @@ export const challengeService = {
     return response.data;
   },
 
+  deleteChallenge: async (id: string): Promise<ApiResponse<Challenge>> => {
+    const response = await axiosInstance.delete<ApiResponse<Challenge>>(`/challenges/${id}`);
+    return response.data;
+  },
+
   getChallengeStats: async (id: string): Promise<ApiResponse<Record<string, unknown>>> => {
     const response = await axiosInstance.get<ApiResponse<Record<string, unknown>>>(`/challenges/${id}/stats`);
     return response.data;

@@ -36,6 +36,7 @@ enum UserStatus {
 
 enum ChallengeStatus {
   DRAFT
+  SCHEDULED
   PUBLISHED
   EVALUATING
   CLOSED
