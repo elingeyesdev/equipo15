@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import styled, { keyframes, css } from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import BackButton from '../../../../components/common/BackButton';
@@ -17,10 +17,7 @@ const shimmer = keyframes`
   100% { background-position: -200% 0; }
 `;
 
-const pulse = keyframes`
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.6; }
-`;
+
 
 /* ─── Types ─── */
 interface JudgeIdeaItem {
@@ -168,45 +165,30 @@ const StatusBadge = styled.span<{ $evaluated: boolean }>`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
   background: ${p => p.$evaluated ? '#dcfce7' : '#fff7ed'};
   color: ${p => p.$evaluated ? '#166534' : '#c2410c'};
-
-  &::before {
-    content: '';
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: ${p => p.$evaluated ? '#22c55e' : '#f97316'};
-    ${p => !p.$evaluated && css`animation: ${pulse} 2s ease-in-out infinite;`}
-  }
+  border: 1px solid ${p => p.$evaluated ? '#22c55e30' : '#f9731630'};
 `;
 
 const ChallengeStatusBadge = styled.span<{ $status: string }>`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
   background: ${p => p.$status === 'EVALUATING' ? '#fef3c7' : p.$status === 'CLOSED' ? '#fee2e2' : '#f1f3f5'};
   color: ${p => p.$status === 'EVALUATING' ? '#92400e' : p.$status === 'CLOSED' ? '#991b1b' : '#6b7280'};
-
-  &::before {
-    content: '';
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: ${p => p.$status === 'EVALUATING' ? '#f59e0b' : p.$status === 'CLOSED' ? '#ef4444' : '#9ca3af'};
-  }
+  border: 1px solid ${p => p.$status === 'EVALUATING' ? '#f59e0b30' : p.$status === 'CLOSED' ? '#ef444430' : '#9ca3af30'};
 `;
 
 const CardDescription = styled.p`

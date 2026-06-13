@@ -2,7 +2,6 @@ import React from 'react';
 import * as S from '../styles/ChallengeStyles';
 import ChallengeCard from './ChallengeCard';
 import ChallengeCardSkeleton from './ChallengeCardSkeleton';
-import { Search } from 'lucide-react';
 import { getFacultySlug } from '../../../config/faculties';
 import type { Challenge } from '../../../types/models';
 
@@ -88,10 +87,10 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
             onClick={() => setFilterOpen(!filterOpen)}
             $tooltipText="Filtrar reto"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="4" y1="6" x2="20" y2="6" stroke="currentColor" />
-              <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" />
-              <line x1="11" y1="18" x2="13" y2="18" stroke="currentColor" />
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+              <line x1="0" y1="2" x2="18" y2="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <line x1="3" y1="7" x2="15" y2="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <line x1="6" y1="12" x2="12" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </S.FilterBtn>
           {filterOpen && (
@@ -147,20 +146,23 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
             flex: 1,
           }}>
             <div style={{
-              width: '56px', height: '56px',
-              borderRadius: '18px',
+              width: '72px', height: '72px',
+              borderRadius: '50%',
               background: 'rgba(254, 65, 10, 0.07)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Search size={28} color="#FE410A" />
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FE410A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
             </div>
-            <p style={{ margin: 0, fontSize: '15px', fontWeight: 900, color: '#1a1f22' }}>
+            <p style={{ margin: 0, fontSize: '16px', fontWeight: 900, color: '#1a1f22' }}>
               {searchQuery.trim() ? `Sin resultados para "${searchQuery}"` : '¡La pista se está preparando!'}
             </p>
-            <p style={{ margin: 0, fontSize: '13px', color: '#9ca3af', lineHeight: 1.6, maxWidth: '260px' }}>
+            <p style={{ margin: 0, fontSize: '13px', color: '#9ca3af', lineHeight: 1.6, maxWidth: '280px' }}>
               {searchQuery.trim()
                 ? 'Intenta con otras palabras clave.'
-                : 'Actualmente no hay retos abiertos, pero las empresas están diseñando nuevos desafíos para ti. ¡Vuelve pronto para demostrar tu talento!'}
+                : 'Por el momento no hay retos abiertos, pero las empresas ya están diseñando nuevos desafíos para vos. ¡Volvé pronto para demostrar tu talento!'}
             </p>
           </div>
         )}

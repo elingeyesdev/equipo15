@@ -11,6 +11,14 @@ export const LeftPanel = styled.div<{ $visibleLimit?: number }>`
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  
+  /* Scrollbar invisible */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar { display: none; }
+  
   ${p => p.$visibleLimit === 4 && `
     min-height: 850px;
   `}
@@ -21,6 +29,14 @@ export const PanelHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   margin-bottom: 22px;
+  position: sticky;
+  top: 0;
+  background: ${Pista8Theme.white};
+  z-index: 2;
+  padding-top: 4px;
+  padding-bottom: 8px;
+  margin-top: -4px;
+  padding-left: 20px;
 `;
 
 export const PanelTitleWrap = styled.div`
@@ -122,7 +138,7 @@ export const ChallengeCard = styled.div<{ $active: boolean }>`
   position: relative;
   background: ${Pista8Theme.white};
   border-radius: 20px;
-  padding: 24px 24px;
+  padding: 24px 20px 24px 20px;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   border: 1.5px solid ${p => p.$active ? Pista8Theme.primary : 'rgba(72,80,84,0.08)'};
@@ -198,14 +214,13 @@ export const CategoryTag = styled.span`
 `;
 
 export const StatusBadge = styled.span<{ expired?: boolean }>`
-  font-size: 9.5px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 600;
   color: ${p => p.expired ? Pista8Theme.error : Pista8Theme.primary};
   background: ${p => p.expired ? `${Pista8Theme.error}15` : `${Pista8Theme.primary}15`};
-  padding: 4px 9px;
+  padding: 4px 10px;
   border-radius: 6px;
+  border: 1px solid ${p => p.expired ? `${Pista8Theme.error}30` : `${Pista8Theme.primary}30`};
 `;
 
 
@@ -346,8 +361,8 @@ export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?:
   ${p => (p.$forceColumn || !p.$isFullWidth) && `
     flex: 1;
     min-height: 0;
-    height: ${p.$visibleLimit === 4 && p.$podiumCount === 3 ? 'calc(100% - 50px)' : 'auto'};
-    max-height: ${p.$visibleLimit === 1 ? '200px' : p.$visibleLimit === 4 ? (p.$podiumCount === 3 ? '100%' : '762px') : '414px'};
+    height: ${p.$visibleLimit === 4 ? 'calc(100% - 50px)' : 'auto'};
+    max-height: ${p.$visibleLimit === 1 ? '200px' : p.$visibleLimit === 4 ? '100%' : '414px'};
     overflow-y: ${p.$cardCount && p.$visibleLimit && p.$cardCount > p.$visibleLimit ? 'auto' : 'hidden'};
     padding-right: 6px;
 

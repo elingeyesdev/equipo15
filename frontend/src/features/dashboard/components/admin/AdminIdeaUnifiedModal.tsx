@@ -90,12 +90,10 @@ const TabContent = styled.div`
 
 const StatusBadge = styled.span<{ $tone: string }>`
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 999px;
+  padding: 4px 10px;
+  border-radius: 6px;
   font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-weight: 600;
   
   ${({ $tone }) => {
     switch ($tone) {

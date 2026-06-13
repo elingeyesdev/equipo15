@@ -293,17 +293,15 @@ const IdeaTitle = styled.span`
 const StatusBadge = styled.span<{ $tone: 'green' | 'amber' | 'gold' | 'red' | 'slate' }>`
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
-  border-radius: 999px;
+  padding: 4px 10px;
+  border-radius: 6px;
   font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  ${({ $tone }) => $tone === 'green' && 'background: rgba(52,168,83,0.12); color: #34A853;'}
-  ${({ $tone }) => $tone === 'amber' && 'background: rgba(255,140,0,0.14); color: #FF8C00;'}
-  ${({ $tone }) => $tone === 'gold' && 'background: rgba(254,65,10,0.10); color: #FE410A; font-weight: 800;'}
-  ${({ $tone }) => $tone === 'red' && 'background: rgba(255,51,51,0.12); color: #FF3333;'}
-  ${({ $tone }) => $tone === 'slate' && 'background: rgba(72,80,84,0.10); color: #485054;'}
+  font-weight: 600;
+  ${({ $tone }) => $tone === 'green' && 'background: rgba(52,168,83,0.12); color: #34A853; border: 1px solid rgba(52,168,83,0.3);'}
+  ${({ $tone }) => $tone === 'amber' && 'background: rgba(255,140,0,0.14); color: #FF8C00; border: 1px solid rgba(255,140,0,0.3);'}
+  ${({ $tone }) => $tone === 'gold' && 'background: rgba(254,65,10,0.10); color: #FE410A; border: 1px solid rgba(254,65,10,0.3);'}
+  ${({ $tone }) => $tone === 'red' && 'background: rgba(255,51,51,0.12); color: #FF3333; border: 1px solid rgba(255,51,51,0.3);'}
+  ${({ $tone }) => $tone === 'slate' && 'background: rgba(72,80,84,0.10); color: #485054; border: 1px solid rgba(72,80,84,0.3);'}
 `;
 
 const ActionBtnGroup = styled.div`

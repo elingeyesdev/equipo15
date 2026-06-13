@@ -85,13 +85,13 @@ const Badge = styled.span`
 const Dropdown = styled.div<{ $open: boolean }>`
   position: absolute;
   top: 100%;
-  right: -50px;
+  right: -10px;
   width: 320px;
   max-height: 400px;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
+  border: 1px solid rgba(72,80,84,0.15);
   overflow-y: auto;
   z-index: 9999;
   display: ${({ $open }) => ($open ? 'block' : 'none')};

@@ -76,14 +76,6 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
   }
 
   const resolvedName = resolveDisplayName(userProfile as any);
-  const roleName: string = (userProfile?.roleInfo?.name || userProfile?.role || '').toLowerCase();
-  const roleLabels: Record<string, string> = {
-    admin: 'administrador',
-    student: 'participante',
-    company: 'empresa',
-    judge: 'jurado',
-  };
-  const userRole = roleLabels[roleName] || 'participante';
 
   const challengeStatus = ds.selectedChallenge ? getStatusLabel(ds.selectedChallenge.status) : null;
   const facultyLabel = ds.selectedChallenge
@@ -105,8 +97,8 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <Pista8Logo fill="#1a1f22" accent="#FE410A" />
           <S.WelcomeZone>
-            <S.Greeting>Hola, {userRole} <span>{resolvedName}</span></S.Greeting>
-            <S.Sub>¿Listo para despegar tu próxima gran idea?</S.Sub>
+            <S.Greeting>Hola, <span>{resolvedName}</span></S.Greeting>
+            <S.Sub>¿Listo para hacer despegar vos también tu gran idea?</S.Sub>
 
             {ds.profileError && (
               <div style={{
@@ -156,13 +148,6 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                 )}
                 {challengeStatus && (
                   <S.DetailStatusBadge $active={challengeStatus.active}>
-                    <span style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: '50%',
-                      background: 'currentColor',
-                      display: 'inline-block',
-                    }} />
                     {challengeStatus.label}
                   </S.DetailStatusBadge>
                 )}
@@ -215,7 +200,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
             </S.DetailActions>
           </S.ChallengeDetailCard>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', margin: '24px 0 14px', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', margin: '24px 0 14px', padding: '0 24px', flexWrap: 'wrap', gap: '8px' }}>
             <AdvancedFilter
               value={advFilter}
               onChange={next => {
@@ -251,7 +236,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
 
           {!showAllIdeas ? (
             <>
-              <S.SplitGrid style={{ marginTop: '24px', alignItems: 'stretch', height: visibleLimit === 1 ? '300px' : '520px' }}>
+              <S.SplitGrid style={{ marginTop: '24px', alignItems: 'stretch', height: visibleLimit === 1 ? '340px' : '600px' }}>
                 {ds.sortOrder && (
                   <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <IdeasChronologicalList
@@ -308,46 +293,33 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                     challengeStatus={ds.selectedChallenge?.status}
                   />
                 )}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
-                  {ds.selectedChallenge?.status !== 'CLOSED' && (
-                    <S.RespondBtn onClick={() => {
-                      const el = document.getElementById('challenge-detail');
-                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                        <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-                      </svg>
-                      Participar
-                    </S.RespondBtn>
-                  )}
-                </div>
               </S.FullWidthContainer>
 
-              <S.SplitGridEqual style={{ marginTop: '24px' }}>
+              <S.SplitGrid style={{ marginTop: '24px', alignItems: 'stretch' }}>
                 <ChallengeList
-                  loading={ds.loading}
-                  challenges={ds.challenges}
-                  activeFilter={ds.activeFilter}
-                  onFilterChange={ds.setActiveFilter}
-                  filterOpen={ds.filterOpen}
-                  setFilterOpen={ds.setFilterOpen}
-                  selectedChallengeId={ds.selectedChallenge?.id || ''}
-                  onSelectChallenge={ds.selectChallenge}
-                  onRespond={(c: Challenge) => ds.handleOpenForm(c, formResetForm)}
-                  onClearSelection={ds.clearSelectedChallenge}
-                  searchQuery={ds.debouncedSearch}
-                  userFacultyId={userProfile?.facultyId}
-                  forceColumn
-                  visibleChallengesLimit={4}
-                  podiumCount={ds.challengeStats?.topIdeas?.length || 0}
-                />
+                    loading={ds.loading}
+                    challenges={ds.challenges}
+                    activeFilter={ds.activeFilter}
+                    onFilterChange={ds.setActiveFilter}
+                    filterOpen={ds.filterOpen}
+                    setFilterOpen={ds.setFilterOpen}
+                    selectedChallengeId={ds.selectedChallenge?.id || ''}
+                    onSelectChallenge={ds.selectChallenge}
+                    onRespond={(c: Challenge) => ds.handleOpenForm(c, formResetForm)}
+                    onClearSelection={ds.clearSelectedChallenge}
+                    searchQuery={ds.debouncedSearch}
+                    userFacultyId={userProfile?.facultyId}
+                    forceColumn
+                    visibleChallengesLimit={4}
+                  />
                 <StatsPanel
                   selectedChallenge={ds.selectedChallenge}
                   challengeStats={ds.challengeStats}
                   onSelectIdea={handleSelectIdea}
-                  isNarrow={true}
+                  style={{ marginTop: 0 }}
+                  isNarrow={false}
                 />
-              </S.SplitGridEqual>
+              </S.SplitGrid>
             </>
           )}
         </>

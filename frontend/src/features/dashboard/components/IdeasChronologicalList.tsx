@@ -23,20 +23,39 @@ const spin = keyframes`
   to   { transform: rotate(360deg); }
 `;
 
-const Wrapper = styled.div`
-  margin-top: 0.5rem;
-  background: transparent;
+const Wrapper = styled.div<{ $showAll?: boolean }>`
+  background: ${p => p.$showAll ? 'transparent' : 'white'};
+  border-radius: 24px;
+  padding: ${p => p.$showAll ? '28px 0' : '28px 28px'};
+  border: ${p => p.$showAll ? 'none' : '1px solid rgba(72, 80, 84, 0.08)'};
+  box-shadow: ${p => p.$showAll ? 'none' : '0 2px 16px rgba(72, 80, 84, 0.06)'};
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
   height: 100%;
-  flex: 1;
+  overflow-y: auto;
+
+  /* Scrollbar invisible */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar { display: none; }
 `;
 
-const Header = styled.div`
+const Header = styled.div<{ $showAll?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
+  padding-left: 18px;
+  padding-right: 4px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  background: ${(p: { $showAll?: boolean }) => p.$showAll ? 'transparent' : 'white'};
+  z-index: 2;
+  padding-top: 4px;
+  padding-bottom: 8px;
+  margin-top: -4px;
 `;
 
 const HeaderLeft = styled.div`
@@ -80,22 +99,19 @@ const ViewAllBtn = styled.button`
 `;
 
 const TopGrid = styled.div<{ $count: number; $isVertical?: boolean }>`
-  display: ${p => p.$isVertical ? 'flex' : 'grid'};
+  display: flex;
   flex-direction: ${p => p.$isVertical ? 'column' : 'row'};
-  grid-template-columns: ${p => !p.$isVertical ? (p.$count === 1 ? '1fr' : `repeat(${Math.min(p.$count, 3)}, 1fr)`) : 'none'};
   gap: 14px;
-  margin-bottom: ${p => p.$isVertical ? '0' : '16px'};
-  flex: ${p => p.$isVertical ? '1' : 'none'};
-  height: ${p => p.$isVertical ? '100%' : 'auto'};
+  flex: 0 0 auto;
 `;
 
 const IdeaCard = styled(motion.div)<{ $isVertical?: boolean; $idx?: number }>`
   position: relative;
-  padding: 24px 20px;
+  padding: 22px 20px 22px 18px;
   border-radius: 18px;
-  background: white;
-  border: 1.5px solid rgba(72, 80, 84, 0.08);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  background: #fafafa;
+  border: 1.5px solid rgba(254, 65, 10, 0.12);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
   cursor: pointer;
   transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
   display: flex;
@@ -104,20 +120,13 @@ const IdeaCard = styled(motion.div)<{ $isVertical?: boolean; $idx?: number }>`
   justify-content: center;
   text-align: center;
   min-width: 0;
-
-  ${p => p.$isVertical ? css`
-    width: 92%;
-    height: 100%;
-  ` : css`
-    flex: 1;
-    width: auto;
-    height: 100%;
-  `}
+  width: 100%;
+  box-sizing: border-box;
 
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(72, 80, 84, 0.12);
-    border-color: rgba(72, 80, 84, 0.14);
+    border-color: rgba(254, 65, 10, 0.28);
   }
 `;
 
@@ -125,9 +134,7 @@ const VerticalRow = styled.div`
   position: relative;
   display: flex;
   align-items: stretch;
-  justify-content: center;
   width: 100%;
-  flex: 1;
 `;
 
 
@@ -437,7 +444,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
   onSelectIdea,
   showAll,
   onToggleShowAll,
-  challengeStatus,
+  challengeStatus: _challengeStatus,
 }) => {
   const { userProfile } = useAuth();
   const [localIdeas, setLocalIdeas] = React.useState(ideas);
@@ -487,18 +494,17 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
     sortOrder === 'likes' ? 'Más populares' :
     'Más comentadas';
 
-  const statusUpper = challengeStatus?.toUpperCase() || '';
-  const isFinished = statusUpper === 'CLOSED' || statusUpper === 'FINALIZADO' || statusUpper === 'EVALUATING' || statusUpper === 'EN_EVALUACION' || statusUpper === 'EN EVALUACIÓN';
 
-  const top3 = (showAll && isFinished) ? [] : localIdeas.slice(0, 3);
-  const rest = (showAll && isFinished) ? localIdeas : localIdeas.slice(3);
+
+  const top3 = (!showAll) ? localIdeas.slice(0, 3) : [];
+  const rest = (!showAll) ? localIdeas.slice(3) : localIdeas;
 
   const maxIndex = Math.max(0, rest.length - 5);
   const visibleIdeas = rest.slice(carouselIndex, carouselIndex + 5);
 
   return (
-    <Wrapper>
-      <Header>
+    <Wrapper $showAll={showAll}>
+      <Header $showAll={showAll}>
         <HeaderLeft>
           <Title>{sortLabel}</Title>
         </HeaderLeft>
@@ -679,19 +685,7 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
             </CarouselWrapper>
           )}
 
-          {!isFinished && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px', width: '100%' }}>
-              <ViewAllBtn onClick={() => {
-                const el = document.getElementById('challenge-detail');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }}>
-                Participar
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </ViewAllBtn>
-            </div>
-          )}
+
         </>
       )}
     </Wrapper>

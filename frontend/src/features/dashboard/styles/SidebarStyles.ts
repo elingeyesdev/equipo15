@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Pista8Theme, breakpoints } from '../../../config/theme';
+import { breakpoints } from '../../../config/theme';
 
 export const Overlay = styled.div<{ open: boolean }>`
   position: fixed;
@@ -22,7 +22,7 @@ export const Sidebar = styled.aside<{ open: boolean }>`
   right: 0;
   height: 100vh;
   width: 300px;
-  background: ${Pista8Theme.secondary};
+  background: #272423;
   z-index: 10000;
   display: flex;
   flex-direction: column;

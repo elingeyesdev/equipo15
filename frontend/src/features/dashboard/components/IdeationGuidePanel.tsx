@@ -1,49 +1,32 @@
-import React, { type SVGProps } from 'react';
-import MagnifierIcon from '../../../components/icons/MagnifierIcon';
-import ShieldCheckIcon from '../../../components/icons/ShieldCheckIcon';
-import PencilDiagramIcon from '../../../components/icons/PencilDiagramIcon';
 
-type StepIconComponent = (props: SVGProps<SVGSVGElement>) => React.ReactElement;
 
 interface StepConfig {
   number: string;
   label: string;
   description: string;
-  Icon: StepIconComponent;
-  accent: string;
-  accentBg: string;
   delay: number;
 }
 
 const STEPS: readonly StepConfig[] = [
   {
-    number: '01',
-    label: 'Entiende el problema',
+    number: '1',
+    label: 'Entendé el problema',
     description:
-      'Analiza la descripción y el contexto de la empresa para asegurar que tu idea resuelva el dolor principal.',
-    Icon: MagnifierIcon,
-    accent: '#FE410A',
-    accentBg: 'rgba(254,65,10,0.10)',
+      'Analizá la descripción y el contexto de la empresa para asegurarte de que tu idea resuelva el dolor principal.',
     delay: 0,
   },
   {
-    number: '02',
-    label: 'Revisa las reglas',
+    number: '2',
+    label: 'Revisá las reglas',
     description:
-      'Verifica las restricciones de participación y los entregables solicitados para que tu idea no sea descartada.',
-    Icon: ShieldCheckIcon,
-    accent: '#FE410A',
-    accentBg: 'rgba(254,65,10,0.10)',
+      'Verificá las restricciones de participación y los entregables solicitados para que tu idea no sea descartada.',
     delay: 80,
   },
   {
-    number: '03',
-    label: 'Estructura tu solución',
+    number: '3',
+    label: 'Estructurá tu solución',
     description:
-      'Usa el modelo estructurado para detallar tu propuesta. Una idea bien explicada tiene más chances de llegar al podio.',
-    Icon: PencilDiagramIcon,
-    accent: '#FE410A',
-    accentBg: 'rgba(254,65,10,0.10)',
+      'Usá el modelo estructurado para detallar tu propuesta. Una idea bien explicada tiene más chances de llegar al podio.',
     delay: 160,
   },
 ] as const;
@@ -90,7 +73,7 @@ const styles = {
   list: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '10px',
+    gap: '12px',
     width: '100%',
     maxWidth: '480px',
     listStyle: 'none',
@@ -104,54 +87,46 @@ interface StepItemProps {
 }
 
 const StepItem = ({ step }: StepItemProps) => {
-  const { number, label, description, Icon, accent, accentBg, delay } = step;
+  const { number, label, description, delay } = step;
 
   return (
     <li
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '14px',
-        padding: '14px 16px',
-        background: 'rgba(255,255,255,0.82)',
-        backdropFilter: 'blur(8px)',
-        borderRadius: '16px',
-        border: '1.5px solid rgba(255,255,255,0.7)',
-        boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+        gap: '16px',
+        padding: '18px 20px',
+        background: 'white',
+        borderRadius: '18px',
+        border: '1px solid rgba(72, 80, 84, 0.08)',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.04)',
         animation: `guideStepIn 0.4s ${delay}ms ease both`,
+        transition: 'border-color 0.2s, box-shadow 0.2s, transform 0.2s',
       }}
     >
+      {/* Círculo naranja con el número */}
       <div
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: '12px',
-          background: accentBg,
-          color: accent,
+          width: 52,
+          height: 52,
+          borderRadius: '50%',
+          background: '#FE410A',
+          color: 'white',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
+          fontSize: '20px',
+          fontWeight: 800,
         }}
       >
-        <Icon width={20} height={20} />
+        {number}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-        <span
-          style={{
-            fontSize: '9.5px',
-            fontWeight: 900,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: accent,
-          }}
-        >
-          Paso {number}
-        </span>
-        <p style={{ margin: 0, fontSize: '13.5px', fontWeight: 800, color: '#1a1f22' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1 }}>
+        <p style={{ margin: 0, fontSize: '14px', fontWeight: 800, color: '#1a1f22', letterSpacing: '-0.1px' }}>
           {label}
         </p>
-        <p style={{ margin: 0, fontSize: '11.5px', color: '#6b7280', lineHeight: 1.55 }}>
+        <p style={{ margin: 0, fontSize: '12px', color: '#6b7280', lineHeight: 1.5 }}>
           {description}
         </p>
       </div>
@@ -166,12 +141,17 @@ const IdeationGuidePanel = () => (
         from { opacity: 0; transform: translateY(10px); }
         to   { opacity: 1; transform: translateY(0); }
       }
+      li:hover {
+        border-color: rgba(254, 65, 10, 0.2) !important;
+        box-shadow: 0 6px 20px rgba(254, 65, 10, 0.07) !important;
+        transform: translateX(4px);
+      }
     `}</style>
     <div style={styles.root}>
       <div style={styles.header}>
-        <span style={styles.eyebrow}>Tu ruta hacia la innovación</span>
-        <h2 style={styles.title}>Por dónde empezar</h2>
-        <p style={styles.subtitle}>Sigue estos tres pasos antes de enviar tu propuesta.</p>
+        <span style={styles.eyebrow}>Guía rápida</span>
+        <h2 style={styles.title}>Seguí estos pasos para participar</h2>
+        <p style={styles.subtitle}>Tres pasos clave antes de enviar tu propuesta.</p>
       </div>
       <ol style={styles.list}>
         {STEPS.map((step) => (

@@ -57,26 +57,19 @@ const CardTitle = styled.h2`
   overflow-wrap: break-word;
 `;
 
-const StatusBadge = styled.span<{ $bg: string; $color: string; $dot: string }>`
+const StatusBadge = styled.span<{ $bg: string; $color: string; $dot?: string }>`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
-  border-radius: 20px;
+  padding: 5px 12px;
+  border-radius: 6px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
   background: ${p => p.$bg};
   color: ${p => p.$color};
   flex-shrink: 0;
-
-  &::before {
-    content: '';
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: ${p => p.$dot};
-  }
+  border: 1px solid ${p => p.$dot}30;
 `;
 
 const CardDescription = styled.p`

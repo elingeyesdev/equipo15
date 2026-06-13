@@ -110,13 +110,22 @@ const SkyCanvasWrapper = styled.div`
   margin-bottom: 3.5rem;
   border-radius: 24px;
   overflow: hidden;
+  box-shadow: 0 8px 32px rgba(135, 206, 235, 0.4), 0 2px 8px rgba(0,0,0,0.06);
 `;
 
 const ScrollableSkyContainer = styled.div`
   max-height: 460px;
-  overflow-y: auto;
+  overflow-y: scroll;
   overflow-x: hidden;
   width: 100%;
+  border-radius: 24px;
+
+  /* Ocultar scrollbar en todos los navegadores */
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE / Edge */
+  &::-webkit-scrollbar {
+    display: none;              /* Chrome / Safari / Opera */
+  }
 `;
 
 const Sky = styled.div<{ $height: number }>`

@@ -111,31 +111,30 @@ export const CompanyName = styled.span`
 
 export const StatusBadge = styled.span<{ $status: string }>`
   padding: 4px 10px;
-  border-radius: 9999px;
+  border-radius: 6px;
   font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
+  font-weight: 600;
 
   ${({ $status }) => {
     const s = $status?.toLowerCase();
     switch (s) {
       case 'activo':
       case 'published':
-        return `background: #dcfce7; color: #166534;`;
+        return `background: #dcfce7; color: #166534; border: 1px solid #22c55e30;`;
       case 'borrador':
       case 'draft':
-        return `background: #f1f5f9; color: #475569;`;
+        return `background: #f1f5f9; color: #475569; border: 1px solid #94a3b830;`;
       case 'agendado':
       case 'scheduled':
-        return `background: #eff6ff; color: #1e40af;`;
+        return `background: #eff6ff; color: #1e40af; border: 1px solid #3b82f630;`;
       case 'en evaluación':
       case 'evaluating':
-        return `background: #fef9c3; color: #854d0e;`;
+        return `background: #fef9c3; color: #854d0e; border: 1px solid #f59e0b30;`;
       case 'finalizado':
       case 'closed':
-        return `background: #fee2e2; color: #991b1b;`;
+        return `background: #fee2e2; color: #991b1b; border: 1px solid #ef444430;`;
       default:
-        return `background: #f1f5f9; color: #475569;`;
+        return `background: #f1f5f9; color: #475569; border: 1px solid #94a3b830;`;
     }
   }}
 `;

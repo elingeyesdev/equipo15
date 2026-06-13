@@ -1,6 +1,5 @@
 import React from 'react';
 import styled, { keyframes } from 'styled-components';
-import { MousePointerClick, SearchCode, Send } from 'lucide-react';
 import { Pista8Theme } from '../../../config/theme';
 
 const fadeUp = keyframes`
@@ -8,14 +7,12 @@ const fadeUp = keyframes`
   to { opacity: 1; transform: translateY(0); }
 `;
 
-
-
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 28px;
-  padding: 32px 28px;
+  gap: 14px;
+  padding: 32px 0 40px 0;
   height: 100%;
   animation: ${fadeUp} 0.5s 0.1s ease both;
 `;
@@ -23,30 +20,26 @@ const Wrapper = styled.div`
 const HeadBlock = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  padding-left: 18px;
+  margin-bottom: 6px;
 `;
 
 const Eyebrow = styled.span`
   font-size: 11px;
   font-weight: 900;
-  letter-spacing: 0.14em;
+  letter-spacing: 1.6px;
   text-transform: uppercase;
   color: ${Pista8Theme.primary};
+  margin: 0;
 `;
 
 const Heading = styled.h2`
   font-size: 22px;
   font-weight: 900;
-  color: ${Pista8Theme.secondary};
-  margin: 0;
+  letter-spacing: -0.3px;
   line-height: 1.25;
-`;
-
-const Sub = styled.p`
-  font-size: 13px;
-  color: #9ca3af;
-  margin: 0;
-  line-height: 1.55;
+  color: ${Pista8Theme.secondary};
+  margin: 4px 0 0;
 `;
 
 const StepList = styled.ol`
@@ -60,12 +53,12 @@ const StepList = styled.ol`
 
 const StepItem = styled.li<{ $delay: number }>`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
-  padding: 18px 20px;
+  padding: 20px;
   background: white;
   border-radius: 18px;
-  border: 1.5px solid rgba(72, 80, 84, 0.07);
+  border: 1px solid rgba(72, 80, 84, 0.08);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
   animation: ${fadeUp} 0.45s ${p => p.$delay}s ease both;
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
@@ -77,29 +70,24 @@ const StepItem = styled.li<{ $delay: number }>`
   }
 `;
 
-const IconBox = styled.div`
-  color: ${Pista8Theme.primary};
+const IconCircle = styled.div`
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: ${Pista8Theme.primary};
   display: flex;
   align-items: center;
   justify-content: center;
-  align-self: center;
   flex-shrink: 0;
-
-  svg { width: 22px; height: 22px; }
+  color: white;
+  font-size: 20px;
+  font-weight: 800;
 `;
 
 const StepContent = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 3px;
-`;
-
-const StepNumber = styled.span`
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #9ca3af;
+  flex: 1;
 `;
 
 const StepTitle = styled.p`
@@ -107,37 +95,33 @@ const StepTitle = styled.p`
   font-weight: 800;
   color: ${Pista8Theme.secondary};
   margin: 0;
+  letter-spacing: -0.1px;
 `;
 
 const StepDesc = styled.p`
-  font-size: 12px;
+  font-size: 13px;
   color: #6b7280;
-  margin: 0;
-  line-height: 1.5;
+  margin: 5px 0 0;
+  line-height: 1.45;
 `;
-
-
 
 const STEPS = [
   {
-    icon: MousePointerClick,
-    label: 'Paso 1',
-    title: 'Elige un reto',
-    desc: 'Selecciona un reto de la lista lateral para conocer el problema que las empresas necesitan resolver.',
+    number: '1',
+    title: 'Encontrá tu reto ideal',
+    desc: 'Explorá la vista lateral "Explorar retos" y descubrí el reto que más suene con vos',
     delay: 0.15,
   },
   {
-    icon: SearchCode,
-    label: 'Paso 2',
-    title: 'Lee los criterios',
-    desc: 'Revisa detenidamente los criterios de evaluación: Deseabilidad, Factibilidad y Viabilidad.',
+    number: '2',
+    title: 'Revisa las reglas del reto',
+    desc: 'Revisa los criterios de evaluación que se tomarán en cuenta',
     delay: 0.25,
   },
   {
-    icon: Send,
-    label: 'Paso 3',
-    title: '¡Publica tu propuesta!',
-    desc: 'Sube tu idea siguiendo el modelo estructurado para maximizar tus posibilidades de ganar.',
+    number: '3',
+    title: '¡Subí tu idea!',
+    desc: 'Completa tu idea paso a paso y da el salto para ganar el desafío',
     delay: 0.35,
   },
 ];
@@ -146,18 +130,16 @@ const InnovationStepsPanel: React.FC = () => (
   <Wrapper>
     <HeadBlock>
       <Eyebrow>Guía rápida</Eyebrow>
-      <Heading>¿Cómo participar?</Heading>
-      <Sub>Sigue estos pasos para enviar tu propuesta y competir en el reto seleccionado.</Sub>
+      <Heading>Seguí estos pasos para participar</Heading>
     </HeadBlock>
 
     <StepList>
-      {STEPS.map(({ icon: Icon, label, title, desc, delay }) => (
-        <StepItem key={label} $delay={delay}>
-          <IconBox>
-            <Icon />
-          </IconBox>
+      {STEPS.map(({ number, title, desc, delay }) => (
+        <StepItem key={number} $delay={delay}>
+          <IconCircle>
+            {number}
+          </IconCircle>
           <StepContent>
-            <StepNumber>{label}</StepNumber>
             <StepTitle>{title}</StepTitle>
             <StepDesc>{desc}</StepDesc>
           </StepContent>

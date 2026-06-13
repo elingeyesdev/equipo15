@@ -37,12 +37,16 @@ export const Header = styled.header`
   gap: 16px;
   position: relative;
   z-index: 1000;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 24px;
 
   @media (max-width: ${breakpoints.mobile}) {
     flex-direction: column;
     align-items: stretch;
     margin-bottom: 1.5rem;
     gap: 12px;
+    padding: 0 16px;
 
     & > div:last-child {
       width: 100%;
@@ -268,12 +272,10 @@ export const DetailBadgeRow = styled.div`
 `;
 
 export const DetailStatusBadge = styled.span<{ $active?: boolean }>`
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 5px 14px;
-  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
