@@ -46,10 +46,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     () => getStoredImpersonationSession(),
   );
 
-  const setSuppressAuth = useCallback((value: boolean) => {
-    suppressAuthRef.current = value;
-  }, []);
-
   const fetchProfile = useCallback(async (): Promise<UserProfile | null> => {
     try {
       const response = await axiosInstance.get<ApiResponse<UserProfile>>('/users/profile');
@@ -72,6 +68,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return null;
     }
   }, []);
+
+  const setSuppressAuth = useCallback((value: boolean) => {
+    suppressAuthRef.current = value;
+    if (!value) {
+      const currentUser = auth.currentUser;
+      setUser(currentUser);
+      if (currentUser) {
+        setLoading(true);
+        fetchProfile().then((profile) => {
+          if (profile) {
+            setUserProfile(profile);
+          } else {
+            syncProfile(currentUser).then((synced) => {
+              setUserProfile(synced);
+              setLoading(false);
+            });
+            return;
+          }
+          setLoading(false);
+        }).catch(() => {
+          setUserProfile(null);
+          setLoading(false);
+        });
+      } else {
+        setUserProfile(null);
+      }
+    }
+  }, [fetchProfile, syncProfile]);
 
   const refetchProfile = useCallback(async () => {
     if (user) {
@@ -99,6 +123,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (suppressAuthRef.current) {
+        return;
+      }
       setUser(currentUser);
       if (currentUser) {
         setLoading(true);

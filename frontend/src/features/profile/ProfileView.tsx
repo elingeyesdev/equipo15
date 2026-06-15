@@ -9,6 +9,7 @@ import { Wrapper, BackBtnWrap, Card, CardBody } from './ProfileStyles';
 import { ProfileHeader } from './ProfileHeader';
 import { ProfileBasicInfo, type BasicInfoData } from './ProfileBasicInfo';
 import { ProfileRoleSections } from './ProfileRoleSections';
+import { useActiveFaculties } from '@/hooks/useActiveFaculties';
 
 const PROFILE_CONFIGS: Record<string, { badge: string; showCode: boolean; bioPlaceholder: string }> = {
   student: { badge: "INNOVADOR", showCode: true, bioPlaceholder: "Escribe brevemente sobre tu experiencia o intereses de innovación (máx. 200 caracteres)." },
@@ -20,15 +21,17 @@ const PROFILE_CONFIGS: Record<string, { badge: string; showCode: boolean; bioPla
 export const ProfileView: React.FC = () => {
   const navigate = useNavigate();
   const { user, userProfile: profile, refetchProfile, impersonationSession } = useAuth();
+  const { faculties } = useActiveFaculties();
   const [profileData, setProfileData] = useState<BasicInfoData>({
     bio: profile?.bio || '',
     nickname: profile?.nickname || '',
     phone: profile?.phone || '',
-    studentCode: profile?.studentCode || profile?.studentProfile?.studentCode || '',
-    institution: profile?.institution || '',
-    specialty: profile?.specialty || '',
+    institucion_educativa: profile?.institucion_educativa || '',
+    ocupacion_laboral: profile?.ocupacion_laboral || '',
+    codigo_estudiantil: profile?.codigo_estudiantil || '',
+    specialty: profile?.studentProfile?.facultyId || profile?.specialty || '',
     ageRange: profile?.ageRange || '',
-  });
+  } as any);
 
   const countWords = (text: string) => text.trim().split(/\s+/).filter(Boolean).length;
 
@@ -51,18 +54,35 @@ export const ProfileView: React.FC = () => {
       toast.info('Estás en modo lectura ahora. No puedes guardar cambios de perfil.');
       return;
     }
+
+    if (profileData.ocupacion_laboral === 'Estudiante') {
+      if (!profileData.codigo_estudiantil || !profileData.codigo_estudiantil.trim()) {
+        toast.error('El código estudiantil es obligatorio cuando eres Estudiante.');
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       await userService.updateProfile({
         bio: profileData.bio,
         nickname: profileData.nickname,
         phone: profileData.phone,
-        studentCode: profileData.studentCode,
+        institucion_educativa: profileData.institucion_educativa || null,
+        ocupacion_laboral: profileData.ocupacion_laboral || null,
+        codigo_estudiantil: profileData.ocupacion_laboral === 'Estudiante' ? profileData.codigo_estudiantil : null,
       });
+
+      const facultyChanged = profileData.specialty !== (profile?.studentProfile?.facultyId || '');
+      if (facultyChanged && profileData.specialty) {
+        await userService.updateFaculty(profileData.specialty);
+      }
+
       await refetchProfile();
       toast.success('Perfil actualizado correctamente');
-    } catch (e) {
-      toast.error('Hubo un error guardando tu perfil');
+    } catch (e: any) {
+      const errorMsg = e.response?.data?.message || 'Hubo un error guardando tu perfil';
+      toast.error(errorMsg);
     } finally {
       setSaving(false);
     }
@@ -126,6 +146,7 @@ export const ProfileView: React.FC = () => {
             onSave={handleSaveProfile}
             countWords={countWords}
             profile={profile}
+            dbFaculties={faculties}
           />
 
           <ProfileRoleSections

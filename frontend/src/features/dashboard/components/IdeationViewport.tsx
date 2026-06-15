@@ -79,9 +79,15 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
 
   const challengeStatus = ds.selectedChallenge ? getStatusLabel(ds.selectedChallenge.status) : null;
   const facultyLabel = ds.selectedChallenge
-    ? (ds.selectedChallenge.facultyId
-        ? getFacultyName(ds.selectedChallenge.facultyId, ds.selectedChallenge.faculty?.name)
-        : 'Todas las Facultades')
+    ? (() => {
+        const facs = (ds.selectedChallenge as any).faculties;
+        if (Array.isArray(facs) && facs.length > 0) {
+          return facs.map((f: any) => f.name.startsWith('Facultad') ? f.name : `Facultad de ${f.name}`).join(', ');
+        }
+        return ds.selectedChallenge.facultyId
+          ? getFacultyName(ds.selectedChallenge.facultyId, ds.selectedChallenge.faculty?.name)
+          : 'Todas las Facultades';
+      })()
     : null;
 
   const visibleLimit = (!showAllIdeas && displayedWallIdeas && displayedWallIdeas.length > 0)

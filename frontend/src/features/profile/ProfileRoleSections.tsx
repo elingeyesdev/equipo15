@@ -4,6 +4,7 @@ import type { UserProfile } from '@/types/models';
 import { Pista8Theme } from '@/config/theme';
 import { RoleGuard } from '@/components/common/RoleGuard';
 import LogoutButton from '@/features/dashboard/components/LogoutButton';
+import { formatFacultyLabel } from '@/services/faculties.service';
 import {
   Divider,
   Section,
@@ -107,7 +108,11 @@ export const ProfileRoleSections: React.FC<ProfileRoleSectionsProps> = ({
               </InfoIcon>
               <InfoText>
                 <InfoKey>Especialidad</InfoKey>
-                <InfoVal>{profile.specialty || 'No definida'}</InfoVal>
+                <InfoVal>
+                  {profile.facultyName
+                    ? formatFacultyLabel(profile.facultyName)
+                    : (profile.specialty || 'No definida')}
+                </InfoVal>
               </InfoText>
             </InfoItem>
             <InfoItem>

@@ -948,7 +948,15 @@ export const CompanyChallengesView = () => {
                 </ViewStat>
                 <ViewStat>
                   <ViewStatLabel>Facultad</ViewStatLabel>
-                  <ViewStatValue>{(viewChallenge as any).faculty?.name || (viewChallenge as any).facultyName || 'Todas las facultades'}</ViewStatValue>
+                  <ViewStatValue>
+                    {(() => {
+                      const facs = (viewChallenge as any).faculties;
+                      if (Array.isArray(facs) && facs.length > 0) {
+                        return facs.map((f: any) => f.name.startsWith('Facultad') ? f.name : `Facultad de ${f.name}`).join(', ');
+                      }
+                      return (viewChallenge as any).faculty?.name || (viewChallenge as any).facultyName || 'Todas las facultades';
+                    })()}
+                  </ViewStatValue>
                 </ViewStat>
                 <ViewStat>
                   <ViewStatLabel>Ideas</ViewStatLabel>

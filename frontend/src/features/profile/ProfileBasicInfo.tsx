@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatFacultyLabel } from '@/services/faculties.service';
 import {
   Section,
   SectionHeader,
@@ -18,15 +19,16 @@ import {
 
 
 const INSTITUTIONS = ['Univalle', 'UAGRM', 'UPSA', 'Empresa Particular', 'Independiente', 'Otro'];
-const SPECIALTIES = ['Desarrollo de Software', 'Marketing Digital', 'Gestión de Negocios', 'Salud y Bienestar', 'Derecho', 'Arquitectura', 'Otro'];
+const OCCUPATIONS = ['Estudiante', 'Empleado', 'Independiente', 'Desempleado', 'Otro'];
 const AGE_RANGES = ['18-25 años', '26-35 años', '36-45 años', 'Más de 46 años'];
 
 export interface BasicInfoData {
   bio: string;
   nickname: string;
   phone: string;
-  studentCode: string;
-  institution: string;
+  institucion_educativa: string;
+  ocupacion_laboral: string;
+  codigo_estudiantil: string;
   specialty: string;
   ageRange: string;
 }
@@ -39,6 +41,7 @@ interface ProfileBasicInfoProps {
   onSave: () => Promise<void>;
   countWords: (text: string) => number;
   profile?: any;
+  dbFaculties?: any[];
 }
 
 export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
@@ -49,6 +52,7 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
   onSave,
   countWords,
   profile,
+  dbFaculties = [],
 }) => {
   const [showProfessional, setShowProfessional] = useState(
     !!profileData.specialty || !!profileData.ageRange || !!profileData.bio
@@ -189,54 +193,94 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
       </Section>
 
       {!isAdmin && !isCompany && (
-        <Section>
-          <SectionHeader>
-            <SectionLabel>Información académica (Opcional)</SectionLabel>
-            <SectionLine />
-          </SectionHeader>
-          <p style={{ margin: '-8px 0 4px', fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>
-            Ayuda a los jueces a conocer tu contexto.
-          </p>
-          <FieldGrid>
-            {!isJudge && (
+        <>
+          <Section>
+            <SectionHeader>
+              <SectionLabel>Formación Académica (Opcional)</SectionLabel>
+              <SectionLine />
+            </SectionHeader>
+            <p style={{ margin: '-8px 0 4px', fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>
+              Ayuda a los jueces a conocer tu contexto educativo.
+            </p>
+            <FieldGrid>
               <FieldFull>
                 <FormRow>
-                  <FormLabel>Código Estudiantil</FormLabel>
-                  <FormInput
-                    type="text"
-                    value={profileData.studentCode}
-                    onChange={e => {
-                      const val = e.target.value.toUpperCase();
-                      if (val.length <= 10) {
-                        setProfileData({ ...profileData, studentCode: val });
-                      }
+                  <FormLabel>Institución / Universidad</FormLabel>
+                  <select
+                    value={profileData.institucion_educativa}
+                    onChange={e => setProfileData({ ...profileData, institucion_educativa: e.target.value })}
+                    style={{
+                      width: '100%', padding: '11px 14px', borderRadius: 12,
+                      border: '1.5px solid rgba(72,80,84,0.1)', outline: 'none',
+                      fontSize: 14, fontWeight: 500, color: '#1a1f22',
+                      background: '#f8f9fa', cursor: 'pointer',
                     }}
-                    placeholder="Ej: 20220150"
-                    maxLength={10}
-                  />
+                  >
+                    <option value="">¿Dónde te formaste o estudias actualmente?</option>
+                    {INSTITUTIONS.map(i => <option key={i} value={i}>{i}</option>)}
+                  </select>
                 </FormRow>
               </FieldFull>
-            )}
-            <FieldFull>
-              <FormRow>
-                <FormLabel>Institución / Universidad</FormLabel>
-                <select
-                  value={profileData.institution}
-                  onChange={e => setProfileData({ ...profileData, institution: e.target.value })}
-                  style={{
-                    width: '100%', padding: '11px 14px', borderRadius: 12,
-                    border: '1.5px solid rgba(72,80,84,0.1)', outline: 'none',
-                    fontSize: 14, fontWeight: 500, color: '#1a1f22',
-                    background: '#f8f9fa', cursor: 'pointer',
-                  }}
-                >
-                  <option value="">¿Dónde te formaste o trabajas actualmente?</option>
-                  {INSTITUTIONS.map(i => <option key={i} value={i}>{i}</option>)}
-                </select>
-              </FormRow>
-            </FieldFull>
-          </FieldGrid>
-        </Section>
+            </FieldGrid>
+          </Section>
+
+          <Section>
+            <SectionHeader>
+              <SectionLabel>Ocupación Laboral</SectionLabel>
+              <SectionLine />
+            </SectionHeader>
+            <p style={{ margin: '-8px 0 4px', fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>
+              Cuéntanos a qué te dedicas actualmente.
+            </p>
+            <FieldGrid>
+              <FieldFull>
+                <FormRow>
+                  <FormLabel>Ocupación Laboral</FormLabel>
+                  <select
+                    value={profileData.ocupacion_laboral}
+                    onChange={e => {
+                      const nextOcupacion = e.target.value;
+                      setProfileData({
+                        ...profileData,
+                        ocupacion_laboral: nextOcupacion,
+                        codigo_estudiantil: nextOcupacion === 'Estudiante' ? profileData.codigo_estudiantil : '',
+                      });
+                    }}
+                    style={{
+                      width: '100%', padding: '11px 14px', borderRadius: 12,
+                      border: '1.5px solid rgba(72,80,84,0.1)', outline: 'none',
+                      fontSize: 14, fontWeight: 500, color: '#1a1f22',
+                      background: '#f8f9fa', cursor: 'pointer',
+                    }}
+                  >
+                    <option value="">¿Cuál es tu ocupación actual?</option>
+                    {OCCUPATIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </FormRow>
+              </FieldFull>
+
+              {profileData.ocupacion_laboral === 'Estudiante' && !isJudge && (
+                <FieldFull>
+                  <FormRow>
+                    <FormLabel>Código Estudiantil *</FormLabel>
+                    <FormInput
+                      type="text"
+                      value={profileData.codigo_estudiantil}
+                      onChange={e => {
+                        const val = e.target.value.toUpperCase();
+                        if (val.length <= 10) {
+                          setProfileData({ ...profileData, codigo_estudiantil: val });
+                        }
+                      }}
+                      placeholder="Ej: 20220150"
+                      maxLength={10}
+                    />
+                  </FormRow>
+                </FieldFull>
+              )}
+            </FieldGrid>
+          </Section>
+        </>
       )}
 
       {!isAdmin && !isCompany && (
@@ -271,7 +315,13 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
                   }}
                 >
                   <option value="">Selecciona tu área de conocimiento principal.</option>
-                  {SPECIALTIES.map(s => <option key={s} value={s}>{s}</option>)}
+                  {dbFaculties
+                    .filter((f) => f.name.toLowerCase() !== 'todas')
+                    .map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {formatFacultyLabel(f.name)}
+                      </option>
+                    ))}
                 </select>
               </FormRow>
             </FieldFull>

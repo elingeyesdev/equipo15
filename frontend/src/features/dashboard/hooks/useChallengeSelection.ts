@@ -68,7 +68,9 @@ export const useChallengeSelection = () => {
           ideasCount: c._count?.ideas || 0,
           likesCount: c.ideas?.reduce((sum: number, idea: any) => sum + (idea.likesCount || 0), 0) || 0,
           commentsCount: c.ideas?.reduce((sum: number, idea: any) => sum + (idea.commentsCount || 0), 0) || 0,
-          category: getFacultySlug(c.facultyId || null, c.faculty?.name),
+          category: c.faculties && c.faculties.length > 0
+            ? getFacultySlug(c.faculties[0].id, c.faculties[0].name)
+            : getFacultySlug(c.facultyId || null, c.faculty?.name),
           badge: c.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
         }));
 
@@ -84,7 +86,9 @@ export const useChallengeSelection = () => {
                   ideasCount: privateChallengeRaw._count?.ideas || privateChallengeRaw.ideas?.length || 0,
                   likesCount: privateChallengeRaw.ideas?.reduce((sum: number, idea: any) => sum + (idea.likesCount || 0), 0) || 0,
                   commentsCount: privateChallengeRaw.ideas?.reduce((sum: number, idea: any) => sum + (idea.commentsCount || 0), 0) || 0,
-                  category: getFacultySlug(privateChallengeRaw.facultyId || null, privateChallengeRaw.faculty?.name),
+                  category: privateChallengeRaw.faculties && privateChallengeRaw.faculties.length > 0
+                    ? getFacultySlug(privateChallengeRaw.faculties[0].id, privateChallengeRaw.faculties[0].name)
+                    : getFacultySlug(privateChallengeRaw.facultyId || null, privateChallengeRaw.faculty?.name),
                   badge: privateChallengeRaw.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
                 };
                 mapped = [mappedPrivate, ...mapped];

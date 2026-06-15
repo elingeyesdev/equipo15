@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { UserRepository, UserWithProfile } from './user.repository';
 import { Prisma, User, UserStatus } from '@prisma/client';
@@ -23,6 +24,27 @@ export class UserService {
     private readonly userRepository: UserRepository,
     private readonly eventsGateway: EventsGateway,
   ) {}
+
+  private handlePrismaError(err: any): never {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === 'P2002'
+    ) {
+      const target = err.meta?.target;
+      const isPhone = Array.isArray(target)
+        ? target.includes('phone')
+        : typeof target === 'string'
+        ? target.includes('phone')
+        : false;
+
+      if (isPhone || err.message?.includes('phone')) {
+        throw new ConflictException(
+          'El número de teléfono ya se encuentra registrado.',
+        );
+      }
+    }
+    throw err;
+  }
 
   private async ensureUserCanWrite(
     firebaseUid: string,
@@ -60,9 +82,13 @@ export class UserService {
     if (!user && normalizedEmail) {
       user = await this.userRepository.findByEmail(normalizedEmail);
       if (user) {
-        await this.userRepository.updateByEmail(normalizedEmail, {
-          firebaseUid,
-        });
+        try {
+          await this.userRepository.updateByEmail(normalizedEmail, {
+            firebaseUid,
+          });
+        } catch (err: any) {
+          this.handlePrismaError(err);
+        }
       }
     }
 
@@ -77,7 +103,11 @@ export class UserService {
         if (createUserDto.phone !== undefined) {
           updateData.phone = createUserDto.phone;
         }
-        await this.userRepository.updateByUid(firebaseUid, updateData);
+        try {
+          await this.userRepository.updateByUid(firebaseUid, updateData);
+        } catch (err: any) {
+          this.handlePrismaError(err);
+        }
         const refreshed = await this.userRepository.findByUid(firebaseUid);
         return this.formatUserResponse(refreshed ?? user);
       }
@@ -91,6 +121,10 @@ export class UserService {
 
     if (!normalizedEmail) {
       return null;
+    }
+
+    if (!createUserDto.phone || createUserDto.phone.trim() === '') {
+      throw new BadRequestException('El número de teléfono es obligatorio para el registro.');
     }
 
     const allowed = await this.userRepository.isEmailAllowed(normalizedEmail);
@@ -111,10 +145,14 @@ export class UserService {
       phone: createUserDto.phone || null,
     };
 
-    await this.userRepository.upsert(firebaseUid, userData, {
-      displayName: createUserDto.displayName,
-      avatarUrl: createUserDto.avatarUrl,
-    });
+    try {
+      await this.userRepository.upsert(firebaseUid, userData, {
+        displayName: createUserDto.displayName,
+        avatarUrl: createUserDto.avatarUrl,
+      });
+    } catch (err: any) {
+      this.handlePrismaError(err);
+    }
     user = await this.userRepository.findByUid(firebaseUid);
 
     const detectedFacultyId = extractFacultyFromEmail(normalizedEmail);
@@ -175,16 +213,46 @@ export class UserService {
       phone?: string;
       studentCode?: string;
       enrollmentYear?: number;
+      institucion_educativa?: string;
+      ocupacion_laboral?: string;
+      codigo_estudiantil?: string | null;
     },
   ): Promise<UserResponse | null> {
     await this.ensureUserCanWrite(firebaseUid);
 
+    const existingUser = await this.userRepository.findByUid(firebaseUid);
+    if (!existingUser) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    const ocupacion = data.ocupacion_laboral !== undefined 
+      ? data.ocupacion_laboral 
+      : (existingUser as any).ocupacion_laboral;
+
+    if (ocupacion === 'Estudiante') {
+      const codigo = data.codigo_estudiantil !== undefined
+        ? data.codigo_estudiantil
+        : (existingUser as any).codigo_estudiantil;
+      if (!codigo || codigo.trim() === '') {
+        throw new BadRequestException(
+          'El código estudiantil es obligatorio cuando la ocupación es Estudiante.',
+        );
+      }
+    } else if (ocupacion !== undefined && ocupacion !== null) {
+      data.codigo_estudiantil = null;
+    }
+
     const { studentCode, enrollmentYear, ...userData } = data;
 
-    const updatedUser = await this.userRepository.updateByUid(
-      firebaseUid,
-      userData,
-    );
+    let updatedUser;
+    try {
+      updatedUser = await this.userRepository.updateByUid(
+        firebaseUid,
+        userData,
+      );
+    } catch (err: any) {
+      this.handlePrismaError(err);
+    }
     if (!updatedUser) {
       throw new NotFoundException('Usuario no encontrado');
     }

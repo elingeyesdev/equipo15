@@ -240,7 +240,10 @@ const IdeationWall = () => {
       status: (challenge?.status as Challenge['status']) || 'Activo',
       facultyId: challenge?.facultyId ?? null,
       faculty: challenge?.faculty ?? null,
-      category: getFacultySlug(challenge?.facultyId ?? null, challenge?.faculty?.name),
+      faculties: (challenge as any)?.faculties ?? [],
+      category: (challenge as any)?.faculties && (challenge as any).faculties.length > 0
+        ? getFacultySlug((challenge as any).faculties[0].id, (challenge as any).faculties[0].name)
+        : getFacultySlug(challenge?.facultyId ?? null, challenge?.faculty?.name),
       isPrivate: false,
     };
   };
