@@ -31,8 +31,8 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
   podiumCount = 0,
 }) => {
   const userSlug = getFacultySlug(userFacultyId || null);
-  const filters = ['Activos', 'En Evaluación', 'Finalizados', 'Mis Retos'];
-  
+  const filters = ['Activos', 'En Evaluación', 'Finalizados'];
+
   // Si no hay filtro válido seleccionado, o es 'Todos', por defecto 'Activos'
   const currentFilter = filters.includes(activeFilter) ? activeFilter : 'Activos';
 

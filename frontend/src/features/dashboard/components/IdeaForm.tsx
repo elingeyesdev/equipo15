@@ -122,7 +122,6 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
 
   const maxIdeaName = 150;
   const maxIdeaSolution = 1000;
-  const maxTags = 6;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,7 +164,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
   };
 
   const handleSaveDraft = () => {
-    const isEmpty = !form.ideaName.trim() && !form.ideaSolution.trim() && form.tags.length === 0;
+    const isEmpty = !form.ideaName.trim() && !form.ideaSolution.trim();
     if (isEmpty) {
       toast.error('No puedes guardar un borrador vacío. Escribe al menos un título o propuesta.');
       return;
@@ -443,31 +442,6 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 </div>
               </S.Field>
 
-              <S.Field id="tagsField">
-                <S.FieldHeader>
-                  <S.Label>Etiquetas</S.Label>
-                  <S.TagCounter>{form.tags.length}/{maxTags}</S.TagCounter>
-                </S.FieldHeader>
-                <S.Tip>Agrega palabras clave y presiona Enter o coma para guardarlas.</S.Tip>
-                <S.TagInputWrap>
-                  {form.tags.map(tag => (
-                    <S.TagChip key={tag}>
-                      {tag}
-                      <S.RemoveTag type="button" onClick={() => form.handleTagRemoval(tag)} aria-label={`Quitar etiqueta ${tag}`}>×</S.RemoveTag>
-                    </S.TagChip>
-                  ))}
-                  <S.TagField
-                    type="text"
-                    value={form.tagInput}
-                    onChange={e => form.setTagInput(e.target.value)}
-                    onKeyDown={form.handleTagKeyDown}
-                    placeholder="impacto, movilidad, energía..."
-                    disabled={form.tags.length >= maxTags}
-                  />
-                  <S.AddTagButton type="button" onClick={form.handleTagAddition} disabled={form.tags.length >= maxTags}>Añadir</S.AddTagButton>
-                </S.TagInputWrap>
-              </S.Field>
-
               <S.Field id="consentsField">
                 <S.Label>Consentimientos y condiciones</S.Label>
                 <S.Tip>Marca cada casilla para habilitar el envío.</S.Tip>
@@ -519,7 +493,6 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
               </FM.ConfirmText>
               <FM.ConfirmSummary>
                 <FM.SummaryPill>{challenge?.title || 'Reto sin seleccionar'}</FM.SummaryPill>
-                <FM.SummaryPill>{form.tags.length} etiquetas</FM.SummaryPill>
               </FM.ConfirmSummary>
               <FM.ConfirmActions>
                 <FM.ConfirmGhost type="button" onClick={() => setConfirmOpen(false)} disabled={form.formSaving}>Seguir editando</FM.ConfirmGhost>

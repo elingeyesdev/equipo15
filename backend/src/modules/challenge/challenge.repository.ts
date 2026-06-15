@@ -1260,10 +1260,15 @@ export class ChallengeRepository {
     if (activeCriteria.length > 0) {
       await Promise.all(
         activeCriteria.map(async (c: any) => {
-          if (!c.id) return;
+          if (!c.name) return;
           try {
             await this.prisma.criteria.upsert({
-              where: { id: c.id },
+              where: {
+                uq_criterion_per_challenge: {
+                  challengeId: challengeId,
+                  name: c.name,
+                },
+              },
               create: {
                 id: c.id,
                 challengeId: challengeId,
@@ -1273,20 +1278,29 @@ export class ChallengeRepository {
                 isActive: true,
               },
               update: {
-                name: c.name,
                 description: c.description,
                 weight: c.weight,
                 isActive: true,
               },
             });
           } catch (e) {
-            this.logger.error(`Error syncing criterion ${c.id}:`, e);
+            this.logger.error(`Error syncing criterion ${c.name}:`, e);
           }
         }),
       );
     }
 
-    return activeCriteria.sort((a, b) => a.name.localeCompare(b.name));
+    const dbCriteria = await this.prisma.criteria.findMany({
+      where: { challengeId, isActive: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        weight: true,
+      },
+    });
+
+    return dbCriteria.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   // ─── E3.3: Export evaluation data for Excel ──────────────────────────────

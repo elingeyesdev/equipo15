@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { KeyboardEvent } from 'react';
+
 import { ideaService, type IdeaDraft } from '../../../services/idea.service';
 import type { Challenge, UserProfile } from '../../../types/models';
 import {
@@ -110,8 +110,6 @@ export const useIdeationForm = (
   const [impactArea, setImpactArea] = useState<ImpactArea | ''>('');
   const [improvementType, setImprovementType] = useState<ImprovementType | ''>('');
   const [effortLevel, setEffortLevel] = useState<EffortLevel | ''>('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
   const [consents, setConsents] = useState<Record<ConsentKey, boolean>>({
     terms: false,
     usage: false,
@@ -126,7 +124,6 @@ export const useIdeationForm = (
   const maxProblemWords = IDEA_WORD_RULES.problem.max;
   const minSolutionWords = IDEA_WORD_RULES.solution.min;
   const maxSolutionWords = IDEA_WORD_RULES.solution.max;
-  const maxTags = 6;
   const isReadOnlyByPenalty = profile?.status === 'SOFT_BLOCK' || profile?.status === 'SUSPENDED';
 
   const allConsentsAccepted = Object.values(consents).every(Boolean);
@@ -152,8 +149,6 @@ export const useIdeationForm = (
     setImpactArea('');
     setImprovementType('');
     setEffortLevel('');
-    setTags([]);
-    setTagInput('');
     setConsents({ terms: false, usage: false, originality: false });
     setFormErrors({});
     setConsentsTouched(false);
@@ -169,8 +164,6 @@ export const useIdeationForm = (
     setImpactArea((draft.impactArea as ImpactArea) || '');
     setImprovementType((draft.improvementType as ImprovementType) || '');
     setEffortLevel((draft.effortLevel as EffortLevel) || '');
-    setTags(Array.isArray(draft.tags) ? draft.tags : []);
-    setTagInput('');
     setFormErrors({});
     setConsentsTouched(false);
 
@@ -181,7 +174,6 @@ export const useIdeationForm = (
       impactArea: (draft.impactArea as ImpactArea) || '',
       improvementType: (draft.improvementType as ImprovementType) || '',
       effortLevel: (draft.effortLevel as EffortLevel) || '',
-      tags: Array.isArray(draft.tags) ? draft.tags : [],
     });
     setActiveDraftData(draftSnapshot);
     showToast({
@@ -266,31 +258,6 @@ export const useIdeationForm = (
     return errors;
   };
 
-  const handleTagAddition = () => {
-    const sanitized = tagInput.trim();
-    if (!sanitized) return;
-    setTags(prev => {
-      if (prev.includes(sanitized) || prev.length >= maxTags) return prev;
-      return [...prev, sanitized];
-    });
-    setTagInput('');
-  };
-
-  const handleTagKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' || event.key === ',') {
-      event.preventDefault();
-      handleTagAddition();
-    }
-    if (event.key === 'Backspace' && !tagInput && tags.length) {
-      event.preventDefault();
-      setTags(prev => prev.slice(0, -1));
-    }
-  };
-
-  const handleTagRemoval = (target: string) => {
-    setTags(prev => prev.filter(tag => tag !== target));
-  };
-
   const toggleConsent = (key: ConsentKey) => {
     setConsents(prev => ({ ...prev, [key]: !prev[key] }));
     setConsentsTouched(true);
@@ -336,8 +303,6 @@ export const useIdeationForm = (
     }
 
     const title = ideaName.trim();
-    const normalizedTags = () =>
-      Array.from(new Set(tags.map(tag => tag.trim()).filter(Boolean)));
 
     if (targetStatus === 'public') {
       const publicErrors = validatePublicSubmission(formChallenge);
@@ -364,7 +329,6 @@ export const useIdeationForm = (
           title: title || undefined,
           problem: ideaProblem.trim() || undefined,
           solution: ideaSolution.trim() || undefined,
-          tags: normalizedTags(),
           challengeId: formChallenge?.id,
           isAnonymous: isGuest,
           impactArea: impactArea || undefined,
@@ -379,7 +343,6 @@ export const useIdeationForm = (
           impactArea: impactArea || '',
           improvementType: improvementType || '',
           effortLevel: effortLevel || '',
-          tags: normalizedTags(),
         });
 
         if (activeDraftId && activeDraftData === currentSnapshot) {
@@ -415,7 +378,6 @@ export const useIdeationForm = (
           title: ideaName.trim(),
           problem: normalizedProblem,
           solution: ideaSolution.trim(),
-          tags: normalizedTags(),
           status: targetStatus,
           challengeId: formChallenge.id,
           isAnonymous: isGuest,
@@ -480,12 +442,6 @@ export const useIdeationForm = (
     isTitleValid,
     isProblemValid,
     isSolutionValid,
-    tags,
-    tagInput,
-    setTagInput,
-    handleTagAddition,
-    handleTagKeyDown,
-    handleTagRemoval,
     consents,
     toggleConsent,
     consentsTouched,

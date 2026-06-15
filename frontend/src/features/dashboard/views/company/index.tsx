@@ -182,9 +182,34 @@ const CreateBtn = styled.button<{ $tooltipText?: string }>`
 const FilterRow = styled.div`
   display: flex;
   gap: 6px;
-  margin-bottom: 20px;
   flex-wrap: wrap;
 `;
+
+const FilterContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+`;
+
+const SearchInput = styled.input`
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(72,80,84,0.15);
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1f22;
+  outline: none;
+  min-width: 250px;
+  transition: all 0.2s;
+  &:focus {
+    border-color: ${Pista8Theme.primary};
+    box-shadow: 0 0 0 3px rgba(254,65,10,0.1);
+  }
+`;
+
 
 const FilterChip = styled.button<{ $active: boolean }>`
   padding: 7px 16px;
@@ -561,6 +586,7 @@ export const CompanyChallengesView = () => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterValue>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
   const [copyChallenge, setCopyChallenge] = useState<Challenge | null>(null);
@@ -592,12 +618,11 @@ export const CompanyChallengesView = () => {
 
   useEffect(() => { fetchChallenges(); }, [fetchChallenges]);
 
-  const filtered = filter === 'all'
-    ? challenges
-    : challenges.filter(c => {
-      const displayStatus = deriveDisplayStatus(c);
-      return displayStatus === filter;
-    });
+  const filtered = challenges.filter(c => {
+    const matchFilter = filter === 'all' || deriveDisplayStatus(c) === filter;
+    const matchSearch = !searchQuery.trim() || c.title?.toLowerCase().includes(searchQuery.trim().toLowerCase());
+    return matchFilter && matchSearch;
+  });
 
   const handleSave = async (formData: ChallengePayload) => {
     try {
@@ -708,13 +733,21 @@ export const CompanyChallengesView = () => {
         </CreateBtn>
       </TopBar>
 
-      <FilterRow>
-        {filters.map(f => (
-          <FilterChip key={f.value} $active={filter === f.value} onClick={() => setFilter(f.value)}>
-            {f.label}
-          </FilterChip>
-        ))}
-      </FilterRow>
+      <FilterContainer>
+        <FilterRow>
+          {filters.map(f => (
+            <FilterChip key={f.value} $active={filter === f.value} onClick={() => setFilter(f.value)}>
+              {f.label}
+            </FilterChip>
+          ))}
+        </FilterRow>
+        <SearchInput
+          type="text"
+          placeholder="Buscar reto por nombre..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
+      </FilterContainer>
 
       {loading ? (
         <Grid>

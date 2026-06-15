@@ -112,4 +112,5 @@ export class CreateChallengeDto {
   @ValidateNested()
   @Type(() => TargetAudienceDto)
   targetAudience?: TargetAudienceDto;
+
 }

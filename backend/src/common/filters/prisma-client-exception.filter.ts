@@ -11,6 +11,7 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = exception.message.replace(/\n/g, '');
+    console.error('PRISMA ERROR:', exception.code, exception.meta, exception.message);
 
     switch (exception.code) {
       case 'P2002':

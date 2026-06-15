@@ -254,7 +254,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
           <FieldGroup>
             <Label $locked={locked('core')}>
-              Descripción del problema
+              Descripción del problema *
               {locked('core') && <LockedBadge>No editable</LockedBadge>}
             </Label>
             <TextAreaField $locked={locked('core')} $error={!!errors.problemDescription}
@@ -271,7 +271,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
           <FieldGroup>
             <Label $locked={locked('core')}>
-              Contexto de la empresa
+              Contexto de la empresa *
               {locked('core') && <LockedBadge>No editable</LockedBadge>}
             </Label>
             <TextAreaField $locked={locked('core')} $error={!!errors.companyContext}
@@ -288,16 +288,64 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
           <FieldGroup style={{ display: 'flex', flexDirection: 'column' }}>
             <Label $locked={locked('core')}>
-              Reglas de participación
+              Reglas de participación *
               {locked('core') && <LockedBadge>No editable</LockedBadge>}
             </Label>
-            <TextAreaField placeholder="Reglas o restricciones para las ideas..."
+            <TextAreaField placeholder="1. Primera regla..."
               value={form.participationRules}
               style={{ flex: 1, resize: 'none' }}
               readOnly={locked('core')}
               $error={!!errors.participationRules}
               $locked={locked('core')}
-              onChange={e => !locked('core') && updateField('participationRules', e.target.value)} />
+              onChange={e => {
+                if (locked('core')) return;
+                const val = e.target.value;
+                if (form.participationRules === '' && val.length === 1 && val !== '1') {
+                  updateField('participationRules', `1. ${val}`);
+                } else {
+                  updateField('participationRules', val);
+                }
+              }}
+              onKeyDown={e => {
+                if (locked('core')) return;
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const target = e.target as HTMLTextAreaElement;
+                  const val = target.value;
+                  const cursor = target.selectionStart;
+                  const textBefore = val.substring(0, cursor);
+                  const textAfter = val.substring(cursor);
+                  const lines = textBefore.split('\n');
+                  const currentLine = lines[lines.length - 1];
+                  const match = currentLine.match(/^(\d+)\.\s(.*)/);
+                  
+                  if (match) {
+                    if (!match[2].trim()) {
+                      // Remove empty list item
+                      const newTextBefore = lines.slice(0, -1).join('\n') + (lines.length > 1 ? '\n' : '');
+                      updateField('participationRules', newTextBefore + textAfter);
+                      setTimeout(() => {
+                        target.selectionStart = newTextBefore.length;
+                        target.selectionEnd = newTextBefore.length;
+                      }, 0);
+                    } else {
+                      const nextNum = parseInt(match[1], 10) + 1;
+                      const insert = `\n${nextNum}. `;
+                      updateField('participationRules', textBefore + insert + textAfter);
+                      setTimeout(() => {
+                        target.selectionStart = cursor + insert.length;
+                        target.selectionEnd = cursor + insert.length;
+                      }, 0);
+                    }
+                  } else {
+                    updateField('participationRules', textBefore + '\n' + textAfter);
+                    setTimeout(() => {
+                      target.selectionStart = cursor + 1;
+                      target.selectionEnd = cursor + 1;
+                    }, 0);
+                  }
+                }
+              }} />
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               {errors.participationRules ? <ErrorText>{errors.participationRules}</ErrorText> : <span />}
               <CharCount $over={countWords(form.participationRules) > WORD_LIMITS.content.max}>
@@ -385,51 +433,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               Reto privado
             </CheckboxRow>
 
-            <FieldGroup style={{ marginBottom: 0 }}>
-              <Label>Audiencia objetivo</Label>
-              <div style={{ background: '#f8f9fa', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div>
-                  <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a8b0b8', margin: '0 0 6px' }}>Rango de edad</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {['18-22', '23-27', '28-35', '36+'].map(range => {
-                      const sel = form.targetAudience.ageRanges.includes(range);
-                      return (
-                        <button key={range} type="button" onClick={() => {
-                          const next = sel
-                            ? form.targetAudience.ageRanges.filter(r => r !== range)
-                            : [...form.targetAudience.ageRanges, range];
-                          updateField('targetAudience', { ...form.targetAudience, ageRanges: next });
-                        }} style={{
-                          padding: '5px 12px', borderRadius: 999, border: `1.5px solid ${sel ? Pista8Theme.primary : 'rgba(72,80,84,0.15)'}`,
-                          background: sel ? Pista8Theme.primary : 'white', color: sel ? 'white' : '#485054',
-                          fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
-                        }}>{range} años</button>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div>
-                  <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a8b0b8', margin: '0 0 6px' }}>Tipo de participante</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {['Universidades', 'Empresas'].map(pType => {
-                      const sel = form.targetAudience.participantTypes.includes(pType);
-                      return (
-                        <button key={pType} type="button" onClick={() => {
-                          const next = sel
-                            ? form.targetAudience.participantTypes.filter(t => t !== pType)
-                            : [...form.targetAudience.participantTypes, pType];
-                          updateField('targetAudience', { ...form.targetAudience, participantTypes: next });
-                        }} style={{
-                          padding: '5px 12px', borderRadius: 999, border: `1.5px solid ${sel ? Pista8Theme.primary : 'rgba(72,80,84,0.15)'}`,
-                          background: sel ? Pista8Theme.primary : 'white', color: sel ? 'white' : '#485054',
-                          fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
-                        }}>{pType}</button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </FieldGroup>
+
           </div>
         </FormGrid>
 

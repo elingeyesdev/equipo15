@@ -25,15 +25,16 @@ const riseIn = keyframes`
 /* ─── layout ─── */
 
 const Screen = styled.div`
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   z-index: 20;
-  padding: 130px 24px 20px;
+  padding: 24px;
   pointer-events: none;
+  overflow-y: auto;
 `;
 
 const TopBanner = styled.div<{ $delay: number }>`

@@ -306,7 +306,15 @@ export class ChallengeService {
 
       const existingStart = existing.submissionsOpenAt ? new Date(existing.submissionsOpenAt) : null;
       const finalStartVal = finalStart !== undefined ? finalStart : existingStart;
-      const startChanged = !existingStart || (finalStartVal && finalStartVal.getTime() !== existingStart.getTime());
+      
+      let startChanged = false;
+      if (!existingStart && finalStartVal) startChanged = true;
+      if (existingStart && finalStartVal) {
+        // Compare truncating seconds and milliseconds (match frontend datetime-local precision)
+        const d1 = new Date(existingStart).setSeconds(0, 0);
+        const d2 = new Date(finalStartVal).setSeconds(0, 0);
+        if (d1 !== d2) startChanged = true;
+      }
 
       if (startChanged && finalStartVal) {
         const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
