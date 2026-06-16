@@ -12,25 +12,18 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  // Forzar redirección HTTPS en producción
-  app.use((req: any, res: any, next: any) => {
-    if (process.env.NODE_ENV === 'production') {
-      if (
-        req.headers['x-forwarded-proto'] &&
-        req.headers['x-forwarded-proto'] !== 'https'
-      ) {
-        return res.redirect(301, `https://${req.headers.host}${req.url}`);
-      }
-    }
-    next();
-  });
-
-  app.use(helmet());
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   app.enableCors({
     origin: CORS_ORIGINS,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
+    allowedHeaders: 'Content-Type,Authorization',
   });
 
   app.useGlobalInterceptors(new TransformInterceptor());

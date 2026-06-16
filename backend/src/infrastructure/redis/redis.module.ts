@@ -43,6 +43,27 @@ export class RedisService implements OnModuleDestroy {
           ? RedisConstructor
           : RedisConstructor.default;
       this.client = new RedisCls(redisUrl) as RedisClient;
+      (this.client as any).on('error', (err: any) => {
+        this.logger.error(`Redis client connection error: ${err.message}`);
+        
+        // If it is an auth error, disconnect to prevent infinite reconnection loop spamming logs
+        const errMsg = String(err.message || '');
+        if (
+          errMsg.includes('WRONGPASS') ||
+          errMsg.includes('NOAUTH') ||
+          errMsg.includes('invalid username-password')
+        ) {
+          this.logger.warn(
+            'Redis authentication failed. Disconnecting client to prevent infinite reconnect loops.',
+          );
+          try {
+            (this.client as any).disconnect();
+          } catch (disconnectErr) {
+            // ignore
+          }
+          this.client = null;
+        }
+      });
       this.logger.log('Redis client connected');
     } catch {
       this.logger.warn('ioredis not available, using in-memory Map fallback');

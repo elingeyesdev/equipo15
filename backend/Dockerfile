@@ -25,7 +25,6 @@ COPY prisma ./prisma
 # Copiar artefactos compilados y dependencias de producción
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/firebase-admin.json ./firebase-admin.json
 
 COPY entrypoint.sh ./entrypoint.sh
 RUN apk add --no-cache dos2unix && dos2unix entrypoint.sh

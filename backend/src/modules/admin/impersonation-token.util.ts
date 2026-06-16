@@ -53,11 +53,16 @@ const getImpersonationSecret = () => {
     return cachedSecret;
   }
 
-  // Opción 2: Desde firebase-admin.json (fallback, solo para dev)
+  // Opción 2: Desde FIREBASE_ADMIN_CONFIG o firebase-admin.json (fallback, solo para dev)
   try {
-    const serviceAccount = JSON.parse(
-      readFileSync(join(process.cwd(), 'firebase-admin.json'), 'utf8'),
-    ) as { private_key?: string; project_id?: string };
+    let serviceAccount: { private_key?: string; project_id?: string };
+    if (process.env.FIREBASE_ADMIN_CONFIG) {
+      serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CONFIG);
+    } else {
+      serviceAccount = JSON.parse(
+        readFileSync(join(process.cwd(), 'firebase-admin.json'), 'utf8'),
+      ) as { private_key?: string; project_id?: string };
+    }
     cachedSecret = [serviceAccount.project_id, serviceAccount.private_key]
       .filter(Boolean)
       .join('::');

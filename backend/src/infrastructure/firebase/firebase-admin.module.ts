@@ -1,7 +1,5 @@
 import { Module, Global } from '@nestjs/common';
 import * as admin from 'firebase-admin';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 
 export const FIREBASE_ADMIN_TOKEN = 'FIREBASE_ADMIN';
 
@@ -11,9 +9,8 @@ export const FIREBASE_ADMIN_TOKEN = 'FIREBASE_ADMIN';
     {
       provide: FIREBASE_ADMIN_TOKEN,
       useFactory: () => {
-        const serviceAccount = JSON.parse(
-          readFileSync(join(process.cwd(), 'firebase-admin.json'), 'utf8'),
-        ) as admin.ServiceAccount;
+        // Esto lee el JSON directamente desde la variable de entorno que configuraste en Railway
+        const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_CONFIG!) as admin.ServiceAccount;
         return admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),
         });
