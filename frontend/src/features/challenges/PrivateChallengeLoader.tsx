@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../api/axiosConfig';
 import NotFoundPage from '../../components/errors/NotFoundPage';
 import { useAuth } from '../../context/AuthContext';
 
@@ -13,11 +13,11 @@ const PrivateChallengeLoader = () => {
   useEffect(() => {
     const fetchPrivateChallenge = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/api/challenges/private/${token}`);
+        const response = await axiosInstance.get(`/challenges/private/${token}`);
         setChallenge(response.data);
         
         if (user) {
-          await axios.post(`http://localhost:3000/api/challenges/access`, {
+          await axiosInstance.post(`/challenges/access`, {
             userId: user.uid,
             challengeId: response.data._id
           });

@@ -893,12 +893,12 @@ export const CompanyChallengesView = () => {
             <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
               <input
                 readOnly
-                value={`${window.location.origin}/reto/privado/${copyChallenge.id}`}
+                value={`${import.meta.env.VITE_APP_URL || 'https://pista8-f8e6e.web.app'}/reto/privado/${copyChallenge.id}`}
                 style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '13px', background: '#f9fafb', color: '#374151', outline: 'none' }}
               />
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/reto/privado/${copyChallenge.id}`);
+                  navigator.clipboard.writeText(`${import.meta.env.VITE_APP_URL || 'https://pista8-f8e6e.web.app'}/reto/privado/${copyChallenge.id}`);
                   const btn = document.getElementById('copy-btn');
                   if (btn) {
                     btn.innerText = 'Copiado!';

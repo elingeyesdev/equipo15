@@ -64,6 +64,8 @@ const Header = styled.div<{ $showAll?: boolean }>`
   @media (max-width: 640px) {
     padding-left: 0;
     padding-right: 0;
+    position: relative;
+    z-index: 1;
   }
 `;
 
@@ -111,10 +113,13 @@ const TopGrid = styled.div<{ $count: number; $isVertical?: boolean }>`
   display: flex;
   flex-direction: ${p => p.$isVertical ? 'column' : 'row'};
   gap: 14px;
-  flex: 0 0 auto;
+  flex: ${p => p.$count === 1 ? '1' : '0 0 auto'};
+  ${p => p.$count === 1 && css`
+    height: 100%;
+  `}
 `;
 
-const IdeaCard = styled(motion.div)<{ $isVertical?: boolean; $idx?: number }>`
+const IdeaCard = styled(motion.div)<{ $isVertical?: boolean; $idx?: number; $stretch?: boolean }>`
   position: relative;
   padding: 22px 20px 22px 18px;
   border-radius: 18px;
@@ -131,6 +136,9 @@ const IdeaCard = styled(motion.div)<{ $isVertical?: boolean; $idx?: number }>`
   min-width: 0;
   width: 100%;
   box-sizing: border-box;
+  ${p => p.$stretch && css`
+    flex: 1;
+  `}
 
   &:hover {
     transform: translateY(-2px);
@@ -139,11 +147,15 @@ const IdeaCard = styled(motion.div)<{ $isVertical?: boolean; $idx?: number }>`
   }
 `;
 
-const VerticalRow = styled.div`
+const VerticalRow = styled.div<{ $stretch?: boolean }>`
   position: relative;
   display: flex;
   align-items: stretch;
   width: 100%;
+  ${p => p.$stretch && css`
+    flex: 1;
+    flex-direction: column;
+  `}
 `;
 
 
@@ -555,12 +567,14 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
             const authorName = isCurrentUser && userProfile
               ? resolveDisplayName(userProfile as any)
               : resolveDisplayName(idea.author);
+            const shouldStretch = top3.length === 1;
 
             return (
-              <VerticalRow key={idea.id ?? idea._id ?? i}>
+              <VerticalRow key={idea.id ?? idea._id ?? i} $stretch={shouldStretch}>
                 <IdeaCard
                   $isVertical={true}
                   $idx={i}
+                  $stretch={shouldStretch}
                   onClick={() => onSelectIdea?.(rawToPlane(idea, i, userProfile))}
                 >
                   <CardTitle>{idea.title}</CardTitle>

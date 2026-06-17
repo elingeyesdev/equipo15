@@ -11,6 +11,7 @@ import { extractFacultyFromEmail } from './utils/email-parser.util';
 import { getRoleFromEmail } from './utils/user-metadata.util';
 import { EventsGateway } from '../../infrastructure/events/events.gateway';
 import { normalizeEmail } from '../../common/utils/email-domain.util';
+import { RedisService } from '../../infrastructure/redis/redis.module';
 
 export interface UserResponse extends Omit<User, 'role'> {
   role: string;
@@ -23,6 +24,7 @@ export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly eventsGateway: EventsGateway,
+    private readonly redisService: RedisService,
   ) {}
 
   private handlePrismaError(err: any): never {
@@ -279,6 +281,11 @@ export class UserService {
     }
 
     const updatedUserWithProfile = await this.userRepository.findByUid(firebaseUid);
+    
+    await this.redisService.delByPrefix('public:').catch((err) => {
+      console.warn('Failed to clear public cache:', err);
+    });
+    
     return this.formatUserResponse(updatedUserWithProfile!);
   }
 
@@ -308,6 +315,10 @@ export class UserService {
 
     await this.userRepository.updateStudentProfile(user.id, {
       facultyId,
+    });
+
+    await this.redisService.delByPrefix('public:').catch((err) => {
+      console.warn('Failed to clear public cache:', err);
     });
 
     const updatedUser = await this.userRepository.findByUid(firebaseUid);

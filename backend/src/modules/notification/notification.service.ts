@@ -80,6 +80,30 @@ export class NotificationService {
         `[NOTIF_CREATE_SUCCESS] Notificación guardada en BD. notifId: ${notif.id}`,
       );
 
+      // Clean up old notifications if there are more than 50
+      const MAX_NOTIFICATIONS = 50;
+      const totalNotifs = await this.prisma.notification.count({
+        where: { userId },
+      });
+
+      if (totalNotifs > MAX_NOTIFICATIONS) {
+        const oldNotifs = await this.prisma.notification.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+          skip: MAX_NOTIFICATIONS,
+          select: { id: true },
+        });
+
+        if (oldNotifs.length > 0) {
+          await this.prisma.notification.deleteMany({
+            where: {
+              id: { in: oldNotifs.map((n) => n.id) },
+            },
+          });
+          this.logger.log(`[NOTIF_CLEANUP] Eliminadas ${oldNotifs.length} notificaciones antiguas para userId: ${userId}`);
+        }
+      }
+
       await this.sendRealTimeNotification(userId, {
         id: notif.id,
         type,

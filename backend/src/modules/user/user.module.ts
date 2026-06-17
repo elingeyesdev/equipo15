@@ -4,9 +4,10 @@ import { UserService } from './user.service';
 import { UserRepository } from './user.repository';
 import { IsAllowedDomainConstraint } from '../../common/validators/is-allowed-domain.validator';
 import { AdminModule } from '../admin/admin.module';
+import { RedisModule } from '../../infrastructure/redis/redis.module';
 
 @Module({
-  imports: [forwardRef(() => AdminModule)],
+  imports: [forwardRef(() => AdminModule), RedisModule],
   controllers: [UsersController],
   providers: [UserService, UserRepository, IsAllowedDomainConstraint],
   exports: [UserService, UserRepository],

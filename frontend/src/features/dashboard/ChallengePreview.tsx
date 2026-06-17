@@ -44,6 +44,7 @@ const CardTop = styled.div`
   justify-content: space-between;
   margin-bottom: 12px;
   gap: 12px;
+  padding-right: 60px;
 `;
 
 const CategoryTag = styled.span`
@@ -81,7 +82,15 @@ export const ChallengePreview: React.FC<ChallengePreviewProps> = ({
         <BadgeCorner>NUEVO</BadgeCorner>
       </TopRight>
       <CardTop>
-        <CategoryTag>{category}</CategoryTag>
+        {category ? (
+          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+            {category.split(',').map((cat, idx) => (
+              <CategoryTag key={idx}>{cat.trim()}</CategoryTag>
+            ))}
+          </div>
+        ) : (
+          <CategoryTag>Categoría</CategoryTag>
+        )}
       </CardTop>
       <CardTitle>{title || 'Título del Reto'}</CardTitle>
       <CardMeta>0 ideas enviadas</CardMeta>

@@ -42,6 +42,17 @@ function countWords(value: string): number {
   return value.trim().split(/\s+/).filter(Boolean).length;
 }
 
+const deepEqual = (a: any, b: any): boolean => {
+  if (a === b) return true;
+  if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) return false;
+  const keysA = Object.keys(a), keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  for (const key of keysA) {
+    if (!keysB.includes(key) || !deepEqual(a[key], b[key])) return false;
+  }
+  return true;
+};
+
 export const DEFAULT_CRITERIA: EvaluationCriterion[] = [
   { id: 'desirability', name: 'Deseabilidad', description: 'Valor real para personas o negocio', enabled: false, weight: 33, isOptional: false },
   { id: 'feasibility',  name: 'Factibilidad', description: 'Posibilidad real de implementar', enabled: false, weight: 33, isOptional: false },
@@ -325,7 +336,11 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
   };
 
   const handleBack = () => {
-    if (JSON.stringify(form) !== JSON.stringify(initialForm)) { setShowConfirm(true); return; }
+    if (!deepEqual(form, initialForm)) {
+      setShowConfirm(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     onBack();
   };
 

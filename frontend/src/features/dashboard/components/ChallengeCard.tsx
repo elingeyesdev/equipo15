@@ -48,7 +48,13 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSele
               <S.CardLogo src={challenge.logoUrl} alt={challenge.title} />
             </S.CardLogoWrap>
           )}
-          {challenge.category && <S.CategoryTag>{challenge.category}</S.CategoryTag>}
+          {challenge.category && (
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              {challenge.category.split(',').map((cat: string, idx: number) => (
+                <S.CategoryTag key={idx}>{cat.trim()}</S.CategoryTag>
+              ))}
+            </div>
+          )}
         </S.CardTopLeft>
 
         {isExpired

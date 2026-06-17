@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import * as S from '../styles/AdminStyles';
 import LogoutButton from '../../../dashboard/components/LogoutButton';
+import { resolveDisplayName } from '../../../../utils/user.utils';
 
 interface AdminSidebarProps {
   userProfile: any;
@@ -45,7 +46,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
 
         <S.UserProfileBlock>
           <S.RoleTag>{userProfile?.roleId?.name?.toUpperCase() || userProfile?.role?.toUpperCase()}</S.RoleTag>
-          <S.UserName>{userProfile?.displayName}</S.UserName>
+          <S.UserName>{resolveDisplayName(userProfile)}</S.UserName>
         </S.UserProfileBlock>
 
         <S.SidebarNav>

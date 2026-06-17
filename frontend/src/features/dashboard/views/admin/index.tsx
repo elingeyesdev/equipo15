@@ -107,6 +107,8 @@ const TitleBlock = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
+  flex: 1;
+  min-width: 0;
 `;
 
 const Eyebrow = styled.span`
@@ -128,7 +130,7 @@ const Description = styled.p`
   margin: 0;
   color: #5b6470;
   line-height: 1.6;
-  max-width: 760px;
+  max-width: 100%;
 `;
 
 const SearchInput = styled.input<{ $tooltipText?: string }>`
@@ -157,6 +159,7 @@ const TableWrap = styled.div`
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
+  min-width: 800px;
 `;
 
 const TH = styled.th`

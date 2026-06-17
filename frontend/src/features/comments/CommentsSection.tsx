@@ -5,6 +5,7 @@ import { commentService } from '../../services/comment.service';
 import type { Comment } from '../../types/models';
 import CommentForm from './CommentForm';
 import CommentItem from './CommentItem';
+import { resolveDisplayName } from '../../utils/user.utils';
 import { useAuth } from '../../context/AuthContext';
 import { wallEvents } from '../../hooks/useWallEvents';
 
@@ -529,7 +530,7 @@ export const CommentsSection = ({
       ideaId,
       content,
       userId: userProfile?.id,
-      displayName: userProfile?.displayName || userProfile?.email || 'Tu',
+      displayName: resolveDisplayName(userProfile),
     });
 
     const currentComments = commentsRef.current;
@@ -575,7 +576,7 @@ export const CommentsSection = ({
       content,
       parentCommentId: commentId,
       userId: userProfile?.id,
-      displayName: userProfile?.displayName || userProfile?.email || 'Tu',
+      displayName: resolveDisplayName(userProfile),
     });
 
     const currentComments = commentsRef.current;

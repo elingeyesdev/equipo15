@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import * as S from '../dashboard/styles/LayoutStyles';
 import { Sidebar } from '../dashboard/layout/Sidebar';
+import { resolveDisplayName } from '../../utils/user.utils';
 
 export const EvaluationPanel = () => {
-  const { user, userProfile } = useAuth();
+  const { userProfile } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const firstName = userProfile?.displayName?.split(' ')[0] || user?.displayName?.split(' ')[0] || 'Jurado';
+  const firstName = resolveDisplayName(userProfile).split(' ')[0] || 'Jurado';
 
   return (
     <S.Root>

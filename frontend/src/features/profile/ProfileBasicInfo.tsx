@@ -162,9 +162,9 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
           </FormRow>
         </FieldGrid>
         
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', marginTop: '16px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', marginTop: '16px' }}>
           <div style={{
-            flex: 1,
+            flex: '1 1 250px',
             border: `1px solid ${stateConfig.borderColor}`,
             backgroundColor: stateConfig.bgColor,
             padding: '16px',
@@ -186,7 +186,7 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
             </div>
           </div>
 
-          <SaveBtn onClick={onSave} disabled={saving || readOnlyMode} data-tooltip={readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Perfil'} data-tooltip-position="top" style={{ alignSelf: 'center', marginTop: 0 }}>
+          <SaveBtn onClick={onSave} disabled={saving || readOnlyMode} data-tooltip={readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Perfil'} data-tooltip-position="top" style={{ alignSelf: 'center', marginTop: 0, flex: '0 0 auto', width: 'auto' }}>
             {saving ? 'Guardando...' : readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Perfil'}
           </SaveBtn>
         </div>

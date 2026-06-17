@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 import { Pista8Theme, breakpoints } from '../../../config/theme';
 import { fadeUp } from './CommonStyles';
@@ -195,6 +195,7 @@ export const SplitGrid = styled.div`
 
   @media (max-width: ${breakpoints.tablet}) {
     grid-template-columns: 1fr;
+    height: auto !important;
   }
 
   @media (max-width: ${breakpoints.small}) {
@@ -276,20 +277,34 @@ export const DetailBadgeRow = styled.div`
 
 export const DetailStatusBadge = styled.span<{ $active?: boolean }>`
   font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  ${p => p.$active ? `
-    color: ${Pista8Theme.success};
-    background: ${Pista8Theme.success}14;
-    border: 1px solid ${Pista8Theme.success}30;
-  ` : `
-    color: #9ca3af;
-    background: rgba(156,163,175,0.1);
-    border: 1px solid rgba(156,163,175,0.2);
+  gap: 6px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: ${p => p.$active ? '#059669' : '#6b7280'};
+  }
+
+  ${p => p.$active ? css`
+    color: #059669;
+    background: rgba(5, 150, 105, 0.06);
+    border: 1.5px solid rgba(5, 150, 105, 0.2);
+    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.03);
+  ` : css`
+    color: #6b7280;
+    background: rgba(107, 114, 128, 0.06);
+    border: 1.5px solid rgba(107, 114, 128, 0.2);
+    box-shadow: 0 2px 4px rgba(107, 114, 128, 0.03);
   `}
 `;
 
@@ -308,18 +323,15 @@ export const DetailTitle = styled.h2`
 `;
 
 export const DetailFaculty = styled.span`
-  font-size: 10.5px;
-  font-weight: 800;
+  font-size: 11.5px;
+  font-weight: 700;
   color: ${Pista8Theme.primary};
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  background: ${Pista8Theme.primary}0d;
-  padding: 5px 14px;
-  border-radius: 20px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  border: 1px solid ${Pista8Theme.primary}20;
+  flex-wrap: wrap;
 `;
 
 export const DetailDescription = styled.p`

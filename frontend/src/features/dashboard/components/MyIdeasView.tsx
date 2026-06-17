@@ -12,6 +12,7 @@ import * as S from './MyIdeasStyles';
 import IdeaDetailModal from '@/features/sky-wall/components/IdeaDetailModal';
 import Pista8Logo from '@/components/icons/Pista8Logo';
 import type { PlaneIdea } from '@/features/sky-wall/types';
+import { resolveDisplayName } from '@/utils/user.utils';
 
 const MyIdeasView: React.FC = () => {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ const MyIdeasView: React.FC = () => {
     onlyMyIdeas: false,
   });
 
-  const resolvedName = userProfile?.displayName || 'Participante';
+  const resolvedName = resolveDisplayName(userProfile);
   const roleName = (userProfile?.roleInfo?.name || userProfile?.role || 'STUDENT').toLowerCase();
   const roleLabels: Record<string, string> = {
     student: 'participante',

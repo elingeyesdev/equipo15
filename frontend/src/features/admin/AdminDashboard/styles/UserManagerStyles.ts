@@ -131,7 +131,8 @@ export const TableCard = styled.div`
   background: white;
   border-radius: 20px;
   border: 1px solid rgba(72, 80, 84, 0.08);
-  overflow: hidden;
+  overflow-x: auto;
+  max-width: 100%;
   box-shadow: 0 4px 24px rgba(72, 80, 84, 0.06);
 `;
 

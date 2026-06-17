@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import * as S from '../styles/AdminStyles';
 import { Pista8Theme } from '../../../../config/theme';
 import { FACULTIES, getFacultySlug } from '../../../../config/faculties';
+import { resolveDisplayName } from '../../../../utils/user.utils';
 import { facultiesService, formatFacultyLabel } from '@/services/faculties.service';
 import type { FacultyCatalogItem } from '@/types/models';
 
@@ -92,7 +93,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
             <S.PreviewHead>
               <S.PreviewGrid />
               <S.PreviewRoleTag>
-                {(userProfile?.displayName || 'USUARIO')?.toUpperCase()} LANZA
+                {(resolveDisplayName(userProfile) || 'USUARIO')?.toUpperCase()} LANZA
               </S.PreviewRoleTag>
               <S.PreviewTitle>{formData.title || 'Título del Reto'}</S.PreviewTitle>
             </S.PreviewHead>

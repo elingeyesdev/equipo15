@@ -357,42 +357,31 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <FieldGroup style={{ marginBottom: 0 }}>
               <Label $locked={locked('core')}>
-                Áreas de interés
+                Área de interés
                 {locked('core') && <LockedBadge>No editable</LockedBadge>}
               </Label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-                {(dbFaculties.length > 0 ? dbFaculties.filter((f: any) => f.name !== 'Todas') : FACULTIES).map((f: any) => {
-                  const sel = form.facultyIds?.includes(f.id);
-                  return (
-                    <button
-                      key={f.id}
-                      type="button"
-                      disabled={locked('core')}
-                      onClick={() => {
-                        if (locked('core')) return;
-                        const next = sel
-                          ? form.facultyIds.filter(id => id !== f.id)
-                          : [...form.facultyIds, f.id];
-                        updateField('facultyIds', next);
-                      }}
-                      style={{
-                        padding: '6px 14px',
-                        borderRadius: 999,
-                        border: `1.5px solid ${sel ? Pista8Theme.primary : 'rgba(72,80,84,0.15)'}`,
-                        background: sel ? Pista8Theme.primary : 'white',
-                        color: sel ? 'white' : '#485054',
-                        fontSize: 12,
-                        fontWeight: 700,
-                        cursor: locked('core') ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.15s',
-                        opacity: locked('core') && !sel ? 0.6 : 1,
-                      }}
-                    >
-                      {f.name.startsWith('Facultad') ? f.name : `Facultad de ${f.name}`}
-                    </button>
-                  );
-                })}
-              </div>
+              <InputWrapper>
+                <InputField
+                  as="select"
+                  disabled={locked('core')}
+                  value={form.facultyIds && form.facultyIds.length > 0 ? form.facultyIds[0] : ''}
+                  onChange={(e: any) => {
+                    const val = e.target.value;
+                    updateField('facultyIds', val === '' ? [] : [val]);
+                  }}
+                  style={{ cursor: locked('core') ? 'not-allowed' : 'pointer', appearance: 'auto' }}
+                >
+                  <option value="">Todas las áreas</option>
+                  {(dbFaculties.length > 0 ? dbFaculties.filter((f: any) => f.name !== 'Todas') : FACULTIES).map((f: any) => {
+                    const label = f.name.replace(/^Facultad de\s+/i, '');
+                    return (
+                      <option key={f.id} value={f.id}>
+                        {label}
+                      </option>
+                    );
+                  })}
+                </InputField>
+              </InputWrapper>
             </FieldGroup>
 
             <div style={{ display: 'flex', gap: 12, width: '100%' }}>
@@ -460,9 +449,8 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               )}
 
               {!form.evaluationCriteria.some(c => c.enabled) && (
-                <div style={{ background: 'rgba(72,80,84,0.05)', border: '1px dashed rgba(72,80,84,0.25)', borderRadius: 10, padding: 12, marginBottom: 14, fontSize: 12, color: '#485054', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 16 }}>ℹ️</span>
-                  <span><strong>Reparto automático por defecto:</strong> Al no habilitar ningún criterio, el sistema aplicará automáticamente: Deseabilidad (33%), Factibilidad (33%) y Alineación (34%).</span>
+                <div style={{ background: '#f8fafc', borderLeft: `3px solid ${Pista8Theme.primary}`, borderRadius: '0 8px 8px 0', padding: '10px 14px', marginBottom: 14, fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+                  Al no habilitar ningún criterio, el sistema aplicará un reparto automático: Deseabilidad (33%), Factibilidad (33%) y Alineación (34%).
                 </div>
               )}
 

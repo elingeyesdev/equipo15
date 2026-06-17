@@ -8,7 +8,7 @@ interface ShareProps {
 
 const ShareChallenge = ({ token }: ShareProps) => {
   const [copied, setCopied] = useState(false);
-  const shareUrl = `${window.location.origin}/reto/privado/${token}`;
+  const shareUrl = `${import.meta.env.VITE_APP_URL || 'https://pista8-f8e6e.web.app'}/reto/privado/${token}`;
 
   const copyToClipboard = async () => {
     try {

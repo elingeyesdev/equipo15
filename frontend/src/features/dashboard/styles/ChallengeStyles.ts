@@ -158,7 +158,9 @@ export const ChallengeCard = styled.div<{ $active: boolean }>`
     : '0 8px 24px rgba(0,0,0,0.04)'};
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  min-height: 160px;
+  gap: 12px;
 
   &:hover {
     border-color: ${p => p.$active ? Pista8Theme.primary : 'rgba(72,80,84,0.18)'};
@@ -213,6 +215,7 @@ export const CardTopRow = styled.div`
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 10px;
+  padding-right: 60px;
 `;
 
 export const CardTopLeft = styled.div`
@@ -227,10 +230,16 @@ export const CategoryTag = styled.span`
   font-size: 11px;
   font-weight: 700;
   color: ${Pista8Theme.primary};
-  background: ${Pista8Theme.primary}14;
-  padding: 4px 10px;
-  border-radius: 6px;
-  letter-spacing: 0.02em;
+  background: rgba(254, 65, 10, 0.06);
+  border: 1.5px solid rgba(254, 65, 10, 0.18);
+  padding: 5px 12px;
+  border-radius: 8px;
+  letter-spacing: 0.03em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(254, 65, 10, 0.03);
+  transition: all 0.2s ease;
 `;
 
 export const StatusBadge = styled.span<{ expired?: boolean }>`
@@ -241,6 +250,10 @@ export const StatusBadge = styled.span<{ expired?: boolean }>`
   padding: 4px 10px;
   border-radius: 6px;
   border: 1px solid ${p => p.expired ? `${Pista8Theme.error}30` : `${Pista8Theme.primary}30`};
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
 `;
 
 
@@ -286,6 +299,7 @@ export const CardBottomRow = styled.div`
   justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
+  margin-top: auto;
 
   @media (max-width: ${breakpoints.small}) {
     flex-direction: column;
@@ -406,8 +420,8 @@ export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?:
     flex: 1;
     min-height: 0;
     height: ${p.$visibleLimit === 4 ? 'calc(100% - 50px)' : 'auto'};
-    max-height: ${p.$visibleLimit === 1 ? '200px' : p.$visibleLimit === 4 ? '100%' : '414px'};
-    overflow-y: ${p.$cardCount && p.$visibleLimit && p.$cardCount > p.$visibleLimit ? 'auto' : 'hidden'};
+    max-height: 100%;
+    overflow-y: auto;
     padding-right: 6px;
 
     ${p.$visibleLimit === 4 && p.$podiumCount === 3 ? `
@@ -419,7 +433,8 @@ export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?:
       }
     ` : `
       > * {
-        height: 200px;
+        height: auto;
+        min-height: 220px;
         flex-shrink: 0;
       }
     `}

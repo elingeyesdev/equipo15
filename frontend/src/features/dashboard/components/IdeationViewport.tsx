@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
 import SkyCanvas from '../../../features/sky-wall';
 import * as S from '../styles/LayoutStyles';
+import { CategoryTag } from '../styles/ChallengeStyles';
 import ChallengeList from './ChallengeList';
 import StatsPanel from './StatsPanel';
 import OmniSearchBar from './OmniSearchBar';
@@ -82,7 +83,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
     ? (() => {
         const facs = (ds.selectedChallenge as any).faculties;
         if (Array.isArray(facs) && facs.length > 0) {
-          return facs.map((f: any) => f.name.startsWith('Facultad') ? f.name : `Facultad de ${f.name}`).join(', ');
+          return facs.map((f: any) => f.name.replace(/^Facultad de /i, '')).join(', ');
         }
         return ds.selectedChallenge.facultyId
           ? getFacultyName(ds.selectedChallenge.facultyId, ds.selectedChallenge.faculty?.name)
@@ -143,14 +144,13 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
         <>
           <S.ChallengeDetailCard id="challenge-detail" as={motion.div} layout initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
             <S.DetailCardBody>
-              <S.DetailBadgeRow>
+              <S.DetailBadgeRow style={{ flexDirection: 'column', gap: '12px', width: '100%' }}>
                 {facultyLabel && (
-                  <S.DetailFaculty>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                    </svg>
-                    {facultyLabel}
-                  </S.DetailFaculty>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                    {facultyLabel.split(',').map((cat: string, idx: number) => (
+                      <CategoryTag key={idx} style={{ padding: '6px 12px', fontSize: '11px' }}>{cat.trim()}</CategoryTag>
+                    ))}
+                  </div>
                 )}
                 {challengeStatus && (
                   <S.DetailStatusBadge $active={challengeStatus.active}>
@@ -242,7 +242,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
 
           {!showAllIdeas ? (
             <>
-              <S.SplitGrid style={{ marginTop: '24px', alignItems: 'stretch', height: visibleLimit === 1 ? '340px' : '600px' }}>
+              <S.SplitGrid style={{ marginTop: '24px', alignItems: 'stretch', height: visibleLimit === 1 ? '480px' : '750px' }}>
                 {ds.sortOrder && (
                   <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <IdeasChronologicalList
