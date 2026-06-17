@@ -459,7 +459,6 @@ export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?:
     flex: 1;
     height: 100%;
     > * { 
-      flex: 1; 
       ${CardLogoWrap} {
         height: 54px;
         min-width: 54px;

@@ -242,7 +242,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
 
           {!showAllIdeas ? (
             <>
-              <S.SplitGrid style={{ marginTop: '24px', alignItems: 'stretch', height: visibleLimit === 1 ? '480px' : '750px' }}>
+              <S.SplitGrid style={{ marginTop: '24px' }}>
                 {ds.sortOrder && (
                   <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                     <IdeasChronologicalList
@@ -301,7 +301,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                 )}
               </S.FullWidthContainer>
 
-              <S.SplitGrid style={{ marginTop: '24px', alignItems: 'stretch' }}>
+              <S.SplitGrid style={{ marginTop: '24px' }}>
                 <ChallengeList
                     loading={ds.loading}
                     challenges={ds.challenges}

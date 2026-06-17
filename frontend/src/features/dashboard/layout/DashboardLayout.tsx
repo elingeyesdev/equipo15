@@ -34,13 +34,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
   const resolvedName = resolveDisplayName(userProfile);
 
-  const roleName: string = (userProfile?.roleInfo?.name || userProfile?.role || '').toLowerCase();
-  const roleLabels: Record<string, string> = {
-    admin: 'administrador',
-    company: 'empresa',
-    judge: 'jurado',
-  };
-  const userRole = roleLabels[roleName] || 'usuario';
+
 
   return (
     <S.Root>
@@ -81,7 +75,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <Pista8Logo fill="#1a1f22" accent="#FE410A" />
             <S.WelcomeZone>
-              <S.Greeting>Hola, {userRole} <span>{resolvedName}</span></S.Greeting>
+              <S.Greeting>Hola, <span>{resolvedName}</span></S.Greeting>
               <S.Sub>{pageTitle}</S.Sub>
             </S.WelcomeZone>
           </div>

@@ -17,7 +17,7 @@ export const EvaluationPanel = () => {
       <S.Page>
         <S.Header>
           <S.WelcomeZone>
-            <S.Greeting>Panel de Evaluación <span>{firstName}</span></S.Greeting>
+            <S.Greeting>Hola, <span>{firstName}</span></S.Greeting>
             <S.Sub>Revisión y calificación de propuestas del Hub.</S.Sub>
           </S.WelcomeZone>
 

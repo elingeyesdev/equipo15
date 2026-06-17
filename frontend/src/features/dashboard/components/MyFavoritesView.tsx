@@ -30,14 +30,7 @@ const MyFavoritesView: React.FC = () => {
   });
 
   const resolvedName = resolveDisplayName(userProfile);
-  const roleName = (userProfile?.roleInfo?.name || userProfile?.role || 'STUDENT').toLowerCase();
-  const roleLabels: Record<string, string> = {
-    student: 'participante',
-    admin: 'administrador',
-    company: 'empresa',
-    judge: 'jurado',
-  };
-  const userRole = roleLabels[roleName] || 'participante';
+
 
   const sortedIdeas = React.useMemo(() => {
     const list = [...ideas];
@@ -94,7 +87,7 @@ const MyFavoritesView: React.FC = () => {
             <Pista8Logo fill="#1a1f22" accent="#FE410A" />
             <S.TitleContainer>
               <S.Title>
-                Hola, {userRole} <span>{resolvedName}</span>
+                Hola, <span>{resolvedName}</span>
               </S.Title>
               <S.Subtitle>
                 Mis Favoritos

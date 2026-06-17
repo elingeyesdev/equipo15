@@ -184,7 +184,7 @@ export const HamburgerBtn = styled.button`
 export const SplitGrid = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: stretch;
+  align-items: start;
   gap: 1.5rem;
   margin-bottom: 1.5rem;
   animation: ${fadeUp} 0.4s 0.1s ease both;
