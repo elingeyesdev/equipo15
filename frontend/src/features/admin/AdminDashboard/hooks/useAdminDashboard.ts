@@ -55,7 +55,7 @@ export const useAdminDashboard = () => {
     endDate: defaultEnd,
     isPrivate: false,
     token: '',
-    facultyId: 0
+    facultyIds: [] as string[]
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string | null>>({});
@@ -168,7 +168,7 @@ export const useAdminDashboard = () => {
 
     setSaving(true);
     try {
-      const payload: Partial<Challenge> & { authorId?: string; id?: string; publicationDate?: string } = {
+      const payload: Partial<Challenge> & { authorId?: string; id?: string; publicationDate?: string; facultyIds?: string[] } = {
         title: formData.title,
         problemDescription: formData.description || undefined,
         companyContext: formData.companyContext || undefined,
@@ -176,7 +176,7 @@ export const useAdminDashboard = () => {
         startDate: formData.startDate ? new Date(formData.startDate).toISOString() : undefined,
         publicationDate: status === 'Activo' ? new Date().toISOString() : undefined,
         isPrivate: formData.isPrivate,
-        facultyId: formData.facultyId === 0 ? undefined : formData.facultyId,
+        facultyIds: formData.facultyIds.length > 0 ? formData.facultyIds : undefined,
         status: status
       };
 
@@ -200,7 +200,7 @@ export const useAdminDashboard = () => {
           endDate: defaultEnd,
           isPrivate: false,
           token: '',
-          facultyId: 0
+          facultyIds: []
         });
       }
       

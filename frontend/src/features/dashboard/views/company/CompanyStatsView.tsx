@@ -14,6 +14,7 @@ import {
   YAxis,
 } from 'recharts';
 import { Pista8Theme, breakpoints } from '../../../../config/theme';
+import { ModalContentSkeleton } from '../../../../components/SkeletonLoaders';
 import { challengeService } from '../../../../services/challenge.service';
 import type { CompanyChallengeOption } from '../../../../services/challenge.service';
 import type {
@@ -142,7 +143,7 @@ const KpiCard = styled.article<{ $compact?: boolean }>`
 const KpiLabel = styled.p`
   margin: 0 0 8px;
   color: ${colors.textMuted};
-  font-size: 12px;
+  font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -151,7 +152,7 @@ const KpiLabel = styled.p`
 const KpiValue = styled.h3`
   margin: 0;
   color: ${colors.textMain};
-  font-size: 28px;
+  font-size: 20px;
   line-height: 1;
 `;
 
@@ -185,15 +186,6 @@ const ChartTitle = styled.h4`
   color: ${Pista8Theme.secondary};
   font-size: 15px;
   font-weight: 800;
-`;
-
-const LoadingState = styled.div`
-  display: grid;
-  place-items: center;
-  min-height: 280px;
-  color: ${colors.textMuted};
-  font-size: 14px;
-  font-weight: 600;
 `;
 
 const ErrorState = styled.div`
@@ -552,7 +544,7 @@ export const CompanyStatsView = () => {
   if (loading) {
     return (
       <Container>
-        <LoadingState>Cargando graficas de innovacion...</LoadingState>
+        <ModalContentSkeleton rows={8} />
       </Container>
     );
   }
@@ -693,10 +685,10 @@ export const CompanyStatsView = () => {
         </KpiCard>
 
         <KpiCard>
-          <KpiLabel>Facultad lider</KpiLabel>
+          <KpiLabel>Área líder</KpiLabel>
           <KpiValue>{stats.kpis.leadingFaculty?.facultyName ?? 'Sin datos'}</KpiValue>
           <KpiHint>
-            {stats.kpis.leadingFaculty ? `${stats.kpis.leadingFaculty.ideasCount} idea${stats.kpis.leadingFaculty.ideasCount === 1 ? '' : 's'} publicadas` : 'Aun no hay facultad destacada.'}
+            {stats.kpis.leadingFaculty ? `${stats.kpis.leadingFaculty.ideasCount} idea${stats.kpis.leadingFaculty.ideasCount === 1 ? '' : 's'} publicadas` : 'Aun no hay área destacada.'}
           </KpiHint>
         </KpiCard>
       </KpiGrid>

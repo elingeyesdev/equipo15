@@ -18,6 +18,7 @@ import type { RawIdea } from '../../../features/sky-wall/types';
 import type { Challenge } from '../../../types/models';
 import { resolveDisplayName } from '../../../utils/user.utils';
 import { getFacultyName } from '../../../config/faculties';
+import { useNavigate } from 'react-router-dom';
 
 interface IdeationViewportProps {
   ds: any;
@@ -77,6 +78,11 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
   }
 
   const resolvedName = resolveDisplayName(userProfile as any);
+  const navigate = useNavigate();
+
+  const roleName = (userProfile?.roleInfo?.name || userProfile?.role || '').toLowerCase();
+  const isStudent = roleName === 'student' || roleName === 'participante';
+  const isProfileIncomplete = isStudent && (!userProfile?.institucion_educativa || !userProfile?.ocupacion_laboral);
 
   const challengeStatus = ds.selectedChallenge ? getStatusLabel(ds.selectedChallenge.status) : null;
   const facultyLabel = ds.selectedChallenge
@@ -130,13 +136,6 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
             onChange={ds.setSearchQuery}
           />
           <NotificationBell />
-          <S.HamburgerBtn onClick={() => ds.setSidebarOpen(true)}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" />
-              <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" />
-              <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" />
-            </svg>
-          </S.HamburgerBtn>
         </div>
       </S.Header>
 
@@ -194,7 +193,13 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                 </div>
               ) : (
                 <>
-                  <S.RespondBtn onClick={() => ds.handleOpenForm(ds.selectedChallenge, formResetForm)}>
+                  <S.RespondBtn onClick={() => {
+                    if (isProfileIncomplete) {
+                      navigate('/dashboard/perfil');
+                    } else {
+                      ds.handleOpenForm(ds.selectedChallenge, formResetForm);
+                    }
+                  }}>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                       <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
                     </svg>
@@ -272,6 +277,8 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                     userFacultyId={userProfile?.facultyId}
                     forceColumn
                     visibleChallengesLimit={visibleLimit}
+                    isProfileIncomplete={isProfileIncomplete}
+                    onCompleteProfile={() => navigate('/dashboard/perfil')}
                   />
                 </div>
               </S.SplitGrid>
@@ -317,6 +324,8 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                     userFacultyId={userProfile?.facultyId}
                     forceColumn
                     visibleChallengesLimit={4}
+                    isProfileIncomplete={isProfileIncomplete}
+                    onCompleteProfile={() => navigate('/dashboard/perfil')}
                   />
                 <StatsPanel
                   selectedChallenge={ds.selectedChallenge}
@@ -330,11 +339,17 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
           )}
         </>
       ) : (
-        <S.SplitGrid>
-          <div>
+        <div className="ideation-split" style={{ display: 'grid', gap: '32px', alignItems: 'stretch', width: '100%' }}>
+          <style>{`
+            .ideation-split { grid-template-columns: 1fr; }
+            @media (min-width: 1024px) {
+              .ideation-split { grid-template-columns: 1fr 1fr; }
+            }
+          `}</style>
+          <div style={{ width: '100%' }}>
             <InnovationStepsPanel />
           </div>
-          <div>
+          <div style={{ width: '100%', height: '100%' }}>
             <ChallengeList
               loading={ds.loading}
               challenges={ds.challenges}
@@ -348,11 +363,12 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
               onClearSelection={ds.clearSelectedChallenge}
               searchQuery={ds.debouncedSearch}
               userFacultyId={userProfile?.facultyId}
-              forceColumn
-              visibleChallengesLimit={visibleLimit}
+              forceColumn={true}
+              isProfileIncomplete={isProfileIncomplete}
+              onCompleteProfile={() => navigate('/dashboard/perfil')}
             />
           </div>
-        </S.SplitGrid>
+        </div>
       )}
     </S.Page>
   );

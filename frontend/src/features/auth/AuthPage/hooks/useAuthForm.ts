@@ -3,10 +3,10 @@ import { authService } from '../../../../services/auth.service';
 import { useAuth } from '../../../../context/AuthContext';
 
 export const useAuthForm = () => {
-  const { user, userProfile, refetchProfile, setSuppressAuth } = useAuth();
+  const { user, userProfile, refetchProfile, setSuppressAuth, impersonationSession, loading: authLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ email: '', password: '', name: '', phone: '' });
-  const isGoogleCompletingProfile = user !== null && userProfile === null;
+  const isGoogleCompletingProfile = user !== null && userProfile === null && !impersonationSession && !authLoading && user.providerData.some(p => p.providerId === 'google.com');
   const [isLinkingAccount, setIsLinkingAccount] = useState(false);
   const [pendingGoogleCredential, setPendingGoogleCredential] = useState<any>(null);
   const [googleEmail, setGoogleEmail] = useState('');
@@ -299,5 +299,6 @@ export const useAuthForm = () => {
     handleCompleteGoogleRegistration,
     handleLinkGoogleAccount,
     handleCancelGoogleFlow,
+    userProfile,
   };
 };

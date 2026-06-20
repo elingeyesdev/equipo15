@@ -3,6 +3,8 @@ import { useAuthForm } from './hooks/useAuthForm';
 import * as S from './styles/AuthStyles';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
+import Pista8Logo from '../../../components/icons/Pista8Logo';
+
 
 const AuthPage = () => {
   const {
@@ -10,7 +12,8 @@ const AuthPage = () => {
     clearError, clearSuccess, handleSubmit, handleGoogleLogin,
     passwordChecks, isFormValid, fieldHints, isResetMode, setIsResetMode, handleResetPassword,
     isGoogleCompletingProfile, isLinkingAccount, googleEmail,
-    handleCompleteGoogleRegistration, handleLinkGoogleAccount, handleCancelGoogleFlow
+    handleCompleteGoogleRegistration, handleLinkGoogleAccount, handleCancelGoogleFlow,
+    userProfile
   } = useAuthForm();
 
   const [showPass, setShowPass] = useState(false);
@@ -99,14 +102,7 @@ const AuthPage = () => {
 
       <S.Card>
         <S.LogoWrap>
-          <S.LogoSvg viewBox="0 0 280 72" xmlns="http://www.w3.org/2000/svg">
-            <text x="0" y="60" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="64" fill="#485054" letterSpacing="-2">PIST</text>
-            <polygon points="186,7 202,40 195,40 195,62 179,62 179,40 172,40" fill="#FE410A" />
-            <rect x="181" y="65" width="5" height="8" rx="2" fill="#FE410A" />
-            <rect x="189" y="65" width="5" height="8" rx="2" fill="#FE410A" />
-            <rect x="197" y="65" width="5" height="8" rx="2" fill="#FE410A" />
-            <text x="209" y="60" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="64" fill="#485054">8</text>
-          </S.LogoSvg>
+          <Pista8Logo width={180} />
         </S.LogoWrap>
 
         <S.SepLine />
@@ -141,6 +137,25 @@ const AuthPage = () => {
                   </S.SwitchBtn>
                 </S.SwitchRow>
               </S.Form>
+            </motion.div>
+          ) : !!sessionStorage.getItem('pista8_impersonation') && userProfile === null ? (
+            <motion.div
+              key="impersonation-error"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h3 style={{ fontSize: 20, fontWeight: 800, color: '#1a1f22', marginBottom: 12, textAlign: 'center' }}>Perfil Incompleto</h3>
+              <p style={{ fontSize: 13, color: '#5f6368', marginBottom: 24, textAlign: 'center', lineHeight: 1.5 }}>
+                El usuario que intentas impersonar no ha finalizado su registro institucional, por lo que su perfil no puede ser cargado en modo espejo.
+              </p>
+              <S.BtnMain type="button" onClick={() => {
+                sessionStorage.removeItem('pista8_impersonation');
+                window.location.href = '/admin';
+              }}>
+                Cerrar Modo Espejo
+              </S.BtnMain>
             </motion.div>
           ) : isGoogleCompletingProfile ? (
             <motion.div

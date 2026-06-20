@@ -12,22 +12,22 @@ export const Root = styled.div`
 `;
 
 export const Page = styled.div`
-  padding: 2.5rem 4%;
+  padding: 2.5rem 4% 100px;
   max-width: 1400px;
   margin: 0 auto;
   box-sizing: border-box;
   width: 100%;
 
   @media (min-width: 1025px) {
-    padding: 2.5rem calc(2% + 300px) 2.5rem 4%;
+    padding: 2.5rem 4% 2.5rem calc(2% + 300px);
   }
 
   @media (max-width: ${breakpoints.mobile}) {
-    padding: 1.5rem 3%;
+    padding: 1.5rem 3% 90px;
   }
 
   @media (max-width: ${breakpoints.small}) {
-    padding: 1rem 2.5%;
+    padding: 1rem 2.5% 80px;
   }
 `;
 
@@ -159,28 +159,9 @@ export const Sub = styled.p`
     font-size: 12px;
   }
 `;
-
 export const HamburgerBtn = styled.button`
-  width: 44px;
-  height: 44px;
-  background: white;
-  border: 1px solid rgba(72,80,84,0.1);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: ${Pista8Theme.secondary};
-  cursor: pointer;
-  transition: border-color 0.18s, color 0.18s, transform 0.12s;
-  flex-shrink: 0;
-  &:hover { border-color: ${Pista8Theme.primary}; color: ${Pista8Theme.primary}; transform: scale(1.04); }
-  &:active { transform: scale(0.96); }
-
-  @media (min-width: 1025px) {
-    display: none;
-  }
+  display: none;
 `;
-
 export const SplitGrid = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

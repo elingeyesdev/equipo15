@@ -27,6 +27,15 @@ const getRemainingText = (endDateStr?: string): { text: string; urgent: boolean 
   return { text: `Cierra en ${minutes} min`, urgent: true };
 };
 
+const getHueForCategory = (category?: string) => {
+  if (!category) return 0;
+  let hash = 0;
+  for (let i = 0; i < category.length; i++) {
+    hash = category.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % 360;
+};
+
 const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSelect, onRespond }) => {
   const [commentsCount, setCommentsCount] = useState(challenge.commentsCount || 0);
   const closeDate = challenge.endDate || challenge.submissionsCloseAt;
@@ -37,6 +46,8 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSele
     setCommentsCount(challenge.commentsCount || 0);
   }, [challenge.commentsCount]);
 
+  const hueRotate = getHueForCategory(challenge.category);
+
   return (
     <S.ChallengeCard $active={active} onClick={() => onSelect()} role="button">
       {active && <S.ActiveBar />}
@@ -45,7 +56,11 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSele
         <S.CardTopLeft>
           {challenge.logoUrl && (
             <S.CardLogoWrap>
-              <S.CardLogo src={challenge.logoUrl} alt={challenge.title} />
+              <S.CardLogo 
+                src={challenge.logoUrl} 
+                alt={challenge.title} 
+                style={challenge.logoUrl?.includes('avion') ? { filter: `hue-rotate(${hueRotate}deg)` } : undefined}
+              />
             </S.CardLogoWrap>
           )}
           {challenge.category && (

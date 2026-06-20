@@ -111,9 +111,10 @@ export class ChallengeRepository {
         include: {
           faculties: true,
           _count: {
-            select: { ideas: true },
+            select: { ideas: { where: { deletedAt: null } } },
           },
           ideas: {
+            where: { deletedAt: null },
             select: { likesCount: true, commentsCount: true },
           },
         },

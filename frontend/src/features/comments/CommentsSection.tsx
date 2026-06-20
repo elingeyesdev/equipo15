@@ -8,6 +8,7 @@ import CommentItem from './CommentItem';
 import { resolveDisplayName } from '../../utils/user.utils';
 import { useAuth } from '../../context/AuthContext';
 import { wallEvents } from '../../hooks/useWallEvents';
+import { CommentSkeleton } from '../../components/SkeletonLoaders';
 
 interface CommentsSectionProps {
   ideaId: string;
@@ -102,14 +103,13 @@ const Meta = styled.span`
   white-space: nowrap;
 `;
 
-const LoadingState = styled.div`
-  padding: 18px;
-  border-radius: 18px;
-  background: rgba(72, 80, 84, 0.04);
-  color: #8a92a5;
-  font-size: 14px;
-  font-weight: 600;
-`;
+const CommentsSkeleton = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    <CommentSkeleton />
+    <CommentSkeleton />
+    <CommentSkeleton />
+  </div>
+);
 
 const ErrorState = styled.div`
   padding: 18px;
@@ -735,8 +735,7 @@ export const CommentsSection = ({
 
       {submitSuccess && <SuccessState>{submitSuccess}</SuccessState>}
 
-      {isLoading && <LoadingState>Cargando comentarios...</LoadingState>}
-
+      {isLoading && <CommentsSkeleton />}
       {!isLoading && error && <ErrorState>{error}</ErrorState>}
 
       {!isLoading && !error && comments.length === 0 && (

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axiosInstance from '../../api/axiosConfig';
 import NotFoundPage from '../../components/errors/NotFoundPage';
+import { ModalContentSkeleton } from '../../components/SkeletonLoaders';
 import { useAuth } from '../../context/AuthContext';
 
 const PrivateChallengeLoader = () => {
@@ -31,7 +32,7 @@ const PrivateChallengeLoader = () => {
   }, [token, user]);
 
   if (error) return <NotFoundPage />;
-  if (!challenge) return <div>Cargando reto...</div>;
+  if (!challenge) return <div style={{ maxWidth: 600, margin: '40px auto', padding: '0 20px' }}><ModalContentSkeleton rows={5} /></div>;
 
   return (
     <div>

@@ -39,7 +39,7 @@ const styles = {
     justifyContent: 'center',
     width: '100%',
     height: '100%',
-    padding: '36px 28px',
+    padding: '12px 28px',
     gap: '24px',
     boxSizing: 'border-box' as const,
   },

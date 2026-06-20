@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes, css } from 'styled-components';
-import { Loader2 } from 'lucide-react';
+
 import { notificationService } from '@/services/notification.service';
 import type { Notification } from '@/services/notification.service';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '@/hooks/useSocket';
 import { useAuth } from '@/context/AuthContext';
+
+import { NotificationListSkeleton } from '@/components/SkeletonLoaders';
 
 
 const Container = styled.div`
@@ -129,6 +131,7 @@ const NotificationItem = styled.div<{ $unread: boolean }>`
   cursor: pointer;
   background: ${({ $unread }) => ($unread ? '#f8fafc' : 'white')};
   transition: background 0.2s;
+  position: relative;
 
   &:hover {
     background: #f1f5f9;
@@ -136,6 +139,27 @@ const NotificationItem = styled.div<{ $unread: boolean }>`
 
   &:last-child {
     border-bottom: none;
+  }
+`;
+
+const DeleteButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f1f5f9;
+    color: #ef4444;
   }
 `;
 
@@ -269,6 +293,19 @@ export const NotificationBell: React.FC = () => {
     }
   };
 
+  const handleDeleteNotification = async (e: React.MouseEvent, notif: Notification) => {
+    e.stopPropagation();
+    try {
+      await notificationService.delete(notif.id);
+      setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+      if (!notif.readAt) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Error deleting notification', error);
+    }
+  };
+
   return (
     <Container ref={dropdownRef}>
       <BellButton $hasUnread={unreadCount > 0} onClick={() => setOpen(!open)}>
@@ -279,9 +316,7 @@ export const NotificationBell: React.FC = () => {
       <Dropdown $open={open}>
         <Header>Notificaciones</Header>
         {loading ? (
-          <EmptyState>
-            <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
-          </EmptyState>
+          <NotificationListSkeleton count={3} />
         ) : !Array.isArray(notifications) || notifications.length === 0 ? (
           <EmptyState>No tienes notificaciones.</EmptyState>
         ) : (
@@ -292,7 +327,16 @@ export const NotificationBell: React.FC = () => {
                 $unread={!notif.readAt}
                 onClick={() => handleNotificationClick(notif)}
               >
-                <NotificationTitle>{notif.title}</NotificationTitle>
+                <DeleteButton 
+                  onClick={(e) => handleDeleteNotification(e, notif)}
+                  title="Eliminar notificación"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </DeleteButton>
+                <NotificationTitle style={{ paddingRight: '20px' }}>{notif.title}</NotificationTitle>
                 <NotificationBody>{notif.body}</NotificationBody>
                 <NotificationTime>
                   {new Date(notif.createdAt).toLocaleDateString('es-ES', {

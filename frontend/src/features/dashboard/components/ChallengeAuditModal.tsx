@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
-import { ClipboardList, Loader2, X } from 'lucide-react';
+import { ClipboardList, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Pista8Theme } from '@/config/theme';
 import { adminService } from '@/services/admin.service';
 import { AdminIdeaUnifiedModal } from './admin/AdminIdeaUnifiedModal';
+import { AuditLogSkeleton } from '../../../components/SkeletonLoaders';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -160,16 +161,6 @@ const EmptyState = styled.div`
   font-weight: 600;
 `;
 
-const LoadingState = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 40px 16px;
-  color: #64748b;
-  font-weight: 600;
-`;
-
 interface AuditIdea {
   id: string;
   title: string;
@@ -236,10 +227,7 @@ export function ChallengeAuditModal({
 
             <Body>
               {loading ? (
-                <LoadingState>
-                  <Loader2 size={18} />
-                  Cargando ideas finalistas...
-                </LoadingState>
+                <AuditLogSkeleton />
               ) : ideas.length === 0 ? (
                 <EmptyState>
                   Este reto no tiene ideas finalistas o ganadoras para auditar.

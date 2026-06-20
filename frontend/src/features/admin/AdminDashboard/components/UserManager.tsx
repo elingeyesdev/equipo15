@@ -101,7 +101,7 @@ const UserManager: React.FC = () => {
           <S.Thead>
             <tr>
               <S.Th>Usuario</S.Th>
-              <S.Th>Facultad</S.Th>
+              <S.Th>Áreas</S.Th>
               <S.Th>Rol</S.Th>
               <S.Th>Registrado</S.Th>
               <S.Th>Acción</S.Th>

@@ -559,8 +559,8 @@ export const DraftActionButton = styled.button<{ $primary?: boolean; $danger?: b
   `}
 
   ${p => p.$danger && css`
-    background: rgba(220,38,38,0.08);
-    color: #dc2626;
+    background: #ef4444;
+    color: white;
   `}
 
   &:hover:not(:disabled) {

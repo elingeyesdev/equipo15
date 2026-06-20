@@ -1,5 +1,7 @@
 import styled, { keyframes, css } from 'styled-components';
 import { Pista8Theme } from '../../config/theme';
+import Pista8Logo from '../icons/Pista8Logo';
+
 
 const rushForward = keyframes`
   0%   { transform: scaleX(1)    translateY(0%);   opacity: 0; }
@@ -231,14 +233,7 @@ const RunwayLoader = () => {
 
       <Content>
         <LogoWrap>
-          <svg viewBox="0 0 280 72" xmlns="http://www.w3.org/2000/svg" width="136" height="35">
-            <text x="0" y="60" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="64" fill="white" letterSpacing="-2">PIST</text>
-            <polygon points="186,7 202,40 195,40 195,62 179,62 179,40 172,40" fill="#FE410A" />
-            <rect x="181" y="65" width="5" height="8" rx="2" fill="#FE410A" />
-            <rect x="189" y="65" width="5" height="8" rx="2" fill="#FE410A" />
-            <rect x="197" y="65" width="5" height="8" rx="2" fill="#FE410A" />
-            <text x="209" y="60" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="64" fill="white">8</text>
-          </svg>
+          <Pista8Logo variant="white" width="130" />
         </LogoWrap>
         <StatusRow>
           <StatusText>Preparando despegue</StatusText>

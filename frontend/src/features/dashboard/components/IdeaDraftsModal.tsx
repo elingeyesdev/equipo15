@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import * as FM from '../styles/FeedbackAndMiscStyles';
 import * as S from '../styles/FormStyles';
 import type { IdeaDraft } from '../../../services/idea.service';
+import { DraftListSkeleton } from '../../../components/SkeletonLoaders';
 import {
   IMPACT_AREA_OPTIONS,
   IMPROVEMENT_TYPE_OPTIONS,
@@ -132,7 +133,7 @@ const IdeaDraftsModal: React.FC<IdeaDraftsModalProps> = ({
         </div>
 
         {loading ? (
-          <p style={{ margin: 0, fontSize: 14, color: '#6b7280' }}>Cargando borradores...</p>
+          <DraftListSkeleton count={2} />
         ) : drafts.length === 0 ? (
           <S.DraftsEmpty>
             <p>No tienes borradores guardados todavía.</p>

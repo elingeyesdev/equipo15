@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, UseGuards, Request, Body, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Patch, Delete, Param, UseGuards, Request, Body, UnauthorizedException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { NotificationService } from './notification.service';
 import { FirebaseAuthGuard } from '../../common/guards/firebase-auth.guard';
@@ -52,6 +52,30 @@ export class NotificationController {
   async markAsRead(@Param('id') id: string, @Request() req: any) {
     const userId = await this.getUserId(req.user);
     await this.notificationService.markAsRead(id, userId);
+    return { success: true };
+  }
+
+  @Patch(':id/delete')
+  @ApiOperation({ summary: 'Delete a notification' })
+  async deleteNotificationPatch(@Param('id') id: string, @Request() req: any) {
+    const userId = await this.getUserId(req.user);
+    await this.notificationService.deleteNotification(id, userId);
+    return { success: true };
+  }
+
+  @Get(':id/delete') // In case frontend client prefers to delete without DELETE verb, or we can use DELETE
+  @ApiOperation({ summary: 'Delete a notification (GET fallback)' })
+  async deleteNotificationGet(@Param('id') id: string, @Request() req: any) {
+    const userId = await this.getUserId(req.user);
+    await this.notificationService.deleteNotification(id, userId);
+    return { success: true };
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a notification' })
+  async deleteNotification(@Param('id') id: string, @Request() req: any) {
+    const userId = await this.getUserId(req.user);
+    await this.notificationService.deleteNotification(id, userId);
     return { success: true };
   }
 }

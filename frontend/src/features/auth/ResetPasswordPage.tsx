@@ -36,7 +36,7 @@ const CheckIcon = () => (
 
 const Pista8LogoWrap = () => (
   <S.LogoWrap>
-    <Pista8Logo fill={Pista8Theme.secondary} accent={Pista8Theme.primary} width={220} />
+    <Pista8Logo width={180} />
   </S.LogoWrap>
 );
 

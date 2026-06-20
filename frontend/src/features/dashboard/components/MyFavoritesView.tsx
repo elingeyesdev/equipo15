@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Menu, Bookmark, Loader2 } from 'lucide-react';
+import { Bookmark } from 'lucide-react';
+import { IdeasGridSkeleton } from '../../../components/SkeletonLoaders';
 import InfoTooltip from '@/components/common/InfoTooltip';
 import AdvancedFilter from './AdvancedFilter';
 import type { AdvancedFilterState } from './AdvancedFilter';
@@ -13,6 +14,7 @@ import IdeaDetailModal from '@/features/sky-wall/components/IdeaDetailModal';
 import Pista8Logo from '@/components/icons/Pista8Logo';
 import type { PlaneIdea } from '@/features/sky-wall/types';
 import { resolveDisplayName } from '@/utils/user.utils';
+import BottomNavbar from './BottomNavbar';
 
 const MyFavoritesView: React.FC = () => {
   const navigate = useNavigate();
@@ -94,15 +96,10 @@ const MyFavoritesView: React.FC = () => {
               </S.Subtitle>
             </S.TitleContainer>
           </div>
-          <S.HamburgerBtn onClick={() => setSidebarOpen(true)}>
-            <Menu size={20} />
-          </S.HamburgerBtn>
         </S.Header>
 
         {loading ? (
-          <S.LoaderWrapper>
-            <Loader2 size={32} color="#FE410A" style={{ animation: 'spin 1s linear infinite' }} />
-          </S.LoaderWrapper>
+          <IdeasGridSkeleton count={8} />
         ) : ideas.length === 0 ? (
           <S.EmptyState>
             <S.EmptyIconWrap>
@@ -132,6 +129,7 @@ const MyFavoritesView: React.FC = () => {
                   {(idea as any).challenge?.title || idea.challengeTitle || 'Reto'}
                 </S.CardBadge>
                 <S.CardTitle>{idea.title}</S.CardTitle>
+                <S.CardAuthor>Por {idea.authorName || 'Anónimo'}</S.CardAuthor>
                 <S.CardFooter>
                   <S.ActionButton onClick={() => handleOpenModal(idea)}>
                     Ver más información
@@ -154,6 +152,7 @@ const MyFavoritesView: React.FC = () => {
           onClose={() => setSelectedIdea(null)}
         />
       )}
+      <BottomNavbar />
     </S.Wrapper>
   );
 };

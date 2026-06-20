@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { ListManagerSkeleton } from '../../components/SkeletonLoaders';
 import styled, { keyframes } from 'styled-components';
 import { ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'sonner';
@@ -585,7 +586,7 @@ export default function WhitelistManager() {
           <div>
             <FormTitleText>Lista activa</FormTitleText>
             <FormHint>
-              {loading ? 'Cargando dominios...' : `${domains.length} registro${domains.length === 1 ? '' : 's'} autorizado${domains.length === 1 ? '' : 's'}`}
+              {loading ? '' : `${domains.length} registro${domains.length === 1 ? '' : 's'} autorizado${domains.length === 1 ? '' : 's'}`}
             </FormHint>
           </div>
 
@@ -602,7 +603,7 @@ export default function WhitelistManager() {
         </ListHeader>
 
         {loading ? (
-          <EmptyState>Cargando la lista actual...</EmptyState>
+          <div style={{ padding: '12px' }}><ListManagerSkeleton /></div>
         ) : domains.length === 0 ? (
           <EmptyState>No hay dominios configurados todavía.</EmptyState>
         ) : (

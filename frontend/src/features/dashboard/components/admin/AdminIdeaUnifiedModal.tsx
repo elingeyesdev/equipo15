@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import {
   X,
   Lightbulb,
   Scale,
   MessageSquare,
   ChevronDown,
-  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Comment } from '@/types/models';
 import { Pista8Theme } from '@/config/theme';
 import { ideaService } from '@/services/idea.service';
 import { evaluationService, type IdeaEvaluationBreakdown } from '@/services/evaluation.service';
+import { ModalContentSkeleton } from '@/components/SkeletonLoaders';
 import { commentService } from '@/services/comment.service';
 import { CommentModerationModal } from './CommentModerationModal';
 import { premiumTooltip, fadeUp } from '../../styles/CommonStyles';
@@ -45,13 +45,7 @@ import {
   AdminTag,
 } from './AdminModalStyles';
 
-const spin = keyframes`
-  to { transform: rotate(360deg); }
-`;
 
-const SpinIcon = styled(Loader2)`
-  animation: ${spin} 1s linear infinite;
-`;
 
 const TabBar = styled.div`
   display: flex;
@@ -107,16 +101,6 @@ const StatusBadge = styled.span<{ $tone: string }>`
         return 'background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;';
     }
   }}
-`;
-
-const LoadingState = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 48px 20px;
-  color: #64748b;
-  font-weight: 600;
 `;
 
 const EmptyState = styled.div`
@@ -728,10 +712,7 @@ export function AdminIdeaUnifiedModal({
             {activeTab === 'propuesta' && (
               <>
                 {loadingIdea ? (
-                  <LoadingState>
-                    <SpinIcon size={18} />
-                    Cargando propuesta...
-                  </LoadingState>
+                  <ModalContentSkeleton rows={5} />
                 ) : !idea ? (
                   <EmptyState>No se encontró información de la propuesta.</EmptyState>
                 ) : (
@@ -803,10 +784,7 @@ export function AdminIdeaUnifiedModal({
             {activeTab === 'evaluaciones' && (
               <>
                 {loadingEval ? (
-                  <LoadingState>
-                    <SpinIcon size={18} />
-                    Cargando evaluaciones...
-                  </LoadingState>
+                  <ModalContentSkeleton rows={5} />
                 ) : !evalData || evalData.evaluations.length === 0 ? (
                   <EmptyState>
                     Esta idea aún no tiene evaluaciones de jueces registradas.
@@ -929,10 +907,7 @@ export function AdminIdeaUnifiedModal({
             {activeTab === 'comentarios' && (
               <>
                 {loadingComments ? (
-                  <LoadingState>
-                    <SpinIcon size={18} />
-                    Cargando comentarios...
-                  </LoadingState>
+                  <ModalContentSkeleton rows={5} />
                 ) : commentTree.length === 0 ? (
                   <EmptyState>No hay comentarios publicados en esta propuesta.</EmptyState>
                 ) : (

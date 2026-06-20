@@ -155,10 +155,12 @@ export const Label = styled.label<{ $locked?: boolean }>`
   display: flex; align-items: center; gap: 6px;
 `;
 
-export const LockedBadge = styled.span`
-  font-size: 10px; font-weight: 700; background: #f1f3f5;
-  color: #9ca3af; padding: 2px 8px; border-radius: 20px;
-  text-transform: none; letter-spacing: 0;
+export const LockedBadge = styled.span<{ $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
+  color: ${Pista8Theme.primary};
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: help;
+  padding: 0 4px;
+  ${premiumTooltip}
 `;
 
 export const InputWrapper = styled.div<{ $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
@@ -189,7 +191,7 @@ export const TextAreaField = styled.textarea<{ $error?: boolean; $locked?: boole
   border: 2px solid ${p => p.$error ? Pista8Theme.error : p.$locked ? '#f1f3f5' : '#eef0f2'};
   font-size: 14px; font-weight: 500; color: ${p => p.$locked ? '#9ca3af' : '#1a1f22'};
   background: ${p => p.$locked ? '#f9fafb' : 'white'};
-  outline: none; resize: none; overflow: hidden; min-height: 52px;
+  outline: none; resize: none !important; overflow-y: auto; height: 150px !important;
   font-family: inherit; line-height: 1.6; transition: all 0.2s;
   cursor: ${p => p.$locked ? 'not-allowed' : 'text'};
   &:focus {
@@ -197,6 +199,12 @@ export const TextAreaField = styled.textarea<{ $error?: boolean; $locked?: boole
     box-shadow: ${p => p.$locked ? 'none' : '0 4px 16px rgba(254,65,10,0.08)'};
   }
   &::placeholder { color: #c0c8d0; font-weight: 400; }
+`;
+
+export const FlexibleTextAreaField = styled(TextAreaField)`
+  height: auto !important;
+  flex: 1;
+  min-height: 150px;
 `;
 
 export const CharCount = styled.span<{ $over: boolean }>`

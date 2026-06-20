@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { X, AlertTriangle, Loader2 } from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
 import { Pista8Theme } from '@/config/theme';
 import { adminService } from '@/services/admin.service';
 import { toast } from 'sonner';
@@ -233,8 +233,7 @@ export function CommentModerationModal({
             disabled={!isReasonValid || loading}
             onClick={handleModerate}
           >
-            {loading ? <Loader2 size={14} className="animate-spin" /> : null}
-            Confirmar Ocultado
+            {loading ? 'Ocultando...' : 'Confirmar Ocultado'}
           </Button>
         </Footer>
       </Card>

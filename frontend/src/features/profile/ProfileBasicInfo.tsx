@@ -14,6 +14,7 @@ import {
   PhoneInputWrap,
   PhonePrefix,
   SaveBtn,
+  SaveBtnWrapper,
   ToggleProfessionalBtn,
 } from './ProfileStyles';
 
@@ -186,9 +187,11 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
             </div>
           </div>
 
-          <SaveBtn onClick={onSave} disabled={saving || readOnlyMode} data-tooltip={readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Perfil'} data-tooltip-position="top" style={{ alignSelf: 'center', marginTop: 0, flex: '0 0 auto', width: 'auto' }}>
-            {saving ? 'Guardando...' : readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Perfil'}
-          </SaveBtn>
+          <SaveBtnWrapper>
+            <SaveBtn onClick={onSave} disabled={saving || readOnlyMode} data-tooltip={readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Perfil'} data-tooltip-position="top">
+              {saving ? 'Guardando...' : readOnlyMode ? 'Estás en modo lectura ahora' : 'Guardar Perfil'}
+            </SaveBtn>
+          </SaveBtnWrapper>
         </div>
       </Section>
 

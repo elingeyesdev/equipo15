@@ -18,6 +18,7 @@ import type { AdvancedFilterState } from './components/AdvancedFilter';
 import { getFacultySlug } from '../../config/faculties';
 import type { Challenge } from '../../types/models';
 import type { IdeaDraft } from '../../services/idea.service';
+import BottomNavbar from './components/BottomNavbar';
 
 const IdeationWall = () => {
   const { user, userProfile } = useAuth();
@@ -303,6 +304,7 @@ const IdeationWall = () => {
         showToast={ds.showToast}
         onContinueDraft={handleContinueDraft}
       />
+      <BottomNavbar />
     </S.Root>
   );
 };

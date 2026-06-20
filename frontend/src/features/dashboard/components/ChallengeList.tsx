@@ -21,6 +21,8 @@ interface ChallengeListProps {
   forceColumn?: boolean;
   visibleChallengesLimit?: number;
   podiumCount?: number;
+  isProfileIncomplete?: boolean;
+  onCompleteProfile?: () => void;
 }
 
 const ChallengeList: React.FC<ChallengeListProps> = ({
@@ -29,6 +31,8 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
   forceColumn = false,
   visibleChallengesLimit,
   podiumCount = 0,
+  isProfileIncomplete = false,
+  onCompleteProfile,
 }) => {
   const userSlug = getFacultySlug(userFacultyId || null);
   const filters = ['Activos', 'En Evaluación', 'Finalizados'];
@@ -142,28 +146,77 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             gap: '12px',
-            minHeight: '400px',
             flex: 1,
           }}>
-            <div style={{
-              width: '72px', height: '72px',
-              borderRadius: '50%',
-              background: 'rgba(254, 65, 10, 0.07)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FE410A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-            </div>
-            <p style={{ margin: 0, fontSize: '16px', fontWeight: 900, color: '#1a1f22' }}>
-              {searchQuery.trim() ? `Sin resultados para "${searchQuery}"` : '¡La pista se está preparando!'}
-            </p>
-            <p style={{ margin: 0, fontSize: '13px', color: '#9ca3af', lineHeight: 1.6, maxWidth: '280px' }}>
-              {searchQuery.trim()
-                ? 'Intenta con otras palabras clave.'
-                : 'Por el momento no hay retos abiertos, pero las empresas ya están diseñando nuevos desafíos para vos. ¡Volvé pronto para demostrar tu talento!'}
-            </p>
+            {isProfileIncomplete && !searchQuery.trim() ? (
+              <>
+                <div style={{
+                  width: '72px', height: '72px',
+                  borderRadius: '50%',
+                  background: 'rgba(254, 65, 10, 0.07)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FE410A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                <p style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#1a1f22' }}>
+                  ¿De qué facultad eres?
+                </p>
+                <p style={{ margin: 0, fontSize: '14px', color: '#64748b', lineHeight: 1.6, maxWidth: '280px' }}>
+                  Para mostrarte los retos adecuados para tu perfil, necesitamos saber tu área de estudio.
+                </p>
+                <button
+                  onClick={onCompleteProfile}
+                  style={{
+                    marginTop: '8px',
+                    background: '#FE410A',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '99px',
+                    fontWeight: 800,
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(254, 65, 10, 0.3)',
+                    transition: 'all 0.2s',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    lineHeight: 1,
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+                >
+                  Completar Perfil
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{
+                  width: '72px', height: '72px',
+                  borderRadius: '50%',
+                  background: 'rgba(254, 65, 10, 0.07)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FE410A" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                </div>
+                <p style={{ margin: 0, fontSize: '16px', fontWeight: 900, color: '#1a1f22' }}>
+                  {searchQuery.trim() ? `Sin resultados para "${searchQuery}"` : '¡La pista se está preparando!'}
+                </p>
+                <p style={{ margin: 0, fontSize: '13px', color: '#9ca3af', lineHeight: 1.6, maxWidth: '280px' }}>
+                  {searchQuery.trim()
+                    ? 'Intenta con otras palabras clave.'
+                    : 'Por el momento no hay retos abiertos, pero las empresas ya están diseñando nuevos desafíos para vos. ¡Volvé pronto para demostrar tu talento!'}
+                </p>
+              </>
+            )}
           </div>
         )}
       </S.ChallengeList>

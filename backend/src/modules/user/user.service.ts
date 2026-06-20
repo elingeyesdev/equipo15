@@ -167,6 +167,22 @@ export class UserService {
         user = await this.userRepository.findByUid(firebaseUid);
       }
     }
+    if (user && user.role === 'USER') {
+      const existingNotif = await (this.userRepository as any).prisma.notification.findFirst({
+        where: { userId: user.id, type: 'ROLE_UPDATED', title: '¡Bienvenido a Pista 8!' },
+      });
+
+      if (!existingNotif) {
+        await (this.userRepository as any).prisma.notification.create({
+          data: {
+            userId: user.id,
+            type: 'ROLE_UPDATED',
+            title: '¡Bienvenido a Pista 8!',
+            body: 'Lo primero que debes hacer para poder ver retos y participar es ir al apartado de "Mi perfil" y completar tu información institucional.',
+          },
+        });
+      }
+    }
 
     return this.formatUserResponse(user);
   }

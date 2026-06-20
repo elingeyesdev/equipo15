@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { ListManagerSkeleton } from '../../components/SkeletonLoaders';
 import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
 import { Pencil, ToggleLeft, ToggleRight, X } from 'lucide-react';
@@ -326,7 +327,7 @@ export default function FacultiesManager() {
   return (
     <Panel>
       <HeaderStrip>
-        <Title>Catálogo de facultades</Title>
+        <Title>Catálogo de áreas</Title>
         <HeaderNote>
           Tabla paramétrica para los menús desplegables. Los cambios de nombre se propagan por relación de ID en perfiles y retos.
         </HeaderNote>
@@ -341,7 +342,7 @@ export default function FacultiesManager() {
       <FormCard>
         <FormHeader>
           <div>
-            <FormTitleText>Agregar facultades</FormTitleText>
+            <FormTitleText>Agregar áreas</FormTitleText>
             <FormHint>Escribe el nombre y guarda para añadirlo al catálogo.</FormHint>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -354,8 +355,8 @@ export default function FacultiesManager() {
             <IconAction
               type="button"
               $primary
-              aria-label="Guardar facultades"
-              $tooltipText={saving ? 'Guardando facultades…' : 'Guardar facultades'}
+              aria-label="Guardar áreas"
+              $tooltipText={saving ? 'Guardando áreas…' : 'Guardar áreas'}
               $tooltipPosition="bottom"
               $tooltipAlign="right"
               onClick={() => void saveRows()}
@@ -374,7 +375,7 @@ export default function FacultiesManager() {
               <div key={row.id}>
                 <Row>
                   <InputWrap>
-                    <Label htmlFor={`faculty-${row.id}`}>Facultad {index + 1}</Label>
+                    <Label htmlFor={`faculty-${row.id}`}>Área {index + 1}</Label>
                     <Input
                       id={`faculty-${row.id}`}
                       value={row.value}
@@ -397,7 +398,7 @@ export default function FacultiesManager() {
               </div>
             );
           })}
-          {saving && <FormHint>Guardando facultades…</FormHint>}
+          {saving && <FormHint>Guardando áreas…</FormHint>}
         </FormBody>
       </FormCard>
 
@@ -405,7 +406,7 @@ export default function FacultiesManager() {
         <ListHeader>
           <div>
             <FormTitleText>Lista del catálogo</FormTitleText>
-            <FormHint>{loading ? 'Cargando…' : `${faculties.length} facultad(es) registrada(s)`}</FormHint>
+            <FormHint>{loading ? '' : `${faculties.length} facultad(es) registrada(s)`}</FormHint>
           </div>
           <IconAction type="button" $tooltipText="Recargar" $tooltipPosition="bottom" onClick={() => void loadFaculties()}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={Pista8Theme.secondary} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
@@ -418,9 +419,9 @@ export default function FacultiesManager() {
         </ListHeader>
 
         {loading ? (
-          <EmptyState>Cargando facultades…</EmptyState>
+          <div style={{ padding: '12px' }}><ListManagerSkeleton /></div>
         ) : faculties.length === 0 ? (
-          <EmptyState>No hay facultades configuradas todavía.</EmptyState>
+          <EmptyState>No hay áreas configuradas todavía.</EmptyState>
         ) : (
           <DomainList>
             {faculties.map((faculty) => (

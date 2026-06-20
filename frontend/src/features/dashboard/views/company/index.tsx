@@ -358,8 +358,8 @@ const ActionBtn = styled.button<{ $danger?: boolean; $tooltipText?: string }>`
   padding: 8px 16px;
   border-radius: 10px;
   border: none;
-  background: ${p => p.$danger ? '#fef2f2' : Pista8Theme.primary};
-  color: ${p => p.$danger ? '#dc2626' : 'white'};
+  background: ${p => p.$danger ? '#ef4444' : Pista8Theme.primary};
+  color: ${p => p.$danger ? 'white' : 'white'};
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -367,7 +367,7 @@ const ActionBtn = styled.button<{ $danger?: boolean; $tooltipText?: string }>`
   display: inline-flex;
   align-items: center;
   &:hover {
-    background: ${p => p.$danger ? '#fee2e2' : '#e63a09'};
+    background: ${p => p.$danger ? '#dc2626' : '#e63a09'};
     transform: translateY(-1px);
     box-shadow: 0 4px 12px ${p => p.$danger ? 'rgba(220,38,38,0.15)' : 'rgba(254,65,10,0.25)'};
   }

@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import * as S from '../styles/AdminStyles';
 import LogoutButton from '../../../dashboard/components/LogoutButton';
 import { resolveDisplayName } from '../../../../utils/user.utils';
+import Pista8Logo from '../../../../components/icons/Pista8Logo';
 
 interface AdminSidebarProps {
   userProfile: any;
@@ -34,14 +35,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
     <S.Sidebar>
       <div style={{ flex: 1 }}>
         <S.SidebarBrand>
-          <svg viewBox="0 0 280 72" xmlns="http://www.w3.org/2000/svg" width="110" height="28">
-            <text x="0" y="60" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="64" fill="white" letterSpacing="-2">PIST</text>
-            <polygon points="186,7 202,40 195,40 195,62 179,62 179,40 172,40" fill="#FE410A" />
-            <rect x="181" y="65" width="5" height="8" rx="2" fill="#FE410A" />
-            <rect x="189" y="65" width="5" height="8" rx="2" fill="#FE410A" />
-            <rect x="197" y="65" width="5" height="8" rx="2" fill="#FE410A" />
-            <text x="209" y="60" fontFamily="Arial Black, Arial, sans-serif" fontWeight="900" fontSize="64" fill="white">8</text>
-          </svg>
+          <Pista8Logo variant="white" width={130} />
         </S.SidebarBrand>
 
         <S.UserProfileBlock>

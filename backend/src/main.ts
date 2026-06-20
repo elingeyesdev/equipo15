@@ -23,7 +23,7 @@ async function bootstrap() {
     origin: CORS_ORIGINS,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: 'Content-Type,Authorization',
+    allowedHeaders: 'Content-Type,Authorization,x-impersonation-token',
   });
 
   app.useGlobalInterceptors(new TransformInterceptor());

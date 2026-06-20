@@ -20,7 +20,6 @@ export const facultiesService = {
 
 export const formatFacultyLabel = (name: string): string => {
   const trimmed = name.trim();
-  if (!trimmed) return 'Facultad';
-  if (/^facultad\b/i.test(trimmed)) return trimmed;
-  return `Facultad de ${trimmed}`;
+  if (!trimmed) return 'Área';
+  return trimmed.replace(/^Facultad\s+(de\s+)?/i, '');
 };

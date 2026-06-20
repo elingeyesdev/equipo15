@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as S from '../styles/AdminStyles';
 import { Pista8Theme } from '../../../../config/theme';
-import { FACULTIES, getFacultySlug } from '../../../../config/faculties';
+import { FACULTIES } from '../../../../config/faculties';
 import { resolveDisplayName } from '../../../../utils/user.utils';
 import { facultiesService, formatFacultyLabel } from '@/services/faculties.service';
 import type { FacultyCatalogItem } from '@/types/models';
@@ -32,6 +32,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
   submitted, setSubmitted, handleSaveChallenge, saving
 }) => {
   const [apiFaculties, setApiFaculties] = useState<FacultyCatalogItem[]>([]);
+  const [showAreaSelect, setShowAreaSelect] = useState(false);
 
   useEffect(() => {
     void facultiesService.getActiveFaculties().then(setApiFaculties).catch(() => setApiFaculties([]));
@@ -118,7 +119,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                 )}
               </S.TwoColumnRow>
               <S.PreviewFooter>
-                <S.PreviewBadge type="privacy">{getFacultySlug(formData.facultyId)}</S.PreviewBadge>
+                <S.PreviewBadge type="privacy">{formData.facultyIds?.length ? formData.facultyIds.length + ' áreas' : 'Todas'}</S.PreviewBadge>
                 <S.PreviewBadge type="privacy">{formData.isPrivate ? 'Privado' : 'Público'}</S.PreviewBadge>
                 <S.PreviewBadge type="date">Expira: {formData.submissionsCloseAt || formData.endDate || '--'}</S.PreviewBadge>
               </S.PreviewFooter>
@@ -138,28 +139,52 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                 {submitted && formErrors.title && <S.ErrorText>{formErrors.title}</S.ErrorText>}
               </S.FormGroup>
 
-              <S.FormGroup>
-                <S.FieldLabel>Asignar a Facultad</S.FieldLabel>
-                <S.Select 
-                  value={formData.facultyId ?? 0}
-                    disabled={readOnlyMode}
-                  onChange={(e) => {
-                    const next = e.target.value;
-                    setFormData({
-                      ...formData,
-                      facultyId: next === '0' ? 0 : next,
-                    });
-                  }}
+              <S.FormGroup style={{ position: 'relative' }}>
+                <S.FieldLabel>Asignar a Áreas</S.FieldLabel>
+                <S.Select
+                  as="button"
+                  type="button"
+                  disabled={readOnlyMode}
+                  onClick={() => setShowAreaSelect(!showAreaSelect)}
+                  style={{ textAlign: 'left', background: '#fff', cursor: 'pointer' }}
                 >
-                  <option value="0">Todas las Facultades</option>
-                  {facultyOptions
-                    ? facultyOptions.map((f) => (
-                        <option key={f.id} value={f.id}>{formatFacultyLabel(f.name)}</option>
-                      ))
-                    : FACULTIES.map((f) => (
-                        <option key={f.id} value={f.id}>{f.name}</option>
-                      ))}
+                  {formData.facultyIds?.length ? `${formData.facultyIds.length} áreas seleccionadas` : 'Seleccionar áreas...'}
                 </S.Select>
+                {showAreaSelect && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e1e4e8', borderRadius: '8px', padding: '12px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                    {facultyOptions
+                      ? facultyOptions.map((f) => (
+                          <label key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#333' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={formData.facultyIds?.includes(f.id)}
+                              onChange={(e) => {
+                                const nextIds = e.target.checked 
+                                  ? [...(formData.facultyIds || []), f.id]
+                                  : (formData.facultyIds || []).filter((id: any) => id !== f.id);
+                                setFormData({...formData, facultyIds: nextIds});
+                              }}
+                            />
+                            {formatFacultyLabel(f.name)}
+                          </label>
+                        ))
+                      : FACULTIES.map((f) => (
+                          <label key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#333' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={formData.facultyIds?.includes(f.id)}
+                              onChange={(e) => {
+                                const nextIds = e.target.checked 
+                                  ? [...(formData.facultyIds || []), f.id]
+                                  : (formData.facultyIds || []).filter((id: any) => id !== f.id);
+                                setFormData({...formData, facultyIds: nextIds});
+                              }}
+                            />
+                            {f.name}
+                          </label>
+                        ))}
+                  </div>
+                )}
               </S.FormGroup>
             </S.TwoColumnRow>
 

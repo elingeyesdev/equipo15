@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { Pista8Theme, breakpoints } from '../../../config/theme';
 import { fadeUp, premiumTooltip } from './CommonStyles';
 
@@ -23,6 +23,10 @@ export const LeftPanel = styled.div<{ $visibleLimit?: number }>`
     min-height: 850px;
   `}
 
+  ${p => p.$visibleLimit === 1 && `
+    max-height: 420px;
+  `}
+
   @media (max-width: ${breakpoints.mobile}) {
     padding: 20px 16px;
     border-radius: 18px;
@@ -41,7 +45,7 @@ export const PanelHeader = styled.div`
   position: sticky;
   top: 0;
   background: ${Pista8Theme.white};
-  z-index: 2;
+  z-index: 10;
   padding-top: 4px;
   padding-bottom: 8px;
   margin-top: -4px;
@@ -117,7 +121,7 @@ export const FilterDropdown = styled.div`
   border: 1px solid rgba(72,80,84,0.09);
   border-radius: 16px;
   padding: 6px;
-  z-index: 10;
+  z-index: 1000;
   min-width: 160px;
   box-shadow: 0 12px 32px ${Pista8Theme.shadow};
   animation: ${fadeUp} 0.18s ease both;
@@ -230,15 +234,14 @@ export const CategoryTag = styled.span`
   font-size: 11px;
   font-weight: 700;
   color: ${Pista8Theme.primary};
-  background: rgba(254, 65, 10, 0.06);
-  border: 1.5px solid rgba(254, 65, 10, 0.18);
-  padding: 5px 12px;
-  border-radius: 8px;
-  letter-spacing: 0.03em;
+  background: #ffffff;
+  border: 1px solid #eaeaea;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(254, 65, 10, 0.03);
   transition: all 0.2s ease;
 `;
 
@@ -246,10 +249,10 @@ export const StatusBadge = styled.span<{ expired?: boolean }>`
   font-size: 11px;
   font-weight: 600;
   color: ${p => p.expired ? Pista8Theme.error : Pista8Theme.primary};
-  background: ${p => p.expired ? `${Pista8Theme.error}15` : `${Pista8Theme.primary}15`};
+  background: #ffffff;
   padding: 4px 10px;
   border-radius: 6px;
-  border: 1px solid ${p => p.expired ? `${Pista8Theme.error}30` : `${Pista8Theme.primary}30`};
+  border: 1px solid ${p => p.expired ? Pista8Theme.error : Pista8Theme.primary};
   position: absolute;
   top: 14px;
   right: 14px;
@@ -398,6 +401,25 @@ export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?:
   justify-content: ${p => (!p.$forceColumn && p.$isFullWidth) ? 'center' : 'flex-start'};
   gap: 14px;
 
+  @media (max-width: 1024px) {
+    ${p => p.$isFullWidth && css`
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      overflow-x: auto !important;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      &::-webkit-scrollbar { display: none; }
+      padding-bottom: 12px;
+      
+      > * {
+        width: 100% !important;
+        flex-shrink: 0 !important;
+        scroll-snap-align: start;
+      }
+    `}
+  }
+
   > * {
     flex-shrink: 0;
     ${p => (!p.$forceColumn && p.$isFullWidth) && `
@@ -427,14 +449,14 @@ export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?:
     ${p.$visibleLimit === 4 && p.$podiumCount === 3 ? `
       > * {
         height: calc((100% - ((${Math.min(p.$cardCount || 4, 4)} - 1) * 14px)) / ${Math.min(p.$cardCount || 4, 4)});
-        min-height: 180px;
+        min-height: 160px;
         max-height: 240px;
         flex-shrink: 0;
       }
     ` : `
       > * {
         height: auto;
-        min-height: 220px;
+        min-height: 160px;
         flex-shrink: 0;
       }
     `}

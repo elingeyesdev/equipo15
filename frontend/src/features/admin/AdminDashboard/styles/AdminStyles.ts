@@ -27,9 +27,11 @@ export const Sidebar = styled.aside`
 `;
 
 export const SidebarBrand = styled.div`
+  padding-top: 32px;
   margin-bottom: 48px;
   display: flex;
   justify-content: center;
+  width: 100%;
 `;
 
 export const UserProfileBlock = styled.div`

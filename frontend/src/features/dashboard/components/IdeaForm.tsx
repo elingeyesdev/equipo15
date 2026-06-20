@@ -11,6 +11,8 @@ import type { ConsentKey, FeedbackMessage } from '../hooks/useIdeationForm';
 import type { IdeaDraft } from '../../../services/idea.service';
 import IdeaDraftsModal from './IdeaDraftsModal';
 import InfoTooltip from '../../../components/common/InfoTooltip';
+import AnimatedCheckbox from '../../../components/AnimatedCheckbox';
+
 
 interface IdeaFormProps {
   open: boolean;
@@ -213,7 +215,13 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
               <S.MetaCard id="challengeField" $invalid={Boolean(form.formErrors.challenge)}>
                 <S.MetaLabel>Reto que respondes</S.MetaLabel>
                 <S.MetaValue>{challenge?.title || 'Selecciona un reto'}</S.MetaValue>
-                {challenge && <S.MetaBadge>{challenge.category}</S.MetaBadge>}
+                {challenge && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px', justifyContent: 'center' }}>
+                    {(challenge.category || '').split(',').map((cat: string) => cat.trim()).filter(Boolean).map((cat: string) => (
+                      <S.MetaBadge key={cat}>{cat}</S.MetaBadge>
+                    ))}
+                  </div>
+                )}
                 <S.MetaFoot>
                   {challenge ? `${challenge.ideasCount ?? 0} ideas publicadas en este reto` : 'Elige un reto para asociar tu idea.'}
                 </S.MetaFoot>
@@ -448,8 +456,7 @@ const IdeaForm: React.FC<IdeaFormProps> = ({
                 <S.ConsentList $invalid={Boolean(form.formErrors.consents) && form.consentsTouched}>
                   {consentItems.map(item => (
                     <S.ConsentItem key={item.key} checked={form.consents[item.key]}>
-                      <S.ConsentCheckbox
-                        type="checkbox"
+                      <AnimatedCheckbox
                         checked={form.consents[item.key]}
                         onChange={() => form.toggleConsent(item.key)}
                       />

@@ -310,8 +310,8 @@ export const ChallengeVinculacionView = () => {
   const sc = getStatusConfig(challenge.status);
   const faculties = (challenge as any).faculties;
   const facultyName = Array.isArray(faculties) && faculties.length > 0
-    ? faculties.map((f: any) => f.name.startsWith('Facultad') ? f.name : `Facultad de ${f.name}`).join(', ')
-    : (challenge as any).faculty?.name || (challenge as any).facultyName || 'Todas las facultades';
+    ? faculties.map((f: any) => f.name.replace(/^Facultad de\s+/i, '')).join(', ')
+    : (challenge as any).faculty?.name || (challenge as any).facultyName || 'Todas las áreas';
   const ideasCount = (challenge as any)._count?.ideas ?? challenge.ideasCount ?? 0;
 
   return (
@@ -319,14 +319,14 @@ export const ChallengeVinculacionView = () => {
       <BackButton onClick={() => navigate('/dashboard/company/challenges')} />
 
       <ChallengeCard>
-        <CardTop>
-          <CardTitle>{challenge.title}</CardTitle>
+        <CardTop style={{ justifyContent: 'center', textAlign: 'center', flexWrap: 'wrap' }}>
+          <CardTitle style={{ textAlign: 'center', width: '100%' }}>{challenge.title}</CardTitle>
           <StatusBadge $bg={sc.bg} $color={sc.color} $dot={sc.dot}>
             {sc.label}
           </StatusBadge>
         </CardTop>
         {challenge.problemDescription && (
-          <CardDescription>{challenge.problemDescription}</CardDescription>
+          <CardDescription style={{ textAlign: 'center' }}>{challenge.problemDescription}</CardDescription>
         )}
         <StatsRow>
           <StatChip>
@@ -340,8 +340,10 @@ export const ChallengeVinculacionView = () => {
             <StatValue>{formatDate(challenge.endDate || challenge.submissionsCloseAt)}</StatValue>
           </StatChip>
           <StatChip>
-            <StatLabel>Facultad</StatLabel>
-            <StatValue style={{ fontSize: 17, lineHeight: 1.25 }}>{facultyName}</StatValue>
+            <StatLabel>Áreas</StatLabel>
+            <StatValue style={{ fontSize: 17, lineHeight: 1.25, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {facultyName.split(', ').map((fn: string, i: number) => <span key={i}>{fn}</span>)}
+            </StatValue>
           </StatChip>
         </StatsRow>
       </ChallengeCard>

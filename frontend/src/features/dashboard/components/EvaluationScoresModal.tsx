@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import styled, { keyframes } from 'styled-components';
-import { ChevronDown, Loader2, MessageSquare, X } from 'lucide-react';
+import styled from 'styled-components';
+import { ChevronDown, MessageSquare, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Pista8Theme } from '@/config/theme';
 import {
   evaluationService,
   type IdeaEvaluationBreakdown,
 } from '@/services/evaluation.service';
+import { ModalContentSkeleton } from '@/components/SkeletonLoaders';
 import {
   AdminAuditBanner,
   AdminCloseBtn,
@@ -30,13 +31,6 @@ import {
   AdminSummaryValue,
 } from './admin/AdminModalStyles';
 
-const spin = keyframes`
-  to { transform: rotate(360deg); }
-`;
-
-const SpinIcon = styled(Loader2)`
-  animation: ${spin} 1s linear infinite;
-`;
 
 const CriteriaSection = styled.div`
   margin-bottom: 24px;
@@ -207,16 +201,6 @@ const EmptyState = styled.div`
   font-weight: 600;
 `;
 
-const LoadingState = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 48px 20px;
-  color: #64748b;
-  font-weight: 600;
-`;
-
 const formatDate = (value?: string) => {
   if (!value) return '—';
   return new Intl.DateTimeFormat('es-ES', {
@@ -285,10 +269,7 @@ export function EvaluationScoresModal({
 
         <AdminModalBody>
           {loading ? (
-            <LoadingState>
-              <SpinIcon size={18} />
-              Cargando evaluaciones...
-            </LoadingState>
+            <ModalContentSkeleton rows={5} />
           ) : !data || data.evaluations.length === 0 ? (
             <EmptyState>
               Esta idea aún no tiene evaluaciones de jueces registradas.

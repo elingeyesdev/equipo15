@@ -325,6 +325,18 @@ export const SaveBtn = styled.button<{
   }
 `;
 
+export const SaveBtnWrapper = styled.div`
+  margin-left: auto;
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  @media (max-width: 768px) {
+    width: 100%;
+    margin-top: 16px;
+    justify-content: flex-end;
+  }
+`;
+
 export const ToggleProfessionalBtn = styled.button`
   padding: 12px 24px;
   border-radius: 14px;

@@ -62,7 +62,7 @@ const Dropdown = styled.div`
   position: absolute;
   top: calc(100% + 10px);
   left: 0;
-  z-index: 200;
+  z-index: 1000;
   background: white;
   border-radius: 20px;
   border: 1.5px solid rgba(72,80,84,0.1);
@@ -324,8 +324,10 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabl
                     $tooltipText={tooltipText}
                     $tooltipPosition="top"
                     style={{
-                      opacity: isClosed ? 1 : 0.5,
                       cursor: isClosed ? 'pointer' : 'not-allowed',
+                      color: isClosed ? undefined : 'rgba(72, 80, 84, 0.45)',
+                      borderColor: isClosed ? undefined : 'rgba(72, 80, 84, 0.08)',
+                      background: isClosed ? undefined : 'rgba(72, 80, 84, 0.02)',
                     }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>

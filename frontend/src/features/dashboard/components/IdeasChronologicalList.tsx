@@ -1,8 +1,9 @@
 import React from 'react';
-import styled, { keyframes, css } from 'styled-components';
+import styled, { css } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, MessageSquare } from 'lucide-react';
 import IdeationGuidePanel from './IdeationGuidePanel';
+import IdeaCardSkeleton from './IdeaCardSkeleton';
 import { Pista8Theme } from '../../../config/theme';
 import { interactiveHover, premiumTooltip } from '../styles/CommonStyles';
 import type { RawIdea, PlaneIdea, SortMode } from '../../../features/sky-wall/types';
@@ -13,15 +14,6 @@ import { commentService } from '../../../services/comment.service';
 
 
 
-const fadeUp = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-`;
-
-const spin = keyframes`
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-`;
 
 const Wrapper = styled.div<{ $showAll?: boolean }>`
   background: ${p => p.$showAll ? 'transparent' : 'white'};
@@ -112,16 +104,14 @@ const ViewAllBtn = styled.button`
 const TopGrid = styled.div<{ $count: number; $isVertical?: boolean }>`
   display: flex;
   flex-direction: ${p => p.$isVertical ? 'column' : 'row'};
-  gap: 14px;
-  flex: ${p => p.$count === 1 ? '1' : '0 0 auto'};
-  ${p => p.$count === 1 && css`
-    height: 100%;
-  `}
+  gap: 10px;
+  flex: 1;
+  height: 100%;
 `;
 
 const IdeaCard = styled(motion.div)<{ $isVertical?: boolean; $idx?: number; $stretch?: boolean }>`
   position: relative;
-  padding: 22px 20px 22px 18px;
+  padding: 16px 16px;
   border-radius: 18px;
   background: #fafafa;
   border: 1.5px solid rgba(254, 65, 10, 0.12);
@@ -136,9 +126,7 @@ const IdeaCard = styled(motion.div)<{ $isVertical?: boolean; $idx?: number; $str
   min-width: 0;
   width: 100%;
   box-sizing: border-box;
-  ${p => p.$stretch && css`
-    flex: 1;
-  `}
+  flex: 1;
 
   &:hover {
     transform: translateY(-2px);
@@ -152,10 +140,8 @@ const VerticalRow = styled.div<{ $stretch?: boolean }>`
   display: flex;
   align-items: stretch;
   width: 100%;
-  ${p => p.$stretch && css`
-    flex: 1;
-    flex-direction: column;
-  `}
+  flex: 1;
+  flex-direction: column;
 `;
 
 
@@ -332,7 +318,7 @@ const CardTitle = styled.p`
   font-size: 14px;
   font-weight: 800;
   color: #1a1f22;
-  margin: 0 0 6px;
+  margin: 36px 0 6px;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -438,32 +424,6 @@ const rawToPlane = (idea: RawIdea, index: number, userProfile?: any): PlaneIdea 
   };
 };
 
-const SpinnerWrap = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 0;
-  gap: 14px;
-  animation: ${fadeUp} 0.3s ease both;
-`;
-
-const Spinner = styled.div`
-  width: 36px;
-  height: 36px;
-  border: 3.5px solid #f1f3f5;
-  border-top-color: ${Pista8Theme.primary};
-  border-radius: 50%;
-  animation: ${spin} 0.7s linear infinite;
-`;
-
-const SpinnerText = styled.p`
-  font-size: 12px;
-  font-weight: 600;
-  color: #a8b0b8;
-  margin: 0;
-`;
-
 interface IdeasChronologicalListProps {
   ideas: RawIdea[];
   sortOrder: SortMode;
@@ -514,11 +474,23 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
 
   if (isLoading) {
     return (
-      <Wrapper>
-        <SpinnerWrap>
-          <Spinner />
-          <SpinnerText>Cargando ideas...</SpinnerText>
-        </SpinnerWrap>
+      <Wrapper $showAll={showAll}>
+        <Header $showAll={showAll}>
+          <HeaderLeft>
+            <Title>Cargando ideas...</Title>
+          </HeaderLeft>
+        </Header>
+        <TopGrid $count={3} $isVertical={true}>
+          <VerticalRow>
+            <IdeaCardSkeleton />
+          </VerticalRow>
+          <VerticalRow>
+            <IdeaCardSkeleton />
+          </VerticalRow>
+          <VerticalRow>
+            <IdeaCardSkeleton />
+          </VerticalRow>
+        </TopGrid>
       </Wrapper>
     );
   }

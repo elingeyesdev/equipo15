@@ -9,6 +9,7 @@ import { resolveDisplayName } from '../../../utils/user.utils';
 import PenaltyBanner from '../../../components/common/PenaltyBanner';
 import Pista8Logo from '../../../components/icons/Pista8Logo';
 import { NotificationBell } from '../../../components/common/NotificationBell';
+import BottomNavbar from '../components/BottomNavbar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -82,19 +83,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <NotificationBell />
-            <S.HamburgerBtn onClick={() => setIsSidebarOpen(true)}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" />
-                <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" />
-                <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" />
-              </svg>
-            </S.HamburgerBtn>
           </div>
         </S.Header>
         
         <S.FullWidthContainer>
           {children}
         </S.FullWidthContainer>
+        <BottomNavbar />
       </S.Page>
     </S.Root>
   );

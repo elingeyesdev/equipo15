@@ -119,7 +119,7 @@ export default function AccessConfigPage() {
       <header>
         <PageTitle>Configuración de Accesos y Registros</PageTitle>
         <PageSubtitle>
-          Administra los dominios de correo permitidos y el catálogo de facultades que alimentan los formularios de la plataforma.
+          Administra los dominios de correo permitidos y el catálogo de áreas que alimentan los formularios de la plataforma.
         </PageSubtitle>
       </header>
 
@@ -149,7 +149,7 @@ export default function AccessConfigPage() {
             <i className="fa-solid fa-building-columns" />
           </CardIcon>
           <CardCopy>
-            <CardTitle>Facultades</CardTitle>
+            <CardTitle>Áreas</CardTitle>
             <CardHint>Catálogo paramétrico para registros, retos y filtros</CardHint>
           </CardCopy>
         </ConfigCard>

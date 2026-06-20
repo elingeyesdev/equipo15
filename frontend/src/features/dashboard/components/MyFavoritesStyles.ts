@@ -14,11 +14,13 @@ export const MainContent = styled.main`
   overflow: hidden;
 
   @media (min-width: 1025px) {
-    padding: 40px calc(2% + 300px) 40px 4%;
+    margin-left: 300px;
+    max-width: calc(100% - 300px);
+    padding: 40px 4%;
   }
 
   @media (max-width: ${breakpoints.mobile}) {
-    padding: 24px 3%;
+    padding: 24px 3% 90px;
   }
 `;
 
@@ -187,7 +189,7 @@ export const CardTitle = styled.h3`
   font-size: 15px;
   font-weight: 800;
   color: ${Pista8Theme.secondary};
-  margin: 16px 0;
+  margin: 36px 0 6px;
   line-height: 1.4;
   letter-spacing: -0.2px;
   word-break: break-word;
@@ -195,6 +197,14 @@ export const CardTitle = styled.h3`
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+`;
+
+export const CardAuthor = styled.p`
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4b5563;
+  margin: 0 0 10px;
+  opacity: 0.9;
 `;
 
 export const CardFooter = styled.div`

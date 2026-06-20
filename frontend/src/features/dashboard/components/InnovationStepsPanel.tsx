@@ -12,7 +12,7 @@ const Wrapper = styled.div`
   flex-direction: column;
   justify-content: center;
   gap: 14px;
-  padding: 32px 0 40px 0;
+  padding: 32px 0 0 0;
   height: 100%;
   animation: ${fadeUp} 0.5s 0.1s ease both;
 `;

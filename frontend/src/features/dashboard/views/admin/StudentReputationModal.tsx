@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { toast } from 'sonner';
 import { Pista8Theme } from '@/config/theme';
 import { adminService } from '@/services/admin.service';
+import { ModalContentSkeleton } from '../../../../components/SkeletonLoaders';
 import type { UserReputation, ReputationIdea } from '@/types/models';
 import { AdminIdeaUnifiedModal } from '../../components/admin/AdminIdeaUnifiedModal';
 
@@ -491,16 +492,6 @@ const CancelBtn = styled.button`
 `;
 
 
-const LoadingContainer = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 32px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #94a3b8;
-`;
-
 const ConfirmOverlay = styled.div`
   position: fixed;
   inset: 0;
@@ -626,7 +617,9 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
       <Overlay onClick={onClose}>
         <ModalCard onClick={(e) => e.stopPropagation()}>
           {loading || !data ? (
-            <LoadingContainer>Cargando perfil de reputación...</LoadingContainer>
+            <div style={{ padding: '40px' }}>
+              <ModalContentSkeleton rows={8} />
+            </div>
           ) : (
             <>
               <ModalHeader>

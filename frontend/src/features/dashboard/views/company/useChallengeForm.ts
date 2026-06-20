@@ -120,6 +120,7 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
   const [criteriaOpen, setCriteriaOpen] = useState(false);
   const [addingCustom, setAddingCustom] = useState(false);
   const [customName, setCustomName]     = useState('');
+  const [customDescription, setCustomDescription] = useState('');
   const [customError, setCustomError]   = useState('');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [logoError, setLogoError]       = useState('');
@@ -270,11 +271,11 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     setForm(prev => ({
       ...prev,
       evaluationCriteria: [...prev.evaluationCriteria, {
-        id: `custom-${Date.now()}`, name: customName.trim(),
+        id: `custom-${Date.now()}`, name: customName.trim(), description: customDescription.trim(),
         enabled: true, weight: 0, isCustom: true,
       }],
     }));
-    setCustomName(''); setCustomError(''); setAddingCustom(false);
+    setCustomName(''); setCustomDescription(''); setCustomError(''); setAddingCustom(false);
   };
 
   const totalWeight = form.evaluationCriteria
@@ -418,10 +419,9 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
     criteriaOpen,
     addingCustom,
     setAddingCustom,
-    customName,
-    setCustomName,
-    customError,
-    setCustomError,
+    customName, setCustomName,
+    customDescription, setCustomDescription,
+    customError, setCustomError,
     lightboxOpen,
     setLightboxOpen,
     logoError,

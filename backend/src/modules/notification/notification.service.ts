@@ -311,6 +311,15 @@ export class NotificationService {
     });
   }
 
+  async deleteNotification(notificationId: string, userId: string) {
+    return this.prisma.notification.deleteMany({
+      where: {
+        id: notificationId,
+        userId,
+      },
+    });
+  }
+
   async getUnreadCount(userId: string) {
     return this.prisma.notification.count({
       where: {

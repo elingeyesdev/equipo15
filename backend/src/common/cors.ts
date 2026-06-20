@@ -1,4 +1,4 @@
-export const CORS_ORIGINS: (string | RegExp)[] = [
+const ALLOWED_PATTERNS: (string | RegExp)[] = [
   /^http:\/\/localhost:\d+$/,
   /^http:\/\/192\.168\.\d+\.\d+:\d+$/,
   /^http:\/\/10\.\d+\.\d+\.\d+:\d+$/,
@@ -8,3 +8,21 @@ export const CORS_ORIGINS: (string | RegExp)[] = [
   'https://pista8-ideacion.francolao.workers.dev',
   'https://pista8.com',
 ];
+
+export const CORS_ORIGINS = (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+  if (!origin) {
+    callback(null, true);
+    return;
+  }
+  const isAllowed = ALLOWED_PATTERNS.some(allowed => {
+    if (allowed instanceof RegExp) {
+      return allowed.test(origin);
+    }
+    return allowed === origin;
+  });
+  if (isAllowed) {
+    callback(null, true);
+  } else {
+    callback(null, false);
+  }
+};

@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import * as S from '../dashboard/styles/LayoutStyles';
 import { Sidebar } from '../dashboard/layout/Sidebar';
 import { resolveDisplayName } from '../../utils/user.utils';
+import BottomNavbar from '../dashboard/components/BottomNavbar';
 
 export const EvaluationPanel = () => {
   const { userProfile } = useAuth();
@@ -20,14 +21,6 @@ export const EvaluationPanel = () => {
             <S.Greeting>Hola, <span>{firstName}</span></S.Greeting>
             <S.Sub>Revisión y calificación de propuestas del Hub.</S.Sub>
           </S.WelcomeZone>
-
-          <S.HamburgerBtn onClick={() => setSidebarOpen(true)}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" />
-              <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" />
-              <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" />
-            </svg>
-          </S.HamburgerBtn>
         </S.Header>
 
         <div style={{ padding: '2rem', color: 'white', opacity: 0.8, animation: 'fadeIn 0.5s ease both' }}>
@@ -37,6 +30,7 @@ export const EvaluationPanel = () => {
           </div>
         </div>
       </S.Page>
+      <BottomNavbar />
     </S.Root>
   );
 };

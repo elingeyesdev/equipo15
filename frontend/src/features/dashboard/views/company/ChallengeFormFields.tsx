@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pista8Theme } from '../../../../config/theme';
+import AnimatedCheckbox from '../../../../components/AnimatedCheckbox';
 import { FACULTIES, getFacultyName } from '../../../../config/faculties';
 import type { ChallengeStatus } from '../../../../types/models';
 import type { ChallengeFormData, Errors } from './useChallengeForm';
@@ -13,10 +14,10 @@ import {
   PreviewText, PreviewLogoWrap, PreviewDateRow, PreviewCriteriaList,
   PreviewCriteriaChip, PreviewWeightBadge, PreviewTypeBadge, Divider,
   SectionTitle, FormGrid, FullSpan, FieldGroup, Label, LockedBadge,
-  InputField, TextAreaField, CharCount, ErrorText, CheckboxRow,
+  InputField, TextAreaField, FlexibleTextAreaField, CharCount, ErrorText, CheckboxRow,
   LogoUploadArea, LogoThumb, LogoPlaceholder, UploadText,
-  CriteriaToggleBtn, CriteriaPanel, CriterionRow, CriterionCheckbox,
-  CriterionName, WeightInput, WeightUnit, AddCriterionBtn,
+  CriteriaToggleBtn, CriteriaPanel, CriterionRow, CriterionName,
+  WeightInput, WeightUnit, AddCriterionBtn,
   CustomCriterionInput, RemoveBtn, TotalWeightBar, BtnRow, Btn, ConfirmBanner, OptionalToggleBtn, InputWrapper
 } from './challengeFormStyles';
 
@@ -51,6 +52,8 @@ export interface ChallengeFormFieldsProps {
   setAddingCustom: (v: boolean) => void;
   customName: string;
   setCustomName: (v: string) => void;
+  customDescription: string;
+  setCustomDescription: (v: string) => void;
   customError: string;
   setCustomError: (v: string) => void;
   lightboxOpen: boolean;
@@ -87,6 +90,8 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
   setAddingCustom,
   customName,
   setCustomName,
+  customDescription,
+  setCustomDescription,
   customError,
   setCustomError,
   lightboxOpen,
@@ -113,10 +118,17 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
   readOnlyMode,
 }) => {
   const [showOptionals, setShowOptionals] = React.useState(false);
+  const [facultyDropdownOpen, setFacultyDropdownOpen] = React.useState(false);
 
-  /** Cuenta palabras reales en un string */
   const countWords = (val: string) =>
     val.trim().split(/\s+/).filter(Boolean).length;
+
+  const LockIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
 
   return (
   <>
@@ -166,9 +178,30 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
     )}
 
     {criteriaOnlyMode && (
-      <div style={{ background: '#eff6ff', border: '2px solid #3b82f6', borderRadius: 14,
-        padding: '12px 20px', marginBottom: 20, fontSize: 13, fontWeight: 600, color: '#1e40af' }}>
-        Solo puedes modificar los criterios de evaluación. Si los cambias, las evaluaciones de los jueces se reiniciarán.
+      <div style={{ 
+        background: 'rgba(254, 65, 10, 0.05)', 
+        border: `2px solid ${Pista8Theme.primary}`, 
+        borderRadius: 14,
+        padding: '16px 20px', 
+        marginBottom: 20, 
+        fontSize: 13.5, 
+        fontWeight: 700, 
+        color: '#485054',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        boxShadow: '0 4px 12px rgba(254, 65, 10, 0.08)'
+      }}>
+        <div style={{ background: Pista8Theme.primary, borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <span style={{ lineHeight: 1.45 }}>
+          Solo puedes modificar los criterios de evaluación. Si los cambias, las evaluaciones de los jueces se reiniciarán.
+        </span>
       </div>
     )}
 
@@ -237,7 +270,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             <FieldGroup>
               <Label $locked={locked('core')}>
                 Título del reto *
-                {locked('core') && <LockedBadge>No editable</LockedBadge>}
+                {locked('core') && <LockedBadge $tooltipText="No editable" $tooltipPosition="top" $tooltipAlign="center"><LockIcon /></LockedBadge>}
               </Label>
               <InputField $locked={locked('core')} $error={!!errors.title}
                 placeholder="Ej: Optimización de procesos logísticos"
@@ -255,11 +288,11 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
           <FieldGroup>
             <Label $locked={locked('core')}>
               Descripción del problema *
-              {locked('core') && <LockedBadge>No editable</LockedBadge>}
+              {locked('core') && <LockedBadge $tooltipText="No editable" $tooltipPosition="top" $tooltipAlign="center"><LockIcon /></LockedBadge>}
             </Label>
             <TextAreaField $locked={locked('core')} $error={!!errors.problemDescription}
               placeholder="Describe el problema que quieres resolver..."
-              value={form.problemDescription} readOnly={locked('core')} rows={2}
+              value={form.problemDescription} readOnly={locked('core')}
               onChange={e => !locked('core') && updateField('problemDescription', e.target.value)} />
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               {errors.problemDescription ? <ErrorText>{errors.problemDescription}</ErrorText> : <span />}
@@ -272,10 +305,10 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
           <FieldGroup>
             <Label $locked={locked('core')}>
               Contexto de la empresa *
-              {locked('core') && <LockedBadge>No editable</LockedBadge>}
+              {locked('core') && <LockedBadge $tooltipText="No editable" $tooltipPosition="top" $tooltipAlign="center"><LockIcon /></LockedBadge>}
             </Label>
             <TextAreaField $locked={locked('core')} $error={!!errors.companyContext}
-              placeholder="Información relevante sobre tu empresa..." rows={2}
+              placeholder="Información relevante sobre tu empresa..."
               value={form.companyContext} readOnly={locked('core')}
               onChange={e => !locked('core') && updateField('companyContext', e.target.value)} />
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -286,14 +319,13 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             </div>
           </FieldGroup>
 
-          <FieldGroup style={{ display: 'flex', flexDirection: 'column' }}>
+          <FieldGroup style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
             <Label $locked={locked('core')}>
               Reglas de participación *
-              {locked('core') && <LockedBadge>No editable</LockedBadge>}
+              {locked('core') && <LockedBadge $tooltipText="No editable" $tooltipPosition="top" $tooltipAlign="center"><LockIcon /></LockedBadge>}
             </Label>
-            <TextAreaField placeholder="1. Primera regla..."
+            <FlexibleTextAreaField placeholder="1. Primera regla..."
               value={form.participationRules}
-              style={{ flex: 1, resize: 'none' }}
               readOnly={locked('core')}
               $error={!!errors.participationRules}
               $locked={locked('core')}
@@ -346,7 +378,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                   }
                 }
               }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', position: 'absolute', bottom: -20, left: 0, right: 0 }}>
               {errors.participationRules ? <ErrorText>{errors.participationRules}</ErrorText> : <span />}
               <CharCount $over={countWords(form.participationRules) > WORD_LIMITS.content.max}>
                 {countWords(form.participationRules)}/{WORD_LIMITS.content.max} palabras
@@ -358,30 +390,55 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             <FieldGroup style={{ marginBottom: 0 }}>
               <Label $locked={locked('core')}>
                 Área de interés
-                {locked('core') && <LockedBadge>No editable</LockedBadge>}
+                {locked('core') && <LockedBadge $tooltipText="No editable" $tooltipPosition="top" $tooltipAlign="center"><LockIcon /></LockedBadge>}
               </Label>
-              <InputWrapper>
+              <div style={{ position: 'relative' }}>
                 <InputField
-                  as="select"
+                  as="div"
                   disabled={locked('core')}
-                  value={form.facultyIds && form.facultyIds.length > 0 ? form.facultyIds[0] : ''}
-                  onChange={(e: any) => {
-                    const val = e.target.value;
-                    updateField('facultyIds', val === '' ? [] : [val]);
-                  }}
-                  style={{ cursor: locked('core') ? 'not-allowed' : 'pointer', appearance: 'auto' }}
+                  onClick={() => !locked('core') && setFacultyDropdownOpen(!facultyDropdownOpen)}
+                  style={{ cursor: locked('core') ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}
                 >
-                  <option value="">Todas las áreas</option>
-                  {(dbFaculties.length > 0 ? dbFaculties.filter((f: any) => f.name !== 'Todas') : FACULTIES).map((f: any) => {
-                    const label = f.name.replace(/^Facultad de\s+/i, '');
-                    return (
-                      <option key={f.id} value={f.id}>
-                        {label}
-                      </option>
-                    );
-                  })}
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {form.facultyIds?.length === 0 
+                      ? 'Todas las áreas' 
+                      : `${form.facultyIds?.length} área(s) seleccionada(s)`}
+                  </span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: facultyDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
                 </InputField>
-              </InputWrapper>
+                {facultyDropdownOpen && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 8, zIndex: 50, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)' }}>
+                    <div style={{ maxHeight: 200, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', cursor: 'pointer', borderRadius: 8, transition: 'background 0.15s' }}>
+                        <AnimatedCheckbox checked={form.facultyIds?.length === 0} onChange={() => updateField('facultyIds', [])} />
+                        <span style={{ fontSize: 13, fontWeight: 500 }}>Todas las áreas</span>
+                      </label>
+                      {(dbFaculties.length > 0 ? dbFaculties.filter((f: any) => f.name !== 'Todas') : FACULTIES).map((f: any) => {
+                        const label = f.name.replace(/^Facultad de\s+/i, '');
+                        const isChecked = form.facultyIds?.includes(f.id);
+                        return (
+                          <label key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', cursor: 'pointer', borderRadius: 8, transition: 'background 0.15s' }}>
+                            <AnimatedCheckbox 
+                              checked={isChecked} 
+                              onChange={() => {
+                                const curr = form.facultyIds || [];
+                                if (isChecked) {
+                                  updateField('facultyIds', curr.filter(id => id !== f.id));
+                                } else {
+                                  updateField('facultyIds', [...curr, f.id]);
+                                }
+                              }} 
+                            />
+                            <span style={{ fontSize: 13 }}>{label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </FieldGroup>
 
             <div style={{ display: 'flex', gap: 12, width: '100%' }}>
@@ -402,7 +459,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               <FieldGroup style={{ marginBottom: 0, flex: 1, minWidth: 0 }}>
                 <Label $locked={locked('core')} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   Fecha cierre
-                  {locked('core') && <LockedBadge>No editable</LockedBadge>}
+                  {locked('core') && <LockedBadge $tooltipText="No editable" $tooltipPosition="top" $tooltipAlign="center"><LockIcon /></LockedBadge>}
                   <InfoTooltip text="Opcional. Si no seleccionas una fecha, el reto cerrará automáticamente hoy a las 23:59." size={14} />
                 </Label>
                 <InputWrapper $tooltipText="Mostrar el selector de fecha y hora locales" $tooltipPosition="bottom" $tooltipAlign="center">
@@ -419,10 +476,9 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             </div>
 
               <CheckboxRow $locked={locked('core')} style={{ marginTop: 2, padding: '14px', border: '1.5px solid rgba(72,80,84,0.18)', borderRadius: 12 }}>
-              <input type="checkbox" checked={form.isPrivate}
+              <AnimatedCheckbox checked={form.isPrivate}
                 disabled={locked('core')}
-                onChange={e => !locked('core') && updateField('isPrivate', e.target.checked)}
-                style={{ width: 18, height: 18, accentColor: Pista8Theme.primary }} />
+                onChange={e => !locked('core') && updateField('isPrivate', e.target.checked)} />
               Reto privado
             </CheckboxRow>
 
@@ -457,7 +513,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#a8b0b8', margin: '0 0 6px' }}>Obligatorios</p>
               {form.evaluationCriteria.filter(c => !c.isOptional && !c.isCustom).map(c => (
                 <CriterionRow key={c.id}>
-                  <CriterionCheckbox type="checkbox" checked={c.enabled}
+                  <AnimatedCheckbox checked={c.enabled}
                     disabled={locked('criteria')}
                     onChange={e => updateCriterion(c.id, { enabled: e.target.checked })} />
                   <CriterionName $enabled={c.enabled} $locked={locked('criteria')}>{c.name}</CriterionName>
@@ -489,7 +545,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                   </OptionalToggleBtn>
                   {showOptionals && form.evaluationCriteria.filter(c => c.isOptional).map(c => (
                     <CriterionRow key={c.id}>
-                      <CriterionCheckbox type="checkbox" checked={c.enabled}
+                      <AnimatedCheckbox checked={c.enabled}
                         disabled={locked('criteria')}
                         onChange={e => updateCriterion(c.id, { enabled: e.target.checked })} />
                       <CriterionName $enabled={c.enabled} $locked={locked('criteria')}>{c.name}</CriterionName>
@@ -515,10 +571,17 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
               {form.evaluationCriteria.filter(c => c.isCustom).map(c => (
                 <CriterionRow key={c.id}>
-                  <CriterionCheckbox type="checkbox" checked={c.enabled}
+                  <AnimatedCheckbox checked={c.enabled}
                     disabled={locked('criteria')}
                     onChange={e => updateCriterion(c.id, { enabled: e.target.checked })} />
-                  <CriterionName $enabled={c.enabled} $locked={locked('criteria')}>{c.name}</CriterionName>
+                  <CriterionName $enabled={c.enabled} $locked={locked('criteria')}>
+                    {c.name}
+                    {c.description && (
+                      <span style={{ marginLeft: 6, display: 'inline-flex', alignItems: 'center' }}>
+                        <InfoTooltip text={c.description} size={16} />
+                      </span>
+                    )}
+                  </CriterionName>
                   <WeightInput type="number" min={0} max={100}
                     value={c.weight === 0 ? '' : c.weight}
                     disabled={!c.enabled || locked('criteria')} placeholder="0"
@@ -550,15 +613,21 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
               {!locked('criteria') && !readOnlyMode && (
                 addingCustom ? (
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <CustomCriterionInput autoFocus placeholder="Nombre del criterio (máx. 10 palabras)"
-                      value={customName}
-                      onChange={e => { setCustomName(e.target.value); setCustomError(''); }}
-                      onKeyDown={e => e.key === 'Enter' && addCustomCriterion()} />
-                    <Btn $primary style={{ padding: '10px 16px', fontSize: 12 }} onClick={addCustomCriterion} disabled={readOnlyMode}>Añadir</Btn>
-                    <Btn style={{ padding: '10px 14px', fontSize: 12 }} onClick={() => { setAddingCustom(false); setCustomName(''); setCustomError(''); }} disabled={readOnlyMode}>
-                      Cancelar
-                    </Btn>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <CustomCriterionInput autoFocus placeholder="Nombre del criterio (máx. 10 palabras)"
+                        value={customName}
+                        onChange={e => { setCustomName(e.target.value); setCustomError(''); }}
+                        onKeyDown={e => e.key === 'Enter' && addCustomCriterion()} />
+                      <CustomCriterionInput placeholder="Descripción (opcional)"
+                        value={customDescription}
+                        onChange={e => setCustomDescription(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addCustomCriterion()} />
+                      <Btn $primary style={{ padding: '10px 16px', fontSize: 12 }} onClick={addCustomCriterion} disabled={readOnlyMode}>Añadir</Btn>
+                      <Btn style={{ padding: '10px 14px', fontSize: 12 }} onClick={() => { setAddingCustom(false); setCustomName(''); setCustomDescription(''); setCustomError(''); }} disabled={readOnlyMode}>
+                        Cancelar
+                      </Btn>
+                    </div>
                     {customError && <ErrorText>{customError}</ErrorText>}
                   </div>
                 ) : (
@@ -604,7 +673,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
         <PreviewTitle>{form.title || 'Título del reto...'}</PreviewTitle>
 
-        <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 800, color: Pista8Theme.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 12, marginTop: -4, wordBreak: 'break-word' }}>
+        <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 800, color: Pista8Theme.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 12, marginTop: 8, wordBreak: 'break-word' }}>
           {(() => {
             if (!form.facultyIds || form.facultyIds.length === 0) return 'Todas las Áreas';
             

@@ -95,7 +95,11 @@ export const premiumTooltip = css<{ $tooltipText?: string; $tooltipPosition?: 't
       border-radius: 8px;
       font-size: 11px;
       font-weight: 800;
-      white-space: nowrap;
+      white-space: normal;
+      width: max-content;
+      max-width: 220px;
+      text-align: center;
+      line-height: 1.3;
       opacity: 0;
       visibility: hidden;
       transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);

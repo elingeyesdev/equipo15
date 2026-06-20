@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import { breakpoints } from '../../../config/theme';
 
 export const Overlay = styled.div<{ open: boolean }>`
   position: fixed;
@@ -19,7 +18,7 @@ export const Overlay = styled.div<{ open: boolean }>`
 export const Sidebar = styled.aside<{ open: boolean }>`
   position: fixed;
   top: 0;
-  right: 0;
+  left: 0;
   height: 100vh;
   width: 300px;
   background: #272423;
@@ -27,11 +26,11 @@ export const Sidebar = styled.aside<{ open: boolean }>`
   display: flex;
   flex-direction: column;
   padding: 36px 28px 40px;
-  transform: ${p => p.open ? 'translateX(0)' : 'translateX(100%)'};
+  transform: ${p => p.open ? 'translateX(0)' : 'translateX(-100%)'};
   transition: transform 0.32s cubic-bezier(.22,.68,0,1.1), visibility 0.32s;
   visibility: ${p => p.open ? 'visible' : 'hidden'};
   pointer-events: ${p => p.open ? 'auto' : 'none'};
-  box-shadow: -20px 0 50px rgba(0,0,0,0.2);
+  box-shadow: 20px 0 50px rgba(0,0,0,0.2);
 
   @media (min-width: 1025px) {
     transform: translateX(0);
@@ -39,9 +38,8 @@ export const Sidebar = styled.aside<{ open: boolean }>`
     pointer-events: auto;
   }
 
-  @media (max-width: ${breakpoints.small}) {
-    width: 100%;
-    padding: 24px 20px;
+  @media (max-width: 1024px) {
+    display: none;
   }
 `;
 
@@ -50,13 +48,15 @@ export const SidebarTop = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-top: 12px;
+  padding-top: 32px;
   margin-bottom: 52px;
+  width: 100%;
 `;
 
 export const SidebarBrand = styled.div`
   display: flex;
   justify-content: center;
+  width: 100%;
 `;
 
 export const SidebarClose = styled.button`

@@ -47,12 +47,26 @@ export class UsersController {
     profile: UserResponse | null,
     req: AuthenticatedRequest,
   ): UserResponse | null {
-    if (!profile || !req.user.impersonationReadOnly) {
+    if (!req.user.impersonationReadOnly) {
       return profile;
     }
 
+    const baseProfile = profile || {
+      id: req.user.companyId || 'impersonated-id',
+      firebaseUid: req.user.uid,
+      email: req.user.email || '',
+      displayName: req.user.companyName || 'Empresa (Perfil Incompleto)',
+      avatarUrl: null,
+      phone: null,
+      role: 'company',
+      roleName: 'company',
+      status: 'ACTIVE',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as UserResponse;
+
     return {
-      ...profile,
+      ...baseProfile,
       status: 'SOFT_BLOCK',
       sessionMode: 'READ_ONLY',
       impersonationCompanyId: req.user.companyId,
@@ -65,22 +79,32 @@ export class UsersController {
   @ApiOperation({ summary: 'Get current authorized user' })
   async getMe(@Request() req: AuthenticatedRequest) {
     const { user } = req;
-    const profile = await this.userService.findOrCreate(
-      {
-        firebaseUid: user.uid,
-        email: user.email || '',
-        displayName:
-          (user as { name?: string }).name ||
-          (user as { displayName?: string }).displayName ||
-          user.email?.split('@')[0] ||
-          'Usuario de Pista 8',
-        avatarUrl:
-          (user as { picture?: string }).picture ||
-          (user as { photoURL?: string }).photoURL,
-      },
-      false,
-      true,
-    );
+    let profile: UserResponse | null = null;
+    
+    try {
+      profile = await this.userService.findOrCreate(
+        {
+          firebaseUid: user.uid,
+          email: user.email || '',
+          displayName:
+            (user as { name?: string }).name ||
+            (user as { displayName?: string }).displayName ||
+            user.email?.split('@')[0] ||
+            'Usuario de Pista 8',
+          avatarUrl:
+            (user as { picture?: string }).picture ||
+            (user as { photoURL?: string }).photoURL,
+        },
+        false,
+        true,
+      );
+    } catch (e) {
+      if (req.user.impersonationReadOnly && e.status === 404) {
+        profile = null;
+      } else {
+        throw e;
+      }
+    }
 
     return this.applySessionContext(profile, req);
   }

@@ -7,6 +7,7 @@ import { useAuth } from '../../../../context/AuthContext';
 import { adminService } from '../../../../services/admin.service';
 import type { CompanySupportItem } from '../../../../types/models';
 import { premiumTooltip } from '../../styles/CommonStyles';
+import { TableRowSkeleton } from '../../../../components/SkeletonLoaders';
 import { getStoredImpersonationToken } from '../../../../utils/impersonation-session';
 import { StudentReputationModal } from './StudentReputationModal';
 
@@ -306,7 +307,7 @@ const CompanyRow = ({ company, onImpersonate }: { company: CompanySupportItem; o
 
 export const AdminClientsView = () => {
   const navigate = useNavigate();
-  const { setImpersonationToken, userProfile, impersonationSession } = useAuth();
+  const { setImpersonationToken, userProfile, impersonationSession, refetchProfile } = useAuth();
   const [companies, setCompanies] = useState<CompanySupportItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -345,6 +346,8 @@ export const AdminClientsView = () => {
       const session = await adminService.impersonateCompany(company.id);
       setImpersonationToken(session.token);
       toast.success(`Sesión espejo activada para ${company.displayName}.`);
+      // Wait for profile to refetch with impersonation token before navigating
+      await refetchProfile();
       navigate('/dashboard/company/stats', { replace: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'No fue posible abrir la sesión espejo.';
@@ -403,11 +406,11 @@ export const AdminClientsView = () => {
             </thead>
             <tbody>
               {loading && (
-                <tr>
-                  <TD colSpan={6}>
-                    <EmptyState>Cargando empresas...</EmptyState>
-                  </TD>
-                </tr>
+                <>
+                  <TableRowSkeleton cols={6} />
+                  <TableRowSkeleton cols={6} />
+                  <TableRowSkeleton cols={6} />
+                </>
               )}
               {!loading && filteredCompanies.length === 0 && (
                 <tr>
@@ -624,11 +627,11 @@ export const AdminUsersView = () => {
             </thead>
             <tbody>
               {loading && (
-                <tr>
-                  <TD colSpan={5}>
-                    <EmptyState>Buscando usuarios...</EmptyState>
-                  </TD>
-                </tr>
+                <>
+                  <TableRowSkeleton cols={5} />
+                  <TableRowSkeleton cols={5} />
+                  <TableRowSkeleton cols={5} />
+                </>
               )}
               {!loading && users.length === 0 && (
                 <tr>

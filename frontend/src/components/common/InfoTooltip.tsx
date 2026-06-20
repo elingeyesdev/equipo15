@@ -69,16 +69,18 @@ const TooltipBubble = styled.div<{ $visible: boolean; $width?: number }>`
   text-align: center;
   border-radius: ${Pista8Theme.radius.lg}px;
   padding: 12px 16px;
-  font-size: ${Pista8Theme.fontSize.sm}px;
-  font-weight: 600;
-  line-height: 1.5;
-  letter-spacing: 0.01em;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
   opacity: ${p => p.$visible ? 1 : 0};
   visibility: ${p => p.$visible ? 'visible' : 'hidden'};
   animation: ${p => p.$visible ? tooltipReveal : 'none'} 0.25s ease both;
   box-shadow: ${Pista8Theme.shadowLayers.lg};
   z-index: ${Pista8Theme.zIndex.tooltip};
   pointer-events: none;
+
+  text-transform: none;
 
   &::after {
     content: '';
