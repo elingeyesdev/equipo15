@@ -8,6 +8,8 @@ import { getStoredImpersonationToken } from '@/utils/impersonation-session';
 import { Pista8Theme } from '@/config/theme';
 import { premiumTooltip } from '@/features/dashboard/styles/CommonStyles';
 import type { AllowedDomain } from '@/types/models';
+import { StatusBadge } from '../../components/common/StatusBadge';
+import { RefreshButton } from '../../components/common/RefreshButton';
 
 type DomainRow = {
   id: string;
@@ -212,28 +214,7 @@ const IconAction = styled.button<{ $size?: number; $danger?: boolean; $primary?:
   ${premiumTooltip}
 `;
 
-const StatusBadge = styled.span<{ $active: boolean }>`
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 10px;
-  border-radius: 999px;
-  background: ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.10)' : 'rgba(72, 80, 84, 0.08)')};
-  border: 1px solid ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.18)' : 'rgba(72, 80, 84, 0.12)')};
-  color: ${({ $active }) => ($active ? '#fe410a' : '#5f6870')};
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-`;
 
-const BadgeDot = styled.span<{ $active: boolean }>`
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: ${({ $active }) => ($active ? '#fe410a' : '#7f8790')};
-  box-shadow: 0 0 0 3px ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.12)' : 'rgba(127, 135, 144, 0.12)')};
-`;
 
 const SwitchAction = styled.button<{ $active: boolean; $tooltipText?: string }>`
   width: 44px;
@@ -591,14 +572,7 @@ export default function WhitelistManager() {
           </div>
 
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <IconAction aria-label="Refrescar lista" $tooltipText="Recargar" $tooltipPosition="bottom" type="button" onClick={loadDomains}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={Pista8Theme.secondary} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M23 4v6h-6" />
-                <path d="M1 20v-6h6" />
-                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10" />
-                <path d="M20.49 15a9 9 0 01-14.85 3.36L1 14" />
-              </svg>
-            </IconAction>
+            <RefreshButton onClick={loadDomains} tooltip="Recargar dominios" tooltipPosition="bottom" tooltipAlign="right" />
           </div>
         </ListHeader>
 
@@ -613,10 +587,7 @@ export default function WhitelistManager() {
                 <DomainText>
                   <DomainTop>
                     <DomainName>{domain.domain}</DomainName>
-                    <StatusBadge $active={domain.isActive}>
-                      <BadgeDot $active={domain.isActive} />
-                      {domain.isActive ? 'Activo' : 'Inactivo'}
-                    </StatusBadge>
+                    <StatusBadge status={domain.isActive ? 'activo' : 'inactivo'} />
                   </DomainTop>
                   <DomainMeta>
                     {domain.isActive

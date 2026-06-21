@@ -6,9 +6,9 @@ import { adminService } from '@/services/admin.service';
 import { ModalContentSkeleton } from '../../../../components/SkeletonLoaders';
 import type { UserReputation, ReputationIdea } from '@/types/models';
 import { AdminIdeaUnifiedModal } from '../../components/admin/AdminIdeaUnifiedModal';
-
 import { Eye } from 'lucide-react';
 import { premiumTooltip } from '../../styles/CommonStyles';
+import { StatusBadge } from '../../../../components/common/StatusBadge';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -335,19 +335,7 @@ const IdeaTitle = styled.span`
   font-size: 13px;
 `;
 
-const StatusBadge = styled.span<{ $tone: 'green' | 'amber' | 'gold' | 'red' | 'slate' }>`
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  ${({ $tone }) => $tone === 'green' && 'background: rgba(52,168,83,0.12); color: #34A853; border: 1px solid rgba(52,168,83,0.3);'}
-  ${({ $tone }) => $tone === 'amber' && 'background: rgba(255,140,0,0.14); color: #FF8C00; border: 1px solid rgba(255,140,0,0.3);'}
-  ${({ $tone }) => $tone === 'gold' && 'background: rgba(254,65,10,0.10); color: #FE410A; border: 1px solid rgba(254,65,10,0.3);'}
-  ${({ $tone }) => $tone === 'red' && 'background: rgba(255,51,51,0.12); color: #FF3333; border: 1px solid rgba(255,51,51,0.3);'}
-  ${({ $tone }) => $tone === 'slate' && 'background: rgba(72,80,84,0.10); color: #485054; border: 1px solid rgba(72,80,84,0.3);'}
-`;
+
 
 const ActionBtnGroup = styled.div`
   display: inline-flex;
@@ -729,9 +717,7 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
                             <IdeaTitle>{idea.title}</IdeaTitle>
                           </ITD>
                           <ITD>
-                            <StatusBadge $tone={STATUS_TONES[idea.status] || 'slate'}>
-                              {STATUS_LABELS[idea.status] || idea.status}
-                            </StatusBadge>
+                            <StatusBadge status={idea.status} label={STATUS_LABELS[idea.status] || idea.status} />
                           </ITD>
                           <ITD style={{ fontSize: 12, color: '#94a3b8' }}>
                             {formatDate(idea.createdAt)}

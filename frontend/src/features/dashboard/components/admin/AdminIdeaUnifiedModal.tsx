@@ -17,6 +17,7 @@ import { ModalContentSkeleton } from '@/components/SkeletonLoaders';
 import { commentService } from '@/services/comment.service';
 import { CommentModerationModal } from './CommentModerationModal';
 import { premiumTooltip, fadeUp } from '../../styles/CommonStyles';
+import { StatusBadge } from '../../../../components/common/StatusBadge';
 
 import {
   AdminModalOverlay,
@@ -82,26 +83,7 @@ const TabContent = styled.div`
   animation: ${fadeUp} 0.3s ease-out;
 `;
 
-const StatusBadge = styled.span<{ $tone: string }>`
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  
-  ${({ $tone }) => {
-    switch ($tone) {
-      case 'emerald':
-        return 'background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0;';
-      case 'orange':
-        return 'background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa;';
-      case 'blue':
-        return 'background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe;';
-      default:
-        return 'background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;';
-    }
-  }}
-`;
+
 
 const EmptyState = styled.div`
   text-align: center;
@@ -740,9 +722,7 @@ export function AdminIdeaUnifiedModal({
 
                     <AdminDetailSection>
                       <AdminDetailLabel>Estado</AdminDetailLabel>
-                      <StatusBadge $tone={STATUS_TONES[idea.status] || 'slate'}>
-                        {STATUS_LABELS[idea.status] || idea.status}
-                      </StatusBadge>
+                      <StatusBadge status={idea.status} label={STATUS_LABELS[idea.status] || idea.status} />
                     </AdminDetailSection>
 
                     <AdminDetailSection>

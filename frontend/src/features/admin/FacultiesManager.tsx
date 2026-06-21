@@ -9,6 +9,8 @@ import { getStoredImpersonationToken } from '@/utils/impersonation-session';
 import { Pista8Theme } from '@/config/theme';
 import { premiumTooltip } from '@/features/dashboard/styles/CommonStyles';
 import type { FacultyCatalogItem } from '@/types/models';
+import { StatusBadge } from '../../components/common/StatusBadge';
+import { RefreshButton } from '../../components/common/RefreshButton';
 
 type FacultyRow = { id: string; value: string };
 type FacultyIssue = { rowId: string; message: string };
@@ -80,16 +82,7 @@ const DomainItem = styled.div`
   border: 1px solid rgba(72, 80, 84, 0.08);
 `;
 const DomainName = styled.div`font-size: 15px; font-weight: 900; color: #1f2628; word-break: break-word;`;
-const StatusBadge = styled.span<{ $active: boolean }>`
-  display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border-radius: 999px;
-  background: ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.10)' : 'rgba(72, 80, 84, 0.08)')};
-  color: ${({ $active }) => ($active ? '#fe410a' : '#5f6870')};
-  font-size: 11px; font-weight: 900; text-transform: uppercase;
-`;
-const BadgeDot = styled.span<{ $active: boolean }>`
-  width: 7px; height: 7px; border-radius: 50%;
-  background: ${({ $active }) => ($active ? '#fe410a' : '#7f8790')};
-`;
+
 const SwitchAction = styled.button<{ $active: boolean; $tooltipText?: string }>`
   width: 44px; height: 44px; border-radius: 12px; border: 1px solid ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.18)' : 'rgba(72, 80, 84, 0.12)')};
   background: ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.08)' : '#f4f6f7')};
@@ -408,14 +401,7 @@ export default function FacultiesManager() {
             <FormTitleText>Lista del catálogo</FormTitleText>
             <FormHint>{loading ? '' : `${faculties.length} facultad(es) registrada(s)`}</FormHint>
           </div>
-          <IconAction type="button" $tooltipText="Recargar" $tooltipPosition="bottom" onClick={() => void loadFaculties()}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={Pista8Theme.secondary} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M23 4v6h-6" />
-              <path d="M1 20v-6h6" />
-              <path d="M3.51 9a9 9 0 0114.85-3.36L23 10" />
-              <path d="M20.49 15a9 9 0 01-14.85 3.36L1 14" />
-            </svg>
-          </IconAction>
+          <RefreshButton onClick={() => loadFaculties()} tooltip="Recargar catálogo" tooltipPosition="bottom" tooltipAlign="right" />
         </ListHeader>
 
         {loading ? (
@@ -429,10 +415,7 @@ export default function FacultiesManager() {
                 <div style={{ minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                     <DomainName>{faculty.name}</DomainName>
-                    <StatusBadge $active={faculty.isActive}>
-                      <BadgeDot $active={faculty.isActive} />
-                      {faculty.isActive ? 'Activa' : 'Inactiva'}
-                    </StatusBadge>
+                    <StatusBadge status={faculty.isActive ? 'activo' : 'inactivo'} />
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>

@@ -6,6 +6,7 @@ import { challengeService } from '../../../../services/challenge.service';
 import type { Challenge } from '../../../../types/models';
 import { ChallengeJudgeSelector } from './components/ChallengeJudgeSelector';
 import BackButton from '../../../../components/common/BackButton';
+import { StatusBadge } from '../../../../components/common/StatusBadge';
 import { Users } from 'lucide-react';
 
 
@@ -57,20 +58,7 @@ const CardTitle = styled.h2`
   overflow-wrap: break-word;
 `;
 
-const StatusBadge = styled.span<{ $bg: string; $color: string; $dot?: string }>`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  background: ${p => p.$bg};
-  color: ${p => p.$color};
-  flex-shrink: 0;
-  border: 1px solid ${p => p.$dot}30;
-`;
+
 
 const CardDescription = styled.p`
   margin: 0;
@@ -215,22 +203,7 @@ const GoBackBtn = styled.button`
   }
 `;
 
-const STATUS_CONFIG: Record<string, { label: string; bg: string; color: string; dot: string }> = {
-  Borrador: { label: 'Borrador', bg: '#f1f5f9', color: '#475569', dot: '#94a3b8' },
-  DRAFT: { label: 'Borrador', bg: '#f1f5f9', color: '#475569', dot: '#94a3b8' },
-  Agendado: { label: 'Agendado', bg: '#eff6ff', color: '#1e40af', dot: '#3b82f6' },
-  SCHEDULED: { label: 'Agendado', bg: '#eff6ff', color: '#1e40af', dot: '#3b82f6' },
-  Activo: { label: 'Activo', bg: '#dcfce7', color: '#166534', dot: '#22c55e' },
-  PUBLISHED: { label: 'Activo', bg: '#dcfce7', color: '#166534', dot: '#22c55e' },
-  'En Evaluación': { label: 'En Evaluación', bg: '#fef3c7', color: '#92400e', dot: '#f59e0b' },
-  EVALUATING: { label: 'En Evaluación', bg: '#fef3c7', color: '#92400e', dot: '#f59e0b' },
-  EVALUATION: { label: 'En Evaluación', bg: '#fef3c7', color: '#92400e', dot: '#f59e0b' },
-  Finalizado: { label: 'Finalizado', bg: '#fee2e2', color: '#991b1b', dot: '#ef4444' },
-  CLOSED: { label: 'Finalizado', bg: '#fee2e2', color: '#991b1b', dot: '#ef4444' },
-};
 
-const getStatusConfig = (status: string) =>
-  STATUS_CONFIG[status] || STATUS_CONFIG['Borrador'];
 
 const formatDate = (d?: string | Date) => {
   if (!d) return '—';
@@ -321,9 +294,7 @@ export const ChallengeVinculacionView = () => {
       <ChallengeCard>
         <CardTop style={{ justifyContent: 'center', textAlign: 'center', flexWrap: 'wrap' }}>
           <CardTitle style={{ textAlign: 'center', width: '100%' }}>{challenge.title}</CardTitle>
-          <StatusBadge $bg={sc.bg} $color={sc.color} $dot={sc.dot}>
-            {sc.label}
-          </StatusBadge>
+          <StatusBadge status={challenge.status} />
         </CardTop>
         {challenge.problemDescription && (
           <CardDescription style={{ textAlign: 'center' }}>{challenge.problemDescription}</CardDescription>

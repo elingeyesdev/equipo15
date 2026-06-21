@@ -4,6 +4,7 @@ import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../../config/theme';
 import { challengeService } from '../../../../services/challenge.service';
 import BackButton from '../../../../components/common/BackButton';
+import { StatusBadge } from '../../../../components/common/StatusBadge';
 import { History, Eye } from 'lucide-react';
 
 /* ─── Animations ─── */
@@ -171,35 +172,7 @@ const CardTitle = styled.h3`
   overflow-wrap: break-word;
 `;
 
-const StatusBadge = styled.span<{ $evaluated: boolean }>`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  flex-shrink: 0;
-  background: ${p => p.$evaluated ? '#dcfce7' : '#fff7ed'};
-  color: ${p => p.$evaluated ? '#166534' : '#c2410c'};
-  border: 1px solid ${p => p.$evaluated ? '#22c55e30' : '#f9731630'};
-`;
 
-const ChallengeStatusBadge = styled.span<{ $status: string }>`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  flex-shrink: 0;
-  background: ${p => p.$status === 'EVALUATING' ? '#fef3c7' : p.$status === 'CLOSED' ? '#fee2e2' : '#f1f3f5'};
-  color: ${p => p.$status === 'EVALUATING' ? '#92400e' : p.$status === 'CLOSED' ? '#991b1b' : '#6b7280'};
-  border: 1px solid ${p => p.$status === 'EVALUATING' ? '#f59e0b30' : p.$status === 'CLOSED' ? '#ef444430' : '#9ca3af30'};
-`;
 
 const CardDescription = styled.p`
   font-size: 13px;
@@ -403,9 +376,7 @@ export const JudgeInboxView = () => {
               
               <CardHeader>
                 <CardTitle>{challenge.title}</CardTitle>
-                <ChallengeStatusBadge $status={challenge.status}>
-                  {challenge.status === 'EVALUATING' ? 'En Evaluación' : challenge.status === 'CLOSED' ? 'Finalizado' : challenge.status}
-                </ChallengeStatusBadge>
+                <StatusBadge status={challenge.status} />
               </CardHeader>
 
               <CardDescription>{challenge.problemDescription}</CardDescription>
@@ -578,9 +549,7 @@ export const JudgeEvaluationView = () => {
 
               <CardHeader>
                 <CardTitle>{idea.title}</CardTitle>
-                <StatusBadge $evaluated={idea.evaluated}>
-                  {idea.evaluated ? 'Completado' : 'Pendiente'}
-                </StatusBadge>
+                <StatusBadge status={idea.evaluated ? 'completado' : 'pendiente'} />
               </CardHeader>
 
               <CardDescription>{idea.problem}</CardDescription>
@@ -716,7 +685,7 @@ export const JudgeHistoryView = () => {
 
               <CardHeader>
                 <CardTitle>{ev.idea?.title}</CardTitle>
-                <StatusBadge $evaluated={true}>Completado</StatusBadge>
+                <StatusBadge status="completado" label="Completado" />
               </CardHeader>
 
               <CardDescription>{ev.idea?.problem}</CardDescription>

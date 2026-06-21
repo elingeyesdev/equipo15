@@ -13,6 +13,7 @@ import { CompanyPodiumView } from './CompanyPodiumView';
 import { premiumTooltip } from '../../styles/CommonStyles';
 import { toast } from 'sonner';
 import { extractErrorMessage } from '../../../../utils/errors';
+import { StatusBadge } from '../../../../components/common/StatusBadge';
 
 
 const fadeUp = keyframes`
@@ -268,20 +269,7 @@ const CardTitle = styled.h3`
   overflow-wrap: break-word;
 `;
 
-const StatusBadge = styled.span<{ $bg: string; $color: string; $dot?: string }>`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  background: ${p => p.$bg};
-  color: ${p => p.$color};
-  flex-shrink: 0;
-  border: 1px solid ${p => p.$dot}30;
-`;
+
 
 const TooltipBtn = styled.button<{ $tooltipText?: string }>`
   background: none;
@@ -802,9 +790,7 @@ export const CompanyChallengesView = () => {
                         </svg>
                       </TooltipBtn>
                     )}
-                    <StatusBadge $bg={sc.bg} $color={sc.color} $dot={sc.dot}>
-                      {sc.label}
-                    </StatusBadge>
+                    <StatusBadge status={challenge.status} />
                   </div>
                 </CardHeader>
 

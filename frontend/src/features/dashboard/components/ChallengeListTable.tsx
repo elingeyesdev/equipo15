@@ -3,6 +3,7 @@ import type { ChallengePerformance } from '@/types/models';
 import { AdminChallengeFilter, type AdminChallengeFilterState } from './AdminChallengeFilter';
 import { ChallengeAuditModal } from './ChallengeAuditModal';
 import * as S from './ChallengeListTable.styles';
+import { StatusBadge } from '../../../components/common/StatusBadge';
 
 interface Props {
   challenges: ChallengePerformance[];
@@ -101,9 +102,7 @@ export function ChallengeListTable({ challenges }: Props) {
                 </S.ChallengeInfo>
               </S.Cell>
               <S.Cell>
-                <S.StatusBadge $status={challenge.status}>
-                  {getStatusLabel(challenge.status)}
-                </S.StatusBadge>
+                <StatusBadge status={challenge.status} />
               </S.Cell>
               <S.Cell>
                 <S.Metric>
