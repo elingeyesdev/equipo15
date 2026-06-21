@@ -19,6 +19,7 @@ import { getFacultySlug } from '../../config/faculties';
 import type { Challenge } from '../../types/models';
 import type { IdeaDraft } from '../../services/idea.service';
 import BottomNavbar from './components/BottomNavbar';
+import { sortIdeas } from './helpers/sortIdeas';
 
 const IdeationWall = () => {
   const { user, userProfile } = useAuth();
@@ -212,18 +213,7 @@ const IdeationWall = () => {
       ideas = ideas.slice(0, advFilter.topLimit);
     }
 
-    ideas.sort((a, b) => {
-      if (advFilter.sortOrder === 'oldest') {
-        return new Date(a.createdAt || '').getTime() - new Date(b.createdAt || '').getTime();
-      }
-      if (advFilter.sortOrder === 'likes') {
-        return (b.likesCount || 0) - (a.likesCount || 0);
-      }
-      if (advFilter.sortOrder === 'comments') {
-        return (b.commentsCount || 0) - (a.commentsCount || 0);
-      }
-      return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
-    });
+    ideas = sortIdeas(ideas, advFilter);
 
     return ideas.map(idea => ({
       ...idea,

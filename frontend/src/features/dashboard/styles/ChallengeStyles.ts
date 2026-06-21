@@ -462,18 +462,10 @@ export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?:
     `}
 
     &::-webkit-scrollbar {
-      width: 6px;
+      display: none;
     }
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    &::-webkit-scrollbar-thumb {
-      background: rgba(72, 80, 84, 0.2);
-      border-radius: 10px;
-    }
-    &::-webkit-scrollbar-thumb:hover {
-      background: ${Pista8Theme.primary}80;
-    }
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   `}
 
   ${p => p.$flexCards && `

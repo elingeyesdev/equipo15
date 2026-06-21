@@ -249,7 +249,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
             <>
               <S.SplitGrid style={{ marginTop: '24px' }}>
                 {ds.sortOrder && (
-                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '400px' }}>
                     <IdeasChronologicalList
                       ideas={displayedWallIdeas}
                       sortOrder={ds.sortOrder}
@@ -261,25 +261,27 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                     />
                   </div>
                 )}
-                <div style={{ height: '100%' }}>
-                  <ChallengeList
-                    loading={ds.loading}
-                    challenges={ds.challenges}
-                    activeFilter={ds.activeFilter}
-                    onFilterChange={ds.setActiveFilter}
-                    filterOpen={ds.filterOpen}
-                    setFilterOpen={ds.setFilterOpen}
-                    selectedChallengeId={ds.selectedChallenge?.id || ''}
-                    onSelectChallenge={ds.selectChallenge}
-                    onRespond={(c: Challenge) => ds.handleOpenForm(c, formResetForm)}
-                    onClearSelection={ds.clearSelectedChallenge}
-                    searchQuery={ds.debouncedSearch}
-                    userFacultyId={userProfile?.facultyId}
-                    forceColumn
-                    visibleChallengesLimit={visibleLimit}
-                    isProfileIncomplete={isProfileIncomplete}
-                    onCompleteProfile={() => navigate('/dashboard/perfil')}
-                  />
+                <div style={{ position: 'relative', height: '100%', minHeight: '400px' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+                    <ChallengeList
+                      loading={ds.loading}
+                      challenges={ds.challenges}
+                      activeFilter={ds.activeFilter}
+                      onFilterChange={ds.setActiveFilter}
+                      filterOpen={ds.filterOpen}
+                      setFilterOpen={ds.setFilterOpen}
+                      selectedChallengeId={ds.selectedChallenge?.id || ''}
+                      onSelectChallenge={ds.selectChallenge}
+                      onRespond={(c: Challenge) => ds.handleOpenForm(c, formResetForm)}
+                      onClearSelection={ds.clearSelectedChallenge}
+                      searchQuery={ds.debouncedSearch}
+                      userFacultyId={userProfile?.facultyId}
+                      forceColumn
+                      visibleChallengesLimit={visibleLimit}
+                      isProfileIncomplete={isProfileIncomplete}
+                      onCompleteProfile={() => navigate('/dashboard/perfil')}
+                    />
+                  </div>
                 </div>
               </S.SplitGrid>
 
@@ -309,7 +311,8 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
               </S.FullWidthContainer>
 
               <S.SplitGrid style={{ marginTop: '24px' }}>
-                <ChallengeList
+                <div style={{ height: '100%', maxHeight: '550px', width: '100%' }}>
+                  <ChallengeList
                     loading={ds.loading}
                     challenges={ds.challenges}
                     activeFilter={ds.activeFilter}
@@ -327,6 +330,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                     isProfileIncomplete={isProfileIncomplete}
                     onCompleteProfile={() => navigate('/dashboard/perfil')}
                   />
+                </div>
                 <StatsPanel
                   selectedChallenge={ds.selectedChallenge}
                   challengeStats={ds.challengeStats}
@@ -349,7 +353,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
           <div style={{ width: '100%' }}>
             <InnovationStepsPanel />
           </div>
-          <div style={{ width: '100%', height: '100%' }}>
+          <div style={{ width: '100%', height: '100%', maxHeight: '500px' }}>
             <ChallengeList
               loading={ds.loading}
               challenges={ds.challenges}

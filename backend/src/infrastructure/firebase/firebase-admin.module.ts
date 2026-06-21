@@ -11,14 +11,24 @@ export const FIREBASE_ADMIN_TOKEN = 'FIREBASE_ADMIN';
       useFactory: () => {
         const configStr = process.env.FIREBASE_ADMIN_CONFIG;
         if (!configStr || configStr.includes('dummy')) {
-          console.warn('⚠️ FIREBASE_ADMIN_CONFIG is not defined or is dummy. Mocking Firebase Admin SDK.');
-          return {
-            auth: () => ({
-              verifyIdToken: async () => ({ uid: 'mock-uid' }),
-            }),
-            firestore: () => ({}),
-            messaging: () => ({}),
-          };
+          try {
+            const fs = require('fs');
+            const path = require('path');
+            const fileConfig = fs.readFileSync(path.join(process.cwd(), 'firebase-admin.json'), 'utf8');
+            const serviceAccount = JSON.parse(fileConfig) as admin.ServiceAccount;
+            return admin.initializeApp({
+              credential: admin.credential.cert(serviceAccount),
+            });
+          } catch (fileErr) {
+            console.warn('⚠️ FIREBASE_ADMIN_CONFIG is not defined and firebase-admin.json not found. Mocking Firebase.');
+            return {
+              auth: () => ({
+                verifyIdToken: async () => ({ uid: 'mock-uid' }),
+              }),
+              firestore: () => ({}),
+              messaging: () => ({}),
+            };
+          }
         }
         
         try {

@@ -118,25 +118,21 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
   roundedRect(doc, margin, 10, 38, 7, 3, 'F');
   setTextHex(doc, WHITE);
   doc.setFontSize(7);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('Inter', 'bold');
   doc.text('REPORTE EJECUTIVO', margin + 19, 14.6, { align: 'center' });
 
   // Main title
   setTextHex(doc, WHITE);
   doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('Inter', 'bold');
   doc.text('Podio de Innovación', margin, 30);
 
-  // Platform tag (right aligned)
-  setTextHex(doc, 'rgba(255,255,255,0.85)'.includes('rgba') ? '#FFD4C4' : '#FFD4C4');
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.text('pista8.com', pageW - margin, 30, { align: 'right' });
+
 
   // Subline: challenge name
   setTextHex(doc, '#FFD4C4');
   doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('Inter', 'normal');
   const challengeTitle = challenge.title ?? 'Reto sin título';
   const wrappedTitle = wrapText(doc, challengeTitle, contentW - 60);
   doc.text(wrappedTitle[0], margin, 40);
@@ -152,7 +148,7 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
 
   setTextHex(doc, GRAY);
   doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('Inter', 'normal');
   doc.text(`Generado el ${formatDate()}`, margin, 60);
 
   // Status badge (CERRADO)
@@ -160,13 +156,13 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
   roundedRect(doc, pageW - margin - 28, 55, 28, 7, 3, 'F');
   setTextHex(doc, WHITE);
   doc.setFontSize(7.5);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('Inter', 'bold');
   doc.text('CERRADO', pageW - margin - 14, 59.2, { align: 'center' });
 
   // Separator text
   setTextHex(doc, GRAY);
   doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('Inter', 'normal');
   doc.text('·', pageW / 2, 60, { align: 'center' });
   doc.text(`${Math.min(winners.length, 3)} ganadores declarados`, pageW / 2 + 3, 60);
 
@@ -175,7 +171,7 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
 
   setTextHex(doc, GRAY);
   doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('Inter', 'bold');
   doc.text('RANKING FINAL', margin, cursorY);
 
   // Underline accent
@@ -192,12 +188,12 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
 
     // Calculate dynamic height based on text
     doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('Inter', 'bold');
     const titleMaxW = contentW - 35 - 28;
     const titleLines = wrapText(doc, idea.title ?? 'Sin título', titleMaxW);
 
     doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('Inter', 'normal');
     const proposalLines: string[] = [];
     if (idea.problem) {
       proposalLines.push(...wrapText(doc, idea.problem, contentW - 40));
@@ -248,7 +244,7 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
     doc.circle(margin + 20, cardY + 16, 8, 'F');
     setTextHex(doc, WHITE);
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('Inter', 'bold');
     doc.text(medalLabel(idx), margin + 20, cardY + 16, { align: 'center', baseline: 'middle' });
 
     // Score badge
@@ -259,12 +255,12 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
       roundedRect(doc, scoreX - 2, cardY + 8, 20, 10, 3, 'F');
       setTextHex(doc, WHITE);
       doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
+      doc.setFont('Inter', 'bold');
       doc.text(scoreStr, scoreX + 8, cardY + 14.5, { align: 'center' });
 
       setTextHex(doc, LIGHT_GRAY);
       doc.setFontSize(7);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('Inter', 'normal');
       doc.text('pts', scoreX + 8, cardY + 21, { align: 'center' });
     }
 
@@ -274,7 +270,7 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
     // Idea title
     setTextHex(doc, DARK);
     doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('Inter', 'bold');
     titleLines.forEach((line, li) => {
       doc.text(line, titleX, cardY + localY + li * 5);
     });
@@ -284,7 +280,7 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
     const authorName = idea.author?.nickname || idea.author?.displayName || 'Participante';
     setTextHex(doc, LIGHT_GRAY);
     doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('Inter', 'normal');
     doc.text(`Por ${authorName}`, titleX, cardY + localY);
     localY += 6;
 
@@ -298,10 +294,10 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
     setTextHex(doc, GRAY);
     doc.setFontSize(8);
     if (proposalLines[0] === 'Descripción no disponible para esta idea.') {
-      doc.setFont('helvetica', 'italic');
+      doc.setFont('Inter', 'italic');
       setTextHex(doc, LIGHT_GRAY);
     } else {
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('Inter', 'normal');
     }
     
     proposalLines.forEach((line, li) => {
@@ -314,7 +310,7 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
       let tagX = titleX;
       
       doc.setFontSize(7);
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('Inter', 'normal');
       
       tagsToRender.forEach(tag => {
         const label = TAG_LABELS[tag] || tag;
@@ -355,8 +351,8 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
 
   setTextHex(doc, LIGHT_GRAY);
   doc.setFontSize(7.5);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Generado automáticamente por Pista 8 · pista8.com', margin, footerY);
+  doc.setFont('Inter', 'normal');
+  doc.text('Generado automáticamente por Pista 8', margin, footerY);
   doc.text(`© ${new Date().getFullYear()} Pista 8. Todos los derechos reservados.`, pageW - margin, footerY, { align: 'right' });
 
   // ── 8. Page border accent ─────────────────────────────────────────────────

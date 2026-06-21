@@ -44,7 +44,7 @@ const ShareWrapper = styled.div`
     background: transparent;
     color: ${Pista8Theme.secondary};
     font-size: 13px;
-    font-family: monospace;
+    font-family: 'Inter', monospace;
     outline: none;
   }
 

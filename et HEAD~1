@@ -1,0 +1,152 @@
+[33mcommit 9172205d528fd9e72345e09bf6f7485d68c4e9c2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Roberto Rodriguez <elbetito500@gmail.com>
+Date:   Thu Jun 18 13:51:49 2026 -0400
+
+    Guardando cambios para volver a sprint 1
+
+[1mdiff --git "a/Acta de Constituci\303\263n de Proyecto Pista 8 - Equipo 15.xlsx" "b/Acta de Constituci\303\263n de Proyecto Pista 8 - Equipo 15.xlsx"[m
+[1mnew file mode 100644[m
+[1mindex 0000000..c9bafaa[m
+Binary files /dev/null and "b/Acta de Constituci\303\263n de Proyecto Pista 8 - Equipo 15.xlsx" differ
+[1mdiff --git a/EDT Proyecto Pista 8 - Equipo 15 (2).docx b/EDT Proyecto Pista 8 - Equipo 15 (2).docx[m
+[1mnew file mode 100644[m
+[1mindex 0000000..06cbc84[m
+[1m--- /dev/null[m
+[1m+++ b/EDT Proyecto Pista 8 - Equipo 15 (2).docx[m	
+[36m@@ -0,0 +1,157 @@[m
+[32m+[m[32m                         UNIVERSIDAD PRIVADA DEL VALLE[m
+[32m+[m[32m                    FACULTAD DE INFORMÁTICA Y ELECTRÓNICA[m
+[32m+[m[32m               CARRERA DE INGENIERÍA DE SISTEMAS INFORMÁTICOS[m
+[32m+[m[41m                                       [m
+[32m+[m[32m                             EDT Proyecto Pista 8[m
+[32m+[m[32mElaborado por:		Franco Leonel Avaro Oliva[m
+[32m+[m[32m             Guilherme da Silva Santana de Almeida[m
+[32m+[m[32m              Roberto Rodriguez Giorgetti[m
+[32m+[m[32mEquipo: 				      15[m
+[32m+[m[32mAsignatura: 		 Proyecto de Sistemas II[m
+[32m+[m[32mDocente: 		       Yesmani Fernandez Arambulo[m
+[32m+[m[32mGestión Académica: 		   1/2026[m
+[32m+[m[32m                            Santa Cruz  -  Bolivia[m
+[32m+[m[32mTabla de contenido[m
+[32m+[m[32mEstructura de Desglose de Trabajo (EDT)	4[m
+[32m+[m[32mSprint 0: Infraestructura, Configuración de Retos y Captura de Ideas	4[m
+[32m+[m[32m1.	Panel de Configuración de Retos	4[m
+[32m+[m[32m2.	Formulario de Postulación de Ideas	4[m
+[32m+[m[32m3.	Muro de Visualización de Ideas Base	5[m
+[32m+[m[32m4.	Gestión de Autoría y Segmentación Inicial	5[m
+[32m+[m[32mSprint 1: Interacción Social y Analítica de Participación	6[m
+[32m+[m[32m1.	Sistema de Likes y Reputación	6[m
+[32m+[m[32m2.	Apartado de Retroalimentación (Comentarios)	6[m
+[32m+[m[32m3.	Filtros de Búsqueda Avanzada	7[m
+[32m+[m[32m4.	Arquitectura de Dashboards y Gestión de Desafíos Corporativos	8[m
+[32m+[m[32mSprint 2: Control Corporativo, Gestión de Identidad y Experiencia del Proponente	9[m
+[32m+[m[32m1.	Panel de Monitoreo Global y Control de Clientes (Dashboard Admin)	9[m
+[32m+[m[32m2.	Módulo de Whitelist e Identidad Institucional (Dashboard Admin)	9[m
+[32m+[m[32m3.	Módulo de Gestión de Roles y Asignación de Jueces (Dashboard Company)	10[m
+[32m+[m[32m4.	Módulo de Actividad y Persistencia del Proponente (Dashboard Student)	10[m
+[32m+[m[32mSprint 3: Evaluación Técnica, Reportes de Éxito y Automatización de Cierre	11[m
+[32m+[m[32m1.	Módulo de Evaluación para Expertos (Dashboard Judge)	11[m
+[32m+[m[32m2.	Módulo de Consolidación de Resultados y Desempate (Dashboard Company)	11[m
+[32m+[m[32m3.	Generación de Reportes Ejecutivos de Selección (Dashboard Company)	12[m
+[32m+[m[32m4.	Motor de Finalización, Moderación y Ciclo de Vida del Reto (Dashboard Student/Company)	12[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m
+[32m+[m[32mEstructura de Desglose de Trabajo (EDT)[m
+[32m+[m[32mSprint 0: Infraestructura, Configuración de Retos y Captura de Ideas[m
+[32m+[m[32m Panel de Configuración de Retos[m
+[32m+[m[32mAlcanzable. Gestión y Parametrización de Desafíos.[m
+[32m+[m[32mTareas.[m[41m [m
+[32m+[m[32m Diseño y creación de la ficha técnica del reto (Título, descripción, fechas y reglas) en la Base de Datos (DB).[m
+[32m+[m[32m Construcción de la pantalla para que el administrador pueda crear, ver y editar estos retos (UI).[m
+[32m+[m[32m Programación de la función de Reto Privado que genera un enlace único para invitar a empresas específicas.[m
+[32m+[m[32m Implementación de una barrera de seguridad en el backend que identifica la fecha del reto y bloquea automáticamente la recepción de nuevas propuestas si este ya ha expirado.[m
+[32m+[m[32m Formulario de Postulación de Ideas[m
+[32m+[m[32mAlcanzable. Motor de Captura y Validación de Propuestas.[m
+[32m+[m[32mTareas.[m
+[32m+[m[32m Diseño visual del formulario bajo la metodología de la NASA (Título, Problema, Solución).[m
+[32m+[m[32m Creación de reglas de validación estrictas para evitar el envío de campos incompletos o vacíos.[m
+[32m+[m[32m Programación de la lógica de guardado en el botón "Enviar", capaz de capturar el ID del reto visualizado y vincular la idea de manera automática en la base de datos.[m
+[32m+[m[32m Integración de un sistema de notificaciones en tiempo real (Toasts) que muestra un mensaje verde de confirmación exitosa al alumno inmediatamente tras la publicación de su idea.[m
+[32m+[m[32m Muro de Visualización de Ideas Base[m
+[32m+[m[32mAlcanzable. Interfaz de Exploración y Visualización Base.[m
+[32m+[m[32mTareas.[m
+[32m+[m[32m Diseño estético del Muro de Ideas.[m
+[32m+[m[32m Creación de las tarjetas (aviones/nubes) que resumen cada propuesta.[m
+[32m+[m[32m Programación del flujo de carga en tiempo real mediante WebSockets, permitiendo que el Muro Cielo ("SkyCanvas") cargue las ideas renderizadas apenas el usuario vea la plataforma.[m
+[32m+[m[32m Implementación del Marco de Navegación Principal (Layout), permitiendo una transición fluida y constante entre el Muro de Ideas y la Configuración de Retos.[m
+[32m+[m[32m Gestión de Autoría y Segmentación Inicial[m
+[32m+[m[32mAlcanzable. Vinculación de Identidad y Clasificación.[m
+[32m+[m[32mTareas.[m
+[32m+[m[32m Configuración del sistema de Autenticación (Auth) para ingresos y registros.[m
+[32m+[m[32m Desarrollo de la Interfaz de Registro Complementario (Complete Profile), diseñada para interceptar el primer inicio de sesión y asegurar la vinculación obligatoria del alumno con su facultad antes de permitir el acceso total.[m
+[32m+[m[32m Creación y enrutamiento inteligente para los 4 perfiles base del sistema: Administradores (Pista 8), Empresas Patrocinadoras, Expertos (Jurados evaluadores) y Alumnos (Participantes).[m
+[32m+[m[32m Programación del Ciclo de Vida de la Sesión (Auth Persistence) y lógica de cierre de sesión seguro, asegurando que los tokens de Firebase se limpien del navegador y el sistema redirija al Login automáticamente al detectar una sesión expirada.[m
+[32m+[m[32mSprint 1: Interacción Social y Analítica de Participación[m
+[32m+[m[32m Sistema de Likes y Reputación[m
+[32m+[m[32mAlcanzable. Mecanismo de Valoración y Popularidad.[m
+[32m+[m[32mTareas.[m
+[32m+[m[32m Programación del botón de Like que suma votos a la idea.[m
+[32m+[m[32m Desarrollo de la función en tiempo real para que los votos se actualicen al instante sin necesidad de refrescar la pantalla.[m
+[32m+[m[32m Control de seguridad para que un mismo usuario no pueda votar mil veces la misma idea.[m
+[32m+[m[32m Implementación de lógica de impacto visual (donde el tamaño o la elevación del avión en el mural cambie proporcionalmente según la cantidad de likes recibidos).[m
+[32m+[m[32m Apartado de Retroalimentación (Comentarios)[m
+[32m+[m[32mAlcanzable. Canal de Interacción y Feedback Cualitativo.[m
+[32m+[m[32mTareas.[m
+[32m+[m[32m Creación de la sección de comentarios debajo de cada idea para permitir debates.[m
+[32m+[m[32m Desarrollo de la función de Respuestas para que se creen hilos de conversación organizados.[m
+[32m+[m[32m Programación de las etiquetas que identifican si el que comenta es el Autor o un Mentor.[m
+[32m+[m[32m Sincronización de contadores en el mural, asegurando que el globo de texto de cada avión muestre el número real de comentarios activos.[m
+[32m+[m[32m Filtros de Búsqueda Avanzada[m
+[32m+[m[32mAlcanzable. Herramientas de Recuperación de Información.[m
+[32m+[m[32mTareas.[m
+[32m+[m[32m Creación de la barra de búsqueda por palabras clave para localizar ideas o retos específicos rápidamente.[m
+[32m+[m[32m Desarrollo de criterios de ordenamiento dinámico: Más Populares (likes) y Más Comentadas (interacción).[m
+[32m+[m[32m Programación de filtros cronológicos para alternar entre las ideas Más Recientes y Más viejas del reto.[m
+[32m+[m[32m Optimización de la velocidad de búsqueda y respuesta mediante indexación en MongoDB para resultados en menos de 2 segundos.[m
+[32m+[m[32m Arquitectura de Dashboards y Gestión de Desafíos Corporativos[m
+[32m+[m[32mAlcanzable. Estructura multi-rol y control operativo de retos para la institución.[m
+[32m+[m[32mTareas.[m
+[32m+[m[32m Definición estructural de los 3 Dashboards (Admin, Company y Judge) estableciendo los apartados de estadísticas, gestión y calificación para cada rol.[m
+[32m+[m[32m Desarrollo del panel de Gestión de Retos para el rol Company, incluyendo el listado de retos mediante Cards y el formulario para publicar nuevos desafíos.[m
+[32m+[m[32m Recolección automática de datos de participación (conteo de ideas y votos segmentados por la facultad del usuario).[m
+[32m+[m[32m Creación de gráficas de barras y métricas visuales que muestren el nivel de innovación alcanzado en el reto actual dentro del apartado de estadísticas.[m
+[32m+[m[32m Diseño del Podio de Líderes y Filtro de Curación que permita a la compañía visualizar el ranking y definir dinámicamente el número de ideas y la categoría de ordenamiento (más likes, más comentadas, etc.) para filtrar hacia el proceso de los jueces.[m
+[32m+[m[32mSprint 2: Control Corporativo, Gestión de Identidad y Experiencia del Proponente[m
+[32m+[m[32m Panel de Monitoreo Global y Control de Clientes (Dashboard Admin)[m
+[32m+[m[32mAlcanzable. Centralización Operativa y Módulo de Soporte Corporativo.[m
+[32m+[m[32mTareas.[m
+[32m+[m[32m Desarrollo de la interfaz "Resumen Global" con las tarjetas de analítica macro para la visualización del total de empresas, retos lanzados e ideas generadas en el sistema.[m
+[32m+[m[32m Creación de la sección "Gestión Clientes" para desplegar el listado de empresas socias, permitiendo auditar sus retos activos, históricos y datos de contacto.[m
+[32m+[m[32m Programación de la funcionalidad de soporte para permitir al administrador visualizar en modo espejo el dashboard de cualquier empresa cliente.[m
+[32m+[m[32m Módulo de Whitelist e Identidad Institucional (Dashboard Admin)[m
+[32m+[m[32mAlcanzable. Filtro de Seguridad de Accesos y Gestión Paramétrica de Facultades.[m
+[32m+[m[32mTareas.[m
+[32m+[m[32m Programación del CRUD en la sección "Config. Accesos" para la administración de la whitelist de dominios de correo electrónico autorizados para el registro automático.[m
+[32m+[m[32m Desarrollo de la interfaz de gestión para la tabla paramétrica de facultades académicas utilizadas en los formularios de la plataforma.[m
+[32m+[m[32m Módulo de Gestión de Roles y Asignación de Jueces (Dashboard Company)[m
+[32m+[m[32mAlcanzable. Asignación Jerárquica de Expertos Evaluadores por Reto.[m
+[32m+[m[32mTareas.[m
+[32m+[m[32m Desarrollo del buscador universal en la sección "Control Usuarios" del lado administrador para indexar y promover cuentas al rol de JUDGE o COMPANY.[m
+[32m+[m[32m Implementación de un botón interactivo en el listado de retos de la empresa para acceder de forma directa al panel de vinculación de expertos.[m
+[32m+[m[32m Programación del selector para buscar usuarios con el rol JUDGE y asociar de 1 a 5 evaluadores a un reto específico en la tabla intermedia challenge_judges.[m
+[32m+[m[32m Módulo de Actividad y Persistencia del Proponente (Dashboard Student)[m
+[32m+[m[32mAlcanzable. Persistencia de Favoritos e Historial de Propuestas Enviadas.[m
+[32m+[m[32mTareas.[m
+[32m+[m[32m Desarrollo del apartado "Mis Ideas" dentro del perfil para listar de forma ordenada el historial de las propuestas enviadas por el usuario y su reto asociado.[m
+[32m+[m[32m Creación del apartado "Mis Favoritos" mediante la tabla relacional idea_favorites para guardar y consultar propuestas de interés de la comunidad desde el perfil del proponente.[m
+[32m+[m[32mSprint 3: Evaluación Técnica, Reportes de Éxito y Automatización de Cierre[m
+[32m+[m[32m Módulo de Evaluación para Expertos (Dashboard Judge)[m
+[32m+[m[32mAlcanzable. Workflow de Calificación Técnica y Justificación Obligatoria de Veredictos.[m
+[32m+[m[32mTareas.[m
+[32m+[m[32m Creación de la bandeja de entrada para el rol JUD

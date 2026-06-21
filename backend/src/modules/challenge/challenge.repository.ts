@@ -89,7 +89,6 @@ export class ChallengeRepository {
       where.OR = [
         {
           isPrivate: false,
-          OR: facultyCondition,
         },
         {
           isPrivate: true,

@@ -130,7 +130,7 @@ const StyledWrapper = styled.div`
   mask-size: 100% 100%;
   -webkit-mask-size: 100% 100%;
   color: var(--p8-secondary);
-  font-family: 'Montserrat', 'Trebuchet MS', sans-serif;
+  font-family: 'Inter', sans-serif;
 
   .stage {
     width: min(920px, 96vw);
@@ -663,7 +663,7 @@ const StyledWrapper = styled.div`
     align-items: center;
     justify-content: center;
     opacity: 1;
-    font-family: 'Montserrat', 'Trebuchet MS', sans-serif;
+    font-family: 'Inter', sans-serif;
     color: rgba(var(--p8-secondary-rgb), 0.22);
     text-shadow: 0 18px 40px rgba(var(--p8-secondary-rgb), 0.12);
     pointer-events: none;

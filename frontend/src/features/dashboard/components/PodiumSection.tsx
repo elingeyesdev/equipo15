@@ -253,7 +253,7 @@ const PodiumCard = styled.div<{ $rank: number; $idx: number; $isNarrow?: boolean
 
   .ranking_number {
     color: ${p => RANK_CONFIG[p.$rank]?.trophy.p1};
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', sans-serif;
     font-weight: 700;
     font-size: 80px;
     padding: 0;
@@ -325,7 +325,7 @@ const PodiumCard = styled.div<{ $rank: number; $idx: number; $isNarrow?: boolean
     margin-left: 60px;
     color: #424c50;
     letter-spacing: 2px;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: 'Inter', sans-serif;
     margin-top: 20px;
     font-weight: 800;
     font-size: 11px;
@@ -333,7 +333,7 @@ const PodiumCard = styled.div<{ $rank: number; $idx: number; $isNarrow?: boolean
 
   .gradesBoxNum {
     position: relative;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: 'Inter', sans-serif;
     display: block;
     font-size: 24px;
     font-weight: 800;

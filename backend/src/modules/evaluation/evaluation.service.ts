@@ -55,6 +55,10 @@ export class EvaluationService {
       }
     }
 
+    if (!evaluationData.feedback || evaluationData.feedback.trim().length < 10) {
+      throw new ForbiddenException('La justificación del veredicto es obligatoria para guardar la calificación.');
+    }
+
     const evaluation = await this.evaluationRepository.create(evaluationData);
     this.logger.log(
       `Idea evaluada: ID ${evaluation.ideaId} por Juez ${evaluation.judgeId} con ${evaluation.scores?.length || 0} criterios evaluados`,

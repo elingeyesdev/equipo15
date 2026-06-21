@@ -308,14 +308,30 @@ export class ChallengeService {
     }
 
     if (criteriaOnlyPhase) {
-      if (updateChallengeDto.evaluationCriteria === undefined) {
-        throw new BadRequestException('Debes enviar los criterios de evaluación.');
+      const updateData: any = {};
+      if (updateChallengeDto.evaluationCriteria !== undefined) {
+        updateData.evaluationCriteria = updateChallengeDto.evaluationCriteria as any;
       }
-      const updatedChallenge = await this.challengeRepository.update(id, {
-        evaluationCriteria: updateChallengeDto.evaluationCriteria as any,
-      });
+      
+      let finalEnd: Date | null | undefined = undefined;
+      if (updateChallengeDto.endDate !== undefined) {
+        finalEnd = updateChallengeDto.endDate ? new Date(updateChallengeDto.endDate) : null;
+      } else if (updateChallengeDto.submissionsCloseAt !== undefined) {
+        finalEnd = updateChallengeDto.submissionsCloseAt ? new Date(updateChallengeDto.submissionsCloseAt) : null;
+      }
+
+      if (finalEnd !== undefined) {
+        updateData.endDate = finalEnd;
+        updateData.submissionsCloseAt = finalEnd;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        throw new BadRequestException('Solo puedes actualizar los criterios de evaluación o la fecha de cierre en esta fase.');
+      }
+
+      const updatedChallenge = await this.challengeRepository.update(id, updateData);
       this.logger.log(
-        `Criterios de evaluación actualizados para reto "${updatedChallenge.title}" (ID: ${id})`,
+        `Reto "${updatedChallenge.title}" (ID: ${id}) actualizado en fase estricta (criterios/fecha).`,
       );
       return updatedChallenge;
     }
@@ -1187,7 +1203,7 @@ export class ChallengeService {
 
     // Style header
     detailSheet.getRow(1).eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+      cell.font = { name: 'Inter', bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
       cell.fill = {
         type: 'pattern',
         pattern: 'solid',
@@ -1293,6 +1309,7 @@ export class ChallengeService {
     // Style data rows and add borders
     detailSheet.eachRow((row, rowNumber) => {
       row.eachCell((cell) => {
+        cell.font = cell.font ? { ...cell.font, name: 'Inter' } : { name: 'Inter' };
         cell.border = {
           top: { style: 'thin' },
           left: { style: 'thin' },
@@ -1328,7 +1345,7 @@ export class ChallengeService {
     ];
 
     summarySheet.getRow(1).eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+      cell.font = { name: 'Inter', bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
       cell.fill = {
         type: 'pattern',
         pattern: 'solid',
@@ -1361,6 +1378,7 @@ export class ChallengeService {
 
     summarySheet.eachRow((row, rowNumber) => {
       row.eachCell((cell) => {
+        cell.font = cell.font ? { ...cell.font, name: 'Inter' } : { name: 'Inter' };
         cell.border = {
           top: { style: 'thin' },
           left: { style: 'thin' },
