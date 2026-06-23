@@ -146,6 +146,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       } else {
         setUserProfile(null);
+        clearStoredImpersonationToken();
+        setImpersonationSession(null);
       }
       setLoading(false);
     });

@@ -82,8 +82,8 @@ export class ChallengeRepository {
       where.status = { in: ['PUBLISHED', 'EVALUATING', 'CLOSED'] };
 
       const facultyCondition: Prisma.ChallengeWhereInput[] = [
-        { faculties: { none: {} } },
-        ...(facultyId ? [{ faculties: { some: { id: facultyId } } }] : []),
+        { challengeFaculties: { none: {} } },
+        ...(facultyId ? [{ challengeFaculties: { some: { facultyId } } }] : []),
       ];
 
       where.OR = [
@@ -98,7 +98,7 @@ export class ChallengeRepository {
           ],
         },
       ];
-    } else if (userRole === 'company' || userRole === UserRole.COMPANY) {
+    } else if (userRole === 'company' || userRole === UserRole.ORGANIZATION) {
       where.authorId = userId;
     }
 
@@ -108,7 +108,7 @@ export class ChallengeRepository {
         skip,
         take,
         include: {
-          faculties: true,
+          challengeFaculties: { include: { faculty: true } },
           _count: {
             select: { ideas: { where: { deletedAt: null } } },
           },
@@ -128,7 +128,7 @@ export class ChallengeRepository {
     return this.prisma.challenge.findUnique({
       where: { id },
       include: {
-        faculties: true,
+        challengeFaculties: { include: { faculty: true } },
         ideas: {
           where: { deletedAt: null },
         },
@@ -315,14 +315,11 @@ export class ChallengeRepository {
     return prepared;
   }
 
-  async create(
-    data: { authorId: string } & Partial<Challenge>,
-  ): Promise<Challenge> {
+  async create(data: Partial<Challenge>): Promise<Challenge> {
     const prepared = this.prepareData(data);
-    const { authorId, facultyIds, ...challengeData } = prepared as any;
-
-    this.logger.log(`Prisma Create Challenge by Author: ${authorId}`);
-    this.logger.log(`Faculty IDs to connect: ${JSON.stringify(facultyIds)}`);
+    const { facultyIds, evaluationCriteria, ...challengeData } = prepared as any;
+    const authorId = challengeData.authorId;
+    delete challengeData.authorId;
 
     const created = await this.prisma.challenge.create({
       data: {
@@ -331,19 +328,19 @@ export class ChallengeRepository {
           connect: { id: authorId },
         },
         ...(facultyIds && facultyIds.length > 0
-          ? { faculties: { connect: facultyIds.map((fId: string) => ({ id: fId })) } }
+          ? { challengeFaculties: { create: facultyIds.map((fId: string) => ({ facultyId: fId })) } }
           : {}),
       },
     });
 
     // Sync criteria to official table on create
-    await this.syncCriteriaToTable(created.id, created.evaluationCriteria);
+    await this.syncCriteriaToTable(created.id, evaluationCriteria);
     return created;
   }
 
   async update(id: string, data: Partial<Challenge>): Promise<Challenge> {
     const prepared = this.prepareData(data);
-    const { facultyIds, ...challengeData } = prepared as any;
+    const { facultyIds, evaluationCriteria, ...challengeData } = prepared as any;
 
     this.logger.log(`Prisma Update Challenge ID: ${id}`);
     this.logger.log(`Faculty IDs to connect: ${JSON.stringify(facultyIds)}`);
@@ -353,13 +350,18 @@ export class ChallengeRepository {
       data: {
         ...(challengeData as Prisma.ChallengeUpdateInput),
         ...(facultyIds !== undefined
-          ? { faculties: { set: facultyIds.map((fId: string) => ({ id: fId })) } }
+          ? {
+              challengeFaculties: {
+                deleteMany: {},
+                create: facultyIds.map((fId: string) => ({ facultyId: fId })),
+              },
+            }
           : {}),
       },
     });
 
     // Sync criteria to official table on update
-    await this.syncCriteriaToTable(updated.id, updated.evaluationCriteria);
+    await this.syncCriteriaToTable(updated.id, evaluationCriteria);
     return updated;
   }
 
@@ -385,20 +387,25 @@ export class ChallengeRepository {
     await Promise.all(
       active.map(async (c: any) => {
         try {
-          const uniqueId = `${challengeId}_${c.id}`;
-          await this.prisma.criteria.upsert({
-            where: { id: uniqueId },
+          const dbCriterion = await this.prisma.criterion.upsert({
+            where: { name: c.name },
+            create: { name: c.name, description: c.description || '' },
+            update: { description: c.description || '' },
+          });
+          await this.prisma.challengeCriterion.upsert({
+            where: {
+              uq_challenge_criterion: {
+                challengeId: challengeId,
+                criterionId: dbCriterion.id,
+              },
+            },
             create: {
-              id: uniqueId,
-              challengeId,
-              name: c.name,
-              description: c.description || null,
+              challengeId: challengeId,
+              criterionId: dbCriterion.id,
               weight: c.weight,
               isActive: true,
             },
             update: {
-              name: c.name,
-              description: c.description || null,
               weight: c.weight,
               isActive: true,
             },
@@ -427,7 +434,7 @@ export class ChallengeRepository {
       data: { finalScore: 0 },
     });
 
-    await this.prisma.criteria.deleteMany({
+    await this.prisma.challengeCriterion.deleteMany({
       where: { challengeId },
     });
 
@@ -606,7 +613,6 @@ export class ChallengeRepository {
               nickname: true,
               displayName: true,
               email: true,
-              avatarUrl: true,
               phone: true,
               studentProfile: {
                 select: {
@@ -646,7 +652,7 @@ export class ChallengeRepository {
           avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(resolvedName)}&background=random`,
         };
       }),
-      topIdeas: topIdeas.map((i) => {
+      topIdeas: topIdeas.map((i: any) => {
         const authorName = i.author?.nickname ||
             i.author?.displayName ||
             i.author?.email?.split('@')[0] ||
@@ -666,7 +672,7 @@ export class ChallengeRepository {
           impact: (i.likesCount || 0) + (i.commentsCount || 0),
           authorName,
           authorRealName,
-          authorAvatar: i.author?.avatarUrl || undefined,
+          authorAvatar: undefined,
           authorStudentCode: i.author?.studentProfile?.studentCode || undefined,
           authorPhone: i.author?.phone || undefined,
           authorFacultyId: i.author?.studentProfile?.facultyId,
@@ -674,7 +680,7 @@ export class ChallengeRepository {
           author: {
             name: authorName,
             nickname: i.author?.nickname || undefined,
-            avatar: i.author?.avatarUrl || undefined,
+            avatar: undefined,
             displayName: authorRealName,
             studentCode: i.author?.studentProfile?.studentCode || undefined,
             phone: i.author?.phone || undefined,
@@ -1092,7 +1098,6 @@ export class ChallengeRepository {
         id: true,
         displayName: true,
         email: true,
-        avatarUrl: true,
       },
       take: 50,
       orderBy: { displayName: 'asc' },
@@ -1108,12 +1113,11 @@ export class ChallengeRepository {
             id: true,
             displayName: true,
             email: true,
-            avatarUrl: true,
           },
         },
       },
     });
-    return judgeRecords.map((r) => r.judge);
+    return judgeRecords.map((r: any) => r.judge);
   }
 
   async assignJudges(
@@ -1189,12 +1193,7 @@ export class ChallengeRepository {
           select: {
             id: true,
             displayName: true,
-            avatarUrl: true,
-          },
-        },
-        tags: {
-          include: {
-            tag: { select: { name: true } },
+            email: true,
           },
         },
         evaluations: {
@@ -1209,7 +1208,7 @@ export class ChallengeRepository {
     });
 
     // 3. Map to a flat response with evaluated flag
-    return ideas.map((idea) => ({
+    return ideas.map((idea: any) => ({
       id: idea.id,
       title: idea.title,
       problem: idea.problem,
@@ -1220,96 +1219,43 @@ export class ChallengeRepository {
       challengeTitle: idea.challenge.title,
       challengeStatus: idea.challenge.status,
       challengeContext: idea.challenge.companyContext,
-      impactArea: (idea as any).impactArea || null,
-      improvementType: (idea as any).improvementType || null,
-      effortLevel: (idea as any).effortLevel || null,
-      tags: idea.tags?.map((t) => t.tag.name) || [],
+      impactArea: idea.impactArea || null,
+      improvementType: idea.improvementType || null,
+      effortLevel: idea.effortLevel || null,
       likesCount: idea.likesCount,
       commentsCount: idea.commentsCount,
       createdAt: idea.createdAt,
-      evaluated: idea.evaluations.length > 0,
-      evaluationId: idea.evaluations[0]?.id ?? null,
-      evaluatedAt: idea.evaluations[0]?.createdAt ?? null,
+      evaluated: idea.evaluations?.length > 0,
+      evaluationId: idea.evaluations?.[0]?.id ?? null,
+      evaluatedAt: idea.evaluations?.[0]?.createdAt ?? null,
     }));
   }
 
   // ─── Judge Eval Form: Get active criteria for a challenge (E3.1) ───────────
 
   async getCriteriaForChallenge(challengeId: string) {
-    const challenge = await this.prisma.challenge.findUnique({
-      where: { id: challengeId },
-      select: { evaluationCriteria: true },
-    });
-
-    if (!challenge || !challenge.evaluationCriteria) {
-      return [];
-    }
-
-    // evaluationCriteria is stored as JSON array of objects
-    const criteriaList = challenge.evaluationCriteria as any[];
-
-    if (!Array.isArray(criteriaList)) {
-      return [];
-    }
-
-    // Filter only enabled criteria and map to required format
-    const activeCriteria = criteriaList
-      .filter((c: any) => c.enabled !== false && c.weight > 0)
-      .map((c: any) => {
-        const uniqueId = `${challengeId}_${c.id}`;
-        return {
-          id: uniqueId,
-          name: c.name,
-          description: c.description || '',
-          weight: c.weight || 0,
-        };
-      });
-
-    // Sync to Criteria table to ensure foreign key integrity for EvaluationScore
-    if (activeCriteria.length > 0) {
-      await Promise.all(
-        activeCriteria.map(async (c: any) => {
-          if (!c.name) return;
-          try {
-            await this.prisma.criteria.upsert({
-              where: {
-                uq_criterion_per_challenge: {
-                  challengeId: challengeId,
-                  name: c.name,
-                },
-              },
-              create: {
-                id: c.id,
-                challengeId: challengeId,
-                name: c.name,
-                description: c.description,
-                weight: c.weight,
-                isActive: true,
-              },
-              update: {
-                description: c.description,
-                weight: c.weight,
-                isActive: true,
-              },
-            });
-          } catch (e) {
-            this.logger.error(`Error syncing criterion ${c.name}:`, e);
-          }
-        }),
-      );
-    }
-
-    const dbCriteria = await this.prisma.criteria.findMany({
+    const dbCriteria = await this.prisma.challengeCriterion.findMany({
       where: { challengeId, isActive: true },
       select: {
         id: true,
-        name: true,
-        description: true,
         weight: true,
+        criterion: {
+          select: {
+            name: true,
+            description: true,
+          },
+        },
       },
     });
 
-    return dbCriteria.sort((a, b) => a.name.localeCompare(b.name));
+    return dbCriteria
+      .map(c => ({
+        id: c.id,
+        name: c.criterion.name,
+        description: c.criterion.description || '',
+        weight: c.weight,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   // ─── E3.3: Export evaluation data for Excel ──────────────────────────────
@@ -1351,11 +1297,8 @@ export class ChallengeRepository {
             scores: {
               select: {
                 score: true,
-                criterion: {
-                  select: {
-                    name: true,
-                    weight: true,
-                  },
+                challengeCriterion: {
+                  select: { id: true, weight: true, criterion: { select: { name: true } } },
                 },
               },
             },

@@ -443,7 +443,7 @@ export class CommentService {
     const isAuthor = requester.id === comment.authorId;
     const isAdmin = requesterRole === UserRole.ADMIN;
     const isCompanyOwnerOfChallenge =
-      requesterRole === UserRole.COMPANY && requester.id === challenge.authorId;
+      requesterRole === UserRole.ORGANIZATION && requester.id === challenge.authorId;
 
     if (!isAuthor && !isAdmin && !isCompanyOwnerOfChallenge) {
       throw new ForbiddenException(

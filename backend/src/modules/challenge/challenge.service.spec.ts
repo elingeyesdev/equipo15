@@ -6,7 +6,7 @@ import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { RedisService } from '../../infrastructure/redis/redis.module';
 import { NotificationService } from '../notification/notification.service';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { FinalizePodiumDto } from './dtos/finalize-podium.dto';
+import { FinalizePodiumDto, RankingCategory } from './dtos/finalize-podium.dto';
 
 describe('ChallengeService', () => {
   let service: ChallengeService;
@@ -55,7 +55,7 @@ describe('ChallengeService', () => {
         authorId: 'user-real-company', // El autor real es otro
       });
 
-      const dto: FinalizePodiumDto = { podiumSize: 5 };
+      const dto: FinalizePodiumDto = { limit: 5, category: RankingCategory.VOTES };
 
       // 2. Act & 3. Assert: Esperamos un error de acceso denegado
       await expect(service.finalizePodium('challenge-1', dto, 'firebase-uid')).rejects.toThrow(

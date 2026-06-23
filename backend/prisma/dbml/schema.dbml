@@ -1,0 +1,568 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table faculties {
+  id String [pk]
+  name String [not null]
+  institutionId String
+  isActive Boolean [not null, default: true]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  studentProfiles student_profiles [not null]
+  challenges challenges [not null]
+}
+
+Table users {
+  id String [pk]
+  firebaseUid String [unique, not null]
+  email String [unique, not null]
+  displayName String [not null]
+  bio String
+  avatarUrl String
+  nickname String
+  phone String [unique]
+  institucion_educativa String
+  ocupacion_laboral String
+  codigo_estudiantil String
+  role UserRole [not null, default: 'USER']
+  totalPoints Int [not null, default: 0]
+  status UserStatus [not null, default: 'ACTIVE']
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  studentProfile student_profiles
+  companyProfile company_profiles
+  devices user_devices [not null]
+  notifications notifications [not null]
+  pointTransactions point_transactions [not null]
+  penalties penalties [not null]
+  appliedPenalties penalties [not null]
+  revokedPenalties penalties [not null]
+  ideas ideas [not null]
+  deletedIdeas ideas [not null]
+  authoredChallenges challenges [not null]
+  judgeAssignments challenge_judges [not null]
+  madeAssignments challenge_judges [not null]
+  privateAccesses private_challenge_accesses [not null]
+  reactions idea_reactions [not null]
+  comments comments [not null]
+  deletedComments comments [not null]
+  evaluations evaluations [not null]
+  mentorshipSessions mentorship_sessions [not null]
+  auditLogs audit_logs [not null]
+}
+
+Table student_profiles {
+  userId String [pk]
+  studentCode String
+  facultyId String
+  enrollmentYear Int
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  user users [not null]
+  faculty faculties
+}
+
+Table company_profiles {
+  userId String [pk]
+  logoUrl String
+  website String
+  description String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  user users [not null]
+}
+
+Table user_devices {
+  id String [pk]
+  userId String [not null]
+  fcmToken String [not null]
+  deviceName String
+  platform Platform
+  lastSeenAt DateTime
+  isActive Boolean [not null, default: true]
+  createdAt DateTime [default: `now()`, not null]
+  user users [not null]
+
+  indexes {
+    (userId, fcmToken) [unique]
+  }
+}
+
+Table notifications {
+  id String [pk]
+  userId String [not null]
+  type NotifType [not null]
+  title String [not null]
+  body String
+  referenceId String
+  referenceType ReferenceType
+  readAt DateTime
+  expiresAt DateTime
+  createdAt DateTime [default: `now()`, not null]
+  user users [not null]
+}
+
+Table point_transactions {
+  id String [pk]
+  userId String [not null]
+  delta Int [not null]
+  reason PointReason [not null]
+  referenceId String
+  referenceType ReferenceType
+  createdAt DateTime [default: `now()`, not null]
+  user users [not null]
+}
+
+Table penalties {
+  id String [pk]
+  userId String [not null]
+  reason PenaltyReason [not null]
+  appliedById String
+  isAutomatic Boolean [not null, default: false]
+  expiresAt DateTime
+  revokedAt DateTime
+  revokedById String
+  createdAt DateTime [default: `now()`, not null]
+  user users [not null]
+  appliedBy users
+  revokedBy users
+}
+
+Table challenges {
+  id String [pk]
+  title String [not null]
+  problemDescription String
+  companyContext String
+  participationRules String
+  publishedAt DateTime
+  submissionsOpenAt DateTime
+  submissionsCloseAt DateTime
+  isPrivate Boolean [not null, default: false]
+  accessToken String [unique]
+  status ChallengeStatus [not null, default: 'DRAFT']
+  authorId String [not null]
+  podiumSize Int
+  logoUrl String
+  evaluationCriteria Json
+  targetAudience Json
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  faculties faculties [not null]
+  author users [not null]
+  ideas ideas [not null]
+  criteria criteria [not null]
+  judges challenge_judges [not null]
+  privateAccesses private_challenge_accesses [not null]
+  winners challenge_winners [not null]
+}
+
+Table private_challenge_accesses {
+  id String [pk]
+  challengeId String [not null]
+  userId String [not null]
+  grantedVia AccessGrantedVia [not null]
+  grantedAt DateTime [default: `now()`, not null]
+  challenge challenges [not null]
+  user users [not null]
+
+  indexes {
+    (challengeId, userId) [unique]
+  }
+}
+
+Table criteria {
+  id String [pk]
+  challengeId String [not null]
+  name String [not null]
+  description String
+  weight Int [not null]
+  isActive Boolean [not null, default: true]
+  createdAt DateTime [default: `now()`, not null]
+  challenge challenges [not null]
+  evaluationScores evaluation_scores [not null]
+
+  indexes {
+    (challengeId, name) [unique]
+  }
+}
+
+Table challenge_judges {
+  challengeId String [not null]
+  judgeId String [not null]
+  assignedById String [not null]
+  assignedAt DateTime [default: `now()`, not null]
+  challenge challenges [not null]
+  judge users [not null]
+  assignedBy users [not null]
+
+  indexes {
+    (challengeId, judgeId) [pk]
+  }
+}
+
+Table ideas {
+  id String [pk]
+  title String [not null]
+  problem String [not null]
+  solution String [not null]
+  isAnonymous Boolean [not null, default: false]
+  authorId String [not null]
+  challengeId String [not null]
+  status IdeaStatus [not null, default: 'PUBLISHED']
+  likesCount Int [not null, default: 0]
+  goodCount Int [not null, default: 0]
+  futureCount Int [not null, default: 0]
+  complexCount Int [not null, default: 0]
+  fireScore Float [not null, default: 0]
+  commentsCount Int [not null, default: 0]
+  favoritesCount Int [not null, default: 0]
+  finalScore Float [not null, default: 0]
+  multimediaLinks Json
+  impactArea String
+  improvementType String
+  effortLevel String
+  deletedAt DateTime
+  deletedById String
+  deleteReason String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  author users [not null]
+  challenge challenges [not null]
+  deletedBy users
+  tags idea_tags [not null]
+  reactions idea_reactions [not null]
+  comments comments [not null]
+  evaluations evaluations [not null]
+  mentorshipSessions mentorship_sessions [not null]
+  winners challenge_winners [not null]
+}
+
+Table mentorship_sessions {
+  id String [pk]
+  ideaId String [not null]
+  mentorId String [not null]
+  feedback String [not null]
+  sessionDate DateTime [not null]
+  topics String
+  createdAt DateTime [default: `now()`, not null]
+  idea ideas [not null]
+  mentor users [not null]
+}
+
+Table tags {
+  id String [pk]
+  name String [unique, not null]
+  createdAt DateTime [default: `now()`, not null]
+  ideas idea_tags [not null]
+}
+
+Table idea_tags {
+  ideaId String [not null]
+  tagId String [not null]
+  idea ideas [not null]
+  tag tags [not null]
+
+  indexes {
+    (ideaId, tagId) [pk]
+  }
+}
+
+Table idea_reactions {
+  id String [pk]
+  ideaId String [not null]
+  userId String [not null]
+  type ReactionType [not null]
+  reactionType String
+  createdAt DateTime [default: `now()`, not null]
+  idea ideas [not null]
+  user users [not null]
+
+  indexes {
+    (ideaId, userId, type) [unique]
+  }
+}
+
+Table comments {
+  id String [pk]
+  content String [not null]
+  authorId String [not null]
+  ideaId String [not null]
+  parentCommentId String
+  status CommentStatus [not null, default: 'VISIBLE']
+  editCount Int [not null, default: 0]
+  deletedById String
+  deleteReason String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  editedAt DateTime
+  deletedAt DateTime
+  author users [not null]
+  idea ideas [not null]
+  deletedBy users
+  parent comments
+  replies comments [not null]
+}
+
+Table evaluations {
+  id String [pk]
+  ideaId String [not null]
+  judgeId String [not null]
+  feedback String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  idea ideas [not null]
+  judge users [not null]
+  scores evaluation_scores [not null]
+
+  indexes {
+    (ideaId, judgeId) [unique]
+  }
+}
+
+Table evaluation_scores {
+  id String [pk]
+  evaluationId String [not null]
+  criterionId String [not null]
+  score Int [not null]
+  createdAt DateTime [default: `now()`, not null]
+  evaluation evaluations [not null]
+  criterion criteria [not null]
+
+  indexes {
+    (evaluationId, criterionId) [unique]
+  }
+}
+
+Table challenge_winners {
+  id String [pk]
+  challengeId String [not null]
+  ideaId String [not null]
+  category WinnerCategory [not null]
+  position Int [not null]
+  createdAt DateTime [default: `now()`, not null]
+  challenge challenges [not null]
+  idea ideas [not null]
+
+  indexes {
+    (challengeId, ideaId, category) [unique]
+    (challengeId, category, position) [unique]
+  }
+}
+
+Table global_metrics {
+  key String [pk]
+  value BigInt [not null, default: 0]
+  valueJson Json
+  updatedAt DateTime [default: `now()`, not null]
+}
+
+Table audit_logs {
+  id String [pk]
+  adminId String [not null]
+  action AuditAction [not null]
+  targetType String [not null]
+  targetId String [not null]
+  reason String
+  snapshot Json
+  createdAt DateTime [default: `now()`, not null]
+  admin users [not null]
+}
+
+Table allowed_domains {
+  id String [pk]
+  domain String [unique, not null]
+  isActive Boolean [not null, default: true]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table ChallengeToFaculty {
+  challengesId String [ref: > challenges.id]
+  facultiesId String [ref: > faculties.id]
+}
+
+Enum UserRole {
+  ADMIN
+  COMPANY
+  JUDGE
+  USER
+}
+
+Enum UserStatus {
+  ACTIVE
+  SOFT_BLOCK
+  SUSPENDED
+  DELETED
+}
+
+Enum ChallengeStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  EVALUATING
+  CLOSED
+}
+
+Enum IdeaStatus {
+  DRAFT
+  PUBLISHED
+  FINALIST
+  WINNER
+  DISQUALIFIED
+}
+
+Enum CommentStatus {
+  VISIBLE
+  HIDDEN
+  FLAGGED
+}
+
+Enum ReactionType {
+  LIKE
+  FAVORITE
+}
+
+Enum Platform {
+  IOS
+  ANDROID
+  WEB
+}
+
+Enum PointReason {
+  IDEA_PUBLISHED
+  COMMENT_POSTED
+  LIKE_GIVEN
+  IDEA_WINNER
+  IDEA_FINALIST
+  PENALTY_DEDUCTION
+}
+
+Enum NotifType {
+  IDEA_LIKED
+  COMMENT_RECEIVED
+  EVALUATION_COMPLETE
+  CHALLENGE_STARTED
+  CHALLENGE_CLOSED
+  WINNER_ANNOUNCED
+  PENALTY_APPLIED
+  JUDGE_REMOVED
+  ROLE_UPDATED
+  NEW_CHALLENGE_PUBLISHED
+  NEW_COMMENT
+  IDEA_REACTION
+  COMMENT_REPLY
+  CHALLENGE_EXPIRING
+  EVALUATION_STARTED
+  EVALUATION_SUBMITTED
+  JUDGE_ASSIGNED
+}
+
+Enum PenaltyReason {
+  EXCESSIVE_LIKE_REMOVAL
+  COMMENT_ABUSE
+  SPAM
+  ADMIN_MANUAL
+}
+
+Enum AuditAction {
+  DELETE_COMMENT
+  DELETE_IDEA
+  BLOCK_USER
+  SUSPEND_USER
+  CLOSE_CHALLENGE
+  ASSIGN_JUDGE
+  REVOKE_PENALTY
+}
+
+Enum WinnerCategory {
+  GENERAL
+  MAS_VOTADA
+  MAS_INNOVADORA
+}
+
+Enum AccessGrantedVia {
+  FACULTY
+  TOKEN
+  ADMIN
+}
+
+Enum ReferenceType {
+  IDEA
+  CHALLENGE
+  COMMENT
+  EVALUATION
+  MANUAL
+}
+
+Ref: student_profiles.userId - users.id [delete: Cascade]
+
+Ref: student_profiles.facultyId > faculties.id [delete: Set Null]
+
+Ref: company_profiles.userId - users.id [delete: Cascade]
+
+Ref: user_devices.userId > users.id [delete: Cascade]
+
+Ref: notifications.userId > users.id [delete: Cascade]
+
+Ref: point_transactions.userId > users.id [delete: Cascade]
+
+Ref: penalties.userId > users.id [delete: Cascade]
+
+Ref: penalties.appliedById > users.id [delete: Cascade]
+
+Ref: penalties.revokedById > users.id [delete: Cascade]
+
+Ref: challenges.authorId > users.id [delete: Restrict]
+
+Ref: private_challenge_accesses.challengeId > challenges.id [delete: Cascade]
+
+Ref: private_challenge_accesses.userId > users.id [delete: Cascade]
+
+Ref: criteria.challengeId > challenges.id [delete: Cascade]
+
+Ref: challenge_judges.challengeId > challenges.id [delete: Cascade]
+
+Ref: challenge_judges.judgeId > users.id [delete: Cascade]
+
+Ref: challenge_judges.assignedById > users.id [delete: Cascade]
+
+Ref: ideas.authorId > users.id [delete: Restrict]
+
+Ref: ideas.challengeId > challenges.id [delete: Restrict]
+
+Ref: ideas.deletedById > users.id [delete: Restrict]
+
+Ref: mentorship_sessions.ideaId > ideas.id [delete: Cascade]
+
+Ref: mentorship_sessions.mentorId > users.id [delete: Restrict]
+
+Ref: idea_tags.ideaId > ideas.id [delete: Cascade]
+
+Ref: idea_tags.tagId > tags.id [delete: Cascade]
+
+Ref: idea_reactions.ideaId > ideas.id [delete: Cascade]
+
+Ref: idea_reactions.userId > users.id [delete: Cascade]
+
+Ref: comments.authorId > users.id [delete: Restrict]
+
+Ref: comments.ideaId > ideas.id [delete: Cascade]
+
+Ref: comments.deletedById > users.id [delete: Restrict]
+
+Ref: comments.parentCommentId - comments.id [delete: Cascade]
+
+Ref: evaluations.ideaId > ideas.id [delete: Restrict]
+
+Ref: evaluations.judgeId > users.id [delete: Restrict]
+
+Ref: evaluation_scores.evaluationId > evaluations.id [delete: Cascade]
+
+Ref: evaluation_scores.criterionId > criteria.id [delete: Restrict]
+
+Ref: challenge_winners.challengeId > challenges.id [delete: Restrict]
+
+Ref: challenge_winners.ideaId > ideas.id [delete: Restrict]
+
+Ref: audit_logs.adminId > users.id [delete: Restrict]

@@ -122,7 +122,6 @@ export class IdeaRepository {
               email: true,
               phone: true,
               role: true,
-              avatarUrl: true,
               studentProfile: {
                 select: {
                   facultyId: true,
@@ -151,7 +150,7 @@ export class IdeaRepository {
         ...rest,
         hasVoted:
           Array.isArray(reactions) &&
-          reactions.some((r: any) => r.type === 'LIKE'),
+          reactions.some((r: any) => r.type === 'FUTURE' || r.type === 'GOOD' || r.type === 'COMPLEX'),
         hasFavorited:
           Array.isArray(reactions) &&
           reactions.some((r: any) => r.type === 'FAVORITE'),
@@ -216,22 +215,22 @@ export class IdeaRepository {
       // Upsert es atómico a nivel de tabla IdeaReaction, pero necesitamos actualizar Idea al mismo tiempo.
       // Así que usaremos la transacción interactiva de Prisma para hacer ambas cosas de forma segura.
       return await this.prisma.$transaction(async (tx) => {
-        const existing = await tx.ideaReaction.findUnique({
-          where: { uq_reaction_per_type: { ideaId, userId, type: 'LIKE' } },
+        const existing = await tx.ideaReaction.findFirst({
+          where: { ideaId, userId, type: { in: ['FUTURE', 'GOOD', 'COMPLEX'] } },
         });
 
         if (existing) {
-          if (existing.reactionType === targetReaction) {
+          if (existing.type === targetReaction) {
             // Eliminar reacción si es la misma
             await tx.ideaReaction.delete({
               where: { id: existing.id },
             });
             const oldFireDelta =
-              existing.reactionType === 'COMPLEX' ? -0.5 : -2;
+              existing.type === 'COMPLEX' ? -0.5 : -2;
             const oldField =
-              existing.reactionType === 'GOOD'
+              existing.type === 'GOOD'
                 ? 'goodCount'
-                : existing.reactionType === 'FUTURE'
+                : existing.type === 'FUTURE'
                   ? 'futureCount'
                   : 'complexCount';
             const updatedIdea = await tx.idea.update({
@@ -247,14 +246,14 @@ export class IdeaRepository {
             // Actualizar reacción
             await tx.ideaReaction.update({
               where: { id: existing.id },
-              data: { reactionType: targetReaction },
+              data: { type: targetReaction as any },
             });
             const oldFireDelta =
-              existing.reactionType === 'COMPLEX' ? -0.5 : -2;
+              existing.type === 'COMPLEX' ? -0.5 : -2;
             const oldField =
-              existing.reactionType === 'GOOD'
+              existing.type === 'GOOD'
                 ? 'goodCount'
-                : existing.reactionType === 'FUTURE'
+                : existing.type === 'FUTURE'
                   ? 'futureCount'
                   : 'complexCount';
             const updatedIdea = await tx.idea.update({
@@ -273,8 +272,7 @@ export class IdeaRepository {
             data: {
               ideaId,
               userId,
-              type: 'LIKE',
-              reactionType: targetReaction,
+              type: targetReaction as any,
             },
           });
           const updatedIdea = await tx.idea.update({
@@ -338,7 +336,7 @@ export class IdeaRepository {
   }
 
   async findDraftsByAuthorId(authorId: string): Promise<any[]> {
-    return this.prisma.idea.findMany({
+    const data = await this.prisma.idea.findMany({
       where: { authorId, status: 'DRAFT', deletedAt: null },
       orderBy: { updatedAt: 'desc' },
       select: {
@@ -353,20 +351,28 @@ export class IdeaRepository {
         isAnonymous: true,
         createdAt: true,
         updatedAt: true,
-        challengeId: true,
         challenge: {
           select: {
             id: true,
             title: true,
             status: true,
-            faculties: { select: { id: true, name: true } },
+            challengeFaculties: {
+              select: {
+                faculty: { select: { id: true, name: true } },
+              },
+            },
           },
-        },
-        tags: {
-          select: { tag: { select: { name: true } } },
         },
       },
     });
+
+    return data.map((idea: any) => ({
+      ...idea,
+      challenge: {
+        ...idea.challenge,
+        faculties: idea.challenge?.challengeFaculties?.map((cf: any) => cf.faculty) || [],
+      },
+    }));
   }
 
   async softDeleteDraft(id: string): Promise<Idea> {
@@ -435,13 +441,13 @@ export class IdeaRepository {
               },
             },
             challenge: { select: { id: true, title: true, status: true } },
-            reactions: { where: { userId, type: 'LIKE' } },
+            reactions: { where: { userId, type: { in: ['FUTURE', 'GOOD', 'COMPLEX'] } } },
           },
         },
       },
-    });
+    }) as any;
 
-    return reactions.map((reaction) => {
+    return reactions.map((reaction: any) => {
       const { reactions: userReactions, ...ideaRest } = reaction.idea as any;
       return {
         ...ideaRest,

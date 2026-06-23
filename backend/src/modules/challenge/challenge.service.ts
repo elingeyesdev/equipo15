@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ChallengeRepository } from './challenge.repository';
-import { Challenge, IdeaStatus, WinnerCategory, ReferenceType } from '@prisma/client';
+import { Challenge, IdeaStatus, WinnerCategory } from '@prisma/client';
 import { CreateChallengeDto } from './dtos/create-challenge.dto';
 import { UpdateChallengeDto } from './dtos/update-challenge.dto';
 import { FinalizePodiumDto, RankingCategory } from './dtos/finalize-podium.dto';
@@ -300,7 +300,8 @@ export class ChallengeService {
       const normalizedCriteria = this.processEvaluationCriteria(updateChallengeDto.evaluationCriteria);
       updateChallengeDto.evaluationCriteria = normalizedCriteria;
 
-      const existingCriteria = JSON.stringify(existing.evaluationCriteria ?? []);
+      const activeDbCriteria = await this.challengeRepository.getCriteriaForChallenge(id);
+      const existingCriteria = JSON.stringify(activeDbCriteria ?? []);
       const newCriteria = JSON.stringify(updateChallengeDto.evaluationCriteria ?? []);
       if (existingCriteria !== newCriteria) {
         await this.challengeRepository.resetEvaluationsForChallenge(id);
@@ -606,7 +607,7 @@ export class ChallengeService {
             where: {
               userId: user.id,
               type: 'CHALLENGE_EXPIRING',
-              referenceId: challenge.id,
+              challengeId: challenge.id,
             },
           });
 
@@ -616,8 +617,9 @@ export class ChallengeService {
               'CHALLENGE_EXPIRING' as any,
               '¡Últimas 24 horas!',
               `¡Últimas 24 horas! El reto ${challenge.title} está por cerrar, envía tu propuesta antes de que se agote el tiempo.`,
-              challenge.id,
-              ReferenceType.CHALLENGE,
+              undefined,
+              undefined,
+              challenge.id
             );
           }
         }
@@ -641,8 +643,9 @@ export class ChallengeService {
           'EVALUATION_STARTED' as any,
           'Periodo de ideación finalizado',
           'El periodo de ideación ha finalizado. Tu propuesta se encuentra ahora bajo evaluación rigurosa del jurado.',
+          undefined,
+          undefined,
           challengeId,
-          ReferenceType.CHALLENGE,
         );
       }
     } catch (error) {
@@ -1027,10 +1030,8 @@ export class ChallengeService {
           scores: {
             select: {
               score: true,
-              criterion: {
-                select: {
-                  weight: true,
-                },
+              challengeCriterion: {
+                select: { id: true, weight: true, criterion: { select: { name: true } } },
               },
             },
           },
@@ -1042,7 +1043,7 @@ export class ChallengeService {
 
     evaluations.forEach((evaluation) => {
       const judgeScore = evaluation.scores.reduce((sum, item) => {
-        const weight = item.criterion?.weight ?? 0;
+        const weight = item.challengeCriterion?.weight ?? 0;
         return sum + item.score * (weight / 100);
       }, 0);
 
@@ -1150,7 +1151,7 @@ export class ChallengeService {
 
     // 2. Fetch deep data
     const ideas =
-      await this.challengeRepository.getEvaluationDataForExport(challengeId);
+      (await this.challengeRepository.getEvaluationDataForExport(challengeId)) as any[];
 
     // 3. Build workbook
 
@@ -1164,7 +1165,7 @@ export class ChallengeService {
     ideas.forEach((idea) => {
       idea.evaluations.forEach((evaluation) => {
         evaluation.scores.forEach((sc) => {
-          if (sc.criterion?.name) criteriaNames.add(sc.criterion.name);
+          if (sc.challengeCriterion?.name) criteriaNames.add(sc.challengeCriterion.name);
         });
       });
     });

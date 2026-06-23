@@ -11,13 +11,13 @@ export class EvaluationRepository {
       data: {
         ...evaluationData,
         scores: {
-          create: scores.map((s: { criterionId: string; score: number }) => ({
-            criterionId: s.criterionId,
+          create: scores.map((s: { challengeCriterionId: string; score: number }) => ({
+            challengeCriterionId: s.challengeCriterionId,
             score: s.score,
           })),
         },
       },
-      include: { scores: { include: { criterion: true } } },
+      include: { scores: { include: { challengeCriterion: true } } },
     });
   }
 
@@ -69,17 +69,14 @@ export class EvaluationRepository {
             displayName: true,
             nickname: true,
             email: true,
-            avatarUrl: true,
           },
         },
         scores: {
           include: {
-            criterion: {
+            challengeCriterion: {
               select: {
                 id: true,
-                name: true,
-                description: true,
-                weight: true,
+                criterion: { select: { name: true, description: true } },
               },
             },
           },
@@ -94,7 +91,7 @@ export class EvaluationRepository {
       where: { judgeId },
       include: {
         idea: true,
-        scores: { include: { criterion: true } },
+        scores: { include: { challengeCriterion: true } },
       },
     });
   }
@@ -115,7 +112,6 @@ export class EvaluationRepository {
             impactArea: true,
             improvementType: true,
             effortLevel: true,
-            tags: true,
             likesCount: true,
             commentsCount: true,
             createdAt: true,
@@ -124,7 +120,6 @@ export class EvaluationRepository {
               select: {
                 id: true,
                 displayName: true,
-                avatarUrl: true,
               },
             },
             challenge: {
@@ -138,11 +133,10 @@ export class EvaluationRepository {
         },
         scores: {
           include: {
-            criterion: {
+            challengeCriterion: {
               select: {
                 id: true,
-                name: true,
-                description: true,
+                criterion: { select: { name: true, description: true } },
                 weight: true,
               },
             },

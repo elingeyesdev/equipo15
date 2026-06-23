@@ -1,14 +1,3 @@
-// ============================================================
-// PostgreSQL / Prisma ORM
-// Sincronizado con prowork_schema_v4.dbml + migration_v4.sql
-//
-// IMPORTANTE — flujo de migración:
-//   1. npx prisma migrate dev --name v4_schema
-//      (Prisma genera y ejecuta su SQL automático)
-//   2. Ejecutar migration_v4.sql manualmente sobre la misma BD
-//      (índices parciales, CHECK constraints, trigger)
-// ============================================================
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -22,7 +11,7 @@ datasource db {
 
 enum UserRole {
   ADMIN
-  COMPANY
+  ORGANIZATION
   JUDGE
   USER
 }
@@ -31,7 +20,7 @@ enum UserStatus {
   ACTIVE
   SOFT_BLOCK
   SUSPENDED
-  DELETED        // [C1] Reemplaza users.isActive — soft delete de usuario
+  DELETED
 }
 
 enum ChallengeStatus {
@@ -53,12 +42,38 @@ enum IdeaStatus {
 enum CommentStatus {
   VISIBLE
   HIDDEN
-  FLAGGED        // [C2] DELETED eliminado — fuente de verdad es deletedAt
+  FLAGGED
 }
 
 enum ReactionType {
-  LIKE
+  GOOD
+  FUTURE
+  COMPLEX
   FAVORITE
+}
+
+enum ImpactArea {
+  PRODUCTIVIDAD
+  COSTOS
+  CLIENTES
+  EQUIPO
+  CRECIMIENTO
+  SOSTENIBILIDAD
+  IMPACTO_SOCIAL
+}
+
+enum ImprovementType {
+  OPTIMIZA
+  POTENCIA
+  EXPANDE
+  TRANSFORMA
+}
+
+enum EffortLevel {
+  FACIL_IMPLEMENTAR
+  REQUIERE_COORDINACION
+  REQUIERE_DESARROLLO
+  REQUIERE_TRANSFORMACION
 }
 
 enum Platform {
@@ -120,17 +135,9 @@ enum WinnerCategory {
 }
 
 enum AccessGrantedVia {
-  FACULTY   // acceso inherente por facultad — se registra para auditoría
-  TOKEN     // acceso por link/token compartido
-  ADMIN     // override manual de admin
-}
-
-enum ReferenceType {
-  IDEA
-  CHALLENGE
-  COMMENT
-  EVALUATION
-  MANUAL
+  FACULTY
+  TOKEN
+  ADMIN
 }
 
 // ============================================================
@@ -138,20 +145,16 @@ enum ReferenceType {
 // ============================================================
 
 model Faculty {
-  id            String    @id @default(uuid())
-  name          String
-  institutionId String?   // FK futura a Institution — multitenancy
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String   @id @default(uuid())
+  name           String
+  organizationId String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  // Relaciones
-  studentProfiles StudentProfile[]
-  challenges      Challenge[]
-
-  // [F1] Unicidad real con institutionId nullable implementada en migration_v4.sql
-  // con dos índices únicos parciales — Prisma no puede expresar esto en schema.
-  // NO agregar @@unique([name, institutionId]) aquí.
+  organization       OrganizationProfile? @relation(fields: [organizationId], references: [userId], onDelete: Cascade)
+  studentProfiles    StudentProfile[]
+  challengeFaculties ChallengeFaculty[]
 
   @@map("faculties")
 }
@@ -166,68 +169,46 @@ model User {
   email       String     @unique
   displayName String
   bio         String?
-  avatarUrl   String?
   nickname    String?
   phone       String?    @unique
-  institucion_educativa String?
-  ocupacion_laboral      String?
-  codigo_estudiantil     String?
   role        UserRole   @default(USER)
-  // CACHÉ de point_transactions. Solo escribe point_transactions.service.ts.
-  // Job CRON diario: UPDATE users SET totalPoints = (SELECT COALESCE(SUM(delta),0)
-  // FROM point_transactions WHERE userId = users.id)
   totalPoints Int        @default(0)
-  // [C1] isActive eliminado. status es la única fuente de verdad del estado.
-  // [R4] Precedencia de rol: se deriva del email SOLO en el primer sync.
-  // Si el admin cambió el rol via PUT /admin/users/:id/role, el sync NO sobreescribe.
   status      UserStatus @default(ACTIVE)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  // Perfiles especializados 1:1
-  studentProfile  StudentProfile?
-  companyProfile  CompanyProfile?
+  studentProfile      StudentProfile?
+  organizationProfile OrganizationProfile?
 
-  // Relaciones principales
-  devices              UserDevice[]
-  notifications        Notification[]
-  pointTransactions    PointTransaction[]
+  devices           UserDevice[]
+  notifications     Notification[]
+  pointTransactions PointTransaction[]
 
-  // Penalizaciones (como sujeto y como quien aplica/revoca)
-  penalties            Penalty[]  @relation("PenaltyUser")
-  appliedPenalties     Penalty[]  @relation("PenaltyAppliedBy")
-  revokedPenalties     Penalty[]  @relation("PenaltyRevokedBy")
+  penalties        Penalty[] @relation("PenaltyUser")
+  appliedPenalties Penalty[] @relation("PenaltyAppliedBy")
+  revokedPenalties Penalty[] @relation("PenaltyRevokedBy")
 
-  // Ideas
-  ideas                Idea[]     @relation("IdeaAuthor")
-  deletedIdeas         Idea[]     @relation("IdeaDeletedBy")
+  ideas        Idea[] @relation("IdeaAuthor")
+  deletedIdeas Idea[] @relation("IdeaDeletedBy")
 
-  // Retos
-  authoredChallenges   Challenge[]
+  authoredChallenges Challenge[]
 
-  // Juez
-  judgeAssignments     ChallengeJudge[] @relation("JudgeUser")
-  madeAssignments      ChallengeJudge[] @relation("AssignedByUser")
+  judgeAssignments ChallengeJudge[] @relation("JudgeUser")
+  madeAssignments  ChallengeJudge[] @relation("AssignedByUser")
 
-  // Accesos privados
-  privateAccesses      PrivateChallengeAccess[]
+  privateAccesses PrivateChallengeAccess[]
 
-  // Reacciones y comentarios
-  reactions            IdeaReaction[]
-  comments             Comment[]  @relation("CommentAuthor")
-  deletedComments      Comment[]  @relation("CommentDeletedBy")
+  reactions       IdeaReaction[]
+  comments        Comment[]      @relation("CommentAuthor")
+  deletedComments Comment[]      @relation("CommentDeletedBy")
 
-  // Evaluaciones (como juez)
-  evaluations          Evaluation[]
+  evaluations Evaluation[]
 
-  // Mentoría
-  mentorshipSessions   MentorshipSession[]
+  mentorshipSessions MentorshipSession[]
 
-  // Auditoría (como admin que ejecuta acciones)
-  auditLogs            AuditLog[]
+  auditLogs AuditLog[]
 
   @@index([status])
-  // [P5] idx_users_active_firebase (parcial WHERE status != 'DELETED') — en migration_v4.sql
   @@map("users")
 }
 
@@ -249,7 +230,7 @@ model StudentProfile {
   @@map("student_profiles")
 }
 
-model CompanyProfile {
+model OrganizationProfile {
   userId      String   @id
   logoUrl     String?
   website     String?
@@ -257,9 +238,10 @@ model CompanyProfile {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  faculties Faculty[]
 
-  @@map("company_profiles")
+  @@map("organization_profiles")
 }
 
 // ============================================================
@@ -288,27 +270,34 @@ model UserDevice {
 // ============================================================
 
 model Notification {
-  id            String      @id @default(uuid())
-  userId        String
-  type          NotifType
-  title         String
-  body          String?
-  // Polimórfico — sin FK real. Validado en service antes de INSERT.
-  // [P8] índice (referenceType, referenceId) en migration_v4.sql
-  referenceId   String?
-  referenceType ReferenceType?
-  readAt        DateTime?
-  // [M2] TTL opcional. Job CRON purga WHERE expiresAt < NOW()
-  // o createdAt < NOW() - INTERVAL '90 days'
-  expiresAt     DateTime?
-  createdAt     DateTime    @default(now())
+  id     String    @id @default(uuid())
+  userId String
+  type   NotifType
+  title  String
+  body   String?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ideaId       String?
+  commentId    String?
+  challengeId  String?
+  evaluationId String?
+
+  readAt    DateTime?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idea       Idea?       @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  comment    Comment?    @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  challenge  Challenge?  @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  evaluation Evaluation? @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([userId, readAt])
   @@index([userId, createdAt])
   @@index([expiresAt])
+  @@index([ideaId])
+  @@index([commentId])
+  @@index([challengeId])
   @@map("notifications")
 }
 
@@ -317,21 +306,30 @@ model Notification {
 // ============================================================
 
 model PointTransaction {
-  id            String        @id @default(uuid())
-  userId        String
-  // Positivo = suma, negativo = descuento
-  delta         Int
-  reason        PointReason
-  // Polimórfico — sin FK real. [P8] índice en migration_v4.sql
-  referenceId   String?
-  referenceType ReferenceType?
-  createdAt     DateTime      @default(now())
+  id     String      @id @default(uuid())
+  userId String
+  delta  Int
+  reason PointReason
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ideaId       String?
+  commentId    String?
+  challengeId  String?
+  evaluationId String?
+
+  createdAt DateTime @default(now())
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idea       Idea?       @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  comment    Comment?    @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  challenge  Challenge?  @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  evaluation Evaluation? @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([userId, createdAt])
   @@index([reason])
+  @@index([ideaId])
+  @@index([commentId])
+  @@index([challengeId])
   @@map("point_transactions")
 }
 
@@ -345,17 +343,15 @@ model Penalty {
   reason      PenaltyReason
   appliedById String?
   isAutomatic Boolean       @default(false)
-  // Null = permanente hasta revocación manual
   expiresAt   DateTime?
   revokedAt   DateTime?
   revokedById String?
   createdAt   DateTime      @default(now())
 
-  user      User  @relation("PenaltyUser",      fields: [userId],      references: [id], onDelete: Cascade)
+  user      User  @relation("PenaltyUser", fields: [userId], references: [id], onDelete: Cascade)
   appliedBy User? @relation("PenaltyAppliedBy", fields: [appliedById], references: [id], onDelete: SetNull)
   revokedBy User? @relation("PenaltyRevokedBy", fields: [revokedById], references: [id], onDelete: SetNull)
 
-  // [P4] idx_active_penalties (parcial WHERE revokedAt IS NULL) — en migration_v4.sql
   @@index([userId])
   @@index([userId, expiresAt])
   @@index([userId, revokedAt])
@@ -376,26 +372,25 @@ model Challenge {
   submissionsOpenAt  DateTime?
   submissionsCloseAt DateTime?
   isPrivate          Boolean         @default(false)
-  // UNIQUE nullable: PostgreSQL permite múltiples NULL (retos públicos), correcto.
   accessToken        String?         @unique
   status             ChallengeStatus @default(DRAFT)
   authorId           String
   podiumSize         Int?
   logoUrl            String?         @db.Text
-  evaluationCriteria Json?
   targetAudience     Json?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
-  faculties Faculty[]
-  // RESTRICT: no se puede eliminar un usuario con retos activos
-  author   User     @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  author User @relation(fields: [authorId], references: [id], onDelete: Restrict)
 
-  ideas          Idea[]
-  criteria       Criteria[]
-  judges         ChallengeJudge[]
-  privateAccesses PrivateChallengeAccess[]
-  winners        ChallengeWinner[]
+  challengeFaculties ChallengeFaculty[]
+  ideas              Idea[]
+  challengeCriteria  ChallengeCriterion[]
+  judges             ChallengeJudge[]
+  privateAccesses    PrivateChallengeAccess[]
+  winners            ChallengeWinner[]
+  notifications      Notification[]
+  pointTransactions  PointTransaction[]
 
   @@index([status])
   @@index([authorId])
@@ -404,17 +399,26 @@ model Challenge {
   @@map("challenges")
 }
 
+model ChallengeFaculty {
+  challengeId String
+  facultyId   String
+  assignedAt  DateTime @default(now())
+
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  faculty   Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+
+  @@id([challengeId, facultyId])
+  @@map("challenge_faculties")
+}
+
 // ============================================================
-// ACCESO A RETOS PRIVADOS — [R5]
+// ACCESO A RETOS PRIVADOS
 // ============================================================
 
 model PrivateChallengeAccess {
   id          String           @id @default(uuid())
   challengeId String
   userId      String
-  // Audita la vía de acceso: FACULTY | TOKEN | ADMIN
-  // REGLA: si student_profiles.facultyId = challenges.facultyId,
-  // el acceso es inherente. Esta tabla solo registra excepciones.
   grantedVia  AccessGrantedVia
   grantedAt   DateTime         @default(now())
 
@@ -431,25 +435,33 @@ model PrivateChallengeAccess {
 // CRITERIOS DE EVALUACIÓN
 // ============================================================
 
-model Criteria {
+model Criterion {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  type        String  @default("DEFAULT") // DEFAULT, OPTIONAL, CUSTOM
+
+  challengeCriteria ChallengeCriterion[]
+
+  @@map("criteria")
+}
+
+model ChallengeCriterion {
   id          String   @id @default(uuid())
   challengeId String
-  name        String
-  description String?
-  // CHECK (weight >= 1 AND weight <= 100) — en migration_v4.sql
-  // El service además valida SUM(weight) = 100 antes de publicar el reto
+  criterionId String
   weight      Int
-  // Se congela a false cuando el challenge pasa a EVALUATING
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 
   challenge        Challenge         @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  criterion        Criterion         @relation(fields: [criterionId], references: [id], onDelete: Cascade)
   evaluationScores EvaluationScore[]
 
-  @@unique([challengeId, name], name: "uq_criterion_per_challenge")
+  @@unique([challengeId, criterionId], name: "uq_challenge_criterion")
   @@index([challengeId])
-  @@index([challengeId, isActive])
-  @@map("criteria")
+  @@index([criterionId])
+  @@map("challenge_criteria")
 }
 
 // ============================================================
@@ -463,7 +475,7 @@ model ChallengeJudge {
   assignedAt   DateTime @default(now())
 
   challenge  Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-  judge      User      @relation("JudgeUser",      fields: [judgeId],      references: [id], onDelete: Cascade)
+  judge      User      @relation("JudgeUser", fields: [judgeId], references: [id], onDelete: Cascade)
   assignedBy User      @relation("AssignedByUser", fields: [assignedById], references: [id], onDelete: Restrict)
 
   @@id([challengeId, judgeId])
@@ -480,21 +492,11 @@ model Idea {
   title       String
   problem     String
   solution    String
-  // authorId siempre almacenado. Anonimato solo en presentación.
-  // El backend DEBE omitir datos del autor en el DTO si isAnonymous=true.
   isAnonymous Boolean    @default(false)
   authorId    String
   challengeId String
   status      IdeaStatus @default(PUBLISHED)
 
-  // ── CACHÉS ────────────────────────────────────────────────
-  // likesCount / favoritesCount: trigger simple en idea_reactions.
-  //   Trigger verifica idea.deletedAt IS NULL antes de actualizar.
-  // commentsCount: trigger simple en comments.
-  //   Filtra: WHERE deletedAt IS NULL AND status != 'HIDDEN'.
-  // finalScore: NO trigger. Service recalcula SOLO al "Finalizar Evaluación".
-  //   Fórmula: AVG entre jueces de SUM(score * weight/100) por juez.
-  // ─────────────────────────────────────────────────────────
   likesCount     Int   @default(0)
   goodCount      Int   @default(0)
   futureCount    Int   @default(0)
@@ -504,17 +506,12 @@ model Idea {
   favoritesCount Int   @default(0)
   finalScore     Float @default(0)
 
-  // Array estático de URLs — aceptable como Json (no se edita concurrentemente)
   multimediaLinks Json?
 
-  // Clasificación de la idea
-  impactArea      String?
-  improvementType String?
-  effortLevel     String?
+  impactArea      ImpactArea?
+  improvementType ImprovementType?
+  effortLevel     EffortLevel?
 
-  // [C3] mentorshipHistory JSONB eliminado → tabla MentorshipSession
-
-  // Soft delete
   deletedAt    DateTime?
   deletedById  String?
   deleteReason String?
@@ -522,21 +519,18 @@ model Idea {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // RESTRICT: no eliminar usuario/reto con ideas
-  author    User      @relation("IdeaAuthor",    fields: [authorId],    references: [id], onDelete: Restrict)
+  author    User      @relation("IdeaAuthor", fields: [authorId], references: [id], onDelete: Restrict)
   challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Restrict)
   deletedBy User?     @relation("IdeaDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
 
-  tags               IdeaTag[]
   reactions          IdeaReaction[]
   comments           Comment[]
   evaluations        Evaluation[]
   mentorshipSessions MentorshipSession[]
   winners            ChallengeWinner[]
+  notifications      Notification[]
+  pointTransactions  PointTransaction[]
 
-  // [P1] idx_ideas_cursor_feed (parcial WHERE deletedAt IS NULL) — migration_v4.sql
-  // [P2] idx_ideas_active_likes (parcial WHERE deletedAt IS NULL) — migration_v4.sql
-  // [P9] idx_ideas_author_created (parcial WHERE deletedAt IS NULL) — migration_v4.sql
   @@index([challengeId])
   @@index([authorId])
   @@index([status])
@@ -546,7 +540,7 @@ model Idea {
 }
 
 // ============================================================
-// MENTORÍA — [C3]
+// MENTORÍA
 // ============================================================
 
 model MentorshipSession {
@@ -559,41 +553,12 @@ model MentorshipSession {
   createdAt   DateTime @default(now())
 
   idea   Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
-  // RESTRICT: no eliminar mentor con sesiones activas
   mentor User @relation(fields: [mentorId], references: [id], onDelete: Restrict)
 
-  // [P7] idx_mentorship_idea_date — en migration_v4.sql
   @@index([ideaId])
   @@index([mentorId])
   @@index([ideaId, mentorId, sessionDate])
   @@map("mentorship_sessions")
-}
-
-// ============================================================
-// TAGS
-// ============================================================
-
-model Tag {
-  id        String   @id @default(uuid())
-  // Lowercase normalizado. Ej: sostenibilidad, inteligencia-artificial
-  name      String   @unique
-  createdAt DateTime @default(now())
-
-  ideas IdeaTag[]
-
-  @@map("tags")
-}
-
-model IdeaTag {
-  ideaId String
-  tagId  String
-
-  idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
-  tag  Tag  @relation(fields: [tagId],  references: [id], onDelete: Cascade)
-
-  @@id([ideaId, tagId])
-  @@index([tagId])
-  @@map("idea_tags")
 }
 
 // ============================================================
@@ -605,13 +570,11 @@ model IdeaReaction {
   ideaId    String
   userId    String
   type      ReactionType
-  reactionType String?
   createdAt DateTime     @default(now())
 
   idea Idea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // [P6] idx_reactions_user_type_created — en migration_v4.sql
   @@unique([ideaId, userId, type], name: "uq_reaction_per_type")
   @@index([ideaId])
   @@index([userId])
@@ -628,30 +591,24 @@ model Comment {
   content         String
   authorId        String
   ideaId          String
-  // Auto-referencia. NestJS Service limita profundidad a 2 niveles.
   parentCommentId String?
-  // [C2] Enum: VISIBLE | HIDDEN | FLAGGED. DELETED eliminado.
-  // Eliminación = deletedAt IS NOT NULL. Todas las queries normales
-  // deben filtrar WHERE deletedAt IS NULL.
   status          CommentStatus @default(VISIBLE)
-  // Frontend oculta el botón de editar si editCount >= límite configurado
   editCount       Int           @default(0)
   deletedById     String?
   deleteReason    String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   editedAt        DateTime?
-  // Soft delete — fuente de verdad para eliminación
   deletedAt       DateTime?
 
-  // RESTRICT: no eliminar usuario con comentarios
-  author    User     @relation("CommentAuthor",    fields: [authorId],    references: [id], onDelete: Restrict)
-  idea      Idea     @relation(fields: [ideaId],   references: [id],      onDelete: Cascade)
-  deletedBy User?    @relation("CommentDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
-  parent    Comment? @relation("CommentReplies",   fields: [parentCommentId], references: [id], onDelete: Cascade)
-  replies   Comment[] @relation("CommentReplies")
+  author            User               @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  idea              Idea               @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  deletedBy         User?              @relation("CommentDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  parent            Comment?           @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies           Comment[]          @relation("CommentReplies")
+  notifications     Notification[]
+  pointTransactions PointTransaction[]
 
-  // [P3] idx_comments_thread e idx_comments_active (parciales) — migration_v4.sql
   @@index([ideaId])
   @@index([authorId])
   @@index([parentCommentId])
@@ -672,11 +629,12 @@ model Evaluation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // RESTRICT: no borrar idea/juez con evaluaciones
-  idea  Idea @relation(fields: [ideaId],  references: [id], onDelete: Restrict)
+  idea  Idea @relation(fields: [ideaId], references: [id], onDelete: Restrict)
   judge User @relation(fields: [judgeId], references: [id], onDelete: Restrict)
 
-  scores EvaluationScore[]
+  scores            EvaluationScore[]
+  notifications     Notification[]
+  pointTransactions PointTransaction[]
 
   @@unique([ideaId, judgeId], name: "uq_evaluation_per_judge")
   @@index([ideaId])
@@ -685,31 +643,22 @@ model Evaluation {
 }
 
 // ============================================================
-// SCORES DE EVALUACIÓN — [I1] [I2]
+// SCORES DE EVALUACIÓN
 // ============================================================
 
 model EvaluationScore {
-  id           String   @id @default(uuid())
-  evaluationId String
-  criterionId  String
-  // CHECK (score >= 1 AND score <= 10) — en migration_v4.sql
-  score        Int
-  createdAt    DateTime @default(now())
-  // Sin updatedAt — modelo INMUTABLE por diseño de negocio.
-  // Si un score es incorrecto: admin DELETE /evaluations/:id
-  // (cascade elimina scores) → juez POST /evaluations de nuevo.
+  id                   String   @id @default(uuid())
+  evaluationId         String
+  challengeCriterionId String
+  score                Int
+  createdAt            DateTime @default(now())
 
-  // CASCADE: si se revoca la evaluación completa, sus scores se eliminan
-  evaluation Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  criterion  Criteria   @relation(fields: [criterionId],  references: [id], onDelete: Restrict)
+  evaluation         Evaluation         @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  challengeCriterion ChallengeCriterion @relation(fields: [challengeCriterionId], references: [id], onDelete: Restrict)
 
-  // [I1] INTEGRIDAD: trigger trg_validate_criterion_challenge valida en INSERT
-  // que criterionId pertenece al challenge de la evaluación.
-  // Ver migration_v4.sql — función validate_criterion_belongs_to_challenge().
-
-  @@unique([evaluationId, criterionId], name: "uq_score_per_criterion")
+  @@unique([evaluationId, challengeCriterionId], name: "uq_score_per_criterion")
   @@index([evaluationId])
-  @@index([criterionId])
+  @@index([challengeCriterionId])
   @@map("evaluation_scores")
 }
 
@@ -725,33 +674,24 @@ model ChallengeWinner {
   position    Int
   createdAt   DateTime       @default(now())
 
-  // RESTRICT: no borrar reto/idea con ganadores registrados
   challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Restrict)
-  idea      Idea      @relation(fields: [ideaId],      references: [id], onDelete: Restrict)
+  idea      Idea      @relation(fields: [ideaId], references: [id], onDelete: Restrict)
 
-  // [R1] uq_position_per_category previene dos ideas en el mismo puesto
-  @@unique([challengeId, ideaId, category],    name: "uq_winner_per_category")
-  @@unique([challengeId, category, position],  name: "uq_position_per_category")
+  @@unique([challengeId, ideaId, category], name: "uq_winner_per_category")
+  @@unique([challengeId, category, position], name: "uq_position_per_category")
   @@index([ideaId])
   @@map("challenge_winners")
 }
 
 // ============================================================
-// ANALYTICS — [G1]
+// ANALYTICS
 // ============================================================
 
 model GlobalMetric {
-  // Ej: total_active_users | total_published_ideas |
-  //     total_challenges_open | total_points_awarded
   key       String   @id
-  // bigint para contadores de largo plazo
   value     BigInt   @default(0)
-  // Para KPIs compuestos. Ej: { "byFaculty": {"Ingeniería": 120} }
   valueJson Json?
   updatedAt DateTime @default(now())
-
-  // Precalculada por job CRON. GET /admin/analytics/global lee aquí en O(1).
-  // Alternativa futura: PostgreSQL Materialized View con REFRESH CONCURRENTLY.
 
   @@map("global_metrics")
 }
@@ -764,25 +704,20 @@ model AuditLog {
   id         String      @id @default(uuid())
   adminId    String
   action     AuditAction
-  targetType String      // Enum: USER | IDEA | COMMENT | CHALLENGE
+  targetType String
   targetId   String
   reason     String?
-  // JSONB: estado completo del recurso ANTES de la acción. INMUTABLE.
   snapshot   Json?
   createdAt  DateTime    @default(now())
-  // Sin updatedAt — tabla append-only. Nunca UPDATE ni DELETE en producción.
 
-  // SET NULL: si se elimina el admin, el log persiste con adminId referenciando
-  // al usuario eliminado (status=DELETED), no se borra el historial
   admin User @relation(fields: [adminId], references: [id], onDelete: Restrict)
 
-  // [Base para particionamiento futuro por rango de fechas]
   @@index([adminId])
   @@index([targetType, targetId])
   @@index([adminId, createdAt])
-   @@index([action])
-   @@index([createdAt])
-   @@map("audit_logs")
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
 }
 
 model AllowedDomain {

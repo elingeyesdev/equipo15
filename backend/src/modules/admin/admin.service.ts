@@ -127,7 +127,7 @@ export class AdminService {
   }
 
   async getUserReputation(userId: string) {
-    const result = await this.adminRepository.getUserReputation(userId);
+    const result: any = await this.adminRepository.getUserReputation(userId);
 
     if (!result) {
       throw new NotFoundException(`Usuario con id "${userId}" no encontrado.`);
@@ -154,7 +154,6 @@ export class AdminService {
         id: result.id,
         displayName: result.displayName,
         email: result.email,
-        avatarUrl: result.avatarUrl,
         role: result.role,
         status: result.status,
         totalPoints: result.totalPoints,
@@ -170,7 +169,7 @@ export class AdminService {
       },
       ideas: result.ideas.map((idea) => ({
         ...idea,
-        tags: idea.tags.map((t) => t.tag.name),
+        tags: [],
       })),
       penalties: result.penalties,
     };

@@ -27,7 +27,7 @@ const decodeBase64Url = (value: string) => {
   throw new Error('El entorno no soporta decodificación base64 URL.');
 };
 
-const getStorage = () => (typeof window !== 'undefined' ? window.localStorage : null);
+const getStorage = () => (typeof window !== 'undefined' ? window.sessionStorage : null);
 
 export const decodeImpersonationToken = (token: string): ImpersonationSession => {
   const [, payloadPart] = token.split('.');

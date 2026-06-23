@@ -56,7 +56,9 @@ export class UsersController {
       firebaseUid: req.user.uid,
       email: req.user.email || '',
       displayName: req.user.companyName || 'Empresa (Perfil Incompleto)',
-      avatarUrl: null,
+      bio: null,
+      nickname: null,
+      totalPoints: 0,
       phone: null,
       role: 'company',
       roleName: 'company',
@@ -91,9 +93,6 @@ export class UsersController {
             (user as { displayName?: string }).displayName ||
             user.email?.split('@')[0] ||
             'Usuario de Pista 8',
-          avatarUrl:
-            (user as { picture?: string }).picture ||
-            (user as { photoURL?: string }).photoURL,
         },
         false,
         true,
@@ -131,7 +130,6 @@ export class UsersController {
           (user as { displayName?: string }).displayName ||
           user.email?.split('@')[0] ||
           'Usuario de Pista 8',
-        avatarUrl: body.avatarUrl,
         phone: body.phone,
       },
       true,

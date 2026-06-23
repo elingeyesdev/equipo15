@@ -118,10 +118,19 @@ export class UserRepository {
   }
 
   async updateStatus(id: string, status: UserStatus): Promise<User> {
-    return this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id },
       data: { status },
     });
+
+    if (status === UserStatus.DELETED || status === UserStatus.SUSPENDED) {
+      await this.prisma.userDevice.updateMany({
+        where: { userId: id },
+        data: { isActive: false },
+      });
+    }
+
+    return updatedUser;
   }
 
   async findFacultyByName(name: string) {

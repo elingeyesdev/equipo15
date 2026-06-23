@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import * as admin from 'firebase-admin';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
-import { ReferenceType, NotifType } from '@prisma/client';
+import { NotifType } from '@prisma/client';
 import { EventsGateway } from '../../infrastructure/events/events.gateway';
 
 @Injectable()
@@ -57,8 +58,10 @@ export class NotificationService {
     type: NotifType,
     title: string,
     body: string,
-    referenceId?: string,
-    referenceType?: ReferenceType,
+    ideaId?: string,
+    commentId?: string,
+    challengeId?: string,
+    evaluationId?: string,
   ) {
     try {
       this.logger.log(
@@ -71,8 +74,11 @@ export class NotificationService {
           type,
           title,
           body,
-          referenceId,
-          referenceType,
+          ideaId,
+          commentId,
+          challengeId,
+          evaluationId,
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         },
       });
 
@@ -109,8 +115,10 @@ export class NotificationService {
         type,
         title,
         body,
-        referenceId,
-        referenceType,
+        ideaId,
+        commentId,
+        challengeId,
+        evaluationId,
       });
 
       // Find FCM devices
@@ -133,8 +141,10 @@ export class NotificationService {
           },
           data: {
             type,
-            referenceId: referenceId || '',
-            referenceType: referenceType || '',
+            ideaId: ideaId || '',
+            commentId: commentId || '',
+            challengeId: challengeId || '',
+            evaluationId: evaluationId || '',
           },
         });
         this.logger.log(
@@ -156,7 +166,6 @@ export class NotificationService {
         '¡Felicidades! 🎉',
         '¡Felicidades! Tu propuesta ha sido seleccionada como ganadora en el podio.',
         w.ideaId,
-        ReferenceType.IDEA,
       );
     }
   }
@@ -167,8 +176,6 @@ export class NotificationService {
       NotifType.JUDGE_REMOVED,
       'Alerta de Sistema',
       `Alerta de Sistema: El juez ${judgeName} ha perdido sus credenciales y fue desvinculado de la evaluación de tu reto.`,
-      undefined,
-      undefined,
     );
   }
 
@@ -178,8 +185,9 @@ export class NotificationService {
       NotifType.JUDGE_ASSIGNED,
       'Nuevo Reto Asignado',
       `Te han asignado como jurado para evaluar las propuestas finalistas del reto '${challengeTitle}'.`,
+      undefined,
+      undefined,
       challengeId,
-      ReferenceType.CHALLENGE,
     );
   }
 
@@ -197,8 +205,6 @@ export class NotificationService {
       NotifType.ROLE_UPDATED,
       'Rol Actualizado',
       `Tu cuenta ha sido actualizada. Ahora tienes permisos de ${roleNameSp}.`,
-      undefined,
-      undefined,
     );
   }
 
@@ -208,8 +214,6 @@ export class NotificationService {
       NotifType.EVALUATION_COMPLETE,
       'Idea Evaluada',
       `El juez ${judgeName} ha evaluado tu idea en el reto '${challengeTitle}'.`,
-      undefined,
-      undefined,
     );
   }
 
@@ -221,7 +225,6 @@ export class NotificationService {
       'Nueva Evaluación Registrada',
       `El juez ${judgeName} ha completado la evaluación de una idea.`,
       ideaId,
-      ReferenceType.IDEA,
     );
 
     // Notify all admins
@@ -237,7 +240,6 @@ export class NotificationService {
           'Nueva Evaluación Registrada',
           `El juez ${judgeName} ha completado la evaluación de una idea.`,
           ideaId,
-          ReferenceType.IDEA,
         );
       }
     } catch (error) {
@@ -252,8 +254,9 @@ export class NotificationService {
         NotifType.NEW_CHALLENGE_PUBLISHED,
         'Nuevo desafío disponible',
         `Nuevo desafío disponible: ${companyName} está buscando tu talento.`,
+        undefined,
+        undefined,
         challengeId,
-        ReferenceType.CHALLENGE,
       );
     }
   }
@@ -265,7 +268,6 @@ export class NotificationService {
       '¡Tu idea está ganando tracción! 🔥',
       `¡Tu idea está ganando tracción! Alguien ha reaccionado a tu propuesta en ${challengeTitle}.`,
       ideaId,
-      ReferenceType.IDEA,
     );
   }
 
@@ -276,7 +278,6 @@ export class NotificationService {
       'Comentario recibido 💬',
       'Alguien ha dejado un comentario en tu idea. ¡Entra a revisar el feedback!',
       ideaId,
-      ReferenceType.IDEA,
     );
   }
 
@@ -287,8 +288,24 @@ export class NotificationService {
       'Respuesta a tu comentario ↩️',
       `${replierName} ha respondido a tu comentario.`,
       ideaId,
-      ReferenceType.IDEA,
     );
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async deleteExpiredNotifications() {
+    this.logger.log('[CRON] Starting cleanup of expired notifications...');
+    try {
+      const result = await this.prisma.notification.deleteMany({
+        where: {
+          expiresAt: {
+            lt: new Date(),
+          },
+        },
+      });
+      this.logger.log(`[CRON] Cleanup complete. Deleted ${result.count} expired notifications.`);
+    } catch (error) {
+      this.logger.error(`[CRON] Error deleting expired notifications:`, error);
+    }
   }
 
   async getMyInbox(userId: string) {

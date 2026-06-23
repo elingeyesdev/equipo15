@@ -23,7 +23,7 @@ export function getRoleFromEmail(email: string): UserRole {
   const normalizedEmail = email.toLowerCase();
 
   if (ADMIN_WHITELIST.includes(normalizedEmail)) return UserRole.ADMIN;
-  if (COMPANY_WHITELIST.includes(normalizedEmail)) return UserRole.COMPANY;
+  if (COMPANY_WHITELIST.includes(normalizedEmail)) return UserRole.ORGANIZATION;
   if (EXPERT_WHITELIST.includes(normalizedEmail)) return UserRole.JUDGE;
 
   return UserRole.USER;

@@ -8,7 +8,7 @@ export class AdminRepository {
 
   async getCompanies() {
     const companies = await this.prisma.user.findMany({
-      where: { role: 'COMPANY' },
+      where: { role: 'ORGANIZATION' },
       select: {
         id: true,
         firebaseUid: true,
@@ -24,7 +24,7 @@ export class AdminRepository {
       orderBy: { displayName: 'asc' },
     });
 
-    return companies.map((company) => {
+    return companies.map((company: any) => {
       let activeChallenges = 0;
       let closedChallenges = 0;
 
@@ -43,7 +43,7 @@ export class AdminRepository {
 
   async findCompanyById(id: string) {
     return this.prisma.user.findFirst({
-      where: { id, role: 'COMPANY' },
+      where: { id, role: 'ORGANIZATION' },
       select: {
         id: true,
         firebaseUid: true,
@@ -64,7 +64,7 @@ export class AdminRepository {
       totalIdeas,
       rawChallenges,
     ] = await Promise.all([
-      this.prisma.user.count({ where: { role: 'COMPANY' } }),
+      this.prisma.user.count({ where: { role: 'ORGANIZATION' } }),
       this.prisma.challenge.count(),
       this.prisma.challenge.count({
         where: { status: 'PUBLISHED' },
@@ -195,7 +195,6 @@ export class AdminRepository {
           firebaseUid: true,
           email: true,
           displayName: true,
-          avatarUrl: true,
           role: true,
           status: true,
           studentProfile: {
@@ -277,7 +276,7 @@ export class AdminRepository {
 
       const updatedUser = await tx.user.update({
         where: { id: userId },
-        data: { role: newRole },
+        data: { role: newRole as import('@prisma/client').UserRole },
         select: {
           id: true,
           firebaseUid: true,
@@ -285,7 +284,6 @@ export class AdminRepository {
           displayName: true,
           role: true,
           status: true,
-          avatarUrl: true,
           studentProfile: {
             select: { faculty: { select: { id: true, name: true } } },
           },
@@ -335,7 +333,6 @@ export class AdminRepository {
         id: true,
         displayName: true,
         email: true,
-        avatarUrl: true,
         role: true,
         status: true,
         totalPoints: true,
@@ -360,9 +357,7 @@ export class AdminRepository {
             finalScore: true,
             isAnonymous: true,
             createdAt: true,
-            tags: {
-              select: { tag: { select: { name: true } } },
-            },
+
             challenge: {
               select: { id: true, title: true, logoUrl: true, status: true },
             },
@@ -406,7 +401,6 @@ export class AdminRepository {
         createdAt: true,
         problem: true,
         solution: true,
-        tags: true,
         author: {
           select: {
             displayName: true,
@@ -422,7 +416,7 @@ export class AdminRepository {
 
     return {
       challenge,
-      ideas: ideas.map((idea) => ({
+      ideas: ideas.map((idea: any) => ({
         id: idea.id,
         title: idea.title,
         status: idea.status,
@@ -430,7 +424,6 @@ export class AdminRepository {
         createdAt: idea.createdAt,
         problem: idea.problem,
         solution: idea.solution,
-        tags: idea.tags,
         authorName:
           idea.author?.nickname || idea.author?.displayName || 'Participante',
         evaluationsCount: idea._count.evaluations,

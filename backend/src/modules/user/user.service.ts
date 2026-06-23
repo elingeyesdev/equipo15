@@ -70,7 +70,6 @@ export class UserService {
       firebaseUid: string;
       email: string;
       displayName: string;
-      avatarUrl?: string;
       phone?: string;
     },
     forceUpdate = false,
@@ -100,7 +99,6 @@ export class UserService {
       if (forceUpdate) {
         const updateData: Record<string, any> = {
           displayName: createUserDto.displayName,
-          avatarUrl: createUserDto.avatarUrl,
         };
         if (createUserDto.phone !== undefined) {
           updateData.phone = createUserDto.phone;
@@ -142,7 +140,6 @@ export class UserService {
       firebaseUid,
       email: normalizedEmail,
       displayName: createUserDto.displayName || '',
-      avatarUrl: createUserDto.avatarUrl,
       role,
       phone: createUserDto.phone || null,
     };
@@ -150,7 +147,6 @@ export class UserService {
     try {
       await this.userRepository.upsert(firebaseUid, userData, {
         displayName: createUserDto.displayName,
-        avatarUrl: createUserDto.avatarUrl,
       });
     } catch (err: any) {
       this.handlePrismaError(err);
