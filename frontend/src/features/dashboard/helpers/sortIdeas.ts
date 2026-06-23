@@ -1,4 +1,4 @@
-import type { RawIdea } from '../../../../features/sky-wall/types';
+import type { RawIdea } from '../../sky-wall/types';
 import type { AdvancedFilterState } from '../components/AdvancedFilter';
 
 export function sortIdeas(ideas: RawIdea[], advFilter: AdvancedFilterState): RawIdea[] {

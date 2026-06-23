@@ -28,8 +28,11 @@ export const AdminModalOverlay = styled.div`
   }
 
   @media (max-width: 480px) {
-    padding: 0;
-    align-items: flex-end;
+    padding: 16px;
+  }
+
+  @media (min-width: 1025px) {
+    padding-left: 324px; /* 300px sidebar + 24px default padding */
   }
 `;
 
@@ -51,10 +54,8 @@ export const AdminModalCard = styled.div`
   }
 
   @media (max-width: 480px) {
-    max-height: 100vh;
+    max-height: 95vh;
     border-radius: 16px;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
   }
 `;
 

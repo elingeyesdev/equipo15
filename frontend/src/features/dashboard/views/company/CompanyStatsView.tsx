@@ -17,6 +17,7 @@ import { Pista8Theme, breakpoints } from '../../../../config/theme';
 import { ModalContentSkeleton } from '../../../../components/SkeletonLoaders';
 import { challengeService } from '../../../../services/challenge.service';
 import type { CompanyChallengeOption } from '../../../../services/challenge.service';
+import { RefreshButton } from '../../../../components/common/RefreshButton';
 import type {
   InnovationInteractionByDayItem,
   InnovationStatsResponse,
@@ -207,10 +208,6 @@ const RetryButton = styled.button`
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
-`;
-
-const RefreshButton = styled(RetryButton)`
-  margin-top: 0;
 `;
 
 const ControlsColumn = styled.div`
@@ -575,9 +572,15 @@ export const CompanyStatsView = () => {
           </Subheading>
         </div>
         <ControlsColumn>
-          <RefreshButton onClick={handleRefresh} disabled={loading}>
-            {loading ? 'Actualizando...' : 'Refrescar'}
-          </RefreshButton>
+          <div style={{ alignSelf: 'flex-end', marginBottom: '4px' }}>
+            <RefreshButton 
+              onClick={handleRefresh} 
+              disabled={loading}
+              tooltip="Recargar estadísticas"
+              tooltipPosition="bottom"
+              tooltipAlign="right"
+            />
+          </div>
           <FiltersRow>
             <FilterField>
               <FilterLabel>Buscar por nombre</FilterLabel>

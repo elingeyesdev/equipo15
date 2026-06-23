@@ -59,8 +59,6 @@ const canEditFullChallenge = (challenge: Challenge): boolean => {
   return displayStatus !== 'Finalizado' && displayStatus !== 'En Evaluación';
 };
 
-const getStatusConfig = (status: string) =>
-  STATUS_CONFIG[status] || STATUS_CONFIG['Borrador'];
 
 const ConfirmOverlay = styled.div`
   position: fixed;
@@ -771,7 +769,6 @@ export const CompanyChallengesView = () => {
         <Grid>
           {filtered.map((challenge, i) => {
             const displayStatus = deriveDisplayStatus(challenge);
-            const sc = getStatusConfig(displayStatus);
             const showFullEdit = canEditFullChallenge(challenge);
             const showCriteriaEdit = canEditCriteria(challenge) && !showFullEdit;
             return (

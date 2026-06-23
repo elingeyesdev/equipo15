@@ -144,21 +144,29 @@ const NotificationItem = styled.div<{ $unread: boolean }>`
 
 const DeleteButton = styled.button`
   position: absolute;
-  top: 10px;
-  right: 12px;
+  top: 4px;
+  right: 4px;
   background: transparent;
   border: none;
   color: #94a3b8;
   cursor: pointer;
-  padding: 4px;
+  padding: 0;
   border-radius: 4px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-end;
   transition: all 0.2s;
+  width: 20px;
+  height: 20px;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
 
   &:hover {
-    background: #f1f5f9;
+    background: #e2e8f0;
     color: #ef4444;
   }
 `;

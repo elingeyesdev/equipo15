@@ -16,6 +16,7 @@ function App() {
           <AppRoutes />
           <Toaster
             position="top-center"
+            closeButton
             style={{ zIndex: 99999 }}
             toastOptions={{
               style: {
@@ -31,8 +32,34 @@ function App() {
                 minWidth: '280px',
                 padding: '16px 20px',
               },
+              classNames: {
+                closeButton: 'sonner-close-btn',
+              }
             }}
           />
+          <style>
+            {`
+              .sonner-close-btn {
+                background: white !important;
+                border: 1px solid rgba(72,80,84,0.15) !important;
+                color: #64748b !important;
+                top: 4px !important;
+                right: 4px !important;
+                left: auto !important;
+                transform: none !important;
+                width: 24px !important;
+                height: 24px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-radius: 8px !important;
+              }
+              .sonner-close-btn:hover {
+                background: #f8fafc !important;
+                color: #0f172a !important;
+              }
+            `}
+          </style>
         </GlobalErrorBoundary>
       </AuthProvider>
     </BrowserRouter>

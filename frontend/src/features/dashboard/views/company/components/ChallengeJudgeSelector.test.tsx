@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ChallengeJudgeSelector } from './ChallengeJudgeSelector';
@@ -19,8 +18,6 @@ vi.mock('sonner', () => ({
     success: vi.fn(),
   }
 }));
-
-import { toast } from 'sonner';
 
 describe('ChallengeJudgeSelector - Buscador Universal de Jueces (Prueba de Límite Máximo)', () => {
   beforeEach(() => {

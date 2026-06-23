@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { toast } from 'sonner';
 import { authService } from '../../../../services/auth.service';
 import { useAuth } from '../../../../context/AuthContext';
 
@@ -12,40 +13,17 @@ export const useAuthForm = () => {
   const [googleEmail, setGoogleEmail] = useState('');
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [errorVisible, setErrorVisible] = useState<string | null>(null);
-  const [successVisible, setSuccessVisible] = useState<string | null>(null);
   const [isResetMode, setIsResetMode] = useState(false);
-  const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const showError = useCallback((msg: string) => {
-    if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
-    setErrorVisible(msg);
-    errorTimerRef.current = setTimeout(() => setErrorVisible(null), 5000);
-  }, []);
+  const showError = useCallback((msg: string) => { toast.error(msg); }, []);
 
-  const showSuccess = useCallback((msg: string) => {
-    if (successTimerRef.current) clearTimeout(successTimerRef.current);
-    setSuccessVisible(msg);
-    successTimerRef.current = setTimeout(() => setSuccessVisible(null), 5000);
-  }, []);
+  const showSuccess = useCallback((msg: string) => { toast.success(msg); }, []);
 
-  const clearError = useCallback(() => {
-    if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
-    setErrorVisible(null);
-  }, []);
 
-  const clearSuccess = useCallback(() => {
-    if (successTimerRef.current) clearTimeout(successTimerRef.current);
-    setSuccessVisible(null);
-  }, []);
 
-  useEffect(() => {
-    return () => {
-      if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
-      if (successTimerRef.current) clearTimeout(successTimerRef.current);
-    };
-  }, []);
+
+
+
 
   useEffect(() => {
     if (user && !userProfile) {
@@ -126,7 +104,6 @@ export const useAuthForm = () => {
       return false;
     }
     setLoading(true);
-    clearError();
     try {
       await authService.sendPasswordReset(email);
       return true;
@@ -148,8 +125,6 @@ export const useAuthForm = () => {
       }
     }
     setLoading(true);
-    clearError();
-    clearSuccess();
     try {
       if (isLogin) {
         await authService.login(formData.email, formData.password);
@@ -175,8 +150,6 @@ export const useAuthForm = () => {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-    clearError();
-    clearSuccess();
     setSuppressAuth(true);
     try {
       await authService.loginWithGoogle();
@@ -211,8 +184,6 @@ export const useAuthForm = () => {
       return;
     }
     setLoading(true);
-    clearError();
-    clearSuccess();
     try {
       const fullPhone = `+591${rawPhone}`;
       await authService.completeGoogleRegistration(formData.name, fullPhone, formData.password);
@@ -232,8 +203,6 @@ export const useAuthForm = () => {
       return;
     }
     setLoading(true);
-    clearError();
-    clearSuccess();
     try {
       await authService.linkGoogleAccountWithPassword(googleEmail, formData.password, pendingGoogleCredential);
       showSuccess('Cuenta vinculada con éxito. Sesión iniciada.');
@@ -268,9 +237,7 @@ export const useAuthForm = () => {
     setIsLogin(value);
     setFormData({ email: '', password: '', name: '', phone: '' });
     setPhoneError(null);
-    clearError();
-    clearSuccess();
-  }, [clearError, clearSuccess]);
+  }, []);
 
   return {
     isLogin,
@@ -278,10 +245,6 @@ export const useAuthForm = () => {
     formData,
     setFormData,
     loading,
-    errorVisible,
-    successVisible,
-    clearError,
-    clearSuccess,
     handleSubmit,
     handleGoogleLogin,
     passwordChecks,

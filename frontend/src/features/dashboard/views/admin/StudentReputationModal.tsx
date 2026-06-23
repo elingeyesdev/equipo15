@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
 import { toast } from 'sonner';
 import { Pista8Theme } from '@/config/theme';
@@ -42,8 +43,11 @@ const Overlay = styled.div`
   }
 
   @media (max-width: 480px) {
-    padding: 0;
-    align-items: flex-end;
+    padding: 16px;
+  }
+
+  @media (min-width: 1025px) {
+    padding-left: 324px; /* 300px sidebar + 24px default padding */
   }
 `;
 
@@ -65,11 +69,8 @@ const ModalCard = styled.div`
   }
 
   @media (max-width: 480px) {
-    max-height: 100vh;
+    max-height: 95vh;
     border-radius: 16px;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    margin-top: auto;
   }
 `;
 
@@ -490,6 +491,10 @@ const ConfirmOverlay = styled.div`
   justify-content: center;
   z-index: 1300;
   animation: ${fadeIn} 0.15s ease;
+
+  @media (min-width: 1025px) {
+    padding-left: 300px;
+  }
 `;
 
 const ConfirmCard = styled.div`
@@ -531,13 +536,6 @@ const STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Borrador',
 };
 
-const STATUS_TONES: Record<string, 'green' | 'amber' | 'gold' | 'red' | 'slate'> = {
-  PUBLISHED: 'green',
-  FINALIST: 'amber',
-  WINNER: 'gold',
-  DISQUALIFIED: 'red',
-  DRAFT: 'slate',
-};
 
 const PENALTY_LABELS: Record<string, string> = {
   EXCESSIVE_LIKE_REMOVAL: 'Retiro excesivo de likes',
@@ -600,7 +598,7 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
 
   const hasActivePenalties = (data?.metrics.activePenalties ?? 0) > 0;
 
-  return (
+  return createPortal(
     <>
       <Overlay onClick={onClose}>
         <ModalCard onClick={(e) => e.stopPropagation()}>
@@ -631,24 +629,24 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
                 </HeaderTop>
 
                 <MetricsGrid>
-                  <MetricCard $accent="#485054">
-                    <MetricValue $accent="#485054">{data.metrics.totalIdeas}</MetricValue>
+                  <MetricCard $accent={Pista8Theme.secondary}>
+                    <MetricValue $accent={Pista8Theme.secondary}>{data.metrics.totalIdeas}</MetricValue>
                     <MetricLabel>Ideas</MetricLabel>
                   </MetricCard>
-                  <MetricCard $accent="#FF8C00">
-                    <MetricValue $accent="#FF8C00">{data.metrics.finalistIdeas}</MetricValue>
+                  <MetricCard $accent={Pista8Theme.primary}>
+                    <MetricValue $accent={Pista8Theme.primary}>{data.metrics.finalistIdeas}</MetricValue>
                     <MetricLabel>Finalista</MetricLabel>
                   </MetricCard>
-                  <MetricCard $accent="#34A853">
-                    <MetricValue $accent="#34A853">{data.metrics.winnerIdeas}</MetricValue>
+                  <MetricCard $accent={Pista8Theme.primary}>
+                    <MetricValue $accent={Pista8Theme.primary}>{data.metrics.winnerIdeas}</MetricValue>
                     <MetricLabel>Ganadora</MetricLabel>
                   </MetricCard>
-                  <MetricCard $accent="#FE410A">
-                    <MetricValue $accent="#FE410A">{data.user.totalPoints}</MetricValue>
+                  <MetricCard $accent={Pista8Theme.primary}>
+                    <MetricValue $accent={Pista8Theme.primary}>{data.user.totalPoints}</MetricValue>
                     <MetricLabel>Puntos</MetricLabel>
                   </MetricCard>
-                  <MetricCard $accent={hasActivePenalties ? '#FF3333' : '#34A853'}>
-                    <MetricValue $accent={hasActivePenalties ? '#FF3333' : '#34A853'}>
+                  <MetricCard $accent={hasActivePenalties ? Pista8Theme.error : Pista8Theme.secondary}>
+                    <MetricValue $accent={hasActivePenalties ? Pista8Theme.error : Pista8Theme.secondary}>
                       {data.metrics.activePenalties}
                     </MetricValue>
                     <MetricLabel>Sanciones</MetricLabel>
@@ -807,6 +805,7 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
           </ConfirmCard>
         </ConfirmOverlay>
       )}
-    </>
+    </>,
+    document.body
   );
 };

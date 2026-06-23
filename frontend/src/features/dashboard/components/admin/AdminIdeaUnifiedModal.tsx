@@ -397,12 +397,6 @@ const STATUS_LABELS: Record<string, string> = {
   WINNER: 'Ganadora',
 };
 
-const STATUS_TONES: Record<string, string> = {
-  DRAFT: 'slate',
-  PUBLISHED: 'blue',
-  FINALIST: 'orange',
-  WINNER: 'emerald',
-};
 
 const formatDate = (value?: string | Date) => {
   if (!value) return '—';

@@ -12,7 +12,9 @@ const spin = keyframes`
 const Btn = styled.button<{
   $size: number;
   $spinning: boolean;
-  $tooltipPosition: 'top' | 'bottom' | 'left' | 'right';
+  $tooltipText?: string;
+  $tooltipPosition?: 'top' | 'bottom';
+  $tooltipAlign?: 'center' | 'right';
 }>`
   position: relative;
   display: inline-flex;

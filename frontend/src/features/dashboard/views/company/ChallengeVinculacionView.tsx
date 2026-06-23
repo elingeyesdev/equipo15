@@ -280,7 +280,6 @@ export const ChallengeVinculacionView = () => {
     );
   }
 
-  const sc = getStatusConfig(challenge.status);
   const faculties = (challenge as any).faculties;
   const facultyName = Array.isArray(faculties) && faculties.length > 0
     ? faculties.map((f: any) => f.name.replace(/^Facultad de\s+/i, '')).join(', ')
