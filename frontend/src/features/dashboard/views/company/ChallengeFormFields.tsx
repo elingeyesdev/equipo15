@@ -613,22 +613,26 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
               {!locked('criteria') && !readOnlyMode && (
                 addingCustom ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8, padding: 16, background: 'white', borderRadius: 12, border: '1px solid rgba(72,80,84,0.1)' }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                       <CustomCriterionInput autoFocus placeholder="Nombre del criterio (máx. 10 palabras)"
+                        style={{ minWidth: 200, flex: 1 }}
                         value={customName}
                         onChange={e => { setCustomName(e.target.value); setCustomError(''); }}
                         onKeyDown={e => e.key === 'Enter' && addCustomCriterion()} />
                       <CustomCriterionInput placeholder="Descripción (opcional)"
+                        style={{ minWidth: 200, flex: 1 }}
                         value={customDescription}
                         onChange={e => setCustomDescription(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && addCustomCriterion()} />
-                      <Btn $primary style={{ padding: '10px 16px', fontSize: 12 }} onClick={addCustomCriterion} disabled={readOnlyMode}>Añadir</Btn>
-                      <Btn style={{ padding: '10px 14px', fontSize: 12 }} onClick={() => { setAddingCustom(false); setCustomName(''); setCustomDescription(''); setCustomError(''); }} disabled={readOnlyMode}>
+                    </div>
+                    {customError && <ErrorText style={{ marginTop: '-4px' }}>{customError}</ErrorText>}
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
+                      <Btn style={{ padding: '10px 16px', fontSize: 12 }} onClick={() => { setAddingCustom(false); setCustomName(''); setCustomDescription(''); setCustomError(''); }} disabled={readOnlyMode}>
                         Cancelar
                       </Btn>
+                      <Btn $primary style={{ padding: '10px 20px', fontSize: 12 }} onClick={addCustomCriterion} disabled={readOnlyMode}>Añadir</Btn>
                     </div>
-                    {customError && <ErrorText>{customError}</ErrorText>}
                   </div>
                 ) : (
                   <AddCriterionBtn type="button" onClick={() => setAddingCustom(true)}>
