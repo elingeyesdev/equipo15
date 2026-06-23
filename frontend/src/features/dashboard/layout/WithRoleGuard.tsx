@@ -20,13 +20,13 @@ export const WithRoleGuard: React.FC<WithRoleGuardProps> = ({ children, allowedR
   }
 
   // During impersonation, allow access to company routes while profile is updating
-  if (impersonationSession && allowedRoles.includes('COMPANY')) {
+  if (impersonationSession && allowedRoles.includes('ORGANIZATION')) {
     if (!userProfile) {
       return <DashboardSkeleton />;
     }
-    // Allow through — the impersonated profile will have COMPANY role once loaded
+    // Allow through — the impersonated profile will have ORGANIZATION role once loaded
     const userRole = (userProfile.roleInfo?.name || userProfile.role || '').toUpperCase();
-    if (userRole === 'COMPANY' || userRole === 'ADMIN') {
+    if (userRole === 'ORGANIZATION' || userRole === 'ADMIN') {
       return <>{children}</>;
     }
   }
@@ -41,7 +41,7 @@ export const WithRoleGuard: React.FC<WithRoleGuardProps> = ({ children, allowedR
     if (userRole === 'ADMIN') {
       return <Navigate to="/dashboard/admin/clients" replace />;
     }
-    if (userRole === 'COMPANY') {
+    if (userRole === 'ORGANIZATION') {
       return <Navigate to="/dashboard/company/stats" replace />;
     }
     if (userRole === 'JUDGE') {

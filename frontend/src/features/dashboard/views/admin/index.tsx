@@ -298,7 +298,7 @@ const CompanyRow = ({ company, onImpersonate }: { company: CompanySupportItem; o
       <TD>{formatDate(company.updatedAt)}</TD>
       <TD>
         <ActionBtn type="button" onClick={() => onImpersonate(company)} $tooltipText="Abrir sesión espejo en modo lectura">
-          Ver como empresa
+          Ver como organización
         </ActionBtn>
       </TD>
     </TR>
@@ -323,7 +323,7 @@ export const AdminClientsView = () => {
         const data = await adminService.getCompanies();
         setCompanies(data);
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'No se pudieron cargar las empresas.';
+        const message = error instanceof Error ? error.message : 'No se pudieron cargar las organizaciones.';
         toast.error(message);
       } finally {
         setLoading(false);
@@ -364,7 +364,7 @@ export const AdminClientsView = () => {
               <Eyebrow>Sesión activa</Eyebrow>
               <Title>{impersonationSession.company.displayName}</Title>
               <Description>
-                Estás navegando en modo lectura como esta empresa. Usa el banner superior para salir cuando termines.
+                Estás navegando en modo lectura como esta organización. Usa el banner superior para salir cuando termines.
               </Description>
             </TitleBlock>
           </PanelHeader>
@@ -380,15 +380,15 @@ export const AdminClientsView = () => {
           <TitleBlock>
             <Title>Directorio de Clientes</Title>
             <Description>
-              Lista de empresas habilitadas para auditar sus métricas y abrir sesiones espejo de soporte en modo lectura.
+              Lista de organizaciones habilitadas para auditar sus métricas y abrir sesiones espejo de soporte en modo lectura.
             </Description>
           </TitleBlock>
           <SearchInput
             type="search"
-            placeholder="Buscar empresa o contacto"
+            placeholder="Buscar organización o contacto"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            $tooltipText={impersonationSession ? 'Estás en modo lectura ahora' : 'Buscar empresa o contacto'}
+            $tooltipText={impersonationSession ? 'Estás en modo lectura ahora' : 'Buscar organización o contacto'}
           />
         </PanelHeader>
 
@@ -396,7 +396,7 @@ export const AdminClientsView = () => {
           <Table>
             <thead>
               <tr>
-                <TH>Empresa</TH>
+                <TH>Organización</TH>
                 <TH>Estado</TH>
                 <TH>Retos activos</TH>
                 <TH>Retos cerrados</TH>
@@ -415,7 +415,7 @@ export const AdminClientsView = () => {
               {!loading && filteredCompanies.length === 0 && (
                 <tr>
                   <TD colSpan={6}>
-                    <EmptyState>No se encontraron empresas con ese criterio.</EmptyState>
+                    <EmptyState>No se encontraron organizaciones con ese criterio.</EmptyState>
                   </TD>
                 </tr>
               )}
@@ -428,7 +428,7 @@ export const AdminClientsView = () => {
 
         {userProfile?.role === 'admin' && !loading && (
           <EmptyState style={{ textAlign: 'center', padding: '18px 24px 24px' }}>
-            Puedes abrir una sesión de soporte y el sistema te trasladará al panel de la empresa manteniendo el bloqueo de escritura.
+            Puedes abrir una sesión de soporte y el sistema te trasladará al panel de la organización manteniendo el bloqueo de escritura.
           </EmptyState>
         )}
       </Panel>
@@ -460,18 +460,18 @@ export const AdminUsersView = () => {
   const ROLE_OPTIONS = [
     { value: '', label: 'Todos' },
     { value: 'ADMIN', label: 'Admin' },
-    { value: 'COMPANY', label: 'Empresa' },
+    { value: 'ORGANIZATION', label: 'Organización' },
     { value: 'JUDGE', label: 'Juez' },
     { value: 'USER', label: 'Participante' },
   ];
 
   const ROLE_LABELS: Record<string, string> = {
     ADMIN: 'Admin',
-    COMPANY: 'Empresa',
+    ORGANIZATION: 'Organización',
     JUDGE: 'Juez',
     USER: 'Participante',
     admin: 'Admin',
-    company: 'Empresa',
+    organization: 'Organización',
     judge: 'Juez',
     student: 'Participante',
     user: 'Participante',
@@ -703,7 +703,7 @@ export const AdminUsersView = () => {
                     >
                       {user.role === 'JUDGE' && <option value="JUDGE">Juez</option>}
                       <option value="ADMIN">Admin</option>
-                      <option value="COMPANY">Empresa</option>
+                      <option value="ORGANIZATION">Organización</option>
                       <option value="USER">Participante</option>
                     </select>
                   </TD>

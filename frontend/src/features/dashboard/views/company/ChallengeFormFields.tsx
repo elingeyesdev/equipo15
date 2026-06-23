@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pista8Theme } from '../../../../config/theme';
 import AnimatedCheckbox from '../../../../components/AnimatedCheckbox';
-import { FACULTIES, getFacultyName } from '../../../../config/faculties';
+
 import type { ChallengeStatus } from '../../../../types/models';
 import type { ChallengeFormData, Errors } from './useChallengeForm';
 import { WORD_LIMITS, formatDate } from './useChallengeForm';
@@ -304,11 +304,11 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
           <FieldGroup>
             <Label $locked={locked('core')}>
-              Contexto de la empresa *
+              Contexto de la organización *
               {locked('core') && <LockedBadge $tooltipText="No editable" $tooltipPosition="top" $tooltipAlign="center"><LockIcon /></LockedBadge>}
             </Label>
             <TextAreaField $locked={locked('core')} $error={!!errors.companyContext}
-              placeholder="Información relevante sobre tu empresa..."
+              placeholder="Información relevante sobre tu organización..."
               value={form.companyContext} readOnly={locked('core')}
               onChange={e => !locked('core') && updateField('companyContext', e.target.value)} />
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -415,7 +415,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                         <AnimatedCheckbox checked={form.facultyIds?.length === 0} onChange={() => updateField('facultyIds', [])} />
                         <span style={{ fontSize: 13, fontWeight: 500 }}>Todas las áreas</span>
                       </label>
-                      {(dbFaculties.length > 0 ? dbFaculties.filter((f: any) => f.name !== 'Todas') : FACULTIES).map((f: any) => {
+                      {(dbFaculties.length > 0 ? dbFaculties.filter((f: any) => f.name !== 'Todas') : []).map((f: any) => {
                         const label = f.name.replace(/^Facultad de\s+/i, '');
                         const isChecked = form.facultyIds?.includes(f.id);
                         return (
@@ -686,7 +686,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               if (dbFac) {
                 return dbFac.name.startsWith('Facultad') ? dbFac.name : `Facultad de ${dbFac.name}`;
               }
-              return getFacultyName(id) || 'Facultad';
+              return 'Facultad';
             });
             return names.join(', ');
           })()}
@@ -718,7 +718,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
 
         {form.companyContext && (
           <PreviewSection>
-            <PreviewSectionLabel>Contexto de la empresa</PreviewSectionLabel>
+            <PreviewSectionLabel>Contexto de la organización</PreviewSectionLabel>
             <PreviewText>{form.companyContext}</PreviewText>
           </PreviewSection>
         )}

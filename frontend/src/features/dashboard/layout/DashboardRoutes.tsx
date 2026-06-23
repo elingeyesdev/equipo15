@@ -30,7 +30,7 @@ const DashboardIndexRedirect = () => {
   const role = (userProfile.roleInfo?.name || userProfile.role || '').toUpperCase();
 
   if (role === 'ADMIN') return <Navigate to="/dashboard/admin/stats" replace />;
-  if (role === 'COMPANY') return <Navigate to="/dashboard/company/stats" replace />;
+  if (role === 'ORGANIZATION') return <Navigate to="/dashboard/company/stats" replace />;
   if (role === 'JUDGE') return <Navigate to="/dashboard/judge/inbox" replace />;
 
   return <Navigate to="/" replace />;
@@ -48,11 +48,11 @@ export const DashboardRoutes = () => {
           <Route path="admin/access-config" element={<WithRoleGuard allowedRoles={['ADMIN']}><AccessConfigPage /></WithRoleGuard>} />
           <Route path="admin/users" element={<WithRoleGuard allowedRoles={['ADMIN']}><AdminUsersView /></WithRoleGuard>} />
 
-          <Route path="company/stats" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyStatsView /></WithRoleGuard>} />
-          <Route path="company/challenges" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyChallengesView /></WithRoleGuard>} />
-          <Route path="company/criteria" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyCriteriaView /></WithRoleGuard>} />
-          <Route path="company/podium" element={<WithRoleGuard allowedRoles={['COMPANY']}><CompanyPodiumView /></WithRoleGuard>} />
-          <Route path="company/judges" element={<WithRoleGuard allowedRoles={['COMPANY']}><ChallengeVinculacionView /></WithRoleGuard>} />
+          <Route path="company/stats" element={<WithRoleGuard allowedRoles={['ORGANIZATION']}><CompanyStatsView /></WithRoleGuard>} />
+          <Route path="company/challenges" element={<WithRoleGuard allowedRoles={['ORGANIZATION']}><CompanyChallengesView /></WithRoleGuard>} />
+          <Route path="company/criteria" element={<WithRoleGuard allowedRoles={['ORGANIZATION']}><CompanyCriteriaView /></WithRoleGuard>} />
+          <Route path="company/podium" element={<WithRoleGuard allowedRoles={['ORGANIZATION']}><CompanyPodiumView /></WithRoleGuard>} />
+          <Route path="company/judges" element={<WithRoleGuard allowedRoles={['ORGANIZATION']}><ChallengeVinculacionView /></WithRoleGuard>} />
 
           <Route path="judge/inbox" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeInboxView /></WithRoleGuard>} />
           <Route path="judge/evaluation/:challengeId?" element={<WithRoleGuard allowedRoles={['JUDGE']}><JudgeEvaluationView /></WithRoleGuard>} />

@@ -10,14 +10,11 @@ import {
   WHITELISTED_EMAILS,
 } from '../../../common/constants/email-domains';
 
-export const ADMIN_WHITELIST = ['admin@univalle.edu'];
+export const ADMIN_WHITELIST = ['admin@pista8ideacion.com'];
 
-export const COMPANY_WHITELIST = ['empresa@univalle.edu'];
+export const COMPANY_WHITELIST: string[] = [];
 
-export const EXPERT_WHITELIST = [
-  'coordinacion@pista8.com',
-  'juez.experto@univalle.edu',
-];
+export const EXPERT_WHITELIST: string[] = [];
 
 export function getRoleFromEmail(email: string): UserRole {
   const normalizedEmail = email.toLowerCase();

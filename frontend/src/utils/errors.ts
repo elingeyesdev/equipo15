@@ -35,7 +35,7 @@ export const translateError = (msg: string): string => {
     return 'La facultad seleccionada es requerida.';
   }
   if (m.includes('companycontext should not be empty') || m.includes('companycontext must be')) {
-    return 'El contexto de la empresa es obligatorio.';
+    return 'El contexto de la organización es obligatorio.';
   }
   
   if (m.includes('description should not be empty') || m.includes('description must be')) {

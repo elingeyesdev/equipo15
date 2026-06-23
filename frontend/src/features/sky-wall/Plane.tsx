@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { computeSize, computeXPosition, computeScale, computeFloatDuration } from './flight.engine';
 import { Pista8Theme } from '../../config/theme';
-import { FACULTIES } from '../../config/faculties';
+
 import type { PlaneIdea, WallPhase } from './types';
 import { Flame, Star } from 'lucide-react';
 import planeImg from '../../assets/logo_avion.png';
@@ -301,18 +301,28 @@ const normalizeFacultyKey = (facultyName?: string) => {
     .trim();
 };
 
+const stringToHash = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+};
+
 const getFacultyFilter = (facultyId?: number | string, facultyName?: string): string | undefined => {
-  const normalizedName = normalizeFacultyKey(facultyName);
-  if (normalizedName && FACULTY_FILTER_MAP[normalizedName]) {
+  const normalizedName = normalizeFacultyKey(facultyName) || (typeof facultyId === 'string' ? normalizeFacultyKey(facultyId) : undefined);
+  if (!normalizedName) return undefined;
+
+  if (FACULTY_FILTER_MAP[normalizedName]) {
     return FACULTY_FILTER_MAP[normalizedName];
   }
 
-  if (facultyId === null || facultyId === undefined) return undefined;
-  const numericId = typeof facultyId === 'number' ? facultyId : Number(facultyId);
-  if (Number.isNaN(numericId)) return undefined;
-
-  const canonicalFacultyName = FACULTIES.find((faculty) => faculty.id === numericId)?.name;
-  return FACULTY_FILTER_MAP[normalizeFacultyKey(canonicalFacultyName) ?? ''];
+  const hash = stringToHash(normalizedName);
+  const hue = hash % 360;
+  const saturation = 2 + (hash % 3);
+  const brightness = 0.6 + ((hash % 4) * 0.1);
+  
+  return `sepia(1) hue-rotate(${hue}deg) saturate(${saturation}) brightness(${brightness})`;
 };
 
 const BASE_Z_INDEX = 10;

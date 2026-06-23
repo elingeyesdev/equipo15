@@ -13,7 +13,7 @@ export const resolveDisplayName = (user?: MinimalUser | null): string => {
 
   let nameStr = user.nickname?.trim() || user.displayName?.trim() || user.email?.split('@')[0] || 'Usuario';
 
-  if (roleLower === 'company') return `Empresa Socia - ${nameStr}`;
+  if (roleLower === 'organization' || roleLower === 'company') return `Organización - ${nameStr}`;
   if (roleLower === 'admin') return `Soporte Técnico - ${nameStr}`;
   if (roleLower === 'judge') return `Juez Evaluador - ${nameStr}`;
   if (roleLower === 'student') return `Participante - ${nameStr}`;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as S from '../styles/AdminStyles';
 import { Pista8Theme } from '../../../../config/theme';
-import { FACULTIES } from '../../../../config/faculties';
+
 import { resolveDisplayName } from '../../../../utils/user.utils';
 import { facultiesService, formatFacultyLabel } from '@/services/faculties.service';
 import type { FacultyCatalogItem } from '@/types/models';
@@ -152,7 +152,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                 </S.Select>
                 {showAreaSelect && (
                   <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e1e4e8', borderRadius: '8px', padding: '12px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                    {facultyOptions
+                    {facultyOptions && facultyOptions.length > 0
                       ? facultyOptions.map((f) => (
                           <label key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#333' }}>
                             <input 
@@ -168,21 +168,7 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
                             {formatFacultyLabel(f.name)}
                           </label>
                         ))
-                      : FACULTIES.map((f) => (
-                          <label key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#333' }}>
-                            <input 
-                              type="checkbox" 
-                              checked={formData.facultyIds?.includes(f.id)}
-                              onChange={(e) => {
-                                const nextIds = e.target.checked 
-                                  ? [...(formData.facultyIds || []), f.id]
-                                  : (formData.facultyIds || []).filter((id: any) => id !== f.id);
-                                setFormData({...formData, facultyIds: nextIds});
-                              }}
-                            />
-                            {f.name}
-                          </label>
-                        ))}
+                      : <p style={{padding: '4px 8px', fontSize: '13px', color: '#666', margin: 0}}>No hay áreas creadas por el administrador.</p>}
                   </div>
                 )}
               </S.FormGroup>
@@ -202,9 +188,9 @@ const ChallengeBuilder: React.FC<ChallengeBuilderProps> = ({
 
             <S.TwoColumnRow style={{ marginBottom: '16px' }}>
               <S.FormGroup>
-                <S.FieldLabel>Contexto de la Empresa</S.FieldLabel>
+                <S.FieldLabel>Contexto de la Organización</S.FieldLabel>
                 <S.Textarea 
-                  placeholder="Cuéntanos un poco sobre tu empresa o el área del reto..."
+                  placeholder="Cuéntanos un poco sobre tu organización o el área del reto..."
                   rows={4}
                   value={formData.companyContext}
                   disabled={readOnlyMode}

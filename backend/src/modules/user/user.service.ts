@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { UserRepository, UserWithProfile } from './user.repository';
 import { Prisma, User, UserStatus } from '@prisma/client';
-import { extractFacultyFromEmail } from './utils/email-parser.util';
+
 import { getRoleFromEmail } from './utils/user-metadata.util';
 import { EventsGateway } from '../../infrastructure/events/events.gateway';
 import { normalizeEmail } from '../../common/utils/email-domain.util';
@@ -130,7 +130,7 @@ export class UserService {
     const allowed = await this.userRepository.isEmailAllowed(normalizedEmail);
     if (!allowed) {
       throw new ForbiddenException(
-        'Acceso restringido a cuentas institucionales autorizadas.',
+        'Este dominio de correo no está autorizado para registrarse.',
       );
     }
 
@@ -153,16 +153,7 @@ export class UserService {
     }
     user = await this.userRepository.findByUid(firebaseUid);
 
-    const detectedFacultyId = extractFacultyFromEmail(normalizedEmail);
-    if (detectedFacultyId !== null && user) {
-      const mappedId = await this.mapLegacyFacultyId(detectedFacultyId);
-      if (mappedId) {
-        await this.userRepository.updateStudentProfile(user.id, {
-          facultyId: mappedId,
-        });
-        user = await this.userRepository.findByUid(firebaseUid);
-      }
-    }
+
     if (user && user.role === 'USER') {
       const existingNotif = await (this.userRepository as any).prisma.notification.findFirst({
         where: { userId: user.id, type: 'ROLE_UPDATED', title: '¡Bienvenido a Pista 8!' },
@@ -315,10 +306,7 @@ export class UserService {
       throw new BadRequestException('Debes seleccionar una facultad válida.');
     }
 
-    const facultyId = await this.mapLegacyFacultyId(data.facultyId);
-    if (!facultyId) {
-      throw new BadRequestException('Facultad inválida o no encontrada.');
-    }
+    const facultyId = String(data.facultyId);
 
     const user = await this.userRepository.findByUid(firebaseUid);
     if (!user) {
@@ -337,41 +325,6 @@ export class UserService {
     return this.formatUserResponse(updatedUser);
   }
 
-  private async mapLegacyFacultyId(
-    legacyId: string | number,
-  ): Promise<string | null> {
-    const numericId = Number(legacyId);
-
-    if (isNaN(numericId)) {
-      if (typeof legacyId === 'string' && legacyId.length > 10) {
-        const faculties = await this.userRepository.getAllFaculties(false);
-        const exists = faculties.find((f) => f.id === legacyId);
-        if (exists) return exists.id;
-      }
-      return null;
-    }
-
-    const facultyMapping: Record<number, string> = {
-      1: 'Ingeniería',
-      2: 'Ciencias',
-      3: 'Humanidades',
-      4: 'Medicina',
-      5: 'Derecho',
-      6: 'Arquitectura',
-    };
-
-    const targetName = facultyMapping[numericId]?.toLowerCase();
-    if (targetName) {
-      const faculties = await this.userRepository.getAllFaculties(false);
-      const matched = faculties.find(
-        (f) =>
-          f.name.toLowerCase().includes(targetName) ||
-          targetName.includes(f.name.toLowerCase()),
-      );
-      return matched?.id || null;
-    }
-    return null;
-  }
 
   async getAllFaculties(onlyActive = true) {
     return this.userRepository.getAllFaculties(onlyActive);

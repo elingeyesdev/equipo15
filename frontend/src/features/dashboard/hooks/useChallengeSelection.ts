@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Challenge } from '../../../types/models';
 import { challengeService } from '../../../services/challenge.service';
-import { getFacultySlug } from '../../../config/faculties';
+
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import type { SortMode } from '../../../features/sky-wall/types';
@@ -69,8 +69,8 @@ export const useChallengeSelection = () => {
           likesCount: c.ideas?.reduce((sum: number, idea: any) => sum + (idea.likesCount || 0), 0) || 0,
           commentsCount: c.ideas?.reduce((sum: number, idea: any) => sum + (idea.commentsCount || 0), 0) || 0,
           category: c.faculties && c.faculties.length > 0
-            ? c.faculties.map((f: any) => getFacultySlug(f.id, f.name)).join(', ')
-            : getFacultySlug(c.facultyId || null, c.faculty?.name),
+            ? c.faculties.map((f: any) => f.name).join(', ')
+            : c.faculty?.name || 'General',
           badge: c.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
         }));
 
@@ -87,8 +87,8 @@ export const useChallengeSelection = () => {
                   likesCount: privateChallengeRaw.ideas?.reduce((sum: number, idea: any) => sum + (idea.likesCount || 0), 0) || 0,
                   commentsCount: privateChallengeRaw.ideas?.reduce((sum: number, idea: any) => sum + (idea.commentsCount || 0), 0) || 0,
                   category: privateChallengeRaw.faculties && privateChallengeRaw.faculties.length > 0
-                    ? privateChallengeRaw.faculties.map((f: any) => getFacultySlug(f.id, f.name)).join(', ')
-                    : getFacultySlug(privateChallengeRaw.facultyId || null, privateChallengeRaw.faculty?.name),
+                    ? privateChallengeRaw.faculties.map((f: any) => f.name).join(', ')
+                    : privateChallengeRaw.faculty?.name || 'General',
                   badge: privateChallengeRaw.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
                 };
                 mapped = [mappedPrivate, ...mapped];

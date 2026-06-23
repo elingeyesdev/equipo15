@@ -5,12 +5,12 @@ import * as S from '../styles/UserManagerStyles';
 
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: 'Administrador',
-  COMPANY: 'Empresa',
+  ORGANIZATION: 'Organización',
   JUDGE: 'Juez',
   USER: 'Participante',
 };
 
-const ROLES = ['ADMIN', 'COMPANY', 'JUDGE', 'USER'] as const;
+const ROLES = ['ADMIN', 'ORGANIZATION', 'JUDGE', 'USER'] as const;
 
 const getInitials = (name: string) => {
   const parts = name.trim().split(/\s+/);

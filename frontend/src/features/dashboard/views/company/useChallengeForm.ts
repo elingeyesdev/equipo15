@@ -319,7 +319,7 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
 
       const ctxWords = countWords(form.companyContext);
       if (!form.companyContext.trim()) {
-        errs.companyContext = 'El contexto de la empresa es obligatorio';
+        errs.companyContext = 'El contexto de la organización es obligatorio';
       } else if (ctxWords < WORD_LIMITS.content.min || ctxWords > WORD_LIMITS.content.max) {
         errs.companyContext = `El contexto debe tener entre ${WORD_LIMITS.content.min} y ${WORD_LIMITS.content.max} palabras (llevas ${ctxWords})`;
       }

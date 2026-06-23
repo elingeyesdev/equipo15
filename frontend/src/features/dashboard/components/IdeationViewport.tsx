@@ -17,7 +17,7 @@ import type { AdvancedFilterState } from './AdvancedFilter';
 import type { RawIdea } from '../../../features/sky-wall/types';
 import type { Challenge } from '../../../types/models';
 import { resolveDisplayName } from '../../../utils/user.utils';
-import { getFacultyName } from '../../../config/faculties';
+
 import { useNavigate } from 'react-router-dom';
 
 interface IdeationViewportProps {
@@ -91,9 +91,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
         if (Array.isArray(facs) && facs.length > 0) {
           return facs.map((f: any) => f.name.replace(/^Facultad de /i, '')).join(', ');
         }
-        return ds.selectedChallenge.facultyId
-          ? getFacultyName(ds.selectedChallenge.facultyId, ds.selectedChallenge.faculty?.name)
-          : 'Todas las Facultades';
+        return ds.selectedChallenge.faculty?.name || 'Todas las Áreas';
       })()
     : null;
 

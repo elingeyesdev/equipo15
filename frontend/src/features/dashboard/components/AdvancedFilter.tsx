@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 import { interactiveHover, premiumTooltip } from '../styles/CommonStyles';
-import { FACULTIES } from '../../../config/faculties';
 import { useActiveFaculties } from '../../../hooks/useActiveFaculties';
 import type { SortMode } from '../../../features/sky-wall/types';
 
@@ -157,9 +156,7 @@ const TOP_OPTIONS: { label: string; value: TopLimit }[] = [
 
 const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ value, onChange, disabled, onlySort = false, challengeStatus }) => {
   const { faculties: apiFaculties } = useActiveFaculties();
-  const facultyOptions = apiFaculties.length > 0
-    ? apiFaculties.filter((f) => f.name.toLowerCase() !== 'todas')
-    : FACULTIES.map((f) => ({ id: f.id, name: f.slug }));
+  const facultyOptions = apiFaculties.filter((f) => f.name.toLowerCase() !== 'todas');
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 

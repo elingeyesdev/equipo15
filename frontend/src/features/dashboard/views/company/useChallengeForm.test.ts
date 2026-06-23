@@ -33,7 +33,7 @@ describe('useChallengeForm - Ficha Técnica Obligatoria (Prueba de Ruta Crítica
     
     expect(result.current.errors.title).toBe('El título es obligatorio');
     expect(result.current.errors.problemDescription).toBe('La descripción del problema es obligatoria');
-    expect(result.current.errors.companyContext).toBe('El contexto de la empresa es obligatorio');
+    expect(result.current.errors.companyContext).toBe('El contexto de la organización es obligatorio');
     expect(result.current.errors.participationRules).toBe('Las reglas de participación son obligatorias');
   });
 });

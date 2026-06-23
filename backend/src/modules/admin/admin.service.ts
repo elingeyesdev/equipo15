@@ -39,14 +39,14 @@ export class AdminService {
     const company = await this.adminRepository.findCompanyById(companyId);
 
     if (!company) {
-      throw new NotFoundException('Empresa no encontrada.');
+      throw new NotFoundException('Organización no encontrada.');
     }
 
     const session = createImpersonationToken({
       uid: company.firebaseUid,
       email: company.email,
-      role: 'COMPANY',
-      roleName: 'company',
+      role: 'ORGANIZATION',
+      roleName: 'organization',
       companyId: company.id,
       companyName: company.displayName,
       originalAdminUid: adminUid,

@@ -15,7 +15,7 @@ import { resolveDisplayName } from '../../utils/user.utils';
 import { useDashboardState } from './hooks/useDashboardState';
 import { useIdeationForm } from './hooks/useIdeationForm';
 import type { AdvancedFilterState } from './components/AdvancedFilter';
-import { getFacultySlug } from '../../config/faculties';
+
 import type { Challenge } from '../../types/models';
 import type { IdeaDraft } from '../../services/idea.service';
 import BottomNavbar from './components/BottomNavbar';
@@ -233,8 +233,8 @@ const IdeationWall = () => {
       faculty: challenge?.faculty ?? null,
       faculties: (challenge as any)?.faculties ?? [],
       category: (challenge as any)?.faculties && (challenge as any).faculties.length > 0
-        ? getFacultySlug((challenge as any).faculties[0].id, (challenge as any).faculties[0].name)
-        : getFacultySlug(challenge?.facultyId ?? null, challenge?.faculty?.name),
+        ? (challenge as any).faculties[0].name
+        : challenge?.faculty?.name || 'General',
       isPrivate: false,
     };
   };

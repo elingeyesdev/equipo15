@@ -366,7 +366,7 @@ export const JudgeInboxView = () => {
             </svg>
           </EmptyIcon>
           <EmptyTitle>No tienes retos asignados</EmptyTitle>
-          <EmptyText>Cuando la empresa te asigne como juez a un reto, aparecerá aquí.</EmptyText>
+          <EmptyText>Cuando la organización te asigne como juez a un reto, aparecerá aquí.</EmptyText>
         </EmptyState>
       ) : (
         <Grid>
@@ -525,7 +525,7 @@ export const JudgeEvaluationView = () => {
           </EmptyTitle>
           <EmptyText>
             {filter === 'all'
-              ? 'Cuando la empresa envíe ideas a la fase de finalistas para este reto, aparecerán aquí para que las califiques.'
+              ? 'Cuando la organización envíe ideas a la fase de finalistas para este reto, aparecerán aquí para que las califiques.'
               : filter === 'pending'
                 ? '¡Excelente trabajo! Has evaluado todas las ideas asignadas de este reto.'
                 : 'Selecciona una idea pendiente para empezar a evaluar.'}

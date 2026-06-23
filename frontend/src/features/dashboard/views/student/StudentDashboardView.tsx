@@ -223,7 +223,7 @@ export const StudentDashboardView: React.FC = () => {
               ¡La pista se está preparando!
             </p>
             <p style={{ margin: 0, fontSize: '13px', color: '#9ca3af', lineHeight: 1.65, maxWidth: '280px' }}>
-              Por el momento no hay retos abiertos, pero las empresas ya están diseñando nuevos desafíos para vos. ¡Volvé pronto para demostrar tu talento!
+              Por el momento no hay retos abiertos, pero las organizaciones ya están diseñando nuevos desafíos para vos. ¡Volvé pronto para demostrar tu talento!
             </p>
           </div>
         </div>

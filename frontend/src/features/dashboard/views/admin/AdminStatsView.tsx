@@ -36,7 +36,7 @@ export function AdminStatsView() {
           <>
             <KpiCard
               icon={<BuildingIcon color="#485054" size={22} />}
-              label="Total de Empresas"
+              label="Total de Organizaciones"
               value={data?.totalCompanies ?? 0}
               subtitle="Compañias registradas en la plataforma"
               accentColor="#485054"

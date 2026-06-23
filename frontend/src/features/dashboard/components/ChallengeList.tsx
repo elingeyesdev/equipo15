@@ -2,7 +2,7 @@ import React from 'react';
 import * as S from '../styles/ChallengeStyles';
 import ChallengeCard from './ChallengeCard';
 import ChallengeCardSkeleton from './ChallengeCardSkeleton';
-import { getFacultySlug } from '../../../config/faculties';
+
 import type { Challenge } from '../../../types/models';
 
 interface ChallengeListProps {
@@ -34,7 +34,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
   isProfileIncomplete = false,
   onCompleteProfile,
 }) => {
-  const userSlug = getFacultySlug(userFacultyId || null);
+
   const filters = ['Activos', 'En Evaluación', 'Finalizados'];
 
   // Si no hay filtro válido seleccionado, o es 'Todos', por defecto 'Activos'
@@ -52,8 +52,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
         return c.status === 'Finalizado' || c.status === 'CLOSED' || (c.endDate && new Date(c.endDate) < new Date());
       }
       if (currentFilter === 'Mis Retos') {
-        // Asumiendo que Mis Retos significa los de mi facultad si soy estudiante
-        return c.category === userSlug;
+        return c.faculties?.some(f => f.id === userFacultyId) || false;
       }
       return true;
     })
@@ -213,7 +212,7 @@ const ChallengeList: React.FC<ChallengeListProps> = ({
                 <p style={{ margin: 0, fontSize: '13px', color: '#9ca3af', lineHeight: 1.6, maxWidth: '280px' }}>
                   {searchQuery.trim()
                     ? 'Intenta con otras palabras clave.'
-                    : 'Por el momento no hay retos abiertos, pero las empresas ya están diseñando nuevos desafíos para vos. ¡Volvé pronto para demostrar tu talento!'}
+                    : 'Por el momento no hay retos abiertos, pero las organizaciones ya están diseñando nuevos desafíos para vos. ¡Volvé pronto para demostrar tu talento!'}
                 </p>
               </>
             )}

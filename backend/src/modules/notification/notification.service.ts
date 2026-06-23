@@ -194,7 +194,7 @@ export class NotificationService {
   async notifyRoleChanged(userId: string, newRole: string) {
     const roleNames: Record<string, string> = {
       ADMIN: 'Administrador',
-      COMPANY: 'Empresa',
+      COMPANY: 'Organización',
       JUDGE: 'Juez',
       USER: 'Participante',
     };

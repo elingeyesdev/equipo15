@@ -953,7 +953,7 @@ export const CompanyChallengesView = () => {
 
               {viewChallenge.companyContext && (
                 <ViewStat>
-                  <ViewStatLabel>Contexto de la empresa</ViewStatLabel>
+                  <ViewStatLabel>Contexto de la organización</ViewStatLabel>
                   <ViewStatValue style={{ fontWeight: 600, color: '#5b6470' }}>{viewChallenge.companyContext}</ViewStatValue>
                 </ViewStat>
               )}

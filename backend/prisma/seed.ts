@@ -8,7 +8,7 @@ async function main() {
 
 
   console.log('Creando usuario admin de prueba...');
-  const adminEmail = 'admin@univalle.edu';
+  const adminEmail = 'admin@pista8ideacion.com';
   const adminExists = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (!adminExists) {
     await prisma.user.create({

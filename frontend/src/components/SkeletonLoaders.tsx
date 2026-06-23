@@ -88,7 +88,7 @@ export const CommentSkeleton: React.FC = () => (
 );
 
 /**
- * Table row skeleton — used in Admin tables (empresas, whitelist, faculties)
+ * Table row skeleton — used in Admin tables (organizaciones, whitelist, faculties)
  */
 export const TableRowSkeleton: React.FC<{ cols?: number }> = ({ cols = 6 }) => (
   <tr>

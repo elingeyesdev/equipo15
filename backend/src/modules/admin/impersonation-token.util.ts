@@ -6,8 +6,8 @@ export interface ImpersonationTokenPayload {
   tokenType: 'impersonation';
   uid: string;
   email: string;
-  role: 'COMPANY';
-  roleName: 'company';
+  role: 'ORGANIZATION';
+  roleName: 'organization';
   companyId: string;
   companyName: string;
   originalAdminUid: string;

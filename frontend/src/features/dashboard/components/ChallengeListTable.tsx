@@ -86,7 +86,7 @@ export function ChallengeListTable({ challenges }: Props) {
       ) : (
         <>
           <S.TableHeader>
-            <S.Cell>Reto / Empresa</S.Cell>
+            <S.Cell>Reto / Organización</S.Cell>
             <S.Cell>Estado</S.Cell>
             <S.Cell>Interacciones</S.Cell>
             <S.Cell>Calificación</S.Cell>

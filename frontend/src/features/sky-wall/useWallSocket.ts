@@ -2,18 +2,14 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import type { PlaneIdea, WallPhase, IdeaUpdatedPayload, IdeaVotedPayload, RawIdea } from './types';
 import { LANE_HEIGHT_PER_IDEA, TOP_PADDING } from './flight.engine';
 import { resolveDisplayName } from '../../utils/user.utils';
-import { FACULTIES } from '../../config/faculties';
+
 import { useSocket } from '../../hooks/useSocket';
 import { useWallEventListener } from '../../hooks/useWallEvents';
 
 const DEBOUNCE_MS = 200;
 
-const resolveAuthorFacultyName = (facultyId?: number | string, facultyName?: string) => {
-  if (facultyName) return facultyName;
-  if (facultyId === null || facultyId === undefined) return undefined;
-  const numericId = typeof facultyId === 'number' ? facultyId : Number(facultyId);
-  if (Number.isNaN(numericId)) return undefined;
-  return FACULTIES.find((faculty) => faculty.id === numericId)?.name;
+const resolveAuthorFacultyName = (_facultyId?: number | string, facultyName?: string) => {
+  return facultyName;
 };
 
 const buildPlanes = (

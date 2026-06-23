@@ -150,7 +150,7 @@ export class ChallengeService {
           where: { id: authorId },
           select: { displayName: true },
         });
-        const companyName = company?.displayName || 'Una empresa';
+        const companyName = company?.displayName || 'Una organización';
         const participants = await this.prisma.user.findMany({
           where: { role: 'USER' },
           select: { id: true },
@@ -443,7 +443,7 @@ export class ChallengeService {
           where: { id: existing.authorId },
           select: { displayName: true },
         });
-        const companyName = company?.displayName || 'Una empresa';
+        const companyName = company?.displayName || 'Una organización';
         const participants = await this.prisma.user.findMany({
           where: { role: 'USER' },
           select: { id: true },

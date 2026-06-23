@@ -65,7 +65,7 @@ describe('ChallengeService', () => {
   });
 
   describe('Asignación de Jerarquía Evaluadora (Prueba de Ruta Crítica)', () => {
-    it('Debe rechazar la asignación si la empresa no es la dueña del reto', async () => {
+    it('Debe rechazar la asignación si la organización no es la dueña del reto', async () => {
       // 1. Arrange
       userService.findByUid.mockResolvedValue({ id: 'user-other-company', status: 'ACTIVE' });
       challengeRepository.findById.mockResolvedValue({

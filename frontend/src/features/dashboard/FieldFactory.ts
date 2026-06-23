@@ -49,10 +49,10 @@ export class FieldFactory {
   static createCompanyContextField(): FieldConfig {
     return {
       name: 'companyContext',
-      label: 'Contexto de la Empresa',
+      label: 'Contexto de la Organización',
       type: 'rich-text',
       validator: new Validator([
-        new WordCountValidation(10, 250, 'El contexto de la empresa'),
+        new WordCountValidation(10, 250, 'El contexto de la organización'),
       ])
     };
   }
@@ -76,10 +76,10 @@ export class FieldFactory {
       defaultValue: false,
       options: [
         { label: 'Reto Abierto (General)', value: false },
-        { label: 'Reto Privado (Empresas)', value: true }
+        { label: 'Reto Privado (Organizaciones)', value: true }
       ],
       helperTexts: {
-        true: 'Este reto no aparecerá en el muro público; se generará un enlace único para invitar empresas.'
+        true: 'Este reto no aparecerá en el muro público; se generará un enlace único para invitar organizaciones.'
       },
       validator: new Validator([
         new RequiredValidation()

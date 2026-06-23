@@ -13,7 +13,7 @@ import { useActiveFaculties } from '@/hooks/useActiveFaculties';
 
 const PROFILE_CONFIGS: Record<string, { badge: string; showCode: boolean; bioPlaceholder: string }> = {
   student: { badge: "INNOVADOR", showCode: true, bioPlaceholder: "Escribe brevemente sobre tu experiencia o intereses de innovación (máx. 200 caracteres)." },
-  company: { badge: "EMPRESA SOCIA", showCode: false, bioPlaceholder: "Descripción de la institución o área..." },
+  company: { badge: "ORGANIZACIÓN", showCode: false, bioPlaceholder: "Descripción de la institución o área..." },
   judge: { badge: "EXPERTO EVALUADOR", showCode: false, bioPlaceholder: "Resumen de tu expertise técnico..." },
   admin: { badge: "SOPORTE TÉCNICO", showCode: false, bioPlaceholder: "Notas de administración..." }
 };

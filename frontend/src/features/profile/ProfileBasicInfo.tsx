@@ -19,7 +19,7 @@ import {
 } from './ProfileStyles';
 
 
-const INSTITUTIONS = ['Univalle', 'UAGRM', 'UPSA', 'Empresa Particular', 'Independiente', 'Otro'];
+const INSTITUTIONS = ['Univalle', 'UAGRM', 'UPSA', 'Organización Particular', 'Independiente', 'Otro'];
 const OCCUPATIONS = ['Estudiante', 'Empleado', 'Independiente', 'Desempleado', 'Otro'];
 const AGE_RANGES = ['18-25 años', '26-35 años', '36-45 años', 'Más de 46 años'];
 
@@ -345,7 +345,7 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
                   {AGE_RANGES.map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
                 <p style={{ margin: '6px 0 0', fontSize: 11, color: '#a8b2ba', fontWeight: 600 }}>
-                  Este dato ayuda a las empresas a entender el alcance generacional de las propuestas.
+                  Este dato ayuda a las organizaciones a entender el alcance generacional de las propuestas.
                 </p>
               </FormRow>
             </FieldFull>

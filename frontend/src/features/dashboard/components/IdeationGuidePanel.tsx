@@ -12,7 +12,7 @@ const STEPS: readonly StepConfig[] = [
     number: '1',
     label: 'Entendé el problema',
     description:
-      'Analizá la descripción y el contexto de la empresa para asegurarte de que tu idea resuelva el dolor principal.',
+      'Analizá la descripción y el contexto de la organización para asegurarte de que tu idea resuelva el dolor principal.',
     delay: 0,
   },
   {

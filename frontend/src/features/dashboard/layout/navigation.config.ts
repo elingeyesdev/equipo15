@@ -30,10 +30,10 @@ export const NAVIGATION_CONFIG: NavItem[] = [
   { name: 'Accesos y registros', shortName: 'Accesos', icon: ShieldCheck, path: '/dashboard/admin/whitelist', roles: ['ADMIN'] },
   { name: 'Control Usuarios', shortName: 'Usuarios', icon: ShieldCheck, path: '/dashboard/admin/users', roles: ['ADMIN'] },
 
-  { name: 'Resultados', shortName: 'Resultados', icon: BarChart3, path: '/dashboard/company/stats', roles: ['COMPANY'] },
-  { name: 'Mis Retos', shortName: 'Retos', icon: FileEdit, path: '/dashboard/company/challenges', roles: ['COMPANY'] },
-  { name: 'Gestión de Podio', shortName: 'Podio', icon: Trophy, path: '/dashboard/company/podium', roles: ['COMPANY'] },
-  { name: 'Gestión de Jueces', shortName: 'Jueces', icon: Users, path: '/dashboard/company/judges', roles: ['COMPANY'] },
+  { name: 'Resultados', shortName: 'Resultados', icon: BarChart3, path: '/dashboard/company/stats', roles: ['ORGANIZATION'] },
+  { name: 'Mis Retos', shortName: 'Retos', icon: FileEdit, path: '/dashboard/company/challenges', roles: ['ORGANIZATION'] },
+  { name: 'Gestión de Podio', shortName: 'Podio', icon: Trophy, path: '/dashboard/company/podium', roles: ['ORGANIZATION'] },
+  { name: 'Gestión de Jueces', shortName: 'Jueces', icon: Users, path: '/dashboard/company/judges', roles: ['ORGANIZATION'] },
 
   { name: 'Retos Asignados', shortName: 'Asignados', icon: Inbox, path: '/dashboard/judge/inbox', roles: ['JUDGE'] },
   { name: 'Evaluar Ideas', shortName: 'Evaluar', icon: ClipboardCheck, path: '/dashboard/judge/evaluation', roles: ['JUDGE'] },

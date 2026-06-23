@@ -14,7 +14,7 @@ describe('AppRoutes - Seguridad en Rutas de Roles (Prueba de Ruta Crítica)', ()
     vi.clearAllMocks();
   });
 
-  it('Debe bloquear a un alumno que intenta acceder a una ruta de administrador o empresa y redirigirlo al inicio', () => {
+  it('Debe bloquear a un alumno que intenta acceder a una ruta de administrador o organización y redirigirlo al inicio', () => {
     // 1. Arrange: Simulamos a un estudiante logueado
     (useAuth as any).mockReturnValue({
       user: { uid: 'student-123', getIdToken: vi.fn().mockResolvedValue('token') },

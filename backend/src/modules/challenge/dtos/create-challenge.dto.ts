@@ -44,7 +44,7 @@ export class CreateChallengeDto {
 
   @IsString()
   @IsOptional()
-  @IsWordCount(10, 250, { message: 'El contexto de la empresa debe tener entre 10 y 250 palabras.' })
+  @IsWordCount(10, 250, { message: 'El contexto de la organización debe tener entre 10 y 250 palabras.' })
   @HasMinimumUniqueWords(0.3)
   @NoInsecureUrls()
   @NoExcessiveSymbols(0.3)

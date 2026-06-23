@@ -55,7 +55,7 @@ export class UsersController {
       id: req.user.companyId || 'impersonated-id',
       firebaseUid: req.user.uid,
       email: req.user.email || '',
-      displayName: req.user.companyName || 'Empresa (Perfil Incompleto)',
+      displayName: req.user.companyName || 'Organización (Perfil Incompleto)',
       bio: null,
       nickname: null,
       totalPoints: 0,
