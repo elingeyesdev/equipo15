@@ -278,8 +278,18 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                 onChange={e => !locked('core') && updateField('title', e.target.value)} />
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 {errors.title ? <ErrorText>{errors.title}</ErrorText> : <span />}
-                <CharCount $over={countWords(form.title) > WORD_LIMITS.title.max}>
-                  {countWords(form.title)}/{WORD_LIMITS.title.max} palabras
+                <CharCount
+                  $over={countWords(form.title) > WORD_LIMITS.title.max}
+                  $under={countWords(form.title) > 0 && countWords(form.title) < WORD_LIMITS.title.min}
+                  $ok={countWords(form.title) >= WORD_LIMITS.title.min && countWords(form.title) <= WORD_LIMITS.title.max}
+                >
+                  {countWords(form.title) < WORD_LIMITS.title.min && countWords(form.title) > 0
+                    ? <>{countWords(form.title)} <span style={{ opacity: 0.6 }}>/ mín. {WORD_LIMITS.title.min} palabras</span></>
+                    : countWords(form.title) > WORD_LIMITS.title.max
+                    ? <>{countWords(form.title)}/{WORD_LIMITS.title.max} palabras</>  
+                    : countWords(form.title) === 0
+                    ? <span style={{ fontWeight: 600, color: '#c0c8d0' }}>mín. {WORD_LIMITS.title.min} · máx. {WORD_LIMITS.title.max} palabras</span>
+                    : <>✓ {countWords(form.title)}/{WORD_LIMITS.title.max} palabras</>}
                 </CharCount>
               </div>
             </FieldGroup>
@@ -296,8 +306,18 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               onChange={e => !locked('core') && updateField('problemDescription', e.target.value)} />
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               {errors.problemDescription ? <ErrorText>{errors.problemDescription}</ErrorText> : <span />}
-              <CharCount $over={countWords(form.problemDescription) > WORD_LIMITS.content.max}>
-                {countWords(form.problemDescription)}/{WORD_LIMITS.content.max} palabras
+              <CharCount
+                $over={countWords(form.problemDescription) > WORD_LIMITS.content.max}
+                $under={countWords(form.problemDescription) > 0 && countWords(form.problemDescription) < WORD_LIMITS.content.min}
+                $ok={countWords(form.problemDescription) >= WORD_LIMITS.content.min && countWords(form.problemDescription) <= WORD_LIMITS.content.max}
+              >
+                {countWords(form.problemDescription) < WORD_LIMITS.content.min && countWords(form.problemDescription) > 0
+                  ? <>{countWords(form.problemDescription)} <span style={{ opacity: 0.6 }}>/ mín. {WORD_LIMITS.content.min} palabras</span></>
+                  : countWords(form.problemDescription) > WORD_LIMITS.content.max
+                  ? <>{countWords(form.problemDescription)}/{WORD_LIMITS.content.max} palabras</>
+                  : countWords(form.problemDescription) === 0
+                  ? <span style={{ fontWeight: 600, color: '#c0c8d0' }}>mín. {WORD_LIMITS.content.min} · máx. {WORD_LIMITS.content.max} palabras</span>
+                  : <>✓ {countWords(form.problemDescription)}/{WORD_LIMITS.content.max} palabras</>}
               </CharCount>
             </div>
           </FieldGroup>
@@ -313,8 +333,18 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               onChange={e => !locked('core') && updateField('companyContext', e.target.value)} />
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               {errors.companyContext ? <ErrorText>{errors.companyContext}</ErrorText> : <span />}
-              <CharCount $over={countWords(form.companyContext) > WORD_LIMITS.content.max}>
-                {countWords(form.companyContext)}/{WORD_LIMITS.content.max} palabras
+              <CharCount
+                $over={countWords(form.companyContext) > WORD_LIMITS.content.max}
+                $under={countWords(form.companyContext) > 0 && countWords(form.companyContext) < WORD_LIMITS.content.min}
+                $ok={countWords(form.companyContext) >= WORD_LIMITS.content.min && countWords(form.companyContext) <= WORD_LIMITS.content.max}
+              >
+                {countWords(form.companyContext) < WORD_LIMITS.content.min && countWords(form.companyContext) > 0
+                  ? <>{countWords(form.companyContext)} <span style={{ opacity: 0.6 }}>/ mín. {WORD_LIMITS.content.min} palabras</span></>
+                  : countWords(form.companyContext) > WORD_LIMITS.content.max
+                  ? <>{countWords(form.companyContext)}/{WORD_LIMITS.content.max} palabras</>
+                  : countWords(form.companyContext) === 0
+                  ? <span style={{ fontWeight: 600, color: '#c0c8d0' }}>mín. {WORD_LIMITS.content.min} · máx. {WORD_LIMITS.content.max} palabras</span>
+                  : <>✓ {countWords(form.companyContext)}/{WORD_LIMITS.content.max} palabras</>}
               </CharCount>
             </div>
           </FieldGroup>
@@ -380,8 +410,18 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
               }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', position: 'absolute', bottom: -20, left: 0, right: 0 }}>
               {errors.participationRules ? <ErrorText>{errors.participationRules}</ErrorText> : <span />}
-              <CharCount $over={countWords(form.participationRules) > WORD_LIMITS.content.max}>
-                {countWords(form.participationRules)}/{WORD_LIMITS.content.max} palabras
+              <CharCount
+                $over={countWords(form.participationRules) > WORD_LIMITS.rules.max}
+                $under={countWords(form.participationRules) > 0 && countWords(form.participationRules) < WORD_LIMITS.rules.min}
+                $ok={countWords(form.participationRules) >= WORD_LIMITS.rules.min && countWords(form.participationRules) <= WORD_LIMITS.rules.max}
+              >
+                {countWords(form.participationRules) < WORD_LIMITS.rules.min && countWords(form.participationRules) > 0
+                  ? <>{countWords(form.participationRules)} <span style={{ opacity: 0.6 }}>/ mín. {WORD_LIMITS.rules.min} palabras</span></>
+                  : countWords(form.participationRules) > WORD_LIMITS.rules.max
+                  ? <>{countWords(form.participationRules)}/{WORD_LIMITS.rules.max} palabras</>
+                  : countWords(form.participationRules) === 0
+                  ? <span style={{ fontWeight: 600, color: '#c0c8d0' }}>mín. {WORD_LIMITS.rules.min} · máx. {WORD_LIMITS.rules.max} palabras</span>
+                  : <>✓ {countWords(form.participationRules)}/{WORD_LIMITS.rules.max} palabras</>}
               </CharCount>
             </div>
           </FieldGroup>

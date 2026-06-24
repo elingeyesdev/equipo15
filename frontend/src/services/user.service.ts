@@ -13,9 +13,6 @@ export const userService = {
     nickname?: string;
     phone?: string;
     studentCode?: string;
-    institucion_educativa?: string | null;
-    ocupacion_laboral?: string | null;
-    codigo_estudiantil?: string | null;
   }): Promise<ApiResponse<UserProfile>> => {
     const response = await axiosInstance.patch<ApiResponse<UserProfile>>('/users/profile', data);
     return response.data;

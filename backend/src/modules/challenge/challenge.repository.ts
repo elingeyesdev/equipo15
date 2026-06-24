@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import {
   Challenge,
@@ -86,19 +87,16 @@ export class ChallengeRepository {
         ...(facultyId ? [{ challengeFaculties: { some: { facultyId } } }] : []),
       ];
 
-      where.OR = [
+      where.AND = [
+        { OR: facultyCondition },
         {
-          isPrivate: false,
-        },
-        {
-          isPrivate: true,
-          AND: [
-            { privateAccesses: { some: { userId } } },
-            { OR: facultyCondition },
+          OR: [
+            { isPrivate: false },
+            { isPrivate: true, privateAccesses: { some: { userId } } },
           ],
         },
       ];
-    } else if (userRole === 'company' || userRole === UserRole.ORGANIZATION) {
+    } else if (userRole === 'company' || userRole === 'organization' || userRole === UserRole.ORGANIZATION) {
       where.authorId = userId;
     }
 
@@ -109,6 +107,7 @@ export class ChallengeRepository {
         take,
         include: {
           challengeFaculties: { include: { faculty: true } },
+          challengeCriteria: { include: { criterion: true } },
           _count: {
             select: { ideas: { where: { deletedAt: null } } },
           },
@@ -121,14 +120,26 @@ export class ChallengeRepository {
       this.prisma.challenge.count({ where }),
     ]);
 
-    return { data, total };
+    const mappedData = data.map((challenge) => {
+      (challenge as any).evaluationCriteria = challenge.challengeCriteria?.map(cc => ({
+        id: cc.criterion.id,
+        name: cc.criterion.name,
+        description: cc.criterion.description,
+        weight: cc.weight,
+        enabled: cc.isActive,
+      })) || [];
+      return challenge;
+    });
+
+    return { data: mappedData, total };
   }
 
   async findById(id: string): Promise<Challenge | null> {
-    return this.prisma.challenge.findUnique({
+    const challenge = await this.prisma.challenge.findUnique({
       where: { id },
       include: {
         challengeFaculties: { include: { faculty: true } },
+        challengeCriteria: { include: { criterion: true } },
         ideas: {
           where: { deletedAt: null },
         },
@@ -141,6 +152,18 @@ export class ChallengeRepository {
         },
       },
     });
+
+    if (challenge) {
+      (challenge as any).evaluationCriteria = challenge.challengeCriteria?.map(cc => ({
+        id: cc.criterion.id,
+        name: cc.criterion.name,
+        description: cc.criterion.description,
+        weight: cc.weight,
+        enabled: cc.isActive,
+      })) || [];
+    }
+
+    return challenge;
   }
 
   async getPodiumStatus(challengeId: string) {
@@ -321,6 +344,10 @@ export class ChallengeRepository {
     const authorId = challengeData.authorId;
     delete challengeData.authorId;
 
+    if (challengeData.isPrivate && !challengeData.accessToken) {
+      challengeData.accessToken = crypto.randomBytes(16).toString('hex');
+    }
+
     const created = await this.prisma.challenge.create({
       data: {
         ...(challengeData as Prisma.ChallengeCreateInput),
@@ -344,6 +371,13 @@ export class ChallengeRepository {
 
     this.logger.log(`Prisma Update Challenge ID: ${id}`);
     this.logger.log(`Faculty IDs to connect: ${JSON.stringify(facultyIds)}`);
+
+    if (challengeData.isPrivate) {
+      const existing = await this.prisma.challenge.findUnique({ where: { id } });
+      if (existing && !existing.accessToken) {
+        challengeData.accessToken = crypto.randomBytes(16).toString('hex');
+      }
+    }
 
     const updated = await this.prisma.challenge.update({
       where: { id },

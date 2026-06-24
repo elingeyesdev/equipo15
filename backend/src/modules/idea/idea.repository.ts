@@ -52,7 +52,10 @@ export class IdeaRepository {
   }
 
   private buildWhereClause(challengeId?: string, search?: string): any {
-    const where: any = { status: { in: ['PUBLISHED', 'FINALIST', 'WINNER'] } };
+    const where: any = { 
+      status: { in: ['PUBLISHED', 'FINALIST', 'WINNER'] },
+      deletedAt: null 
+    };
     if (challengeId) where.challengeId = challengeId;
 
     if (search && search.trim().length > 0) {
@@ -379,6 +382,13 @@ export class IdeaRepository {
     return this.prisma.idea.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+  }
+
+  async softDeleteIdea(id: string, deletedById: string): Promise<Idea> {
+    return this.prisma.idea.update({
+      where: { id },
+      data: { deletedAt: new Date(), deletedById },
     });
   }
 

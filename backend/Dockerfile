@@ -28,6 +28,7 @@ COPY --from=builder /app/node_modules ./node_modules
 
 
 COPY entrypoint.sh ./entrypoint.sh
+COPY firebase-admin.json ./firebase-admin.json
 RUN apk add --no-cache dos2unix && dos2unix entrypoint.sh
 RUN chmod +x entrypoint.sh
 

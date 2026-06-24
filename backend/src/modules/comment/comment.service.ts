@@ -618,8 +618,8 @@ export class CommentService {
     }
 
     const canCompanyWithdraw =
-      requesterRole === 'company' && requesterId === challenge.authorId;
-    const canAdminWithdraw = requesterRole === 'admin';
+      (requesterRole === 'company' || requesterRole === 'organization' || requesterRole === UserRole.ORGANIZATION) && requesterId === challenge.authorId;
+    const canAdminWithdraw = requesterRole === 'admin' || requesterRole === UserRole.ADMIN;
 
     const dataWithPermissions = data.map((comment) => ({
       ...comment,

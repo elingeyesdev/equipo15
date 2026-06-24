@@ -12,6 +12,7 @@ import { useAuth } from '@/context/AuthContext';
 import * as S from './MyFavoritesStyles';
 import IdeaDetailModal from '@/features/sky-wall/components/IdeaDetailModal';
 import Pista8Logo from '@/components/icons/Pista8Logo';
+import { useWallEventListener } from '@/hooks/useWallEvents';
 import type { PlaneIdea } from '@/features/sky-wall/types';
 import { resolveDisplayName } from '@/utils/user.utils';
 import BottomNavbar from './BottomNavbar';
@@ -79,6 +80,10 @@ const MyFavoritesView: React.FC = () => {
   const handleOpenModal = useCallback((idea: PlaneIdea) => {
     setSelectedIdea(idea);
   }, []);
+
+  useWallEventListener('idea_deleted', useCallback(({ ideaId }) => {
+    setIdeas(prev => prev.filter(idea => idea.id !== ideaId));
+  }, []));
 
   return (
     <S.Wrapper>

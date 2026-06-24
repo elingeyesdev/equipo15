@@ -14,6 +14,7 @@ import { useActiveFaculties } from '@/hooks/useActiveFaculties';
 const PROFILE_CONFIGS: Record<string, { badge: string; showCode: boolean; bioPlaceholder: string }> = {
   student: { badge: "INNOVADOR", showCode: true, bioPlaceholder: "Escribe brevemente sobre tu experiencia o intereses de innovación (máx. 200 caracteres)." },
   company: { badge: "ORGANIZACIÓN", showCode: false, bioPlaceholder: "Descripción de la institución o área..." },
+  organization: { badge: "ORGANIZACIÓN", showCode: false, bioPlaceholder: "Descripción de la institución o área..." },
   judge: { badge: "EXPERTO EVALUADOR", showCode: false, bioPlaceholder: "Resumen de tu expertise técnico..." },
   admin: { badge: "SOPORTE TÉCNICO", showCode: false, bioPlaceholder: "Notas de administración..." }
 };
@@ -26,12 +27,10 @@ export const ProfileView: React.FC = () => {
     bio: profile?.bio || '',
     nickname: profile?.nickname || '',
     phone: profile?.phone || '',
-    institucion_educativa: profile?.institucion_educativa || '',
-    ocupacion_laboral: profile?.ocupacion_laboral || '',
-    codigo_estudiantil: profile?.codigo_estudiantil || '',
-    specialty: profile?.studentProfile?.facultyId || profile?.specialty || '',
-    ageRange: profile?.ageRange || '',
-  } as any);
+    isStudent: !!(profile?.studentProfile?.studentCode),
+    studentCode: profile?.studentProfile?.studentCode || '',
+    specialty: profile?.studentProfile?.facultyId || '',
+  });
 
   const countWords = (text: string) => text.trim().split(/\s+/).filter(Boolean).length;
 
@@ -55,22 +54,15 @@ export const ProfileView: React.FC = () => {
       return;
     }
 
-    if (profileData.ocupacion_laboral === 'Estudiante') {
-      if (!profileData.codigo_estudiantil || !profileData.codigo_estudiantil.trim()) {
-        toast.error('El código estudiantil es obligatorio cuando eres Estudiante.');
-        return;
-      }
-    }
-
     setSaving(true);
     try {
       await userService.updateProfile({
         bio: profileData.bio,
         nickname: profileData.nickname,
         phone: profileData.phone,
-        institucion_educativa: profileData.institucion_educativa || null,
-        ocupacion_laboral: profileData.ocupacion_laboral || null,
-        codigo_estudiantil: profileData.ocupacion_laboral === 'Estudiante' ? profileData.codigo_estudiantil : null,
+        ...(profileData.isStudent && profileData.studentCode
+          ? { studentCode: profileData.studentCode }
+          : {}),
       });
 
       const facultyChanged = profileData.specialty !== (profile?.studentProfile?.facultyId || '');
@@ -139,7 +131,7 @@ export const ProfileView: React.FC = () => {
 
         <CardBody>
           <ProfileBasicInfo
-            profileData={profileData as any}
+            profileData={profileData}
             setProfileData={setProfileData}
             saving={saving}
             readOnlyMode={readOnlyMode}

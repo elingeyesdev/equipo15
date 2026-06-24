@@ -29,6 +29,8 @@ export const authService = {
       const token = await userCredential.user.getIdToken();
       const uid = userCredential.user.uid;
 
+      await signOut(auth);
+
       await axiosInstance.post(
         '/users/sync',
         {
@@ -44,13 +46,11 @@ export const authService = {
           },
         },
       );
-
-      await signOut(auth);
     } catch (error) {
-      if (userCredential && auth.currentUser) {
-        await deleteUser(auth.currentUser).catch(() => undefined);
+      if (userCredential) {
+        await deleteUser(userCredential.user).catch(() => undefined);
       }
-      await signOut(auth).catch(() => undefined);
+      await signOut(auth);
       throw error;
     }
   },

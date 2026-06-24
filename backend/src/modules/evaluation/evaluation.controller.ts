@@ -44,7 +44,7 @@ export class EvaluationsController {
 
   @Get('idea/:ideaId')
   @UseGuards(FirebaseAuthGuard, RolesGuard)
-  @Roles('admin', 'company')
+  @Roles('admin', 'company', 'organization', 'student')
   async findByIdea(
     @Param('ideaId') ideaId: string,
     @Request() req: AuthenticatedRequest,

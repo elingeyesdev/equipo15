@@ -18,7 +18,7 @@ async function main() {
 
   for (const faculty of faculties) {
     const exists = await prisma.faculty.findFirst({
-      where: { name: faculty.name, institutionId: null },
+      where: { name: faculty.name, organizationId: null },
     });
 
     if (!exists) {
@@ -32,7 +32,7 @@ async function main() {
   }
 
   console.log('Creando usuario admin de prueba...');
-  const adminEmail = 'admin@univalle.edu';
+  const adminEmail = 'admin@pista8ideacion.com';
   const adminExists = await prisma.user.findUnique({
     where: { email: adminEmail },
   });
@@ -40,8 +40,8 @@ async function main() {
   if (!adminExists) {
     await prisma.user.create({
       data: {
-        id: 'admin-0001',
-        firebaseUid: 'admin-fb-0001',
+        id: 'admin-pista8ideacion',
+        firebaseUid: '8D2VpCzukPQCN8c993Ifw4dvGo52',
         email: adminEmail,
         displayName: 'Admin Pista8',
         role: 'ADMIN',
@@ -49,7 +49,14 @@ async function main() {
     });
     console.log(`Usuario admin creado: ${adminEmail}`);
   } else {
-    console.log('Usuario admin ya existe');
+    await prisma.user.update({
+      where: { email: adminEmail },
+      data: {
+        role: 'ADMIN',
+        status: 'ACTIVE',
+      },
+    });
+    console.log('Usuario admin ya existe; rol y estado verificados');
   }
 
   console.log('Poblamiento finalizado con exito.');

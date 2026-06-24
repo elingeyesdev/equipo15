@@ -13,7 +13,7 @@ async function main() {
   if (!adminExists) {
     await prisma.user.create({
       data: {
-        id: 'admin-0001',
+        id: 'admin-pista8ideacion',
         firebaseUid: 'admin-fb-0001',
         email: adminEmail,
         displayName: 'Admin Pista8',
@@ -22,7 +22,14 @@ async function main() {
     });
     console.log(`Usuario admin creado: ${adminEmail}`);
   } else {
-    console.log('Usuario admin ya existe');
+    await prisma.user.update({
+      where: { email: adminEmail },
+      data: {
+        role: 'ADMIN',
+        status: 'ACTIVE',
+      },
+    });
+    console.log('Usuario admin ya existe; rol y estado verificados');
   }
   console.log('Poblamiento finalizado con éxito.');
 }

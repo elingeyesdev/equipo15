@@ -207,9 +207,15 @@ export const FlexibleTextAreaField = styled(TextAreaField)`
   min-height: 150px;
 `;
 
-export const CharCount = styled.span<{ $over: boolean }>`
-  font-size: 11px; font-weight: 600; text-align: right;
-  color: ${p => p.$over ? Pista8Theme.error : '#c0c8d0'};
+export const CharCount = styled.span<{ $over: boolean; $under?: boolean; $ok?: boolean }>`
+  font-size: 11px; font-weight: 700; text-align: right; display: flex; align-items: center; gap: 4px; justify-content: flex-end;
+  color: ${
+    p => p.$over ? Pista8Theme.error
+    : p.$ok ? '#16a34a'
+    : p.$under ? '#f59e0b'
+    : '#c0c8d0'
+  };
+  transition: color 0.2s ease;
 `;
 
 export const ErrorText = styled.p`

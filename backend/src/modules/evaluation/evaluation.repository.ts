@@ -11,8 +11,8 @@ export class EvaluationRepository {
       data: {
         ...evaluationData,
         scores: {
-          create: scores.map((s: { challengeCriterionId: string; score: number }) => ({
-            challengeCriterionId: s.challengeCriterionId,
+          create: scores.map((s: any) => ({
+            challengeCriterionId: s.challengeCriterionId || s.criterionId,
             score: s.score,
           })),
         },
@@ -76,6 +76,7 @@ export class EvaluationRepository {
             challengeCriterion: {
               select: {
                 id: true,
+                weight: true,
                 criterion: { select: { name: true, description: true } },
               },
             },

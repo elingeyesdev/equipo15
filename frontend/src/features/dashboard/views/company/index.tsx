@@ -47,7 +47,7 @@ const deriveDisplayStatus = (challenge: Challenge): string => {
 
 const isChallengeClosed = (challenge: Challenge): boolean => {
   const statusUpper = challenge.status?.toUpperCase() || '';
-  return statusUpper === 'CLOSED';
+  return statusUpper === 'CLOSED' || statusUpper === 'FINALIZADO';
 };
 
 const canEditCriteria = (challenge: Challenge): boolean => !isChallengeClosed(challenge);
@@ -933,6 +933,13 @@ export const CompanyChallengesView = () => {
                   <ViewStatLabel>Facultad</ViewStatLabel>
                   <ViewStatValue>
                     {(() => {
+                      const cf = (viewChallenge as any).challengeFaculties;
+                      if (Array.isArray(cf) && cf.length > 0) {
+                        return cf.map((f: any) => {
+                          const n = f.faculty?.name || '';
+                          return n.startsWith('Facultad') ? n : `Facultad de ${n}`;
+                        }).filter((n: string) => n !== 'Facultad de ').join(', ');
+                      }
                       const facs = (viewChallenge as any).faculties;
                       if (Array.isArray(facs) && facs.length > 0) {
                         return facs.map((f: any) => f.name.startsWith('Facultad') ? f.name : `Facultad de ${f.name}`).join(', ');

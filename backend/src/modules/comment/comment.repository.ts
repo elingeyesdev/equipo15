@@ -15,7 +15,6 @@ const commentInclude = {
       id: true,
       displayName: true,
       nickname: true,
-      avatarUrl: true,
       studentProfile: {
         select: { facultyId: true, faculty: { select: { name: true } } },
       },

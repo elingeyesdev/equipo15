@@ -35,12 +35,15 @@ export interface Errors {
 export const WORD_LIMITS = {
   title: { min: 2, max: 15 },
   content: { min: 10, max: 250 },
+  rules: { min: 5, max: 250 },
 };
 
 /** Cuenta palabras reales en un string */
 function countWords(value: string): number {
   return value.trim().split(/\s+/).filter(Boolean).length;
 }
+
+
 
 const deepEqual = (a: any, b: any): boolean => {
   if (a === b) return true;
@@ -132,7 +135,7 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
   const hasIdeas   = (challenge?.ideasCount ?? 0) > 0;
 
   const statusUpper = challenge?.status?.toUpperCase() || '';
-  const isClosed = statusUpper === 'CLOSED';
+  const isClosed = statusUpper === 'CLOSED' || statusUpper === 'FINALIZADO';
   const isDraftOrScheduled =
     statusUpper === 'DRAFT' ||
     statusUpper === 'SCHEDULED' ||
@@ -165,10 +168,11 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
   const locked = (field: 'core' | 'flexible' | 'criteria') => {
     if (readOnlyMode) return true;
     if (!isEditMode) return false;
+    if (isClosed) return true; // Everything is locked when closed
     const restrictCore = !isDraftOrScheduled && (hasIdeas || isEvaluating || isPastEnd);
     if (field === 'core') return restrictCore;
     if (field === 'flexible') return !isDraftOrScheduled && (isEvaluating || isPastEnd);
-    if (field === 'criteria') return isClosed;
+    if (field === 'criteria') return false;
     return false;
   };
 
@@ -196,9 +200,19 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
       status: challenge.status || 'Borrador',
       logoUrl: challenge.logoUrl || '',
       evaluationCriteria: (challenge.evaluationCriteria && challenge.evaluationCriteria.length > 0)
-        ? challenge.evaluationCriteria
+        ? DEFAULT_CRITERIA.map(dc => {
+            const saved = challenge.evaluationCriteria!.find((c: any) => c.name === dc.name || c.id === dc.id);
+            if (saved) return { ...dc, ...saved, enabled: true };
+            return { ...dc, enabled: false };
+          }).concat(
+            challenge.evaluationCriteria!.filter((c: any) => !DEFAULT_CRITERIA.some(dc => dc.name === c.name || dc.id === c.id))
+          )
         : DEFAULT_CRITERIA,
-      facultyIds: challenge.faculties ? challenge.faculties.map((f: any) => f.id) : (challenge.facultyId ? [String(challenge.facultyId)] : []),
+      facultyIds: challenge.challengeFaculties 
+        ? challenge.challengeFaculties.map((cf: any) => cf.facultyId)
+        : challenge.faculties 
+          ? challenge.faculties.map((f: any) => f.id) 
+          : (challenge.facultyId ? [String(challenge.facultyId)] : []),
       targetAudience: (challenge as any).targetAudience || { ageRanges: [], participantTypes: [] },
     } as ChallengeFormData : emptyForm;
 
@@ -285,16 +299,18 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
   const validate = (forDraft: boolean): boolean => {
     const errs: Errors = {};
 
-    // ─ Título: obligatorio siempre, 2–15 palabras ─
-    const titleWords = countWords(form.title);
-    if (!form.title.trim()) {
-      errs.title = 'El título es obligatorio';
-    } else if (titleWords < WORD_LIMITS.title.min || titleWords > WORD_LIMITS.title.max) {
-      errs.title = `El título debe tener entre ${WORD_LIMITS.title.min} y ${WORD_LIMITS.title.max} palabras (llevas ${titleWords})`;
+    // ─ Título: obligatorio siempre, 2–15 palabras (skip if criteriaOnlyMode) ─
+    if (!criteriaOnlyMode) {
+      const titleWords = countWords(form.title);
+      if (!form.title.trim()) {
+        errs.title = 'El título es obligatorio';
+      } else if (titleWords < WORD_LIMITS.title.min || titleWords > WORD_LIMITS.title.max) {
+        errs.title = `El título debe tener entre ${WORD_LIMITS.title.min} y ${WORD_LIMITS.title.max} palabras (llevas ${titleWords})`;
+      }
     }
 
-    // ─ Los demás campos solo se validan al publicar ─
-    if (!forDraft) {
+    // ─ Los demás campos solo se validan al publicar (y si no estamos en criteriaOnlyMode) ─
+    if (!forDraft && !criteriaOnlyMode) {
       if ((form.startDate && !form.endDate) || (!form.startDate && form.endDate)) {
         if (!form.startDate) errs.startDate = 'Debes ingresar ambas fechas o dejarlas vacías para activación inmediata';
         if (!form.endDate) errs.endDate = 'Debes ingresar ambas fechas o dejarlas vacías para activación inmediata';
@@ -327,8 +343,8 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
       const rulesWords = countWords(form.participationRules);
       if (!form.participationRules.trim()) {
         errs.participationRules = 'Las reglas de participación son obligatorias';
-      } else if (rulesWords < WORD_LIMITS.content.min || rulesWords > WORD_LIMITS.content.max) {
-        errs.participationRules = `Las reglas deben tener entre ${WORD_LIMITS.content.min} y ${WORD_LIMITS.content.max} palabras (llevas ${rulesWords})`;
+      } else if (rulesWords < WORD_LIMITS.rules.min || rulesWords > WORD_LIMITS.rules.max) {
+        errs.participationRules = `Las reglas deben tener entre ${WORD_LIMITS.rules.min} y ${WORD_LIMITS.rules.max} palabras (llevas ${rulesWords})`;
       }
     }
 
@@ -377,27 +393,37 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
 
     setSaving(true);
     try {
-      const payload = { ...form, status };
-      if (payload.startDate && payload.startDate.trim() !== '') {
-        const d = new Date(payload.startDate);
-        if (!isNaN(d.getTime())) {
-          payload.startDate = d.toISOString();
-        } else {
-          (payload as any).startDate = null;
-        }
+      let payload: any = { ...form, status };
+
+      if (criteriaOnlyMode) {
+        payload = {
+          status,
+          evaluationCriteria: form.evaluationCriteria,
+          facultyIds: form.facultyIds,
+        };
       } else {
-        (payload as any).startDate = null;
-      }
-      if (payload.endDate && payload.endDate.trim() !== '') {
-        const d = new Date(payload.endDate);
-        if (!isNaN(d.getTime())) {
-          payload.endDate = d.toISOString();
+        if (payload.startDate && payload.startDate.trim() !== '') {
+          const d = new Date(payload.startDate);
+          if (!isNaN(d.getTime())) {
+            payload.startDate = d.toISOString();
+          } else {
+            payload.startDate = null;
+          }
         } else {
-          (payload as any).endDate = null;
+          payload.startDate = null;
         }
-      } else {
-        (payload as any).endDate = null;
+        if (payload.endDate && payload.endDate.trim() !== '') {
+          const d = new Date(payload.endDate);
+          if (!isNaN(d.getTime())) {
+            payload.endDate = d.toISOString();
+          } else {
+            payload.endDate = null;
+          }
+        } else {
+          payload.endDate = null;
+        }
       }
+
       await onSave(payload);
     }
     finally { setSaving(false); }

@@ -83,7 +83,9 @@ export const extractErrorMessage = (error: unknown, fallback = 'Ocurrió un erro
   const message = err.response?.data?.message;
   
   if (Array.isArray(message)) {
-    return message.map(translateError).join('\n');
+    const translated = message.map(translateError);
+    const unique = [...new Set(translated)];
+    return unique.join('\n');
   }
   if (typeof message === 'string') {
     return translateError(message);

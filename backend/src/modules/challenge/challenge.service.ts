@@ -313,6 +313,9 @@ export class ChallengeService {
       if (updateChallengeDto.evaluationCriteria !== undefined) {
         updateData.evaluationCriteria = updateChallengeDto.evaluationCriteria as any;
       }
+      if (updateChallengeDto.facultyIds !== undefined) {
+        updateData.facultyIds = updateChallengeDto.facultyIds;
+      }
       
       let finalEnd: Date | null | undefined = undefined;
       if (updateChallengeDto.endDate !== undefined) {
@@ -327,7 +330,7 @@ export class ChallengeService {
       }
 
       if (Object.keys(updateData).length === 0) {
-        throw new BadRequestException('Solo puedes actualizar los criterios de evaluación o la fecha de cierre en esta fase.');
+        throw new BadRequestException('Solo puedes actualizar los criterios de evaluación, las áreas de interés o la fecha de cierre en esta fase.');
       }
 
       const updatedChallenge = await this.challengeRepository.update(id, updateData);
@@ -520,7 +523,7 @@ export class ChallengeService {
     };
   }
 
-  @Cron(CronExpression.EVERY_HOUR)
+  @Cron(CronExpression.EVERY_MINUTE)
   async handleExpiredChallenges() {
     this.logger.log('Ejecutando cron para buscar retos expirados...');
     try {
@@ -819,7 +822,11 @@ export class ChallengeService {
     if (challenge.status === 'CLOSED') {
       phase = 'COMPLETED';
     } else if (challenge.status === 'EVALUATING') {
-      phase = 'AWAITING_JUDGES';
+      if (challenge.podiumSize !== null) {
+        phase = 'AWAITING_JUDGES';
+      } else {
+        phase = 'SELECT_FINALISTS';
+      }
     }
 
     return {
@@ -873,7 +880,7 @@ export class ChallengeService {
     }
 
     const isGeneratingResults = dto.category === RankingCategory.VOTES;
-    const isEvaluationPhase = challenge.status === 'EVALUATING';
+    const isEvaluationPhase = challenge.status === 'EVALUATING' && challenge.podiumSize !== null;
 
     if (isGeneratingResults && !isEvaluationPhase) {
       throw new ForbiddenException(

@@ -232,7 +232,9 @@ const IdeationWall = () => {
       facultyId: challenge?.facultyId ?? null,
       faculty: challenge?.faculty ?? null,
       faculties: (challenge as any)?.faculties ?? [],
-      category: (challenge as any)?.faculties && (challenge as any).faculties.length > 0
+      category: (challenge as any)?.challengeFaculties && (challenge as any).challengeFaculties.length > 0
+        ? (challenge as any).challengeFaculties.map((cf: any) => cf.faculty?.name).filter(Boolean).join(', ')
+        : (challenge as any)?.faculties && (challenge as any).faculties.length > 0
         ? (challenge as any).faculties[0].name
         : challenge?.faculty?.name || 'General',
       isPrivate: false,

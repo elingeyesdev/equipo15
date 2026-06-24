@@ -106,6 +106,16 @@ const Dropdown = styled.div<{ $open: boolean }>`
     background: #cbd5e1;
     border-radius: 3px;
   }
+
+  @media (max-width: 480px) {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+    max-height: calc(100vh - 80px);
+    margin-top: 0;
+  }
 `;
 
 const Header = styled.div`
@@ -252,7 +262,13 @@ export const NotificationBell: React.FC = () => {
       ]);
 
       if (notif.type === 'ROLE_UPDATE' || notif.type === 'ROLE_UPDATED') {
-        void refetchProfile();
+        void refetchProfile().then(() => {
+          // Navigate to the correct dashboard after role update
+          // We do a small delay to let the profile state settle
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 300);
+        });
       }
     };
 
@@ -261,7 +277,7 @@ export const NotificationBell: React.FC = () => {
     return () => {
       socket.off('notification:received', handleNewNotification);
     };
-  }, [socket, refetchProfile]);
+  }, [socket, refetchProfile, navigate]);
 
   useEffect(() => {
     if (open) {

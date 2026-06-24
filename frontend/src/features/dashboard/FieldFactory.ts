@@ -63,7 +63,7 @@ export class FieldFactory {
       label: 'Reglas de Participación',
       type: 'rich-text',
       validator: new Validator([
-        new WordCountValidation(10, 250, 'Las reglas de participación'),
+        new WordCountValidation(5, 250, 'Las reglas de participación'),
       ])
     };
   }

@@ -26,12 +26,12 @@ interface ChallengeData {
 // Translations for Tags
 // ─────────────────────────────────────────────────────────────────────────────
 const TAG_LABELS: Record<string, string> = {
-  PRODUCTIVITY: 'Productividad', COSTS: 'Costos', CUSTOMERS: 'Clientes',
-  TEAM: 'Equipo', GROWTH: 'Crecimiento', SUSTAINABILITY: 'Sostenibilidad',
-  SOCIAL_IMPACT: 'Impacto Social',
-  OPTIMIZES: 'Optimiza', ENHANCES: 'Potencia', EXPANDS: 'Expande', TRANSFORMS: 'Transforma',
-  EASY: 'Fácil de Implementar', COORDINATION: 'Requiere Coordinación',
-  DEVELOPMENT: 'Requiere Desarrollo', TRANSFORMATION: 'Requiere Transformación',
+  PRODUCTIVIDAD: 'Productividad', COSTOS: 'Costos', CLIENTES: 'Clientes',
+  EQUIPO: 'Equipo', CRECIMIENTO: 'Crecimiento', SOSTENIBILIDAD: 'Sostenibilidad',
+  IMPACTO_SOCIAL: 'Impacto Social',
+  OPTIMIZA: 'Optimiza', POTENCIA: 'Potencia', EXPANDE: 'Expande', TRANSFORMA: 'Transforma',
+  FACIL_IMPLEMENTAR: 'Fácil de Implementar', REQUIERE_COORDINACION: 'Requiere Coordinación',
+  REQUIERE_DESARROLLO: 'Requiere Desarrollo', REQUIERE_TRANSFORMACION: 'Requiere Transformación',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

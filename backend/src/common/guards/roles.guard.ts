@@ -11,7 +11,8 @@ import type { AuthenticatedRequest } from '../types/authenticated-request.interf
 
 const ROLE_MAP: Record<string, string> = {
   ADMIN: 'admin',
-  COMPANY: 'company',
+  ORGANIZATION: 'organization',
+  COMPANY: 'organization',  // legacy alias
   JUDGE: 'judge',
   USER: 'student',
 };

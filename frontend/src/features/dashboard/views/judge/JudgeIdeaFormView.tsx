@@ -10,16 +10,16 @@ import { toast } from 'sonner';
 
 /* ─── Label Maps ─── */
 const IMPACT_AREA_LABELS: Record<string, string> = {
-  PRODUCTIVITY: 'Productividad', COSTS: 'Costos', CUSTOMERS: 'Clientes',
-  TEAM: 'Equipo', GROWTH: 'Crecimiento', SUSTAINABILITY: 'Sostenibilidad',
-  SOCIAL_IMPACT: 'Impacto Social',
+  PRODUCTIVIDAD: 'Productividad', COSTOS: 'Costos', CLIENTES: 'Clientes',
+  EQUIPO: 'Equipo', CRECIMIENTO: 'Crecimiento', SOSTENIBILIDAD: 'Sostenibilidad',
+  IMPACTO_SOCIAL: 'Impacto Social',
 };
 const IMPROVEMENT_TYPE_LABELS: Record<string, string> = {
-  OPTIMIZES: 'Optimiza', ENHANCES: 'Potencia', EXPANDS: 'Expande', TRANSFORMS: 'Transforma',
+  OPTIMIZA: 'Optimiza', POTENCIA: 'Potencia', EXPANDE: 'Expande', TRANSFORMA: 'Transforma',
 };
 const EFFORT_LEVEL_LABELS: Record<string, string> = {
-  EASY: 'Fácil de Implementar', COORDINATION: 'Requiere Coordinación',
-  DEVELOPMENT: 'Requiere Desarrollo', TRANSFORMATION: 'Requiere Transformación',
+  FACIL_IMPLEMENTAR: 'Fácil de Implementar', REQUIERE_COORDINACION: 'Requiere Coordinación',
+  REQUIERE_DESARROLLO: 'Requiere Desarrollo', REQUIERE_TRANSFORMACION: 'Requiere Transformación',
 };
 
 /* ─── Animations ─── */

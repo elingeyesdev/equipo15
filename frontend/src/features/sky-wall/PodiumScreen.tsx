@@ -25,7 +25,7 @@ const riseIn = keyframes`
 /* ─── layout ─── */
 
 const Screen = styled.div`
-  position: fixed;
+  position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
@@ -34,7 +34,7 @@ const Screen = styled.div`
   z-index: 20;
   padding: 24px;
   pointer-events: none;
-  overflow-y: auto;
+  overflow: hidden;
 `;
 
 const TopBanner = styled.div<{ $delay: number }>`

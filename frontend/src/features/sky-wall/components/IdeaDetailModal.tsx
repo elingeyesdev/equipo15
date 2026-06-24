@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
-import { Lightbulb, Flame, Brain } from 'lucide-react';
+import { Lightbulb, Flame, Brain, Trash2, ShieldAlert } from 'lucide-react';
 import type { PlaneIdea } from '../types';
 import LikeButton from './LikeButton';
 import FavoriteButton from './FavoriteButton';
 import { Pista8Theme, breakpoints } from '../../../config/theme';
 import CommentsSection from '../../comments/CommentsSection';
 import { useAuth } from '../../../context/AuthContext';
-import { useWallEventListener } from '../../../hooks/useWallEvents';
+import { useWallEventListener, wallEvents } from '../../../hooks/useWallEvents';
 import { commentService } from '../../../services/comment.service';
+import { ideaService } from '../../../services/idea.service';
 
 const overlayIn = keyframes`
   from { opacity: 0; }
@@ -336,6 +337,109 @@ const StatPill = styled.div<{ $color: string }>`
   }
 `;
 
+const DeleteIdeaButton = styled.button<{ $isAdmin?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  color: #ef4444;
+  border: 1.5px solid #ef444450;
+  border-radius: 99px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #ef444410;
+    border-color: #ef4444;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const ConfirmOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 31, 34, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.18s ease;
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+`;
+
+const ConfirmCard = styled.div`
+  background: white;
+  border-radius: 20px;
+  padding: 28px 28px 24px;
+  max-width: 400px;
+  width: calc(100% - 32px);
+  box-shadow: 0 16px 48px rgba(26, 31, 34, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: slideUp 0.22s cubic-bezier(0.22, 0.68, 0, 1.1);
+  @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+`;
+
+const ConfirmIcon = styled.div`
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(198, 40, 40, 0.08);
+  border: 1.5px solid rgba(198, 40, 40, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+`;
+
+const ConfirmTitle = styled.h3`
+  margin: 0;
+  font-size: 17px;
+  font-weight: 900;
+  color: #1a1f22;
+  text-align: center;
+`;
+
+const ConfirmBody = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.65;
+  text-align: center;
+`;
+
+const ConfirmActions = styled.div`
+  display: flex;
+  gap: 10px;
+`;
+
+const ConfirmBtn = styled.button<{ $danger?: boolean }>`
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1.5px solid ${p => p.$danger ? '#c62828' : 'rgba(72,80,84,0.18)'};
+  background: ${p => p.$danger ? '#c62828' : 'white'};
+  color: ${p => p.$danger ? 'white' : '#485054'};
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  &:hover {
+    background: ${p => p.$danger ? '#b71c1c' : '#f8f9fa'};
+    transform: translateY(-1px);
+  }
+  &:active { transform: translateY(0); }
+`;
+
 interface IdeaDetailModalProps {
   idea: PlaneIdea;
   onClose: () => void;
@@ -347,9 +451,31 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [commentsCount, setCommentsCount] = useState(idea.commentsCount);
   const [showFullProposal, setShowFullProposal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const commentsRef = useRef<HTMLDivElement | null>(null);
 
   const isAuthor = !!(userProfile?.id && idea.authorId && userProfile.id === idea.authorId);
+  const isAdmin = userProfile?.role === 'ADMIN' || userProfile?.role === 'ORGANIZATION';
+  const canDelete = isAuthor || isAdmin;
+
+  const triggerDelete = () => {
+    setShowConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowConfirm(false);
+    try {
+      setIsDeleting(true);
+      await ideaService.deleteIdea(idea.id);
+      wallEvents.emit('idea_deleted', { ideaId: idea.id });
+      onClose();
+    } catch (error) {
+      console.error(error);
+      alert('Error al procesar la solicitud.');
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     setCommentsCount(idea.commentsCount);
@@ -398,8 +524,9 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
     : `${proposalText.slice(0, 420).trimEnd()}...`;
 
   const modalContent = (
-    <ModalOverlay onClick={handleOverlayClick}>
-      <ModalContainer>
+    <>
+      <ModalOverlay onClick={handleOverlayClick}>
+        <ModalContainer>
         <ModalBanner>
           <BannerDots />
           <CloseButton onClick={onClose} aria-label="Cerrar">
@@ -484,6 +611,18 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
                 </CommentToggleButton>
                 <CommentTooltipText className="custom-tooltip">Comentarios</CommentTooltipText>
               </CommentTooltipContainer>
+
+              {canDelete && idea.challengeStatus !== 'CLOSED' && (
+                <DeleteIdeaButton 
+                  onClick={triggerDelete} 
+                  disabled={isDeleting}
+                  $isAdmin={isAdmin && !isAuthor}
+                  title={isAdmin && !isAuthor ? "Auditar (Eliminar) idea" : "Eliminar mi idea"}
+                >
+                  {isAdmin && !isAuthor ? <ShieldAlert size={16} /> : <Trash2 size={16} />}
+                  {isDeleting ? 'Procesando...' : (isAdmin && !isAuthor ? 'Auditar' : 'Eliminar')}
+                </DeleteIdeaButton>
+              )}
             </ActionsRow>
           </SectionBlock>
 
@@ -499,6 +638,31 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
         </Body>
       </ModalContainer>
     </ModalOverlay>
+
+    {showConfirm && (
+      <ConfirmOverlay onClick={() => setShowConfirm(false)}>
+        <ConfirmCard onClick={e => e.stopPropagation()}>
+          <ConfirmIcon>
+            {isAdmin && !isAuthor ? (
+              <ShieldAlert size={22} color="#c62828" />
+            ) : (
+              <Trash2 size={22} color="#c62828" />
+            )}
+          </ConfirmIcon>
+          <ConfirmTitle>{isAdmin && !isAuthor ? "Auditar idea" : "Eliminar idea"}</ConfirmTitle>
+          <ConfirmBody>
+            {isAdmin && !isAuthor 
+              ? "Estás a punto de eliminar esta idea como administrador. Esta acción es irreversible."
+              : "Estás a punto de eliminar tu idea. Una vez borrada no podrás recuperarla."}
+          </ConfirmBody>
+          <ConfirmActions>
+            <ConfirmBtn type="button" onClick={() => setShowConfirm(false)}>Cancelar</ConfirmBtn>
+            <ConfirmBtn type="button" $danger onClick={handleConfirmDelete}>Sí, eliminar</ConfirmBtn>
+          </ConfirmActions>
+        </ConfirmCard>
+      </ConfirmOverlay>
+    )}
+    </>
   );
 
   return createPortal(modalContent, document.body);

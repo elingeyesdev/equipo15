@@ -62,6 +62,7 @@ export interface Challenge {
   facultyId?: string | number | null;
   faculty?: { id: string; name: string } | null;
   faculties?: { id: string; name: string }[];
+  challengeFaculties?: any[];
 
   category?: string;
   badge?: string;

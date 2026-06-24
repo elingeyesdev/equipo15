@@ -68,7 +68,9 @@ export const useChallengeSelection = () => {
           ideasCount: c._count?.ideas || 0,
           likesCount: c.ideas?.reduce((sum: number, idea: any) => sum + (idea.likesCount || 0), 0) || 0,
           commentsCount: c.ideas?.reduce((sum: number, idea: any) => sum + (idea.commentsCount || 0), 0) || 0,
-          category: c.faculties && c.faculties.length > 0
+          category: c.challengeFaculties && c.challengeFaculties.length > 0
+            ? c.challengeFaculties.map((cf: any) => cf.faculty?.name).filter(Boolean).join(', ')
+            : c.faculties && c.faculties.length > 0
             ? c.faculties.map((f: any) => f.name).join(', ')
             : c.faculty?.name || 'General',
           badge: c.status === 'Activo' ? 'ACTIVO' : 'NUEVO'
@@ -86,7 +88,9 @@ export const useChallengeSelection = () => {
                   ideasCount: privateChallengeRaw._count?.ideas || privateChallengeRaw.ideas?.length || 0,
                   likesCount: privateChallengeRaw.ideas?.reduce((sum: number, idea: any) => sum + (idea.likesCount || 0), 0) || 0,
                   commentsCount: privateChallengeRaw.ideas?.reduce((sum: number, idea: any) => sum + (idea.commentsCount || 0), 0) || 0,
-                  category: privateChallengeRaw.faculties && privateChallengeRaw.faculties.length > 0
+                  category: privateChallengeRaw.challengeFaculties && privateChallengeRaw.challengeFaculties.length > 0
+                    ? privateChallengeRaw.challengeFaculties.map((cf: any) => cf.faculty?.name).filter(Boolean).join(', ')
+                    : privateChallengeRaw.faculties && privateChallengeRaw.faculties.length > 0
                     ? privateChallengeRaw.faculties.map((f: any) => f.name).join(', ')
                     : privateChallengeRaw.faculty?.name || 'General',
                   badge: privateChallengeRaw.status === 'Activo' ? 'ACTIVO' : 'NUEVO'

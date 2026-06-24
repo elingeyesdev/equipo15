@@ -616,6 +616,33 @@ export class IdeaService {
     return { id: ideaId };
   }
 
+  async deleteIdea(ideaId: string, firebaseUid: string): Promise<{ id: string }> {
+    const user = await this.userRepository.findByUid(firebaseUid);
+    if (!user) throw new ForbiddenException('Usuario no encontrado.');
+
+    const idea = await this.ideaRepository.findById(ideaId);
+    if (!idea || idea.deletedAt) {
+      throw new NotFoundException('La idea no existe o ya fue eliminada.');
+    }
+
+    const isAuthor = idea.authorId === user.id;
+    const isAdmin = user.role === 'ADMIN' || user.role === 'ORGANIZATION';
+
+    if (!isAuthor && !isAdmin) {
+      throw new ForbiddenException('No tienes permisos para eliminar o auditar esta idea.');
+    }
+
+    await this.ideaRepository.softDeleteIdea(ideaId, user.id);
+    this.logger.log(`Idea eliminada/auditada: ${ideaId} por usuario ${user.id}`);
+    this.invalidateCache();
+    
+    if (idea.status !== 'DRAFT') {
+      this.eventBus.emitToRoom(`challenge:${idea.challengeId}`, 'idea:deleted', { ideaId });
+    }
+
+    return { id: ideaId };
+  }
+
   async findMyFavorites(firebaseUid: string) {
     const userId = await this.resolveAuthorId(firebaseUid);
     return this.ideaRepository.findFavoritedByUser(userId);

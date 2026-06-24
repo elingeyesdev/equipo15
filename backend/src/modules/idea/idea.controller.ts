@@ -114,6 +114,12 @@ export class IdeasController {
     return this.ideaService.deleteDraft(id, request.user.uid);
   }
 
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete an idea (author or admin only)' })
+  deleteIdea(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
+    return this.ideaService.deleteIdea(id, request.user.uid);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Edit an idea (author only)' })
   updateIdea(

@@ -181,7 +181,8 @@ export class UserService {
 
     const roleMapping: Record<string, string> = {
       ADMIN: 'admin',
-      COMPANY: 'company',
+      ORGANIZATION: 'organization',
+      COMPANY: 'organization',  // legacy alias
       JUDGE: 'judge',
       USER: 'student',
     };
@@ -218,9 +219,6 @@ export class UserService {
       phone?: string;
       studentCode?: string;
       enrollmentYear?: number;
-      institucion_educativa?: string;
-      ocupacion_laboral?: string;
-      codigo_estudiantil?: string | null;
     },
   ): Promise<UserResponse | null> {
     await this.ensureUserCanWrite(firebaseUid);
@@ -228,23 +226,6 @@ export class UserService {
     const existingUser = await this.userRepository.findByUid(firebaseUid);
     if (!existingUser) {
       throw new NotFoundException('Usuario no encontrado');
-    }
-
-    const ocupacion = data.ocupacion_laboral !== undefined 
-      ? data.ocupacion_laboral 
-      : (existingUser as any).ocupacion_laboral;
-
-    if (ocupacion === 'Estudiante') {
-      const codigo = data.codigo_estudiantil !== undefined
-        ? data.codigo_estudiantil
-        : (existingUser as any).codigo_estudiantil;
-      if (!codigo || codigo.trim() === '') {
-        throw new BadRequestException(
-          'El código estudiantil es obligatorio cuando la ocupación es Estudiante.',
-        );
-      }
-    } else if (ocupacion !== undefined && ocupacion !== null) {
-      data.codigo_estudiantil = null;
     }
 
     const { studentCode, enrollmentYear, ...userData } = data;

@@ -228,6 +228,10 @@ const IdeaCard = styled.div<{
 
 const AnimatedRow = styled.div<{ $key: string }>`
   animation: ${slideIn} 0.3s ease both;
+  position: relative;
+  &:hover {
+    z-index: 10;
+  }
 `;
 
 const RankNumber = styled.div<{ $pos: number }>`
@@ -734,8 +738,10 @@ type PodiumStatus = {
   podiumSize: number | null;
 };
 
-const resolvePhase = (status?: string): PodiumPhase => {
+const resolvePhase = (status?: string, podiumPhase?: string): PodiumPhase => {
   if (status === 'CLOSED') return 'done';
+  if (podiumPhase === 'AWAITING_JUDGES') return 'evaluate';
+  if (podiumPhase === 'SELECT_FINALISTS') return 'select';
   if (status === 'EVALUATING') return 'evaluate';
   return 'select';
 };
@@ -796,7 +802,7 @@ export const CompanyPodiumView = () => {
     setAnimKey(k => k + 1);
   }, [cutLimit, metric]);
 
-  const phase = resolvePhase(challenge?.status);
+  const phase = resolvePhase(challenge?.status, podiumStatus?.phase);
   const readOnlyMode = Boolean(impersonationSession);
 
   const visibleIdeas = useMemo(() => {
@@ -1260,7 +1266,8 @@ export const CompanyPodiumView = () => {
                   $clickable={canOpenBreakdown}
                   onClick={() => canOpenBreakdown && setScoresModalIdea({ id: idea.id, title: idea.title })}
                   $tooltipText={canOpenBreakdown ? 'Ver desglose de evaluaciones' : undefined}
-                  $tooltipPosition="top"
+                  $tooltipPosition="bottom"
+                  $tooltipAlign="center"
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
                     <RankNumber $pos={rankIndex}>

@@ -15,9 +15,9 @@ import {
 } from '../helpers/draftPlaceholders';
 
 export type ConsentKey = 'terms' | 'usage' | 'originality';
-export type ImpactArea = 'PRODUCTIVITY' | 'COSTS' | 'CUSTOMERS' | 'TEAM' | 'GROWTH' | 'SUSTAINABILITY' | 'SOCIAL_IMPACT';
-export type ImprovementType = 'OPTIMIZES' | 'ENHANCES' | 'EXPANDS' | 'TRANSFORMS';
-export type EffortLevel = 'EASY' | 'COORDINATION' | 'DEVELOPMENT' | 'TRANSFORMATION';
+export type ImpactArea = 'PRODUCTIVIDAD' | 'COSTOS' | 'CLIENTES' | 'EQUIPO' | 'CRECIMIENTO' | 'SOSTENIBILIDAD' | 'IMPACTO_SOCIAL';
+export type ImprovementType = 'OPTIMIZA' | 'POTENCIA' | 'EXPANDE' | 'TRANSFORMA';
+export type EffortLevel = 'FACIL_IMPLEMENTAR' | 'REQUIERE_COORDINACION' | 'REQUIERE_DESARROLLO' | 'REQUIERE_TRANSFORMACION';
 export type FormErrorKey =
   | 'challenge'
   | 'ideaName'
@@ -39,7 +39,7 @@ export interface FeedbackMessage {
 
 const extractMessage = (raw: unknown): string | undefined => {
   if (typeof raw === 'string') return raw;
-  if (Array.isArray(raw)) return raw.join(' ');
+  if (Array.isArray(raw)) return [...new Set(raw)].join(' ');
   return undefined;
 };
 
@@ -202,20 +202,10 @@ export const useIdeationForm = (
       return getWordRangeError('El título', ideaName, minTitleWords, maxTitleWords);
     }
     if (field === 'ideaProblem') {
-      return getWordRangeError(
-        'El problema',
-        ideaProblem,
-        minProblemWords,
-        maxProblemWords,
-      );
+      return getWordRangeError('El problema', ideaProblem, minProblemWords, maxProblemWords);
     }
     if (field === 'ideaSolution') {
-      return getWordRangeError(
-        'La solución',
-        ideaSolution,
-        minSolutionWords,
-        maxSolutionWords,
-      );
+      return getWordRangeError('La solución', ideaSolution, minSolutionWords, maxSolutionWords);
     }
     if (field === 'consents' && !allConsentsAccepted) {
       return 'Acepta los tres consentimientos (ejemplo: si “App para Bienestar Estudiantil” llega al laboratorio, debemos poder prototiparla citándote).';

@@ -82,11 +82,15 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
 
   const roleName = (userProfile?.roleInfo?.name || userProfile?.role || '').toLowerCase();
   const isStudent = roleName === 'student' || roleName === 'participante';
-  const isProfileIncomplete = isStudent && (!userProfile?.institucion_educativa || !userProfile?.ocupacion_laboral);
+  const isProfileIncomplete = isStudent && (!userProfile?.nickname || !userProfile?.studentProfile?.facultyId);
 
   const challengeStatus = ds.selectedChallenge ? getStatusLabel(ds.selectedChallenge.status) : null;
   const facultyLabel = ds.selectedChallenge
     ? (() => {
+        const cf = (ds.selectedChallenge as any).challengeFaculties;
+        if (Array.isArray(cf) && cf.length > 0) {
+          return cf.map((f: any) => f.faculty?.name?.replace(/^Facultad de /i, '')).filter(Boolean).join(', ');
+        }
         const facs = (ds.selectedChallenge as any).faculties;
         if (Array.isArray(facs) && facs.length > 0) {
           return facs.map((f: any) => f.name.replace(/^Facultad de /i, '')).join(', ');

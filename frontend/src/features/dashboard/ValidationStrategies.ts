@@ -182,6 +182,56 @@ export class NoExcessiveSymbolsValidation implements ValidationStrategy {
   }
 }
 
+const VOWELS = new Set('aeiouáéíóúüAEIOUÁÉÍÓÚÜ');
+
+function isGibberishText(text: string): boolean {
+  if (text.trim().length === 0) return false;
+
+  // 1. Extreme character repetition (e.g., aaaaa)
+  if (/(.)\1{4,}/.test(text)) return true;
+
+  // 2. Reject if the text is mostly non-alphabetic (like "-1-2 -1-2")
+  const lettersOnly = text.replace(/[^a-záéíóúüñA-ZÁÉÍÓÚÜÑ]/g, '');
+  if (lettersOnly.length < text.length * 0.3) return true;
+
+  // 3. Reject high repetition of words (like "ad ad ad ad")
+  const wordsRaw = text.trim().split(/\s+/);
+  if (wordsRaw.length >= 4) {
+    const uniqueWords = new Set(wordsRaw.map(w => w.toLowerCase()));
+    if (uniqueWords.size / wordsRaw.length < 0.3) return true;
+  }
+
+  // 4. Word-level analysis
+  const words = text.match(/[a-záéíóúüñA-ZÁÉÍÓÚÜÑ]{3,}/g) || [];
+  if (words.length === 0 && lettersOnly.length > 0) {
+    // Has letters but no word is >= 3 chars
+    return true;
+  }
+
+  if (words.length > 0) {
+    let gibberishCount = 0;
+    for (const word of words) {
+      const vowelCount = [...word.toLowerCase()].filter(ch => VOWELS.has(ch)).length;
+      const vowelRatio = vowelCount / word.length;
+      if (vowelRatio < 0.15 || vowelRatio > 0.85) gibberishCount++;
+    }
+    // If more than 40% of words have broken vowel ratios
+    if (gibberishCount / words.length > 0.4) return true;
+  }
+
+  return false;
+}
+
+export class NoGibberishValidation implements ValidationStrategy {
+  validate(value: unknown): string | null {
+    if (typeof value !== 'string' || value.trim().length === 0) return null;
+    if (isGibberishText(value)) {
+      return 'El texto parece no tener sentido. Escribe una descripción coherente.';
+    }
+    return null;
+  }
+}
+
 export class Validator {
   private strategies: ValidationStrategy[];
   constructor(strategies: ValidationStrategy[]) {

@@ -11,6 +11,7 @@ type WallEventPayloads = {
     delta: number;
   };
   'idea_created': { ideaId: string; challengeId: string; likesCount: number; authorId?: string };
+  'idea_deleted': { ideaId: string };
 };
 
 type EventName = keyof WallEventPayloads;

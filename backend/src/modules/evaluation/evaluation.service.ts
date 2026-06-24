@@ -95,17 +95,25 @@ export class EvaluationService {
       challenge: { id: string; title: string };
     },
   ) {
-    const enrichedEvaluations = evaluations.map((evaluation) => ({
-      id: evaluation.id,
-      feedback: evaluation.feedback,
-      createdAt: evaluation.createdAt,
-      judge: evaluation.judge,
-      judgeScore: this.computeJudgeScore(evaluation.scores),
-      scores: evaluation.scores.map((item) => ({
+    const enrichedEvaluations = evaluations.map((evaluation: any) => {
+      const mappedScores = evaluation.scores.map((item: any) => ({
         score: item.score,
-        criterion: item.criterion,
-      })),
-    }));
+        criterion: {
+          id: item.challengeCriterion?.id || 'unknown',
+          name: item.challengeCriterion?.criterion?.name || 'Criterio',
+          weight: item.challengeCriterion?.weight || 0,
+        },
+      }));
+
+      return {
+        id: evaluation.id,
+        feedback: evaluation.feedback,
+        createdAt: evaluation.createdAt,
+        judge: evaluation.judge,
+        judgeScore: this.computeJudgeScore(mappedScores),
+        scores: mappedScores,
+      };
+    });
 
     const judgeScores = enrichedEvaluations.map((item) => item.judgeScore);
     const averageJudgeScore =
@@ -164,7 +172,7 @@ export class EvaluationService {
     const idea = await this.evaluationRepository.findIdeaContext(ideaId);
     if (!idea) throw new NotFoundException('Idea no encontrada');
 
-    if (user.role === 'COMPANY' && idea.challenge.authorId !== user.id) {
+    if ((user.role === 'organization' || user.role === 'company') && idea.challenge.authorId !== user.id) {
       throw new ForbiddenException(
         'No tienes permisos para consultar las evaluaciones de esta idea.',
       );

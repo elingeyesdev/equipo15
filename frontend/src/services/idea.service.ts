@@ -16,9 +16,9 @@ export interface CreateIdeaPayload {
   tags?: string[];
   status?: IdeaStatus;
   isAnonymous?: boolean;
-  impactArea?: 'PRODUCTIVITY' | 'COSTS' | 'CUSTOMERS' | 'TEAM' | 'GROWTH' | 'SUSTAINABILITY' | 'SOCIAL_IMPACT';
-  improvementType?: 'OPTIMIZES' | 'ENHANCES' | 'EXPANDS' | 'TRANSFORMS';
-  effortLevel?: 'EASY' | 'COORDINATION' | 'DEVELOPMENT' | 'TRANSFORMATION';
+  impactArea?: 'PRODUCTIVIDAD' | 'COSTOS' | 'CLIENTES' | 'EQUIPO' | 'CRECIMIENTO' | 'SOSTENIBILIDAD' | 'IMPACTO_SOCIAL';
+  improvementType?: 'OPTIMIZA' | 'POTENCIA' | 'EXPANDE' | 'TRANSFORMA';
+  effortLevel?: 'FACIL_IMPLEMENTAR' | 'REQUIERE_COORDINACION' | 'REQUIERE_DESARROLLO' | 'REQUIERE_TRANSFORMACION';
 }
 
 export interface CreateDraftIdeaPayload {
@@ -28,9 +28,9 @@ export interface CreateDraftIdeaPayload {
   challengeId?: string;
   tags?: string[];
   isAnonymous?: boolean;
-  impactArea?: 'PRODUCTIVITY' | 'COSTS' | 'CUSTOMERS' | 'TEAM' | 'GROWTH' | 'SUSTAINABILITY' | 'SOCIAL_IMPACT';
-  improvementType?: 'OPTIMIZES' | 'ENHANCES' | 'EXPANDS' | 'TRANSFORMS';
-  effortLevel?: 'EASY' | 'COORDINATION' | 'DEVELOPMENT' | 'TRANSFORMATION';
+  impactArea?: 'PRODUCTIVIDAD' | 'COSTOS' | 'CLIENTES' | 'EQUIPO' | 'CRECIMIENTO' | 'SOSTENIBILIDAD' | 'IMPACTO_SOCIAL';
+  improvementType?: 'OPTIMIZA' | 'POTENCIA' | 'EXPANDE' | 'TRANSFORMA';
+  effortLevel?: 'FACIL_IMPLEMENTAR' | 'REQUIERE_COORDINACION' | 'REQUIERE_DESARROLLO' | 'REQUIERE_TRANSFORMACION';
 }
 
 export interface IdeaDraft {
@@ -126,6 +126,11 @@ export const ideaService = {
 
   deleteDraftIdea: async (draftId: string) => {
     const response = await axiosInstance.delete(`/ideas/${draftId}/draft`);
+    return response.data;
+  },
+
+  deleteIdea: async (ideaId: string) => {
+    const response = await axiosInstance.delete(`/ideas/${ideaId}`);
     return response.data;
   },
 

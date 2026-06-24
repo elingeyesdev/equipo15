@@ -42,7 +42,7 @@ export class ChallengesController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles('company')
+  @Roles('organization')
   @ApiOperation({ summary: 'Create a new challenge (Company only)' })
   @ApiResponse({
     status: 201,
@@ -85,7 +85,7 @@ export class ChallengesController {
 
   @Get('judges/search')
   @UseGuards(RolesGuard)
-  @Roles('company', 'admin')
+  @Roles('organization', 'company', 'admin')
   @ApiOperation({ summary: 'Search judges by name or email' })
   @ApiQuery({ name: 'q', required: true, type: String })
   searchJudges(@Query('q') query: string) {
@@ -94,7 +94,7 @@ export class ChallengesController {
 
   @Get('company/innovation-stats')
   @UseGuards(RolesGuard)
-  @Roles('company')
+  @Roles('organization')
   @ApiOperation({
     summary: 'Get innovation statistics for the company dashboard (E1.4)',
     description:
@@ -131,7 +131,7 @@ export class ChallengesController {
 
   @Get('company/challenges')
   @UseGuards(RolesGuard)
-  @Roles('company')
+  @Roles('organization')
   @ApiOperation({
     summary: 'Get company-owned challenges for dashboard filters',
   })
@@ -183,7 +183,7 @@ export class ChallengesController {
 
   @Get(':id/judges')
   @UseGuards(RolesGuard)
-  @Roles('company', 'admin')
+  @Roles('organization', 'company', 'admin')
   @ApiOperation({ summary: 'Get assigned judges for a challenge' })
   getAssignedJudges(@Param('id') id: string) {
     return this.challengeService.getAssignedJudges(id);
@@ -191,7 +191,7 @@ export class ChallengesController {
 
   @Put(':id/judges')
   @UseGuards(RolesGuard)
-  @Roles('company')
+  @Roles('organization', 'company')
   @ApiOperation({ summary: 'Assign judges to a challenge' })
   assignJudges(
     @Param('id') id: string,
@@ -229,7 +229,7 @@ export class ChallengesController {
 
   @Patch(':id')
   @UseGuards(RolesGuard)
-  @Roles('company')
+  @Roles('organization', 'company')
   @ApiOperation({ summary: 'Update a challenge (Company only)' })
   update(
     @Param('id') id: string,
@@ -240,7 +240,7 @@ export class ChallengesController {
 
   @Delete(':id')
   @UseGuards(RolesGuard)
-  @Roles('company')
+  @Roles('organization', 'company')
   @ApiOperation({ summary: 'Delete a challenge (Company only)' })
   remove(
     @Param('id') id: string,
@@ -251,7 +251,7 @@ export class ChallengesController {
 
   @Get(':id/podium-ideas')
   @UseGuards(RolesGuard)
-  @Roles('company')
+  @Roles('organization', 'company')
   @ApiOperation({
     summary: 'Get ideas for company podium management (Company only)',
   })
@@ -268,7 +268,7 @@ export class ChallengesController {
 
   @Get(':id/podium-status')
   @UseGuards(RolesGuard)
-  @Roles('company')
+  @Roles('organization', 'company')
   @ApiOperation({
     summary: 'Get podium workflow status for a challenge (Company only)',
   })
@@ -285,7 +285,7 @@ export class ChallengesController {
 
   @Post(':id/finalize-podium')
   @UseGuards(RolesGuard)
-  @Roles('company')
+  @Roles('organization', 'company')
   @ApiOperation({ summary: 'Finalize challenge podium (Company only)' })
   @ApiResponse({
     status: 200,
@@ -302,7 +302,7 @@ export class ChallengesController {
   // ─── E3.3: Export evaluations as Excel ────────────────────────────────
   @Get(':id/export-evaluations')
   @UseGuards(RolesGuard)
-  @Roles('company')
+  @Roles('organization', 'company')
   @ApiOperation({
     summary: 'Export raw evaluation data as Excel (E3.3)',
     description:
@@ -342,7 +342,7 @@ export class ChallengesController {
   }
   @Patch(':id/close')
   @UseGuards(RolesGuard)
-  @Roles('company', 'admin')
+  @Roles('company', 'organization', 'admin')
   @ApiOperation({
     summary: 'Close a challenge indefinitely (Company/Admin only)',
   })

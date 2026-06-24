@@ -95,6 +95,10 @@ export const useWallSocket = (
     ));
   }, []));
 
+  useWallEventListener('idea_deleted', useCallback(({ ideaId }) => {
+    setIdeas(prev => prev.filter(idea => idea.id !== ideaId));
+  }, []));
+
   useEffect(() => {
     if (!socket) return;
 
@@ -163,6 +167,10 @@ export const useWallSocket = (
       ));
     });
 
+    socket.on('idea:deleted', (payload: { ideaId: string }) => {
+      setIdeas(prev => prev.filter(idea => idea.id !== payload.ideaId));
+    });
+
     socket.on('challenge:close', () => {
       setPhase('race');
     });
@@ -178,6 +186,7 @@ export const useWallSocket = (
       socket.off('idea:unvoted');
       socket.off('idea_created');
       socket.off('user:profile_updated');
+      socket.off('idea:deleted');
       socket.off('challenge:close');
       socket.off('timer:sync');
       if (debounceTimer.current) clearTimeout(debounceTimer.current);

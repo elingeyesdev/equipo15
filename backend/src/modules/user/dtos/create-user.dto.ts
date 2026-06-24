@@ -43,22 +43,6 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   studentCode?: string;
-  
-  @IsString()
-  @IsOptional()
-  institucion_educativa?: string;
-
-  @IsString()
-  @IsOptional()
-  ocupacion_laboral?: string;
-
-  @IsString()
-  @IsOptional()
-  codigo_estudiantil?: string;
-
-  @IsString()
-  @IsOptional()
-  avatarUrl?: string;
 
   @IsOptional()
   facultyId?: string | number;

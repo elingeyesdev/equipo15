@@ -180,7 +180,7 @@ export class AdminRepository {
 
     if (
       roleFilter &&
-      ['ADMIN', 'COMPANY', 'JUDGE', 'USER'].includes(roleFilter.toUpperCase())
+      ['ADMIN', 'ORGANIZATION', 'JUDGE', 'USER'].includes(roleFilter.toUpperCase())
     ) {
       where.role = roleFilter.toUpperCase();
     }
@@ -215,7 +215,7 @@ export class AdminRepository {
 
   async updateUserRole(
     userId: string,
-    newRole: 'ADMIN' | 'COMPANY' | 'JUDGE' | 'USER',
+    newRole: 'ADMIN' | 'ORGANIZATION' | 'JUDGE' | 'USER',
   ) {
     return this.prisma.$transaction(async (tx) => {
       const existingUser = await tx.user.findUnique({

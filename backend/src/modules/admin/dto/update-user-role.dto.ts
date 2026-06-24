@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export enum UserRoleEnum {
   ADMIN = 'ADMIN',
-  COMPANY = 'COMPANY',
+  ORGANIZATION = 'ORGANIZATION',
   JUDGE = 'JUDGE',
   USER = 'USER',
 }
@@ -16,7 +16,7 @@ export class UpdateUserRoleDto {
   })
   @IsNotEmpty({ message: 'El rol es requerido' })
   @IsEnum(UserRoleEnum, {
-    message: 'Rol inválido. Valores permitidos: ADMIN, COMPANY, JUDGE, USER',
+    message: 'Rol inválido. Valores permitidos: ADMIN, ORGANIZATION, JUDGE, USER',
   })
   role: UserRoleEnum;
 }

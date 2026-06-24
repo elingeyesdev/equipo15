@@ -268,6 +268,8 @@ const SkyCanvasScene = memo(({ initialIdeas, isLoading = false, progress = 0, ch
   useEffect(() => {
     if (challengeStatus === 'CLOSED') {
       setShowPodium(true);
+    } else {
+      setShowPodium(false);
     }
   }, [challengeStatus]);
 
@@ -365,8 +367,6 @@ const SkyCanvasScene = memo(({ initialIdeas, isLoading = false, progress = 0, ch
             <RaceOverlay onShowPodium={handleShowPodium} />
           )}
 
-          {showPodium && !isEvaluating && <PodiumScreen ideas={ideas} onSelectIdea={setSelectedIdea} />}
-
           {isEvaluating && (
             <>
               <TopBanner>
@@ -382,6 +382,8 @@ const SkyCanvasScene = memo(({ initialIdeas, isLoading = false, progress = 0, ch
           )}
         </Sky>
       </ScrollableSkyContainer>
+
+      {showPodium && !isEvaluating && <PodiumScreen ideas={ideas} onSelectIdea={setSelectedIdea} />}
 
       {isLoading && (
         <ProgressBarContainer>

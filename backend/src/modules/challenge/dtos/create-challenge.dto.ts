@@ -18,6 +18,7 @@ import { NoExcessiveSymbols } from '../../../common/validators/no-excessive-symb
 import { EvaluationCriteriaItemDto } from './evaluation-criteria-item.dto';
 import { TargetAudienceDto } from './target-audience.dto';
 import { IsWordCount } from '../../../common/validators/word-count.decorator';
+import { NoGibberish } from '../../../common/validators/no-gibberish.decorator';
 
 export class CreateChallengeDto {
   @IsUUID()
@@ -40,6 +41,7 @@ export class CreateChallengeDto {
   @HasMinimumUniqueWords(0.3)
   @NoInsecureUrls()
   @NoExcessiveSymbols(0.3)
+  @NoGibberish()
   problemDescription?: string;
 
   @IsString()
@@ -48,14 +50,16 @@ export class CreateChallengeDto {
   @HasMinimumUniqueWords(0.3)
   @NoInsecureUrls()
   @NoExcessiveSymbols(0.3)
+  @NoGibberish()
   companyContext?: string;
 
   @IsString()
   @IsOptional()
-  @IsWordCount(10, 250, { message: 'Las reglas de participación deben tener entre 10 y 250 palabras.' })
+  @IsWordCount(5, 250, { message: 'Las reglas de participación deben tener entre 5 y 250 palabras.' })
   @HasMinimumUniqueWords(0.3)
   @NoInsecureUrls()
   @NoExcessiveSymbols(0.3)
+  @NoGibberish()
   participationRules?: string;
 
   @IsDateString()
