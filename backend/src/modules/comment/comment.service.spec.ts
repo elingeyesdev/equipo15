@@ -8,6 +8,7 @@ import { EventsGateway } from '../../infrastructure/events/events.gateway';
 import { EventBus } from '../../infrastructure/events/event-bus';
 import { RedisService } from '../../infrastructure/redis/redis.module';
 import { ModerationService } from '../moderation/moderation.service';
+import { NotificationService } from '../notification/notification.service';
 
 describe('CommentService', () => {
   let service: CommentService;
@@ -33,6 +34,10 @@ describe('CommentService', () => {
         {
           provide: ModerationService,
           useValue: { trackUnlike: jest.fn(), trackCommentAction: jest.fn() },
+        },
+        {
+          provide: NotificationService,
+          useValue: { notifyCommentReply: jest.fn(), notifyNewComment: jest.fn() },
         },
       ] as any[],
     }).compile();

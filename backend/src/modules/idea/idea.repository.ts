@@ -10,6 +10,7 @@ interface IdeaWhereInput {
 export interface IdeaWithVoteStatus extends Idea {
   hasVoted: boolean;
   hasFavorited: boolean;
+  votedType?: string | null;
 }
 
 @Injectable()
@@ -149,11 +150,14 @@ export class IdeaRepository {
 
     const enriched: IdeaWithVoteStatus[] = data.map((idea) => {
       const { reactions, ...rest } = idea as any;
+      const voteReaction = Array.isArray(reactions)
+        ? reactions.find((r: any) => r.type === 'FUTURE' || r.type === 'GOOD' || r.type === 'COMPLEX')
+        : null;
+
       return {
         ...rest,
-        hasVoted:
-          Array.isArray(reactions) &&
-          reactions.some((r: any) => r.type === 'FUTURE' || r.type === 'GOOD' || r.type === 'COMPLEX'),
+        hasVoted: !!voteReaction,
+        votedType: voteReaction ? voteReaction.type : null,
         hasFavorited:
           Array.isArray(reactions) &&
           reactions.some((r: any) => r.type === 'FAVORITE'),
@@ -203,7 +207,7 @@ export class IdeaRepository {
   async upsertLike(
     ideaId: string,
     userId: string,
-    targetReaction: string,
+    targetReaction: string | null,
   ): Promise<any> {
     const fireDelta = targetReaction === 'COMPLEX' ? 0.5 : 2;
     const countField =
@@ -211,7 +215,9 @@ export class IdeaRepository {
         ? 'goodCount'
         : targetReaction === 'FUTURE'
           ? 'futureCount'
-          : 'complexCount';
+          : targetReaction === 'COMPLEX'
+            ? 'complexCount'
+            : null;
 
     try {
       // Usar transaction para intentar crear y si falla (P2002), actualizar en otra petición no es atómico.
@@ -223,8 +229,8 @@ export class IdeaRepository {
         });
 
         if (existing) {
-          if (existing.type === targetReaction) {
-            // Eliminar reacción si es la misma
+          if (targetReaction === null || existing.type === targetReaction) {
+            // Eliminar reacción si es la misma o si se pide explícitamente removerla
             await tx.ideaReaction.delete({
               where: { id: existing.id },
             });
@@ -263,14 +269,18 @@ export class IdeaRepository {
               where: { id: ideaId },
               data: {
                 [oldField]: { decrement: 1 },
-                [countField]: { increment: 1 },
+                [countField!]: { increment: 1 },
                 fireScore: { increment: oldFireDelta + fireDelta },
               },
             });
-            return { updatedIdea, hasVoted: true };
+            return { updatedIdea, hasVoted: true, isModified: true };
           }
         } else {
-          // Crear reacción (puede lanzar P2002 si hay concurrencia extrema, el service lo capturará)
+          if (targetReaction === null) {
+            const updatedIdea = await tx.idea.findUnique({ where: { id: ideaId } });
+            return { updatedIdea, hasVoted: false };
+          }
+          // Crear reacción
           await tx.ideaReaction.create({
             data: {
               ideaId,
@@ -282,7 +292,7 @@ export class IdeaRepository {
             where: { id: ideaId },
             data: {
               likesCount: { increment: 1 },
-              [countField]: { increment: 1 },
+              [countField!]: { increment: 1 },
               fireScore: { increment: fireDelta },
             },
           });
@@ -459,9 +469,14 @@ export class IdeaRepository {
 
     return reactions.map((reaction: any) => {
       const { reactions: userReactions, ...ideaRest } = reaction.idea as any;
+      const voteReaction = Array.isArray(userReactions)
+        ? userReactions.find((r: any) => r.type === 'FUTURE' || r.type === 'GOOD' || r.type === 'COMPLEX')
+        : null;
+
       return {
         ...ideaRest,
-        hasVoted: Array.isArray(userReactions) && userReactions.length > 0,
+        hasVoted: !!voteReaction,
+        votedType: voteReaction ? voteReaction.type : null,
         hasFavorited: true,
       };
     });

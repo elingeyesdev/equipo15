@@ -402,7 +402,7 @@ export const ChallengeList = styled.div<{ $isFullWidth?: boolean; $forceColumn?:
   gap: 14px;
 
   @media (max-width: 1024px) {
-    ${p => p.$isFullWidth && css`
+    ${p => p.$isFullWidth && !p.$forceColumn && css`
       flex-direction: row !important;
       flex-wrap: nowrap !important;
       overflow-x: auto !important;

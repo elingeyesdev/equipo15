@@ -152,22 +152,52 @@ const NotificationItem = styled.div<{ $unread: boolean }>`
   }
 `;
 
+const NotificationDeleteTooltip = styled.span`
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: rgba(26, 31, 34, 0.95);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    right: 12px;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent rgba(26, 31, 34, 0.95) transparent;
+  }
+`;
+
 const DeleteButton = styled.button`
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 8px;
+  right: 8px;
   background: transparent;
   border: none;
   color: #94a3b8;
   cursor: pointer;
   padding: 0;
-  border-radius: 4px;
+  border-radius: 50%;
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  transition: all 0.2s;
-  width: 20px;
-  height: 20px;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  width: 24px;
+  height: 24px;
 
   svg {
     width: 14px;
@@ -176,8 +206,20 @@ const DeleteButton = styled.button`
   }
 
   &:hover {
-    background: #e2e8f0;
+    background: #ef444410;
+    border-color: #ef4444;
     color: #ef4444;
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(1px);
+  }
+
+  &:hover .custom-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
   }
 `;
 
@@ -353,8 +395,8 @@ export const NotificationBell: React.FC = () => {
               >
                 <DeleteButton 
                   onClick={(e) => handleDeleteNotification(e, notif)}
-                  title="Eliminar notificación"
                 >
+                  <NotificationDeleteTooltip className="custom-tooltip">Eliminar notificación</NotificationDeleteTooltip>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>

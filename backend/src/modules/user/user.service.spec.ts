@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { UserRepository } from './user.repository';
 import { EventsGateway } from '../../infrastructure/events/events.gateway';
+import { RedisService } from '../../infrastructure/redis/redis.module';
 import { BadRequestException } from '@nestjs/common';
 
 describe('UserService', () => {
@@ -12,6 +13,7 @@ describe('UserService', () => {
     userRepository = {
       findByUid: jest.fn(),
       findByEmail: jest.fn(),
+      findActivePenalties: jest.fn().mockResolvedValue([]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -19,6 +21,7 @@ describe('UserService', () => {
         UserService,
         { provide: UserRepository, useValue: userRepository },
         { provide: EventsGateway, useValue: {} },
+        { provide: RedisService, useValue: { delByPrefix: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 

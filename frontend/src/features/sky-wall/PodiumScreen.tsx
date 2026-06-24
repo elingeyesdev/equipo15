@@ -24,6 +24,8 @@ const riseIn = keyframes`
 
 /* ─── layout ─── */
 
+/* ─── layout ─── */
+
 const Screen = styled.div`
   position: absolute;
   inset: 0;
@@ -35,6 +37,18 @@ const Screen = styled.div`
   padding: 24px;
   pointer-events: none;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, #bae6fd 0%, #e0f2fe 50%, #f0f9ff 100%);
+    overflow-y: auto;
+    pointer-events: auto;
+    justify-content: flex-start;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    z-index: 20;
+  }
 `;
 
 const TopBanner = styled.div<{ $delay: number }>`
@@ -66,6 +80,13 @@ const IntroTitle = styled.h2`
   animation: ${fadeInOut} 4.5s ease both;
   position: absolute;
   top: 30%;
+
+  @media (max-width: 768px) {
+    font-size: 1.8rem;
+    top: 20%;
+    text-align: center;
+    width: 90%;
+  }
 `;
 
 const IntroSubtitle = styled.div`
@@ -77,6 +98,13 @@ const IntroSubtitle = styled.div`
   position: absolute;
   top: calc(30% + 60px);
   text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 1px 4px rgba(0,0,0,0.8);
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    top: calc(20% + 60px);
+    text-align: center;
+    width: 90%;
+  }
 `;
 
 const PodiumContainer = styled.div`
@@ -96,6 +124,15 @@ const PodiumRow = styled.div`
   max-width: 860px;
   margin-top: 20px;
   pointer-events: auto;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    margin-top: 10px;
+    padding: 0 16px;
+    box-sizing: border-box;
+  }
 `;
 
 /* ─── card theme ─── */
@@ -171,6 +208,19 @@ const PodiumCard = styled.div<{ $rank: number }>`
   &:hover {
     transform: ${p => p.$rank === 1 ? 'scale(1.08)' : 'scale(1.03)'};
     box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    max-width: 280px;
+    order: ${p => (p.$rank === 1 ? -3 : p.$rank === 2 ? -2 : -1)};
+    transform: none !important;
+    padding: 28px 16px 16px;
+    z-index: 1;
+
+    &:hover {
+      transform: scale(1.02) !important;
+    }
   }
 `;
 

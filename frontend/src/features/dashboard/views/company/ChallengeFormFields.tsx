@@ -349,7 +349,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
             </div>
           </FieldGroup>
 
-          <FieldGroup style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+          <FieldGroup>
             <Label $locked={locked('core')}>
               Reglas de participación *
               {locked('core') && <LockedBadge $tooltipText="No editable" $tooltipPosition="top" $tooltipAlign="center"><LockIcon /></LockedBadge>}
@@ -408,7 +408,7 @@ export const ChallengeFormFields: React.FC<ChallengeFormFieldsProps> = ({
                   }
                 }
               }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', position: 'absolute', bottom: -20, left: 0, right: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
               {errors.participationRules ? <ErrorText>{errors.participationRules}</ErrorText> : <span />}
               <CharCount
                 $over={countWords(form.participationRules) > WORD_LIMITS.rules.max}

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
 import { Pista8Theme } from '../../../config/theme';
 import PodiumSection from './PodiumSection';
 import { useWallEventListener } from '../../../hooks/useWallEvents';
 import { Sparkles } from 'lucide-react';
+
 const CommentSvg = ({ size = 20 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -25,96 +27,151 @@ const UsersSvg = ({ size = 20 }: { size?: number }) => (
   </svg>
 );
 
-const styles: Record<string, React.CSSProperties> = {
-  card: {
-    background: Pista8Theme.white,
-    borderRadius: 20,
-    border: `0.5px solid ${Pista8Theme.shadow}`,
-    boxShadow: `0 4px 24px ${Pista8Theme.shadow}`,
-    padding: '28px 28px 24px',
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    boxSizing: 'border-box',
-    width: '100%',
-  },
-  header: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    textAlign: 'center' as const,
-    marginBottom: 22,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 800,
-    color: '#1a1f22',
-    lineHeight: 1.2,
-    margin: 0,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: Pista8Theme.secondary,
-    marginTop: 6,
-  },
-  divider: {
-    height: '0.5px',
-    background: 'rgba(72,80,84,0.12)',
-    marginBottom: 22,
-  },
-  metricsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: 12,
-    marginBottom: 24,
-  },
-  metricCard: {
-    background: Pista8Theme.background,
-    borderRadius: 16,
-    padding: '20px 16px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    gap: 14,
-    border: '1.5px solid transparent',
-    transition: 'all 0.2s ease',
-  },
-  metricHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    width: '100%',
-  },
-  metricIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    background: 'rgba(254,65,10,0.08)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: Pista8Theme.primary,
-    flexShrink: 0,
-  },
-  metricLabel: {
-    fontSize: 16,
-    color: '#1a1f22',
-    fontWeight: 800,
-    lineHeight: 1.2,
-    letterSpacing: '-0.2px',
-  },
-  metricVal: {
-    fontSize: 40,
-    fontWeight: 900,
-    color: '#1a1f22',
-    lineHeight: 1,
-    letterSpacing: '-1.5px',
-    textAlign: 'center' as const,
-    width: '100%',
-  },
-};
+const Card = styled.div`
+  background: ${Pista8Theme.white};
+  border-radius: 20px;
+  border: 0.5px solid ${Pista8Theme.shadow};
+  box-shadow: 0 4px 24px ${Pista8Theme.shadow};
+  padding: 28px 28px 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    padding: 20px 16px 16px;
+  }
+`;
+
+const Header = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 22px;
+`;
+
+const Title = styled.h2`
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1f22;
+  line-height: 1.2;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 22px;
+  }
+`;
+
+const Subtitle = styled.p`
+  font-size: 13px;
+  color: ${Pista8Theme.secondary};
+  margin-top: 6px;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+`;
+
+const Divider = styled.div`
+  height: 0.5px;
+  background: rgba(72, 80, 84, 0.12);
+  margin-bottom: 22px;
+`;
+
+const MetricsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+
+  @media (max-width: 360px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const MetricCardContainer = styled.div`
+  background: ${Pista8Theme.background};
+  border-radius: 16px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  border: 1.5px solid transparent;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+
+  &:hover {
+    background: ${Pista8Theme.white};
+    border-color: rgba(254, 65, 10, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px ${Pista8Theme.shadow};
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px 8px;
+    gap: 8px;
+  }
+`;
+
+const MetricHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 6px;
+  }
+`;
+
+const MetricIcon = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(254, 65, 10, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${Pista8Theme.primary};
+  flex-shrink: 0;
+`;
+
+const MetricLabel = styled.span`
+  font-size: 16px;
+  color: #1a1f22;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
+  text-align: center;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+
+  @media (max-width: 768px) {
+    font-size: 12px;
+  }
+`;
+
+const MetricVal = styled.div`
+  font-size: 40px;
+  font-weight: 900;
+  color: #1a1f22;
+  line-height: 1;
+  letter-spacing: -1.5px;
+  text-align: center;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    font-size: 28px;
+  }
+`;
 
 interface MetricCardProps {
   icon: React.ReactNode;
@@ -123,26 +180,14 @@ interface MetricCardProps {
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({ icon, value, label }) => {
-  const [hovered, setHovered] = useState(false);
   return (
-    <div
-      style={{
-        ...styles.metricCard,
-        background: hovered ? Pista8Theme.white : Pista8Theme.background,
-        borderColor: hovered ? 'rgba(254,65,10,0.2)' : 'transparent',
-        transform: hovered ? 'translateY(-2px)' : 'none',
-        boxShadow: hovered ? `0 6px 20px ${Pista8Theme.shadow}` : 'none',
-        cursor: 'default',
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div style={styles.metricHeader}>
-        <div style={styles.metricIcon}>{icon}</div>
-        <span style={styles.metricLabel}>{label}</span>
-      </div>
-      <div style={styles.metricVal}>{value}</div>
-    </div>
+    <MetricCardContainer>
+      <MetricHeader>
+        <MetricIcon>{icon}</MetricIcon>
+        <MetricLabel>{label}</MetricLabel>
+      </MetricHeader>
+      <MetricVal>{value}</MetricVal>
+    </MetricCardContainer>
   );
 };
 
@@ -204,22 +249,22 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
   };
 
   return (
-    <div style={{ ...styles.card, ...style }}>
-      <div style={styles.header}>
-        <h2 style={styles.title}>Estadisticas</h2>
+    <Card style={style}>
+      <Header>
+        <Title>Estadísticas</Title>
         {selectedChallenge?.title && (
-          <p style={styles.subtitle}>{selectedChallenge.title}</p>
+          <Subtitle>{selectedChallenge.title}</Subtitle>
         )}
-      </div>
+      </Header>
 
-      <div style={styles.divider} />
+      <Divider />
 
-      <div style={styles.metricsGrid}>
+      <MetricsGrid>
         <MetricCard icon={<Sparkles size={20} strokeWidth={2.5} />} value={totalLikes} label="Interacciones" />
         <MetricCard icon={<CommentSvg />} value={totalComments} label="Comentarios" />
         <MetricCard icon={<BulbSvg />} value={totalIdeas} label="Ideas en Vuelo" />
         <MetricCard icon={<UsersSvg />} value={totalParticipants} label="Participantes" />
-      </div>
+      </MetricsGrid>
 
       <PodiumSection
         topIdeas={topIdeas}
@@ -227,7 +272,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ selectedChallenge, challengeSta
         challengeStatus={selectedChallenge?.status}
         isNarrow={isNarrow}
       />
-    </div>
+    </Card>
   );
 };
 

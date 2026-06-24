@@ -109,10 +109,10 @@ export class UserService {
           this.handlePrismaError(err);
         }
         const refreshed = await this.userRepository.findByUid(firebaseUid);
-        return this.formatUserResponse(refreshed ?? user);
+        return await this.formatUserResponse(refreshed ?? user);
       }
 
-      return this.formatUserResponse(user);
+      return await this.formatUserResponse(user);
     }
 
     if (preventCreation) {
@@ -171,12 +171,12 @@ export class UserService {
       }
     }
 
-    return this.formatUserResponse(user);
+    return await this.formatUserResponse(user);
   }
 
-  private formatUserResponse(
+  private async formatUserResponse(
     user: UserWithProfile | null,
-  ): UserResponse | null {
+  ): Promise<UserResponse | null> {
     if (!user) return null;
 
     const roleMapping: Record<string, string> = {
@@ -189,12 +189,26 @@ export class UserService {
 
     const mappedRole = roleMapping[user.role] || 'student';
 
+    let penaltyExpiresAt: Date | null = null;
+    if (user.status === 'SOFT_BLOCK' || user.status === 'SUSPENDED') {
+      const activePenalties = await this.userRepository.findActivePenalties(user.id);
+      if (activePenalties && activePenalties.length > 0) {
+        const sorted = activePenalties.sort((a, b) => {
+          if (!a.expiresAt) return 1;
+          if (!b.expiresAt) return -1;
+          return b.expiresAt.getTime() - a.expiresAt.getTime();
+        });
+        penaltyExpiresAt = sorted[0].expiresAt;
+      }
+    }
+
     return {
       ...user,
       role: mappedRole,
       roleName: mappedRole,
       facultyName: user.studentProfile?.faculty?.name || null,
-    };
+      penaltyExpiresAt: penaltyExpiresAt || undefined,
+    } as any;
   }
 
   private async syncUserStatus(
@@ -208,7 +222,7 @@ export class UserService {
   async findByUid(firebaseUid: string): Promise<UserResponse | null> {
     let user = await this.userRepository.findByUid(firebaseUid);
     user = await this.syncUserStatus(user);
-    return this.formatUserResponse(user);
+    return await this.formatUserResponse(user);
   }
 
   async updateProfile(
@@ -270,7 +284,7 @@ export class UserService {
       console.warn('Failed to clear public cache:', err);
     });
     
-    return this.formatUserResponse(updatedUserWithProfile!);
+    return await this.formatUserResponse(updatedUserWithProfile!);
   }
 
   async updateFaculty(
@@ -303,7 +317,7 @@ export class UserService {
     });
 
     const updatedUser = await this.userRepository.findByUid(firebaseUid);
-    return this.formatUserResponse(updatedUser);
+    return await this.formatUserResponse(updatedUser);
   }
 
 

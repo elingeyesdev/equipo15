@@ -407,10 +407,10 @@ export class IdeaService {
       complex: 'COMPLEX',
     };
     const targetReaction =
-      rawType && reactionMap[rawType] ? reactionMap[rawType] : 'GOOD';
+      rawType && reactionMap[rawType] ? reactionMap[rawType] : null;
 
     try {
-      const { updatedIdea, hasVoted } = await this.ideaRepository.upsertLike(
+      const { updatedIdea, hasVoted, isModified } = await this.ideaRepository.upsertLike(
         ideaId,
         userId,
         targetReaction,
@@ -418,7 +418,7 @@ export class IdeaService {
       this.invalidateCache();
 
       if (!hasVoted) {
-        this.moderationService.trackUnlike(userId).catch((err) => {
+        this.moderationService.trackUnlike(userId, ideaId).catch((err) => {
           this.logger.error(`Error in trackUnlike for user ${userId}:`, err);
         });
 
@@ -434,6 +434,12 @@ export class IdeaService {
           },
         );
       } else {
+        if (isModified) {
+          this.moderationService.trackUnlike(userId, ideaId).catch((err) => {
+            this.logger.error(`Error in trackUnlike (due to modification) for user ${userId}:`, err);
+          });
+        }
+
         this.eventBus.emitToRoom(
           `challenge:${idea.challengeId}`,
           'idea:voted',

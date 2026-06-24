@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components';
-import { Pista8Theme } from '../../../config/theme';
+import { Pista8Theme, breakpoints } from '../../../config/theme';
 import { fadeUp, FEEDBACK_PALETTE } from './CommonStyles';
 
 export const ModalBackdrop = styled.div`
@@ -20,6 +20,10 @@ export const ModalWrapper = styled.div`
   z-index: 10000;
   overflow-y: auto;
   overscroll-behavior: contain;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    padding: 10px;
+  }
 `;
 
 export const ModalCard = styled.section`
@@ -38,6 +42,12 @@ export const ModalCard = styled.section`
   
   &::-webkit-scrollbar {
     display: none;
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    padding: 24px 16px;
+    border-radius: 20px;
+    max-height: calc(100vh - 20px);
   }
 `;
 
@@ -77,6 +87,10 @@ export const ModalTitle = styled.h2`
   color: ${Pista8Theme.secondary};
   word-break: break-word;
   overflow-wrap: break-word;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    font-size: 24px;
+  }
 `;
 
 export const ModalLead = styled.p`
@@ -124,6 +138,12 @@ export const FormCard = styled.form`
   display: flex;
   flex-direction: column;
   gap: 24px;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    padding: 20px 16px;
+    border-radius: 20px;
+    gap: 16px;
+  }
 `;
 
 export const Field = styled.div`
@@ -230,6 +250,14 @@ export const ButtonRow = styled.div`
   flex-wrap: wrap;
   gap: 12px;
   justify-content: flex-end;
+
+  @media (max-width: ${breakpoints.small}) {
+    flex-direction: column;
+    width: 100%;
+    > button {
+      width: 100%;
+    }
+  }
 `;
 
 export const GhostButton = styled.button`

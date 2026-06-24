@@ -5,12 +5,13 @@
 Table faculties {
   id String [pk]
   name String [not null]
-  institutionId String
+  organizationId String
   isActive Boolean [not null, default: true]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
+  organization organization_profiles
   studentProfiles student_profiles [not null]
-  challenges challenges [not null]
+  challengeFaculties challenge_faculties [not null]
 }
 
 Table users {
@@ -19,19 +20,15 @@ Table users {
   email String [unique, not null]
   displayName String [not null]
   bio String
-  avatarUrl String
   nickname String
   phone String [unique]
-  institucion_educativa String
-  ocupacion_laboral String
-  codigo_estudiantil String
   role UserRole [not null, default: 'USER']
   totalPoints Int [not null, default: 0]
   status UserStatus [not null, default: 'ACTIVE']
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
   studentProfile student_profiles
-  companyProfile company_profiles
+  organizationProfile organization_profiles
   devices user_devices [not null]
   notifications notifications [not null]
   pointTransactions point_transactions [not null]
@@ -63,7 +60,7 @@ Table student_profiles {
   faculty faculties
 }
 
-Table company_profiles {
+Table organization_profiles {
   userId String [pk]
   logoUrl String
   website String
@@ -71,6 +68,7 @@ Table company_profiles {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
   user users [not null]
+  faculties faculties [not null]
 }
 
 Table user_devices {
@@ -95,12 +93,18 @@ Table notifications {
   type NotifType [not null]
   title String [not null]
   body String
-  referenceId String
-  referenceType ReferenceType
+  ideaId String
+  commentId String
+  challengeId String
+  evaluationId String
   readAt DateTime
   expiresAt DateTime
   createdAt DateTime [default: `now()`, not null]
   user users [not null]
+  idea ideas
+  comment comments
+  challenge challenges
+  evaluation evaluations
 }
 
 Table point_transactions {
@@ -108,10 +112,16 @@ Table point_transactions {
   userId String [not null]
   delta Int [not null]
   reason PointReason [not null]
-  referenceId String
-  referenceType ReferenceType
+  ideaId String
+  commentId String
+  challengeId String
+  evaluationId String
   createdAt DateTime [default: `now()`, not null]
   user users [not null]
+  idea ideas
+  comment comments
+  challenge challenges
+  evaluation evaluations
 }
 
 Table penalties {
@@ -144,17 +154,30 @@ Table challenges {
   authorId String [not null]
   podiumSize Int
   logoUrl String
-  evaluationCriteria Json
   targetAudience Json
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
-  faculties faculties [not null]
   author users [not null]
+  challengeFaculties challenge_faculties [not null]
   ideas ideas [not null]
-  criteria criteria [not null]
+  challengeCriteria challenge_criteria [not null]
   judges challenge_judges [not null]
   privateAccesses private_challenge_accesses [not null]
   winners challenge_winners [not null]
+  notifications notifications [not null]
+  pointTransactions point_transactions [not null]
+}
+
+Table challenge_faculties {
+  challengeId String [not null]
+  facultyId String [not null]
+  assignedAt DateTime [default: `now()`, not null]
+  challenge challenges [not null]
+  faculty faculties [not null]
+
+  indexes {
+    (challengeId, facultyId) [pk]
+  }
 }
 
 Table private_challenge_accesses {
@@ -173,17 +196,25 @@ Table private_challenge_accesses {
 
 Table criteria {
   id String [pk]
-  challengeId String [not null]
-  name String [not null]
+  name String [unique, not null]
   description String
+  type String [not null, default: 'DEFAULT']
+  challengeCriteria challenge_criteria [not null]
+}
+
+Table challenge_criteria {
+  id String [pk]
+  challengeId String [not null]
+  criterionId String [not null]
   weight Int [not null]
   isActive Boolean [not null, default: true]
   createdAt DateTime [default: `now()`, not null]
   challenge challenges [not null]
+  criterion criteria [not null]
   evaluationScores evaluation_scores [not null]
 
   indexes {
-    (challengeId, name) [unique]
+    (challengeId, criterionId) [unique]
   }
 }
 
@@ -219,9 +250,9 @@ Table ideas {
   favoritesCount Int [not null, default: 0]
   finalScore Float [not null, default: 0]
   multimediaLinks Json
-  impactArea String
-  improvementType String
-  effortLevel String
+  impactArea ImpactArea
+  improvementType ImprovementType
+  effortLevel EffortLevel
   deletedAt DateTime
   deletedById String
   deleteReason String
@@ -230,12 +261,13 @@ Table ideas {
   author users [not null]
   challenge challenges [not null]
   deletedBy users
-  tags idea_tags [not null]
   reactions idea_reactions [not null]
   comments comments [not null]
   evaluations evaluations [not null]
   mentorshipSessions mentorship_sessions [not null]
   winners challenge_winners [not null]
+  notifications notifications [not null]
+  pointTransactions point_transactions [not null]
 }
 
 Table mentorship_sessions {
@@ -250,30 +282,11 @@ Table mentorship_sessions {
   mentor users [not null]
 }
 
-Table tags {
-  id String [pk]
-  name String [unique, not null]
-  createdAt DateTime [default: `now()`, not null]
-  ideas idea_tags [not null]
-}
-
-Table idea_tags {
-  ideaId String [not null]
-  tagId String [not null]
-  idea ideas [not null]
-  tag tags [not null]
-
-  indexes {
-    (ideaId, tagId) [pk]
-  }
-}
-
 Table idea_reactions {
   id String [pk]
   ideaId String [not null]
   userId String [not null]
   type ReactionType [not null]
-  reactionType String
   createdAt DateTime [default: `now()`, not null]
   idea ideas [not null]
   user users [not null]
@@ -302,6 +315,8 @@ Table comments {
   deletedBy users
   parent comments
   replies comments [not null]
+  notifications notifications [not null]
+  pointTransactions point_transactions [not null]
 }
 
 Table evaluations {
@@ -314,6 +329,8 @@ Table evaluations {
   idea ideas [not null]
   judge users [not null]
   scores evaluation_scores [not null]
+  notifications notifications [not null]
+  pointTransactions point_transactions [not null]
 
   indexes {
     (ideaId, judgeId) [unique]
@@ -323,14 +340,14 @@ Table evaluations {
 Table evaluation_scores {
   id String [pk]
   evaluationId String [not null]
-  criterionId String [not null]
+  challengeCriterionId String [not null]
   score Int [not null]
   createdAt DateTime [default: `now()`, not null]
   evaluation evaluations [not null]
-  criterion criteria [not null]
+  challengeCriterion challenge_criteria [not null]
 
   indexes {
-    (evaluationId, criterionId) [unique]
+    (evaluationId, challengeCriterionId) [unique]
   }
 }
 
@@ -377,14 +394,9 @@ Table allowed_domains {
   updatedAt DateTime [not null]
 }
 
-Table ChallengeToFaculty {
-  challengesId String [ref: > challenges.id]
-  facultiesId String [ref: > faculties.id]
-}
-
 Enum UserRole {
   ADMIN
-  COMPANY
+  ORGANIZATION
   JUDGE
   USER
 }
@@ -419,8 +431,34 @@ Enum CommentStatus {
 }
 
 Enum ReactionType {
-  LIKE
+  GOOD
+  FUTURE
+  COMPLEX
   FAVORITE
+}
+
+Enum ImpactArea {
+  PRODUCTIVIDAD
+  COSTOS
+  CLIENTES
+  EQUIPO
+  CRECIMIENTO
+  SOSTENIBILIDAD
+  IMPACTO_SOCIAL
+}
+
+Enum ImprovementType {
+  OPTIMIZA
+  POTENCIA
+  EXPANDE
+  TRANSFORMA
+}
+
+Enum EffortLevel {
+  FACIL_IMPLEMENTAR
+  REQUIERE_COORDINACION
+  REQUIERE_DESARROLLO
+  REQUIERE_TRANSFORMACION
 }
 
 Enum Platform {
@@ -487,25 +525,35 @@ Enum AccessGrantedVia {
   ADMIN
 }
 
-Enum ReferenceType {
-  IDEA
-  CHALLENGE
-  COMMENT
-  EVALUATION
-  MANUAL
-}
+Ref: faculties.organizationId > organization_profiles.userId [delete: Cascade]
 
 Ref: student_profiles.userId - users.id [delete: Cascade]
 
 Ref: student_profiles.facultyId > faculties.id [delete: Set Null]
 
-Ref: company_profiles.userId - users.id [delete: Cascade]
+Ref: organization_profiles.userId - users.id [delete: Cascade]
 
 Ref: user_devices.userId > users.id [delete: Cascade]
 
 Ref: notifications.userId > users.id [delete: Cascade]
 
+Ref: notifications.ideaId > ideas.id [delete: Cascade]
+
+Ref: notifications.commentId > comments.id [delete: Cascade]
+
+Ref: notifications.challengeId > challenges.id [delete: Cascade]
+
+Ref: notifications.evaluationId > evaluations.id [delete: Cascade]
+
 Ref: point_transactions.userId > users.id [delete: Cascade]
+
+Ref: point_transactions.ideaId > ideas.id [delete: Cascade]
+
+Ref: point_transactions.commentId > comments.id [delete: Cascade]
+
+Ref: point_transactions.challengeId > challenges.id [delete: Cascade]
+
+Ref: point_transactions.evaluationId > evaluations.id [delete: Cascade]
 
 Ref: penalties.userId > users.id [delete: Cascade]
 
@@ -515,11 +563,17 @@ Ref: penalties.revokedById > users.id [delete: Cascade]
 
 Ref: challenges.authorId > users.id [delete: Restrict]
 
+Ref: challenge_faculties.challengeId > challenges.id [delete: Cascade]
+
+Ref: challenge_faculties.facultyId > faculties.id [delete: Cascade]
+
 Ref: private_challenge_accesses.challengeId > challenges.id [delete: Cascade]
 
 Ref: private_challenge_accesses.userId > users.id [delete: Cascade]
 
-Ref: criteria.challengeId > challenges.id [delete: Cascade]
+Ref: challenge_criteria.challengeId > challenges.id [delete: Cascade]
+
+Ref: challenge_criteria.criterionId > criteria.id [delete: Cascade]
 
 Ref: challenge_judges.challengeId > challenges.id [delete: Cascade]
 
@@ -536,10 +590,6 @@ Ref: ideas.deletedById > users.id [delete: Restrict]
 Ref: mentorship_sessions.ideaId > ideas.id [delete: Cascade]
 
 Ref: mentorship_sessions.mentorId > users.id [delete: Restrict]
-
-Ref: idea_tags.ideaId > ideas.id [delete: Cascade]
-
-Ref: idea_tags.tagId > tags.id [delete: Cascade]
 
 Ref: idea_reactions.ideaId > ideas.id [delete: Cascade]
 
@@ -559,7 +609,7 @@ Ref: evaluations.judgeId > users.id [delete: Restrict]
 
 Ref: evaluation_scores.evaluationId > evaluations.id [delete: Cascade]
 
-Ref: evaluation_scores.criterionId > criteria.id [delete: Restrict]
+Ref: evaluation_scores.challengeCriterionId > challenge_criteria.id [delete: Restrict]
 
 Ref: challenge_winners.challengeId > challenges.id [delete: Restrict]
 

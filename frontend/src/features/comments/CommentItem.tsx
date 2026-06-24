@@ -23,13 +23,23 @@ const Item = styled.article<{ $depth: number }>`
   background: ${({ $depth }) => ($depth > 0 ? 'rgba(72, 80, 84, 0.03)' : 'white')};
   border: 1px solid rgba(72, 80, 84, 0.08);
   margin-left: ${({ $depth }) => $depth * 18}px;
+
+  @media (max-width: 768px) {
+    padding: 12px;
+    margin-left: ${({ $depth }) => Math.min($depth * 10, 40)}px;
+  }
 `;
 
 const Header = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 `;
 
 const AuthorBlock = styled.div`

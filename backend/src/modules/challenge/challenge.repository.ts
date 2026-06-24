@@ -412,20 +412,21 @@ export class ChallengeRepository {
     const criteriaList = Array.isArray(evaluationCriteria)
       ? evaluationCriteria
       : [];
-    const active = criteriaList.filter(
-      (c: any) => c.enabled !== false && c.weight > 0 && c.id,
-    );
 
-    if (active.length === 0) return;
+    const incomingNames = criteriaList.map((c: any) => c.name).filter(Boolean);
 
     await Promise.all(
-      active.map(async (c: any) => {
+      criteriaList.map(async (c: any) => {
+        if (!c.name) return;
         try {
           const dbCriterion = await this.prisma.criterion.upsert({
             where: { name: c.name },
             create: { name: c.name, description: c.description || '' },
             update: { description: c.description || '' },
           });
+
+          const isActive = c.enabled !== false && Number(c.weight) > 0;
+
           await this.prisma.challengeCriterion.upsert({
             where: {
               uq_challenge_criterion: {
@@ -436,23 +437,43 @@ export class ChallengeRepository {
             create: {
               challengeId: challengeId,
               criterionId: dbCriterion.id,
-              weight: c.weight,
-              isActive: true,
+              weight: Number(c.weight) || 0,
+              isActive: isActive,
             },
             update: {
-              weight: c.weight,
-              isActive: true,
+              weight: Number(c.weight) || 0,
+              isActive: isActive,
             },
           });
         } catch (err) {
           this.logger.warn(
-            `syncCriteriaToTable: failed upsert for ${c.id}: ${err}`,
+            `syncCriteriaToTable: failed upsert for ${c.name || c.id}: ${err}`,
           );
         }
       }),
     );
+
+    try {
+      await this.prisma.challengeCriterion.updateMany({
+        where: {
+          challengeId: challengeId,
+          isActive: true,
+          criterion: {
+            name: { notIn: incomingNames },
+          },
+        },
+        data: {
+          isActive: false,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `syncCriteriaToTable: failed to deactivate old criteria: ${err}`,
+      );
+    }
+
     this.logger.log(
-      `Synced ${active.length} criteria to table for challenge ${challengeId}`,
+      `Synced criteria to table for challenge ${challengeId}`,
     );
   }
 

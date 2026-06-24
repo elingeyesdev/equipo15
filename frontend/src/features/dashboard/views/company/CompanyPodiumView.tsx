@@ -989,8 +989,7 @@ export const CompanyPodiumView = () => {
     ? 'Preparando lote de finalistas para los jueces...'
     : 'Procesando rúbricas y calculando puntajes...';
 
-  const expectedEvaluations = (podiumStatus?.assignedJudgesCount || 0) * (podiumStatus?.finalistCount || 0);
-  const hasMissingEvaluations = (podiumStatus?.evaluationCount || 0) < expectedEvaluations;
+  const hasMissingEvaluations = (podiumStatus?.ideasWithEvaluations || 0) < (podiumStatus?.finalistCount || 0);
 
   let confirmTitle = '';
   let confirmText = '';
@@ -1000,9 +999,9 @@ export const CompanyPodiumView = () => {
     confirmText = 'Se cerrará la participación pública y se enviarán ' + actionLimit + ' ideas a los jueces para evaluación técnica. Esta acción es irreversible.';
   } else if (phase === 'evaluate') {
     if (hasMissingEvaluations) {
-      const missingCount = expectedEvaluations - (podiumStatus?.evaluationCount || 0);
+      const missingCount = (podiumStatus?.finalistCount || 0) - (podiumStatus?.ideasWithEvaluations || 0);
       confirmTitle = '⚠️ Evaluaciones Incompletas';
-      confirmText = 'Aún faltan ' + missingCount + ' rúbricas por completar por parte del panel de jueces. Si decides forzar el cálculo ahora, el algoritmo promediará las notas utilizando únicamente las evaluaciones que ya han sido enviadas. Los jueces rezagados perderán el acceso para calificar. ¿Deseas proceder?';
+      confirmText = 'Aún faltan ' + missingCount + ' ideas por evaluar por parte del panel de jueces. Si decides forzar el cálculo ahora, el algoritmo promediará las notas utilizando únicamente las evaluaciones que ya han sido enviadas. Los jueces rezagados perderán el acceso para calificar. ¿Deseas proceder?';
     } else {
       confirmTitle = '¿Calcular puntajes y finalizar podio?';
       confirmText = 'Se calcularán los puntajes técnicos con las rúbricas recibidas y se declararán ' + actionLimit + ' ganador' + (actionLimit !== 1 ? 'es' : '') + '. Esta acción es irreversible.';

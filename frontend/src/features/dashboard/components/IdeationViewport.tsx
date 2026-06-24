@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
 import SkyCanvas from '../../../features/sky-wall';
@@ -79,6 +80,13 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
 
   const resolvedName = resolveDisplayName(userProfile as any);
   const navigate = useNavigate();
+
+  const [isNarrow, setIsNarrow] = useState(window.innerWidth < 1024);
+  useEffect(() => {
+    const handleResize = () => setIsNarrow(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const roleName = (userProfile?.roleInfo?.name || userProfile?.role || '').toLowerCase();
   const isStudent = roleName === 'student' || roleName === 'participante';
@@ -293,7 +301,7 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                 challengeStats={ds.challengeStats}
                 onSelectIdea={handleSelectIdea}
                 style={{ marginTop: 32 }}
-                isNarrow={false}
+                isNarrow={isNarrow}
               />
             </>
           ) : (
@@ -338,14 +346,14 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
                   challengeStats={ds.challengeStats}
                   onSelectIdea={handleSelectIdea}
                   style={{ marginTop: 0 }}
-                  isNarrow={false}
+                  isNarrow={isNarrow}
                 />
               </S.SplitGrid>
             </>
           )}
         </>
       ) : (
-        <div className="ideation-split" style={{ display: 'grid', gap: '32px', alignItems: 'stretch', width: '100%' }}>
+        <div className="ideation-split" style={{ display: 'grid', gap: '32px', alignItems: 'flex-start', width: '100%' }}>
           <style>{`
             .ideation-split { grid-template-columns: 1fr; }
             @media (min-width: 1024px) {

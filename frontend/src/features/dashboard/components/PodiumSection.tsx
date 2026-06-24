@@ -27,6 +27,12 @@ const Grid = styled.div<{ $count?: number; $isNarrow?: boolean }>`
       grid-template-columns: 1fr !important;
       gap: 12px;
     }
+
+    @media (max-width: 768px) {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
   `}
 `;
 
@@ -209,6 +215,34 @@ const PodiumCard = styled.div<{ $rank: number; $idx: number; $isNarrow?: boolean
       border: 1px solid rgba(0,0,0,0.06);
       border-top: none;
       box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+    }
+
+    @media (max-width: 768px) {
+      display: flex;
+      flex-direction: column;
+      min-height: 90px;
+      max-height: 240px;
+      height: auto;
+
+      &:hover {
+        flex: 1.8;
+        min-height: 200px;
+        max-height: 300px;
+        height: auto;
+      }
+
+      .outlinePage {
+        height: auto;
+        min-height: 90px;
+        flex: 1;
+      }
+
+      .detailPage {
+        height: 100px;
+        margin-top: -16px;
+        padding-top: 16px;
+        top: 0;
+      }
     }
   `}
 

@@ -11,6 +11,7 @@ import {
 
 interface ActionLog {
   timestamp: number;
+  ideaId?: string;
 }
 
 @Injectable()
@@ -24,15 +25,25 @@ export class ModerationService {
     private readonly redisService: RedisService,
   ) {}
 
-  async trackUnlike(userId: string): Promise<void> {
+  async trackUnlike(userId: string, ideaId?: string): Promise<void> {
     const now = Date.now();
     const key = `mod:unlike:${userId}`;
     let history: ActionLog[] = (await this.redisService.get(key)) || [];
 
-    history.push({ timestamp: now });
-
     const sixtyMinsAgo = now - 60 * 60 * 1000;
     history = history.filter((log) => log.timestamp > sixtyMinsAgo);
+
+    if (ideaId) {
+      const sameIdeaLogs = history.filter((log) => log.ideaId === ideaId);
+      if (sameIdeaLogs.length > 0) {
+        const lastLog = sameIdeaLogs[sameIdeaLogs.length - 1];
+        if (now - lastLog.timestamp < 10000) {
+          return;
+        }
+      }
+    }
+
+    history.push({ timestamp: now, ideaId });
     await this.redisService.set(key, history, 60 * 60 * 1000);
 
     const thirtyMinsAgo = now - 30 * 60 * 1000;

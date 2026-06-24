@@ -54,9 +54,9 @@ const ReactionsBar = styled.div<{ $open: boolean }>`
   }
 `;
 
-const ReactionOption = styled.button<{ $color: string }>`
-  background: ${Pista8Theme.background};
-  border: none;
+const ReactionOption = styled.button<{ $color: string; $active?: boolean }>`
+  background: ${p => p.$active ? p.$color + '20' : Pista8Theme.background};
+  border: ${p => p.$active ? `1.5px solid ${p.$color}` : 'none'};
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -64,7 +64,7 @@ const ReactionOption = styled.button<{ $color: string }>`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #64748b;
+  color: ${p => p.$active ? p.$color : '#64748b'};
   transition: all 0.2s;
   position: relative;
 
@@ -172,6 +172,7 @@ interface LikeButtonProps {
   ideaId: string;
   initialLikes: number;
   hasVoted?: boolean;
+  votedType?: string;
   isAuthor?: boolean;
   disabled?: boolean;
 }
@@ -220,11 +221,15 @@ const REACTION_CONFIG = {
   complex: { icon: Brain, color: '#64748b', label: 'Complicado', tooltip: 'Interesante, pero parece difícil de implementar.' }
 } as const;
 
-export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuthor, disabled }: LikeButtonProps) => {
+export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, votedType, isAuthor, disabled }: LikeButtonProps) => {
   const { userProfile } = useAuth();
   const currentUserId = userProfile?.id;
   const [likes, setLikes] = useState(initialLikes);
-  const [reaction, setReaction] = useState<string | null>(() => getLocalReaction(ideaId, currentUserId));
+  const [reaction, setReaction] = useState<string | null>(() => {
+    const raw = votedType?.toLowerCase();
+    if (raw === 'good' || raw === 'future' || raw === 'complex') return raw;
+    return getLocalReaction(ideaId, currentUserId);
+  });
   const [hasVoted, setHasVoted] = useState(() => serverVoted || !!reaction);
   const [reactionsOpen, setReactionsOpen] = useState(false);
 
@@ -239,16 +244,18 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
   useEffect(() => {
     if (serverVoted) {
       setHasVoted(true);
+      const raw = votedType?.toLowerCase();
+      const resolvedType = raw === 'good' || raw === 'future' || raw === 'complex' ? raw : 'good';
       if (!reaction) {
-        setReaction('good');
-        saveLocalReaction(ideaId, 'good', currentUserId);
+        setReaction(resolvedType);
+        saveLocalReaction(ideaId, resolvedType, currentUserId);
       }
     } else {
       setHasVoted(false);
       setReaction(null);
       removeLocalReaction(ideaId, currentUserId);
     }
-  }, [serverVoted, ideaId, currentUserId]);
+  }, [serverVoted, votedType, ideaId, currentUserId]);
 
   const executeVote = (targetReaction: string | null) => {
     const isReadOnlyPenalty = userProfile?.status === 'SOFT_BLOCK' || userProfile?.status === 'SUSPENDED';
@@ -263,6 +270,10 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
       return;
     }
 
+    if (targetReaction === reaction) {
+      targetReaction = null;
+    }
+
     const isVoting = targetReaction !== null;
     const prevVoted = hasVoted;
     const prevReaction = reaction;
@@ -273,13 +284,13 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
 
     let nextLikes = likes;
 
-    if (isVoting && !prevVoted) {
+    if (isVoting && !prevVoted && targetReaction) {
       nextLikes = likes + 1;
       saveLocalReaction(ideaId, targetReaction, currentUserId);
     } else if (!isVoting && prevVoted) {
       nextLikes = Math.max(0, likes - 1);
       removeLocalReaction(ideaId, currentUserId);
-    } else if (isVoting && prevVoted) {
+    } else if (isVoting && prevVoted && targetReaction) {
       saveLocalReaction(ideaId, targetReaction, currentUserId);
     }
 
@@ -337,10 +348,11 @@ export const LikeButton = ({ ideaId, initialLikes, hasVoted: serverVoted, isAuth
               <ReactionOption 
                 key={key} 
                 $color={config.color}
+                $active={reaction === key}
                 onClick={(e) => {
                   e.stopPropagation();
                   setReactionsOpen(false);
-                  executeVote(key);
+                  executeVote(reaction === key ? null : key);
                 }}
               >
                 <Icon size={18} strokeWidth={2.5} />

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
+import { premiumTooltip } from '../../dashboard/styles/CommonStyles';
 import { Lightbulb, Flame, Brain, Trash2, ShieldAlert } from 'lucide-react';
 import type { PlaneIdea } from '../types';
 import LikeButton from './LikeButton';
@@ -337,29 +338,33 @@ const StatPill = styled.div<{ $color: string }>`
   }
 `;
 
-const DeleteIdeaButton = styled.button<{ $isAdmin?: boolean }>`
-  display: flex;
+const DeleteIdeaButton = styled.button<{ $isAdmin?: boolean; $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: white;
-  color: #ef4444;
-  border: 1.5px solid #ef444450;
-  border-radius: 99px;
-  padding: 10px 18px;
-  font-size: 13px;
-  font-weight: 800;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 
-  &:hover {
-    background: #ef444410;
-    border-color: #ef4444;
+  &:hover:not(:disabled) {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220,38,38,0.15);
   }
   
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
+    transform: none;
   }
+  
+  ${premiumTooltip}
 `;
 
 const ConfirmOverlay = styled.div`
@@ -591,6 +596,7 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
                     ideaId={idea.id} 
                     initialLikes={idea.likesCount} 
                     hasVoted={idea.hasVoted}
+                    votedType={(idea as any).votedType}
                     isAuthor={isAuthor}
                     disabled={idea.challengeStatus === 'CLOSED'}
                   />
@@ -617,7 +623,8 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
                   onClick={triggerDelete} 
                   disabled={isDeleting}
                   $isAdmin={isAdmin && !isAuthor}
-                  title={isAdmin && !isAuthor ? "Auditar (Eliminar) idea" : "Eliminar mi idea"}
+                  $tooltipText={isAdmin && !isAuthor ? "Auditar (Eliminar) idea" : "Eliminar mi idea"}
+                  aria-label="Eliminar idea"
                 >
                   {isAdmin && !isAuthor ? <ShieldAlert size={16} /> : <Trash2 size={16} />}
                   {isDeleting ? 'Procesando...' : (isAdmin && !isAuthor ? 'Auditar' : 'Eliminar')}

@@ -202,10 +202,10 @@ export const useChallengeForm = ({ onBack, onSave, challenge, readOnlyMode = fal
       evaluationCriteria: (challenge.evaluationCriteria && challenge.evaluationCriteria.length > 0)
         ? DEFAULT_CRITERIA.map(dc => {
             const saved = challenge.evaluationCriteria!.find((c: any) => c.name === dc.name || c.id === dc.id);
-            if (saved) return { ...dc, ...saved, enabled: true };
+            if (saved) return { ...dc, ...saved, enabled: !!saved.enabled };
             return { ...dc, enabled: false };
           }).concat(
-            challenge.evaluationCriteria!.filter((c: any) => !DEFAULT_CRITERIA.some(dc => dc.name === c.name || dc.id === c.id))
+            challenge.evaluationCriteria!.filter((c: any) => c.enabled && !DEFAULT_CRITERIA.some(dc => dc.name === c.name || dc.id === c.id))
           )
         : DEFAULT_CRITERIA,
       facultyIds: challenge.challengeFaculties 

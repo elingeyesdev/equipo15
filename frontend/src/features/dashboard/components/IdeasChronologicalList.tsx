@@ -312,6 +312,27 @@ const CarouselNavBtn = styled.button<{ $disabled: boolean; $left?: boolean }>`
     justify-content: center;
     transform: ${p => p.$left ? 'scaleX(-1)' : 'none'};
   }
+
+  @media (max-width: 640px) {
+    .outer-ring {
+      width: 44px;
+      height: 44px;
+    }
+    .button-inner {
+      width: 36px;
+      height: 36px;
+      top: 4px;
+      box-shadow: inset 0px 2px 1px #ff9e80, inset 0px -2px 0px #9e2600, 0px 0px 1px rgba(0,0,0,0.4);
+    }
+    .shadow-overlay {
+      width: 36px;
+      height: 36px;
+      top: 4px;
+    }
+    .svg-wrap {
+      width: 16px;
+    }
+  }
 `;
 
 const CardTitle = styled.p`
@@ -415,6 +436,7 @@ const rawToPlane = (idea: RawIdea, index: number, userProfile?: any): PlaneIdea 
   solution: idea.solution,
   hasVoted: idea.hasVoted ?? false,
   hasFavorited: idea.hasFavorited ?? false,
+  votedType: (idea as any).votedType,
   authorId: idea.authorId ?? '',
   createdAt: idea.createdAt,
   authorRealName: idea.author?.displayName,
@@ -446,11 +468,37 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
   const { userProfile } = useAuth();
   const [localIdeas, setLocalIdeas] = React.useState(ideas);
   const [carouselIndex, setCarouselIndex] = React.useState(0);
+  const [carouselPageSize, setCarouselPageSize] = React.useState(5);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth;
+      if (w < 480) {
+        setCarouselPageSize(1);
+      } else if (w < 768) {
+        setCarouselPageSize(2);
+      } else if (w < 1024) {
+        setCarouselPageSize(3);
+      } else {
+        setCarouselPageSize(5);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   React.useEffect(() => {
     setLocalIdeas(ideas);
     setCarouselIndex(0);
   }, [ideas]);
+
+  const restLength = showAll ? localIdeas.length : Math.max(0, localIdeas.length - 3);
+
+  React.useEffect(() => {
+    const maxIdx = Math.max(0, restLength - carouselPageSize);
+    setCarouselIndex(prev => Math.min(prev, maxIdx));
+  }, [carouselPageSize, restLength]);
 
   useWallEventListener('comment_count_changed', ({ ideaId, count }) => {
     if (!ideaId) return;
@@ -508,8 +556,8 @@ const IdeasChronologicalList: React.FC<IdeasChronologicalListProps> = ({
   const top3 = (!showAll) ? localIdeas.slice(0, 3) : [];
   const rest = (!showAll) ? localIdeas.slice(3) : localIdeas;
 
-  const maxIndex = Math.max(0, rest.length - 5);
-  const visibleIdeas = rest.slice(carouselIndex, carouselIndex + 5);
+  const maxIndex = Math.max(0, rest.length - carouselPageSize);
+  const visibleIdeas = rest.slice(carouselIndex, carouselIndex + carouselPageSize);
 
   return (
     <Wrapper $showAll={showAll}>

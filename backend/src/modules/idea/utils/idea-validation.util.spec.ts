@@ -97,15 +97,15 @@ describe('idea-validation.util', () => {
 
   describe('IDEA_WORD_RULES constants', () => {
     it('has correct title bounds', () => {
-      expect(IDEA_WORD_RULES.title).toEqual({ min: 5, max: 20 });
+      expect(IDEA_WORD_RULES.title).toEqual({ min: 2, max: 10 });
     });
 
     it('has correct problem bounds', () => {
-      expect(IDEA_WORD_RULES.problem).toEqual({ min: 20, max: 200 });
+      expect(IDEA_WORD_RULES.problem).toEqual({ min: 10, max: 200 });
     });
 
     it('has correct solution bounds', () => {
-      expect(IDEA_WORD_RULES.solution).toEqual({ min: 30, max: 200 });
+      expect(IDEA_WORD_RULES.solution).toEqual({ min: 10, max: 200 });
     });
   });
 });

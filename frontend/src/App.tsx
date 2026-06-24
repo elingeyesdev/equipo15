@@ -30,7 +30,9 @@ function App() {
                 boxShadow: '0 16px 48px rgba(0,0,0,0.12)',
                 width: 'auto',
                 minWidth: '280px',
-                padding: '16px 20px',
+                maxWidth: 'calc(100vw - 32px)',
+                wordBreak: 'break-word',
+                padding: '16px 40px 16px 20px',
               },
               classNames: {
                 closeButton: 'sonner-close-btn',
@@ -52,7 +54,7 @@ function App() {
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                border-radius: 8px !important;
+                border-radius: 50% !important;
               }
               .sonner-close-btn:hover {
                 background: #f8fafc !important;

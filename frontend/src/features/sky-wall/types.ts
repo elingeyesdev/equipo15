@@ -22,6 +22,7 @@ export interface PlaneIdea {
   solution?: string;
   hasVoted?: boolean;
   hasFavorited?: boolean;
+  votedType?: string | null;
   authorId: string;
   createdAt?: string;
   authorRealName?: string;

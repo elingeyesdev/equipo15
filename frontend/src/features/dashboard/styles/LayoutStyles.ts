@@ -12,7 +12,7 @@ export const Root = styled.div`
 `;
 
 export const Page = styled.div`
-  padding: 2.5rem 4% 100px;
+  padding: 2.5rem 4% 120px;
   max-width: 1400px;
   margin: 0 auto;
   box-sizing: border-box;
@@ -23,11 +23,11 @@ export const Page = styled.div`
   }
 
   @media (max-width: ${breakpoints.mobile}) {
-    padding: 1.5rem 3% 90px;
+    padding: 1.5rem 3% 130px;
   }
 
   @media (max-width: ${breakpoints.small}) {
-    padding: 1rem 2.5% 80px;
+    padding: 1rem 2.5% 120px;
   }
 `;
 
