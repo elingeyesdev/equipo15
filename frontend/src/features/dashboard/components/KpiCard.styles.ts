@@ -69,8 +69,7 @@ export const Label = styled.span`
   font-size: 18px;
   color: ${Pista8Theme.secondary};
   font-weight: 800;
-  display: flex;
-  align-items: center;
+  text-align: center;
 `;
 
 export const Subtitle = styled.span`

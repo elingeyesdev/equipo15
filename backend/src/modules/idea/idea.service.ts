@@ -319,6 +319,19 @@ export class IdeaService {
       throw new ForbiddenException('Solo el autor de la idea puede editarla.');
     }
 
+    const now = new Date();
+    const createdAt = new Date(existingIdea.createdAt);
+    const diffMs = now.getTime() - createdAt.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    if (diffHours > 24) {
+      throw new ForbiddenException('No puedes editar una propuesta después de 24 horas de haber sido publicada.');
+    }
+
+    const challengeStatus = (existingIdea as any).challenge?.status;
+    if (challengeStatus === 'EVALUATING' || challengeStatus === 'CLOSED') {
+      throw new ForbiddenException('No puedes editar una propuesta si el reto está en evaluación o cerrado.');
+    }
+
     if (updateIdeaDto.challengeId || updateIdeaDto.status) {
       throw new BadRequestException(
         'No está permitido cambiar el reto o estado desde esta edición.',
@@ -638,12 +651,44 @@ export class IdeaService {
       throw new ForbiddenException('No tienes permisos para eliminar o auditar esta idea.');
     }
 
+    if (isAuthor && !isAdmin) {
+      const now = new Date();
+      const createdAt = new Date(idea.createdAt);
+      const diffMs = now.getTime() - createdAt.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+      if (diffHours > 24) {
+        throw new ForbiddenException('No puedes eliminar una propuesta después de 24 horas de haber sido publicada.');
+      }
+
+      const challengeStatus = (idea as any).challenge?.status;
+      if (challengeStatus === 'EVALUATING' || challengeStatus === 'CLOSED') {
+        throw new ForbiddenException('No puedes eliminar una propuesta si el reto está en evaluación o cerrado.');
+      }
+    }
+
     await this.ideaRepository.softDeleteIdea(ideaId, user.id);
     this.logger.log(`Idea eliminada/auditada: ${ideaId} por usuario ${user.id}`);
     this.invalidateCache();
     
     if (idea.status !== 'DRAFT') {
       this.eventBus.emitToRoom(`challenge:${idea.challengeId}`, 'idea:deleted', { ideaId });
+    }
+
+    if (!isAuthor && isAdmin) {
+      try {
+        const challengeTitle = (idea as any).challenge?.title || 'un reto';
+        await this.notificationService.createNotification(
+          idea.authorId,
+          'ROLE_UPDATED',
+          'Idea eliminada por el administrador',
+          `Tu propuesta "${idea.title}" en el reto "${challengeTitle}" fue eliminada por moderación.`,
+          undefined,
+          undefined,
+          idea.challengeId,
+        );
+      } catch (notifErr) {
+        this.logger.error('Error creating moderation notification for idea:', notifErr);
+      }
     }
 
     return { id: ideaId };

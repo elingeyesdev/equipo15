@@ -63,13 +63,17 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({ challenge, active, onSele
               />
             </S.CardLogoWrap>
           )}
-          {challenge.category && (
+          {challenge.isPrivate ? (
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              <S.CategoryTag>Privado</S.CategoryTag>
+            </div>
+          ) : challenge.category ? (
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
               {challenge.category.split(',').map((cat: string, idx: number) => (
                 <S.CategoryTag key={idx}>{cat.trim()}</S.CategoryTag>
               ))}
             </div>
-          )}
+          ) : null}
         </S.CardTopLeft>
 
         {isExpired

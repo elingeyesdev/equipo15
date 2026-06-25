@@ -108,13 +108,13 @@ const Dropdown = styled.div<{ $open: boolean }>`
   }
 
   @media (max-width: 480px) {
-    position: fixed;
-    top: 60px;
-    right: 10px;
-    left: 10px;
-    width: auto;
-    max-height: calc(100vh - 80px);
-    margin-top: 0;
+    position: absolute;
+    top: 100%;
+    right: -10px;
+    left: auto;
+    width: 290px;
+    max-height: 380px;
+    margin-top: 8px;
   }
 `;
 
@@ -198,6 +198,10 @@ const DeleteButton = styled.button`
   transition: all 0.2s ease;
   width: 24px;
   height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  flex-shrink: 0;
+  box-sizing: border-box;
 
   svg {
     width: 14px;
@@ -228,6 +232,7 @@ const NotificationTitle = styled.div`
   font-weight: 700;
   color: #0f172a;
   margin-bottom: 4px;
+  padding-right: 28px;
 `;
 
 const NotificationBody = styled.div`

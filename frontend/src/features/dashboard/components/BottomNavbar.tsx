@@ -14,7 +14,7 @@ const DIP_DEPTH = 36;
 const CORNER_RADIUS = 24;
 const TOP_PADDING = 28;
 const SVG_HEIGHT = BAR_HEIGHT + TOP_PADDING;
-const TRANSITION = 'left 0.32s cubic-bezier(0.22, 1, 0.36, 1)';
+const TRANSITION = 'left 0.58s cubic-bezier(0.25, 1, 0.5, 1)';
 
 const NavWrapper = styled.nav`
   position: fixed;
@@ -37,9 +37,9 @@ const NavShape = styled.svg`
   height: 100%;
 `;
 
-const ShapePath = styled.path`
+const ShapePath = styled.path<{ $noTransition?: boolean }>`
   fill: white;
-  transition: d 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: ${p => p.$noTransition ? 'none' : 'd 0.58s cubic-bezier(0.25, 1, 0.5, 1)'};
 `;
 
 const NavItems = styled.div`
@@ -85,7 +85,7 @@ const NavCell = styled.button<{ $isActive: boolean }>`
   }
 `;
 
-const FloatingCircle = styled.div<{ $left: number }>`
+const FloatingCircle = styled.div<{ $left: number; $noTransition?: boolean }>`
   position: absolute;
   top: 0px;
   width: ${CIRCLE_SIZE}px;
@@ -97,7 +97,7 @@ const FloatingCircle = styled.div<{ $left: number }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: ${TRANSITION};
+  transition: ${p => p.$noTransition ? 'none' : TRANSITION};
   pointer-events: none;
 
   svg {
@@ -126,6 +126,9 @@ function bumpPathD(width: number, centerX: number) {
   `;
 }
 
+let globalLastCenter = 0;
+let globalLastWidth = 0;
+
 export const BottomNavbar: React.FC = () => {
   const { userProfile } = useAuth();
   const location = useLocation();
@@ -133,8 +136,9 @@ export const BottomNavbar: React.FC = () => {
 
   const wrapperRef = useRef<HTMLElement>(null);
   const cellRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const [barWidth, setBarWidth] = useState(0);
-  const [activeCenter, setActiveCenter] = useState(0);
+  const [barWidth, setBarWidth] = useState(globalLastWidth);
+  const [activeCenter, setActiveCenter] = useState(globalLastCenter);
+  const [noTransition, setNoTransition] = useState(globalLastCenter === 0);
 
   if (!userProfile) return null;
 
@@ -181,14 +185,26 @@ export const BottomNavbar: React.FC = () => {
     const wrapperRect = wrapper.getBoundingClientRect();
     const cellRect = activeCell.getBoundingClientRect();
 
-    setBarWidth(wrapperRect.width);
-    setActiveCenter(cellRect.left - wrapperRect.left + cellRect.width / 2);
+    const newWidth = wrapperRect.width;
+    const newCenter = cellRect.left - wrapperRect.left + cellRect.width / 2;
+
+    setBarWidth(newWidth);
+    setActiveCenter(newCenter);
+
+    globalLastWidth = newWidth;
+    globalLastCenter = newCenter;
   };
 
   useLayoutEffect(() => {
     measure();
+    if (globalLastCenter > 0 && globalLastWidth > 0 && noTransition) {
+      const timer = setTimeout(() => {
+        setNoTransition(false);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [safeActiveIndex, allItems.length]);
+  }, [safeActiveIndex, allItems.length, activeCenter, barWidth]);
 
   useEffect(() => {
     const handleResize = () => measure();
@@ -202,7 +218,10 @@ export const BottomNavbar: React.FC = () => {
   return (
     <NavWrapper ref={wrapperRef}>
       <NavShape viewBox={`0 0 ${barWidth} ${SVG_HEIGHT}`} preserveAspectRatio="none">
-        <ShapePath d={barWidth ? bumpPathD(barWidth, activeCenter) : ''} />
+        <ShapePath
+          d={barWidth ? bumpPathD(barWidth, activeCenter) : ''}
+          $noTransition={noTransition}
+        />
       </NavShape>
 
       <NavItems>
@@ -222,7 +241,10 @@ export const BottomNavbar: React.FC = () => {
         })}
       </NavItems>
 
-      <FloatingCircle $left={activeCenter - CIRCLE_SIZE / 2}>
+      <FloatingCircle
+        $left={activeCenter - CIRCLE_SIZE / 2}
+        $noTransition={noTransition}
+      >
         <ActiveIcon />
       </FloatingCircle>
     </NavWrapper>

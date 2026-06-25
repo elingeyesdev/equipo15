@@ -94,17 +94,19 @@ const IdeationViewport: React.FC<IdeationViewportProps> = ({
 
   const challengeStatus = ds.selectedChallenge ? getStatusLabel(ds.selectedChallenge.status) : null;
   const facultyLabel = ds.selectedChallenge
-    ? (() => {
-        const cf = (ds.selectedChallenge as any).challengeFaculties;
-        if (Array.isArray(cf) && cf.length > 0) {
-          return cf.map((f: any) => f.faculty?.name?.replace(/^Facultad de /i, '')).filter(Boolean).join(', ');
-        }
-        const facs = (ds.selectedChallenge as any).faculties;
-        if (Array.isArray(facs) && facs.length > 0) {
-          return facs.map((f: any) => f.name.replace(/^Facultad de /i, '')).join(', ');
-        }
-        return ds.selectedChallenge.faculty?.name || 'Todas las Áreas';
-      })()
+    ? ds.selectedChallenge.isPrivate
+      ? 'Privado'
+      : (() => {
+          const cf = (ds.selectedChallenge as any).challengeFaculties;
+          if (Array.isArray(cf) && cf.length > 0) {
+            return cf.map((f: any) => f.faculty?.name?.replace(/^Facultad de /i, '')).filter(Boolean).join(', ');
+          }
+          const facs = (ds.selectedChallenge as any).faculties;
+          if (Array.isArray(facs) && facs.length > 0) {
+            return facs.map((f: any) => f.name.replace(/^Facultad de /i, '')).join(', ');
+          }
+          return ds.selectedChallenge.faculty?.name || 'Todas las Áreas';
+        })()
     : null;
 
   const visibleLimit = (!showAllIdeas && displayedWallIdeas && displayedWallIdeas.length > 0)

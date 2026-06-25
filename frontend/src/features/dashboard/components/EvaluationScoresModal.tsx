@@ -283,14 +283,14 @@ export function EvaluationScoresModal({
                   </AdminSummaryValue>
                   <AdminSummaryLabel>Puntaje promedio</AdminSummaryLabel>
                 </AdminSummaryCard>
-                <AdminSummaryCard $accent="#2563eb">
-                  <AdminSummaryValue $accent="#2563eb">
+                <AdminSummaryCard $accent={Pista8Theme.primary}>
+                  <AdminSummaryValue $accent={Pista8Theme.primary}>
                     {data.summary.judgesCount}
                   </AdminSummaryValue>
                   <AdminSummaryLabel>Jueces evaluadores</AdminSummaryLabel>
                 </AdminSummaryCard>
-                <AdminSummaryCard $accent="#16a34a">
-                  <AdminSummaryValue $accent="#16a34a">
+                <AdminSummaryCard $accent={Pista8Theme.primary}>
+                  <AdminSummaryValue $accent={Pista8Theme.primary}>
                     {data.finalScore > 0 ? data.finalScore.toFixed(2) : data.summary.averageFinalScore.toFixed(2)}
                   </AdminSummaryValue>
                   <AdminSummaryLabel>Nota consolidada</AdminSummaryLabel>

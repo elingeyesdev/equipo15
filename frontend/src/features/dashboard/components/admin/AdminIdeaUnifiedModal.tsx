@@ -7,6 +7,7 @@ import {
   Scale,
   MessageSquare,
   ChevronDown,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Comment } from '@/types/models';
@@ -18,6 +19,7 @@ import { commentService } from '@/services/comment.service';
 import { CommentModerationModal } from './CommentModerationModal';
 import { premiumTooltip, fadeUp } from '../../styles/CommonStyles';
 import { StatusBadge } from '../../../../components/common/StatusBadge';
+import { wallEvents } from '../../../../hooks/useWallEvents';
 
 import {
   AdminModalOverlay,
@@ -347,18 +349,19 @@ const CommentActionBtn = styled.button<{ $tooltipText?: string; $tooltipPosition
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: transparent;
-  border: none;
+  background-color: white;
+  border: 1px solid rgba(72, 80, 84, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition-duration: 0.3s;
+  transition: all 0.3s ease;
   overflow: hidden;
   position: relative;
   gap: 2px;
-  opacity: 0.4;
+  opacity: 0.9;
 
   .svgIcon {
     width: 10px;
@@ -372,6 +375,8 @@ const CommentActionBtn = styled.button<{ $tooltipText?: string; $tooltipPosition
   &:hover {
     transition-duration: 0.3s;
     background-color: rgb(255, 69, 69);
+    border-color: rgb(255, 69, 69);
+    box-shadow: 0 4px 12px rgba(255, 69, 69, 0.2);
     align-items: center;
     gap: 0;
     opacity: 1;
@@ -388,6 +393,154 @@ const CommentActionBtn = styled.button<{ $tooltipText?: string; $tooltipPosition
     transition-duration: 0.5s;
     transform: rotate(160deg);
   }
+`;
+
+const BaseAnimatedButton = styled.button`
+  cursor: pointer;
+  width: 50px;
+  height: 50px;
+  border: none;
+  position: relative;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 1px 1px 5px 0.2px rgba(0, 0, 0, 0.2);
+  transition: width 0.2s linear;
+  transition-delay: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  overflow: hidden;
+
+  &:hover {
+    width: 150px;
+    transition-delay: 0.2s;
+  }
+
+  &:hover > .paragraph {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0.4s;
+  }
+
+  &:hover > .icon-wrapper .icon {
+    transform: scale(1.1);
+  }
+
+  .paragraph {
+    color: #1a1f22;
+    visibility: hidden;
+    opacity: 0;
+    font-size: 14px;
+    margin: 0;
+    width: calc(100% - 50px);
+    text-align: center;
+    padding-left: 10px;
+    transition: opacity 0.2s linear, visibility 0.2s linear;
+    font-weight: bold;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .icon-wrapper {
+    width: 50px;
+    height: 50px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon {
+    transform: scale(0.9);
+    transition: transform 0.2s linear;
+  }
+`;
+
+const DeleteIdeaButton = styled(BaseAnimatedButton)`
+  &:hover > .icon-wrapper .icon path {
+    stroke: #e11d48;
+  }
+  .icon path {
+    stroke: #e11d48;
+  }
+`;
+
+const ConfirmOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 18, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 10005;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+`;
+
+const ConfirmCard = styled.div`
+  background: white;
+  border-radius: 24px;
+  padding: 32px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+const ConfirmIcon = styled.div`
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(198, 40, 40, 0.08);
+  border: 1.5px solid rgba(198, 40, 40, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+`;
+
+const ConfirmTitle = styled.h3`
+  margin: 0;
+  font-size: 17px;
+  font-weight: 900;
+  color: #1a1f22;
+  text-align: center;
+`;
+
+const ConfirmBody = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.65;
+  text-align: center;
+`;
+
+const ConfirmActions = styled.div`
+  display: flex;
+  gap: 10px;
+`;
+
+const ConfirmBtn = styled.button<{ $danger?: boolean }>`
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1.5px solid ${p => p.$danger ? '#c62828' : 'rgba(72,80,84,0.18)'};
+  background: ${p => p.$danger ? '#c62828' : 'white'};
+  color: ${p => p.$danger ? 'white' : '#485054'};
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  &:hover {
+    background: ${p => p.$danger ? '#b71c1c' : '#f8f9fa'};
+    transform: translateY(-1px);
+  }
+  &:active { transform: translateY(0); }
 `;
 
 const STATUS_LABELS: Record<string, string> = {
@@ -476,6 +629,25 @@ export function AdminIdeaUnifiedModal({
   const [flatComments, setFlatComments] = useState<Comment[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [selectedCommentIdForMod, setSelectedCommentIdForMod] = useState<string | null>(null);
+
+  // Deletion states
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteIdea = async () => {
+    setIsDeleting(true);
+    try {
+      await ideaService.deleteIdea(ideaId);
+      toast.success('La propuesta ha sido eliminada.');
+      wallEvents.emit('idea_deleted', { ideaId });
+      onClose();
+    } catch (err) {
+      toast.error('No se pudo eliminar la propuesta.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   // Fetch Idea details if not provided
   useEffect(() => {
@@ -694,14 +866,14 @@ export function AdminIdeaUnifiedModal({
                 ) : (
                   <>
                     <AdminSummaryGrid>
-                      <AdminSummaryCard $accent="#e11d48">
-                        <AdminSummaryValue $accent="#e11d48">
+                      <AdminSummaryCard $accent={Pista8Theme.primary}>
+                        <AdminSummaryValue $accent={Pista8Theme.primary}>
                           {idea.likesCount ?? idea.goodsCount ?? 0}
                         </AdminSummaryValue>
                         <AdminSummaryLabel>Likes</AdminSummaryLabel>
                       </AdminSummaryCard>
-                      <AdminSummaryCard $accent="#2563eb">
-                        <AdminSummaryValue $accent="#2563eb">
+                      <AdminSummaryCard $accent={Pista8Theme.primary}>
+                        <AdminSummaryValue $accent={Pista8Theme.primary}>
                           {idea.commentsCount ?? 0}
                         </AdminSummaryValue>
                         <AdminSummaryLabel>Comentarios</AdminSummaryLabel>
@@ -749,6 +921,17 @@ export function AdminIdeaUnifiedModal({
                       <AdminDetailLabel>Fecha de publicación</AdminDetailLabel>
                       <AdminDetailText>{formatDate(idea.createdAt)}</AdminDetailText>
                     </AdminDetailSection>
+
+                    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '8px' }}>
+                      <DeleteIdeaButton type="button" onClick={() => setShowDeleteConfirm(true)}>
+                        <p className="paragraph"> eliminar </p>
+                        <span className="icon-wrapper">
+                          <svg className="icon" width="30px" height="30px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 7V18C6 19.1046 6.89543 20 8 20H16C17.1046 20 18 19.1046 18 18V7M6 7H5M6 7H8M18 7H19M18 7H16M10 11V16M14 11V16M8 7V5C8 3.89543 8.89543 3 10 3H14C15.1046 3 16 3.89543 16 5V7M8 7H16" stroke="#e11d48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </span>
+                      </DeleteIdeaButton>
+                    </div>
                   </>
                 )}
               </>
@@ -757,7 +940,11 @@ export function AdminIdeaUnifiedModal({
             {/* TABS 2: EVALUACIONES */}
             {activeTab === 'evaluaciones' && (
               <>
-                {loadingEval ? (
+                {idea && idea.challenge && idea.challenge.status !== 'EVALUATING' && idea.challenge.status !== 'CLOSED' ? (
+                  <EmptyState>
+                    Este reto todavía no finaliza por lo que no hay evaluaciones aún.
+                  </EmptyState>
+                ) : loadingEval ? (
                   <ModalContentSkeleton rows={5} />
                 ) : !evalData || evalData.evaluations.length === 0 ? (
                   <EmptyState>
@@ -772,14 +959,14 @@ export function AdminIdeaUnifiedModal({
                         </AdminSummaryValue>
                         <AdminSummaryLabel>Puntaje promedio</AdminSummaryLabel>
                       </AdminSummaryCard>
-                      <AdminSummaryCard $accent="#2563eb">
-                        <AdminSummaryValue $accent="#2563eb">
+                      <AdminSummaryCard $accent={Pista8Theme.primary}>
+                        <AdminSummaryValue $accent={Pista8Theme.primary}>
                           {evalData.summary.judgesCount}
                         </AdminSummaryValue>
                         <AdminSummaryLabel>Jueces evaluadores</AdminSummaryLabel>
                       </AdminSummaryCard>
-                      <AdminSummaryCard $accent="#16a34a">
-                        <AdminSummaryValue $accent="#16a34a">
+                      <AdminSummaryCard $accent={Pista8Theme.primary}>
+                        <AdminSummaryValue $accent={Pista8Theme.primary}>
                           {evalData.finalScore > 0
                             ? evalData.finalScore.toFixed(2)
                             : evalData.summary.averageFinalScore.toFixed(2)}
@@ -894,6 +1081,33 @@ export function AdminIdeaUnifiedModal({
           </TabContent>
         </AdminModalBody>
       </AdminModalCard>
+
+      {showDeleteConfirm && (
+        <ConfirmOverlay onClick={() => setShowDeleteConfirm(false)}>
+          <ConfirmCard onClick={(e) => e.stopPropagation()}>
+            <ConfirmIcon>
+              <Trash2 size={24} color="#c62828" />
+            </ConfirmIcon>
+            <ConfirmTitle>¿Eliminar propuesta?</ConfirmTitle>
+            <ConfirmBody>
+              ¿Estás seguro de que deseas eliminar esta propuesta de forma permanente? Esta acción es irreversible.
+            </ConfirmBody>
+            <ConfirmActions>
+              <ConfirmBtn type="button" onClick={() => setShowDeleteConfirm(false)}>
+                Cancelar
+              </ConfirmBtn>
+              <ConfirmBtn
+                type="button"
+                $danger
+                disabled={isDeleting}
+                onClick={handleDeleteIdea}
+              >
+                {isDeleting ? 'Eliminando...' : 'Eliminar'}
+              </ConfirmBtn>
+            </ConfirmActions>
+          </ConfirmCard>
+        </ConfirmOverlay>
+      )}
 
       {selectedCommentIdForMod && (
         <CommentModerationModal

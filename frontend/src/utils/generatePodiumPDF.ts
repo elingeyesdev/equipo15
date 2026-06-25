@@ -85,8 +85,8 @@ function roundedRect(doc: jsPDF, x: number, y: number, w: number, h: number, r: 
 }
 
 /** Medal character for position */
-const medalLabel = (pos: number) => ['1°', '2°', '3°'][pos] ?? `${pos + 1}°`;
-const medalColor = (pos: number): string => [GOLD, SILVER, BRONZE][pos] ?? GRAY;
+const medalLabel = (pos: number) => ['1°', '2°', '3°'][pos] ?? `${pos + 1}`;
+const medalColor = (pos: number): string => [GOLD, SILVER, BRONZE][pos] ?? '#64748b';
 
 const formatDate = () => {
   const now = new Date();
@@ -96,8 +96,29 @@ const formatDate = () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Main function
 // ─────────────────────────────────────────────────────────────────────────────
-export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[]) {
+async function fetchFontBase64(url: string): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Failed to fetch font: ${res.statusText}`);
+  const buffer = await res.arrayBuffer();
+  const binary = String.fromCharCode(...new Uint8Array(buffer));
+  return btoa(binary);
+}
+
+export async function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[]) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  try {
+    const [regBase64, boldBase64] = await Promise.all([
+      fetchFontBase64('https://cdn.jsdelivr.net/npm/inter-ui@3.19.3/Inter-Regular.ttf'),
+      fetchFontBase64('https://cdn.jsdelivr.net/npm/inter-ui@3.19.3/Inter-Bold.ttf'),
+    ]);
+    doc.addFileToVFS('Inter-Regular.ttf', regBase64);
+    doc.addFont('Inter-Regular.ttf', 'Inter', 'normal');
+    doc.addFileToVFS('Inter-Bold.ttf', boldBase64);
+    doc.addFont('Inter-Bold.ttf', 'Inter', 'bold');
+  } catch (error) {
+    console.error('Failed to load Inter font, using fallback:', error);
+  }
 
   const pageW = 210;
   const pageH = 297;
@@ -159,12 +180,7 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
   doc.setFont('Inter', 'bold');
   doc.text('CERRADO', pageW - margin - 14, 59.2, { align: 'center' });
 
-  // Separator text
-  setTextHex(doc, GRAY);
-  doc.setFontSize(8);
-  doc.setFont('Inter', 'normal');
-  doc.text('·', pageW / 2, 60, { align: 'center' });
-  doc.text(`${Math.min(winners.length, 3)} ganadores declarados`, pageW / 2 + 3, 60);
+
 
   // ── 4. Section label "Ranking Final" ─────────────────────────────────────
   let cursorY = 78;
@@ -183,7 +199,7 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
   // ── 5. Winner cards ───────────────────────────────────────────────────────
   const cardGap = 8;
 
-  winners.slice(0, 3).forEach((idea, idx) => {
+  winners.forEach((idea, idx) => {
     const color = medalColor(idx);
 
     // Calculate dynamic height based on text
@@ -233,16 +249,22 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
     setFillHex(doc, BG_CARD);
     roundedRect(doc, margin, cardY, contentW, cardH, 5, 'F');
 
-    // Left color bar (medal color)
-    setFillHex(doc, color);
-    roundedRect(doc, margin, cardY, 5, cardH, 3, 'F');
-    // Cover right half of bar radius so it's flush with card
-    doc.rect(margin + 3, cardY, 2, cardH, 'F');
+    // Left color bar (medal color) - Only top 3
+    if (idx < 3) {
+      setFillHex(doc, color);
+      roundedRect(doc, margin, cardY, 5, cardH, 3, 'F');
+      // Cover right half of bar radius so it's flush with card
+      doc.rect(margin + 3, cardY, 2, cardH, 'F');
+    }
 
     // Medal circle
-    setFillHex(doc, color);
-    doc.circle(margin + 20, cardY + 16, 8, 'F');
-    setTextHex(doc, WHITE);
+    if (idx < 3) {
+      setFillHex(doc, color);
+      doc.circle(margin + 20, cardY + 16, 8, 'F');
+      setTextHex(doc, WHITE);
+    } else {
+      setTextHex(doc, DARK);
+    }
     doc.setFontSize(10);
     doc.setFont('Inter', 'bold');
     doc.text(medalLabel(idx), margin + 20, cardY + 16, { align: 'center', baseline: 'middle' });
@@ -251,9 +273,13 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
     if (idea.finalScore != null) {
       const scoreStr = idea.finalScore.toFixed(2);
       const scoreX = margin + contentW - 24;
-      setFillHex(doc, color);
-      roundedRect(doc, scoreX - 2, cardY + 8, 20, 10, 3, 'F');
-      setTextHex(doc, WHITE);
+      if (idx < 3) {
+        setFillHex(doc, color);
+        roundedRect(doc, scoreX - 2, cardY + 8, 20, 10, 3, 'F');
+        setTextHex(doc, WHITE);
+      } else {
+        setTextHex(doc, DARK);
+      }
       doc.setFontSize(9);
       doc.setFont('Inter', 'bold');
       doc.text(scoreStr, scoreX + 8, cardY + 14.5, { align: 'center' });
@@ -366,7 +392,8 @@ export function generatePodiumPDF(challenge: ChallengeData, winners: PodiumIdea[
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '-')
     .replace(/-+/g, '-')
-    .slice(0, 40);
+    .substring(0, 20)
+    .replace(/-$/, '');
 
   doc.save(`reporte-podio-${safeName}.pdf`);
 }

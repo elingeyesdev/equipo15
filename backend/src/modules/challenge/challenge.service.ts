@@ -1160,6 +1160,15 @@ export class ChallengeService {
     const ideas =
       (await this.challengeRepository.getEvaluationDataForExport(challengeId)) as any[];
 
+    // Sort ideas by finalScore descending, then by createdAt ascending as tie breaker
+    ideas.sort((a, b) => {
+      const scoreDiff = (b.finalScore || 0) - (a.finalScore || 0);
+      if (scoreDiff !== 0) return scoreDiff;
+      const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return aCreated - bCreated;
+    });
+
     // 3. Build workbook
 
     const ExcelJS = require('exceljs');
@@ -1224,7 +1233,7 @@ export class ChallengeService {
     const STATUS_LABELS: Record<string, string> = {
       PUBLISHED: 'Publicada',
       FINALIST: 'Finalista',
-      WINNER: 'Ganadora',
+      WINNER: 'Finalista',
     };
 
     const IMPACT_LABELS: Record<string, string> = {
@@ -1252,6 +1261,13 @@ export class ChallengeService {
     for (const [idx, idea] of ideas.entries()) {
       const currentPosition = idx + 1;
 
+      let displayStatus = idea.status;
+      if (idea.status === 'PUBLISHED') {
+        displayStatus = 'Publicada';
+      } else if (idea.status === 'FINALIST' || idea.status === 'WINNER') {
+        displayStatus = idx < 3 ? 'Ganadora' : 'Finalista';
+      }
+
       if (idea.evaluations.length === 0) {
         // Ideas without evaluations still appear
         const rowData: any = {
@@ -1259,7 +1275,7 @@ export class ChallengeService {
           ideaTitle: idea.title,
           author: idea.author?.displayName || '—',
           authorEmail: idea.author?.email || '—',
-          status: STATUS_LABELS[idea.status] || idea.status,
+          status: displayStatus,
           finalScore: idea.finalScore ?? 0,
           judgeName: '—',
           judgeEmail: '—',
@@ -1292,7 +1308,7 @@ export class ChallengeService {
           ideaTitle: idea.title,
           author: idea.author?.displayName || '—',
           authorEmail: idea.author?.email || '—',
-          status: STATUS_LABELS[idea.status] || idea.status,
+          status: displayStatus,
           finalScore: idea.finalScore ?? 0,
           judgeName: evaluation.judge?.displayName || '—',
           judgeEmail: evaluation.judge?.email || '—',
@@ -1364,11 +1380,18 @@ export class ChallengeService {
     summarySheet.getRow(1).height = 24;
 
     ideas.forEach((idea, idx) => {
+      let displayStatus = idea.status;
+      if (idea.status === 'PUBLISHED') {
+        displayStatus = 'Publicada';
+      } else if (idea.status === 'FINALIST' || idea.status === 'WINNER') {
+        displayStatus = idx < 3 ? 'Ganadora' : 'Finalista';
+      }
+
       summarySheet.addRow({
         position: idx + 1,
         title: idea.title,
         author: idea.author?.displayName || '—',
-        status: STATUS_LABELS[idea.status] || idea.status,
+        status: displayStatus,
         finalScore: idea.finalScore ?? 0,
         evalCount: idea.evaluations.length,
         impactArea: idea.impactArea
@@ -1413,7 +1436,8 @@ export class ChallengeService {
     const safeTitle = (challenge.title || 'reto')
       .replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ ]/g, '')
       .replace(/\s+/g, '_')
-      .substring(0, 40);
+      .substring(0, 20)
+      .replace(/_$/, '');
 
     return {
       buffer,

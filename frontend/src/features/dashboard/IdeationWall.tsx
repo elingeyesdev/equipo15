@@ -71,6 +71,10 @@ const IdeationWall = () => {
     );
   });
 
+  useWallEventListener('idea_deleted', useCallback(({ ideaId }) => {
+    setWallIdeas((prev) => prev.filter((idea) => idea.id !== ideaId && idea._id !== ideaId));
+  }, []));
+
   const handleSelectIdea = useCallback((idea: RawIdea) => {
     setSelectedListIdea(idea as PlaneIdea);
     if (ds.selectedChallenge?.status !== 'CLOSED') {

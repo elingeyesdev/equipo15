@@ -149,7 +149,7 @@ export const challengeService = {
     return unwrapApiData(response.data);
   },
 
-  downloadEvaluationExcel: async (challengeId: string): Promise<void> => {
+  downloadEvaluationExcel: async (challengeId: string, challengeTitle?: string): Promise<void> => {
     const response = await axiosInstance.get(`/challenges/${challengeId}/export-evaluations`, {
       responseType: 'blob',
     });
@@ -162,7 +162,19 @@ export const challengeService = {
 
     // Try to extract filename from Content-Disposition header
     const disposition = response.headers['content-disposition'];
-    let fileName = `evaluaciones_${challengeId}.xlsx`;
+    let fileName = '';
+    if (challengeTitle) {
+      const cleanTitle = challengeTitle
+        .toLowerCase()
+        .replace(/[^a-z0-9áéíóúñ]/g, '_')
+        .replace(/_+/g, '_')
+        .substring(0, 20)
+        .replace(/_$/, '');
+      fileName = `evaluaciones_${cleanTitle}.xlsx`;
+    } else {
+      fileName = `evaluaciones_${challengeId}.xlsx`;
+    }
+
     if (disposition) {
       const match = disposition.match(/filename="?([^";\n]+)"?/);
       if (match?.[1]) fileName = match[1];

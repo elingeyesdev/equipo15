@@ -82,4 +82,74 @@ describe('IdeaService', () => {
       );
     });
   });
+
+  describe('Restricciones de 24h y Estado de Reto en Edicion/Eliminacion', () => {
+    let mockIdeaRepository: any;
+
+    beforeEach(() => {
+      mockIdeaRepository = {
+        findById: jest.fn(),
+        update: jest.fn(),
+        softDeleteIdea: jest.fn(),
+      };
+      (service as any).ideaRepository = mockIdeaRepository;
+      (service as any).notificationService = { createNotification: jest.fn() };
+    });
+
+    it('Debe lanzar ForbiddenException si se edita la idea despues de 24 horas', async () => {
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 2);
+
+      userRepository.findByUid.mockResolvedValue({ id: 'user-1', role: 'USER', status: 'ACTIVE' });
+      mockIdeaRepository.findById.mockResolvedValue({
+        id: 'idea-1',
+        authorId: 'user-1',
+        createdAt: pastDate,
+        challenge: { status: 'PUBLISHED' },
+      });
+
+      await expect(
+        service.updateIdea('idea-1', { title: 'Nuevo Titulo' }, 'uid-1'),
+      ).rejects.toThrow(
+        'No puedes editar una propuesta después de 24 horas de haber sido publicada.',
+      );
+    });
+
+    it('Debe lanzar ForbiddenException si se edita la idea cuando el reto esta cerrado', async () => {
+      const now = new Date();
+
+      userRepository.findByUid.mockResolvedValue({ id: 'user-1', role: 'USER', status: 'ACTIVE' });
+      mockIdeaRepository.findById.mockResolvedValue({
+        id: 'idea-1',
+        authorId: 'user-1',
+        createdAt: now,
+        challenge: { status: 'CLOSED' },
+      });
+
+      await expect(
+        service.updateIdea('idea-1', { title: 'Nuevo Titulo' }, 'uid-1'),
+      ).rejects.toThrow(
+        'No puedes editar una propuesta si el reto está en evaluación o cerrado.',
+      );
+    });
+
+    it('Debe lanzar ForbiddenException si se elimina la idea despues de 24 horas', async () => {
+      const pastDate = new Date();
+      pastDate.setDate(pastDate.getDate() - 2);
+
+      userRepository.findByUid.mockResolvedValue({ id: 'user-1', role: 'USER', status: 'ACTIVE' });
+      mockIdeaRepository.findById.mockResolvedValue({
+        id: 'idea-1',
+        authorId: 'user-1',
+        createdAt: pastDate,
+        challenge: { status: 'PUBLISHED' },
+      });
+
+      await expect(
+        service.deleteIdea('idea-1', 'uid-1'),
+      ).rejects.toThrow(
+        'No puedes eliminar una propuesta después de 24 horas de haber sido publicada.',
+      );
+    });
+  });
 });

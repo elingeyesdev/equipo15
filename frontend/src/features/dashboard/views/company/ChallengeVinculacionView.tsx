@@ -281,9 +281,11 @@ export const ChallengeVinculacionView = () => {
   }
 
   const faculties = (challenge as any).faculties;
-  const facultyName = Array.isArray(faculties) && faculties.length > 0
-    ? faculties.map((f: any) => f.name.replace(/^Facultad de\s+/i, '')).join(', ')
-    : (challenge as any).faculty?.name || (challenge as any).facultyName || 'Todas las áreas';
+  const facultyName = challenge.isPrivate
+    ? 'Privado'
+    : Array.isArray(faculties) && faculties.length > 0
+      ? faculties.map((f: any) => f.name.replace(/^Facultad de\s+/i, '')).join(', ')
+      : (challenge as any).faculty?.name || (challenge as any).facultyName || 'Todas las áreas';
   const ideasCount = (challenge as any)._count?.ideas ?? challenge.ideasCount ?? 0;
 
   return (

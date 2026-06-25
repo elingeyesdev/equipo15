@@ -12,6 +12,7 @@ type WallEventPayloads = {
   };
   'idea_created': { ideaId: string; challengeId: string; likesCount: number; authorId?: string };
   'idea_deleted': { ideaId: string };
+  'idea_updated': { ideaId: string; idea: any };
 };
 
 type EventName = keyof WallEventPayloads;

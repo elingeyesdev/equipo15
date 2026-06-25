@@ -12,6 +12,8 @@ import { useAuth } from '../../../context/AuthContext';
 import { useWallEventListener, wallEvents } from '../../../hooks/useWallEvents';
 import { commentService } from '../../../services/comment.service';
 import { ideaService } from '../../../services/idea.service';
+import { EditIdeaModal } from './EditIdeaModal';
+import InfoTooltip from '@/components/common/InfoTooltip';
 
 const overlayIn = keyframes`
   from { opacity: 0; }
@@ -338,6 +340,85 @@ const StatPill = styled.div<{ $color: string }>`
   }
 `;
 
+const BaseAnimatedButton = styled.button`
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid rgba(72, 80, 84, 0.1);
+  position: relative;
+  border-radius: 99px;
+  background: rgba(248, 249, 250, 0.9);
+  transition: width 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  transition-delay: 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+
+  &:hover {
+    width: 120px;
+    background: white;
+    transition-delay: 0.1s;
+  }
+
+  &:hover > .paragraph {
+    visibility: visible;
+    opacity: 1;
+    transition-delay: 0.2s;
+  }
+
+  &:hover > .icon-wrapper .icon {
+    transform: scale(1.05);
+  }
+
+  .paragraph {
+    color: #1a1f22;
+    visibility: hidden;
+    opacity: 0;
+    font-size: 12px;
+    margin: 0;
+    width: calc(100% - 44px);
+    text-align: center;
+    padding-left: 8px;
+    transition: opacity 0.15s linear, visibility 0.15s linear;
+    font-weight: 800;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .icon-wrapper {
+    width: 41px;
+    height: 41px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon {
+    transform: scale(0.8);
+    transition: transform 0.2s ease;
+  }
+`;
+
+const AnimatedDeleteButton = styled(BaseAnimatedButton)`
+  color: #ef4444;
+  &:hover {
+    border-color: #ef4444;
+  }
+`;
+
+const AnimatedEditButton = styled(BaseAnimatedButton)`
+  color: ${Pista8Theme.primary};
+  &:hover {
+    border-color: ${Pista8Theme.primary};
+  }
+`;
+
 const DeleteIdeaButton = styled.button<{ $isAdmin?: boolean; $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
   display: inline-flex;
   align-items: center;
@@ -460,9 +541,21 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
   const [showConfirm, setShowConfirm] = useState(false);
   const commentsRef = useRef<HTMLDivElement | null>(null);
 
-  const isAuthor = !!(userProfile?.id && idea.authorId && userProfile.id === idea.authorId);
+  const [currentIdea, setCurrentIdea] = useState(idea);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  useEffect(() => {
+    setCurrentIdea(idea);
+  }, [idea]);
+
+  const isAuthor = !!(userProfile?.id && currentIdea.authorId && userProfile.id === currentIdea.authorId);
   const isAdmin = userProfile?.role === 'ADMIN' || userProfile?.role === 'ORGANIZATION';
-  const canDelete = isAuthor || isAdmin;
+
+  const createdDate = new Date(currentIdea.createdAt ?? '');
+  const elapsedHours = (Date.now() - createdDate.getTime()) / (1000 * 60 * 60);
+  const isWithin24Hours = elapsedHours < 24;
+  const isChallengeActive = currentIdea.challengeStatus !== 'CLOSED' && currentIdea.challengeStatus !== 'EVALUATING';
+  const canEditOrDeleteParticipant = isAuthor && isWithin24Hours && isChallengeActive;
 
   const triggerDelete = () => {
     setShowConfirm(true);
@@ -472,8 +565,8 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
     setShowConfirm(false);
     try {
       setIsDeleting(true);
-      await ideaService.deleteIdea(idea.id);
-      wallEvents.emit('idea_deleted', { ideaId: idea.id });
+      await ideaService.deleteIdea(currentIdea.id);
+      wallEvents.emit('idea_deleted', { ideaId: currentIdea.id });
       onClose();
     } catch (error) {
       console.error(error);
@@ -483,13 +576,13 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
   };
 
   useEffect(() => {
-    setCommentsCount(idea.commentsCount);
+    setCommentsCount(currentIdea.commentsCount);
     setIsCommentsOpen(false);
     setShowFullProposal(false);
-  }, [idea.id, idea.commentsCount]);
+  }, [currentIdea.id, currentIdea.commentsCount]);
 
   useWallEventListener('comment_count_changed', ({ ideaId, count }) => {
-    if (!ideaId || ideaId !== idea.id) return;
+    if (!ideaId || ideaId !== currentIdea.id) return;
 
     if (typeof count === 'number' && count >= 0) {
       setCommentsCount(count);
@@ -497,7 +590,7 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
     }
 
     commentService
-      .getComments({ ideaId: idea.id, page: 1, limit: 1 })
+      .getComments({ ideaId: currentIdea.id, page: 1, limit: 1 })
       .then((res) => setCommentsCount(res.data.total ?? commentsCount))
       .catch(() => {
       });
@@ -522,7 +615,7 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
     if (e.target === e.currentTarget) onClose();
   };
 
-  const proposalText = idea.solution || 'No se detalló la solución.';
+  const proposalText = currentIdea.solution || 'No se detalló la solución.';
   const shouldTruncateProposal = proposalText.length > 420;
   const shownProposal = showFullProposal || !shouldTruncateProposal
     ? proposalText
@@ -532,8 +625,8 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
     <>
       <ModalOverlay onClick={handleOverlayClick}>
         <ModalContainer>
-        <ModalBanner>
-          <BannerDots />
+          <ModalBanner>
+            <BannerDots />
           <CloseButton onClick={onClose} aria-label="Cerrar">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -542,13 +635,13 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
           </CloseButton>
 
           <IdeaTag>Idea en vuelo</IdeaTag>
-          <ModalTitle>{idea.title}</ModalTitle>
+          <ModalTitle>{currentIdea.title}</ModalTitle>
           <AuthorRow>
             <AuthorDot />
-            <AuthorName>{idea.authorName}</AuthorName>
-            {idea.createdAt && (
+            <AuthorName>{currentIdea.authorName}</AuthorName>
+            {currentIdea.createdAt && (
               <DateChip>
-                {new Date(idea.createdAt).toLocaleDateString('es', {
+                {new Date(currentIdea.createdAt).toLocaleDateString('es', {
                   day: 'numeric', month: 'short', year: 'numeric',
                   hour: '2-digit', minute: '2-digit'
                 })}
@@ -574,31 +667,31 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
                 <StatsContainer>
                   <StatPill $color="#f59e0b" title="Buena idea: Me interesa, esta propuesta resuelve algo real.">
                     <Lightbulb size={18} />
-                    <span>{idea.goodCount ?? 0}</span>
+                    <span>{currentIdea.goodCount ?? 0}</span>
                   </StatPill>
                   <StatPill $color="#ef4444" title="Tiene futuro: Veo mucho potencial estratégico en esta idea.">
                     <Flame size={18} />
-                    <span>{idea.futureCount ?? 0}</span>
+                    <span>{currentIdea.futureCount ?? 0}</span>
                   </StatPill>
                   <StatPill $color="#64748b" title="Complicado: Interesante, pero parece difícil de implementar.">
                     <Brain size={18} />
-                    <span>{idea.complexCount ?? 0}</span>
+                    <span>{currentIdea.complexCount ?? 0}</span>
                   </StatPill>
                 </StatsContainer>
               ) : (
                 <>
                   <FavoriteButton 
-                    ideaId={idea.id} 
-                    hasFavorited={idea.hasFavorited} 
-                    disabled={idea.challengeStatus === 'CLOSED'} 
+                    ideaId={currentIdea.id} 
+                    hasFavorited={currentIdea.hasFavorited} 
+                    disabled={currentIdea.challengeStatus === 'CLOSED'} 
                   />
                   <LikeButton 
-                    ideaId={idea.id} 
-                    initialLikes={idea.likesCount} 
-                    hasVoted={idea.hasVoted}
-                    votedType={(idea as any).votedType}
+                    ideaId={currentIdea.id} 
+                    initialLikes={currentIdea.likesCount} 
+                    hasVoted={currentIdea.hasVoted}
+                    votedType={(currentIdea as any).votedType}
                     isAuthor={isAuthor}
-                    disabled={idea.challengeStatus === 'CLOSED'}
+                    disabled={currentIdea.challengeStatus === 'CLOSED'}
                   />
                 </>
               )}
@@ -618,16 +711,44 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
                 <CommentTooltipText className="custom-tooltip">Comentarios</CommentTooltipText>
               </CommentTooltipContainer>
 
-              {canDelete && idea.challengeStatus !== 'CLOSED' && (
+              {canEditOrDeleteParticipant && (
+                <>
+                  <AnimatedEditButton type="button" onClick={() => setShowEditModal(true)}>
+                    <p className="paragraph"> editar </p>
+                    <span className="icon-wrapper">
+                      <svg className="icon" width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </span>
+                  </AnimatedEditButton>
+                  
+                  <AnimatedDeleteButton type="button" onClick={triggerDelete}>
+                    <p className="paragraph"> eliminar </p>
+                    <span className="icon-wrapper">
+                      <svg className="icon" width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 7V18C6 19.1046 6.89543 20 8 20H16C17.1046 20 18 19.1046 18 18V7M6 7H5M6 7H8M18 7H19M18 7H16M10 11V16M14 11V16M8 7V5C8 3.89543 8.89543 3 10 3H14C15.1046 3 16 3.89543 16 5V7M8 7H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </span>
+                  </AnimatedDeleteButton>
+
+                  <InfoTooltip 
+                    text="Tienes 24 horas desde la publicación para editar o eliminar tu propuesta" 
+                    size={18} 
+                    width={260} 
+                  />
+                </>
+              )}
+
+              {!canEditOrDeleteParticipant && isAdmin && currentIdea.challengeStatus !== 'CLOSED' && (
                 <DeleteIdeaButton 
                   onClick={triggerDelete} 
                   disabled={isDeleting}
-                  $isAdmin={isAdmin && !isAuthor}
-                  $tooltipText={isAdmin && !isAuthor ? "Auditar (Eliminar) idea" : "Eliminar mi idea"}
+                  $isAdmin={true}
+                  $tooltipText="Auditar (Eliminar) idea"
                   aria-label="Eliminar idea"
                 >
-                  {isAdmin && !isAuthor ? <ShieldAlert size={16} /> : <Trash2 size={16} />}
-                  {isDeleting ? 'Procesando...' : (isAdmin && !isAuthor ? 'Auditar' : 'Eliminar')}
+                  <ShieldAlert size={16} />
+                  {isDeleting ? 'Procesando...' : 'Auditar'}
                 </DeleteIdeaButton>
               )}
             </ActionsRow>
@@ -635,11 +756,11 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
 
           <SectionBlock ref={commentsRef as any} style={{ display: isCommentsOpen ? 'block' : 'none' }}>
             <CommentsSection
-              ideaId={idea.id}
-              challengeId={idea.challengeId}
+              ideaId={currentIdea.id}
+              challengeId={currentIdea.challengeId}
               title="Debate y feedback"
               onCountChange={setCommentsCount}
-              disabled={idea.challengeStatus === 'CLOSED'}
+              disabled={currentIdea.challengeStatus === 'CLOSED'}
             />
           </SectionBlock>
         </Body>
@@ -668,6 +789,17 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
           </ConfirmActions>
         </ConfirmCard>
       </ConfirmOverlay>
+    )}
+
+    {showEditModal && (
+      <EditIdeaModal
+        idea={currentIdea}
+        onClose={() => setShowEditModal(false)}
+        onSaveSuccess={(updatedIdea) => {
+          setCurrentIdea(updatedIdea);
+          wallEvents.emit('idea_updated', { ideaId: currentIdea.id, idea: updatedIdea });
+        }}
+      />
     )}
     </>
   );

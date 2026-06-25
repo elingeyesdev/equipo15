@@ -45,7 +45,7 @@ const Screen = styled.div`
     overflow-y: auto;
     pointer-events: auto;
     justify-content: flex-start;
-    padding-top: 20px;
+    padding-top: 140px;
     padding-bottom: 20px;
     z-index: 20;
   }

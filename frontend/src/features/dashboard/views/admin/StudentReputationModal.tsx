@@ -629,8 +629,8 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
                 </HeaderTop>
 
                 <MetricsGrid>
-                  <MetricCard $accent={Pista8Theme.secondary}>
-                    <MetricValue $accent={Pista8Theme.secondary}>{data.metrics.totalIdeas}</MetricValue>
+                  <MetricCard $accent={Pista8Theme.primary}>
+                    <MetricValue $accent={Pista8Theme.primary}>{data.metrics.totalIdeas}</MetricValue>
                     <MetricLabel>Ideas</MetricLabel>
                   </MetricCard>
                   <MetricCard $accent={Pista8Theme.primary}>
@@ -645,8 +645,8 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
                     <MetricValue $accent={Pista8Theme.primary}>{data.user.totalPoints}</MetricValue>
                     <MetricLabel>Puntos</MetricLabel>
                   </MetricCard>
-                  <MetricCard $accent={hasActivePenalties ? Pista8Theme.error : Pista8Theme.secondary}>
-                    <MetricValue $accent={hasActivePenalties ? Pista8Theme.error : Pista8Theme.secondary}>
+                  <MetricCard $accent={Pista8Theme.primary}>
+                    <MetricValue $accent={Pista8Theme.primary}>
                       {data.metrics.activePenalties}
                     </MetricValue>
                     <MetricLabel>Sanciones</MetricLabel>

@@ -218,33 +218,27 @@ export class NotificationService {
   }
 
   async notifyEvaluationSubmitted(companyUserId: string, judgeName: string, ideaId: string) {
+    let challengeTitle = 'un reto';
+    try {
+      const idea = await this.prisma.idea.findUnique({
+        where: { id: ideaId },
+        include: { challenge: true },
+      });
+      if (idea?.challenge?.title) {
+        challengeTitle = idea.challenge.title;
+      }
+    } catch (err) {
+      this.logger.error('Error fetching challenge title for evaluation notification:', err);
+    }
+
     // Notify challenge owner
     await this.createNotification(
       companyUserId,
       NotifType.EVALUATION_SUBMITTED,
       'Nueva Evaluación Registrada',
-      `El juez ${judgeName} ha completado la evaluación de una idea.`,
+      `El juez ${judgeName} ha completado la evaluación de una idea en el reto '${challengeTitle}'.`,
       ideaId,
     );
-
-    // Notify all admins
-    try {
-      const admins = await this.prisma.user.findMany({
-        where: { role: 'ADMIN' },
-        select: { id: true },
-      });
-      for (const adminUser of admins) {
-        await this.createNotification(
-          adminUser.id,
-          NotifType.EVALUATION_SUBMITTED,
-          'Nueva Evaluación Registrada',
-          `El juez ${judgeName} ha completado la evaluación de una idea.`,
-          ideaId,
-        );
-      }
-    } catch (error) {
-      this.logger.error('Error sending evaluation submitted notification to admins:', error);
-    }
   }
 
   async notifyNewChallenge(userIds: string[], challengeId: string, challengeTitle: string, companyName: string) {

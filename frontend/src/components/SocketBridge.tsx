@@ -48,16 +48,24 @@ export const SocketBridge: React.FC = () => {
       });
     };
 
+    const handleIdeaDeleted = (payload: any) => {
+      wallEvents.emit('idea_deleted', {
+        ideaId: payload?.ideaId || '',
+      });
+    };
+
     socket.on('idea_commented', handleIdeaCommented);
     socket.on('idea:voted', handleIdeaVoted);
     socket.on('idea:unvoted', handleIdeaUnvoted);
     socket.on('idea_created', handleIdeaCreated);
+    socket.on('idea:deleted', handleIdeaDeleted);
 
     return () => {
       socket.off('idea_commented', handleIdeaCommented);
       socket.off('idea:voted', handleIdeaVoted);
       socket.off('idea:unvoted', handleIdeaUnvoted);
       socket.off('idea_created', handleIdeaCreated);
+      socket.off('idea:deleted', handleIdeaDeleted);
     };
   }, [socket, user, userProfile]);
 

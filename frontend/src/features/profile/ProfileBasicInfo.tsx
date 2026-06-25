@@ -184,11 +184,11 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
         </div>
       </Section>
 
-      {/* ── Información Académica — solo para participantes (no admin ni organización) ── */}
+      {/* ── Información de Vinculación — solo para participantes (no admin ni organización) ── */}
       {!isAdmin && !isCompany && !isJudge && (
         <Section>
           <SectionHeader>
-            <SectionLabel>Información Académica</SectionLabel>
+            <SectionLabel>Información de Vinculación</SectionLabel>
             <SectionLine />
           </SectionHeader>
 
@@ -222,7 +222,7 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
             {/* Toggle estudiante */}
             <FieldFull>
               <FormRow>
-                <FormLabel>¿Eres estudiante?</FormLabel>
+                <FormLabel>¿Perteneces a alguna Institución o Empresa?</FormLabel>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none' }}>
                   <div
                     onClick={() => setProfileData({ ...profileData, isStudent: !profileData.isStudent, studentCode: !profileData.isStudent ? profileData.studentCode : '' })}
@@ -248,7 +248,7 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
                     }} />
                   </div>
                   <span style={{ fontSize: 14, fontWeight: 500, color: '#4b5563' }}>
-                    {profileData.isStudent ? 'Sí, soy estudiante' : 'No, no soy estudiante'}
+                    {profileData.isStudent ? 'Sí, estoy vinculado a una organización' : 'No estoy vinculado a una organización'}
                   </span>
                 </label>
               </FormRow>
@@ -258,7 +258,7 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
             {profileData.isStudent && (
               <FieldFull>
                 <FormRow>
-                  <FormLabel>Código estudiantil *</FormLabel>
+                  <FormLabel>CÓDIGO DE IDENTIFICACIÓN *</FormLabel>
                   <FormInput
                     type="text"
                     value={profileData.studentCode}
@@ -268,7 +268,7 @@ export const ProfileBasicInfo: React.FC<ProfileBasicInfoProps> = ({
                         setProfileData({ ...profileData, studentCode: val });
                       }
                     }}
-                    placeholder="Ej: 20220150"
+                    placeholder="ID INSTITUCIONAL"
                     maxLength={10}
                   />
                 </FormRow>

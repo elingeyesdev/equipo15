@@ -899,8 +899,7 @@ export const CompanyPodiumView = () => {
     if (!challenge || isDownloadingPDF) return;
     setIsDownloadingPDF(true);
     try {
-      const topWinners = sortedIdeas.slice(0, 3);
-      generatePodiumPDF(challenge, topWinners);
+      await generatePodiumPDF(challenge, sortedIdeas);
       toast.success('Reporte ejecutivo generado y descargado.');
     } catch (err) {
       console.error('Error generando PDF:', err);
@@ -914,7 +913,7 @@ export const CompanyPodiumView = () => {
     if (!challengeId || isDownloadingExcel) return;
     setIsDownloadingExcel(true);
     try {
-      await challengeService.downloadEvaluationExcel(challengeId);
+      await challengeService.downloadEvaluationExcel(challengeId, challenge?.title);
       toast.success('Reporte Excel descargado exitosamente.');
     } catch (err) {
       console.error('Error descargando Excel:', err);

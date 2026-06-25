@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
 import { ChallengeStatus } from '../../common/enums/challenge-status.enum';
+import { IdeaStatus } from '@prisma/client';
 
 @Injectable()
 export class AdminRepository {
@@ -387,11 +388,16 @@ export class AdminRepository {
 
     if (!challenge) return null;
 
+    const showAllIdeas = challenge.status !== 'CLOSED';
+    const statusFilter: IdeaStatus[] = showAllIdeas
+      ? [IdeaStatus.PUBLISHED, IdeaStatus.FINALIST, IdeaStatus.WINNER]
+      : [IdeaStatus.FINALIST, IdeaStatus.WINNER];
+
     const ideas = await this.prisma.idea.findMany({
       where: {
         challengeId,
         deletedAt: null,
-        status: { in: ['FINALIST', 'WINNER'] },
+        status: { in: statusFilter },
       },
       select: {
         id: true,
@@ -435,7 +441,18 @@ export class AdminRepository {
     return this.prisma.$transaction(async (tx) => {
       const comment = await tx.comment.findUnique({
         where: { id: commentId },
-        select: { id: true, deletedAt: true, ideaId: true },
+        select: {
+          id: true,
+          deletedAt: true,
+          ideaId: true,
+          authorId: true,
+          idea: {
+            select: {
+              title: true,
+              challenge: { select: { title: true } }
+            }
+          }
+        },
       });
 
       if (!comment || comment.deletedAt) {
@@ -466,7 +483,12 @@ export class AdminRepository {
         },
       });
 
-      return updatedComment;
+      return {
+        ...updatedComment,
+        authorId: comment.authorId,
+        ideaId: comment.ideaId,
+        idea: comment.idea
+      };
     });
   }
 }

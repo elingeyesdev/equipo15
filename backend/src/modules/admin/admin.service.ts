@@ -233,6 +233,22 @@ export class AdminService {
         'Comentario no encontrado o ya fue eliminado.',
       );
     }
+
+    if (result.authorId) {
+      try {
+        const challengeTitle = result.idea?.challenge?.title || 'un reto';
+        await this.notificationService.createNotification(
+          result.authorId,
+          'ROLE_UPDATED',
+          'Comentario eliminado por el administrador',
+          `Tu comentario en la idea "${result.idea?.title || 'una propuesta'}" en el reto "${challengeTitle}" fue eliminado por moderación.`,
+          result.ideaId,
+        );
+      } catch (notifErr) {
+        this.logger.error('Error creating comment moderation notification:', notifErr);
+      }
+    }
+
     this.logger.log(
       `[MODERATE_COMMENT] Admin ${adminUser.id} eliminó comentario ${commentId}. Razón: ${reason}`,
     );
