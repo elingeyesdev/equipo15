@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ListManagerSkeleton } from '../../components/SkeletonLoaders';
 import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
-import { Pencil, ToggleLeft, ToggleRight, X } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminService } from '@/services/admin.service';
 import { getStoredImpersonationToken } from '@/utils/impersonation-session';
@@ -20,7 +20,7 @@ const fadeUp = keyframes`
   to { opacity: 1; transform: translateY(0); }
 `;
 
-const Panel = styled.div`width: 100%; display: flex; flex-direction: column; gap: 18px;`;
+const Panel = styled.div`width: 100%; display: flex; flex-direction: column; gap: 8px;`;
 const HeaderStrip = styled.section`
   border-radius: 18px; padding: 16px 18px;
   background: linear-gradient(180deg, #ffffff 0%, #fcfcfd 100%);
@@ -44,7 +44,7 @@ const FormHeader = styled.div`
   padding: 22px 24px 18px; border-bottom: 1px solid rgba(72, 80, 84, 0.08); flex-wrap: wrap;
 `;
 const FormTitleText = styled.h3`margin: 0; font-size: 18px; font-weight: 900; color: #1f2628;`;
-const FormHint = styled.p`margin: 0; color: #66727a; font-size: 13px;`;
+const FormHint = styled.p`margin: 0; color: #66727a; font-size: 13px; line-height: 1.5;`;
 const FormBody = styled.div`padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 14px;`;
 const Row = styled.div`
   display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: flex-start;
@@ -60,8 +60,8 @@ const Input = styled.input`
   padding: 0 14px; font-size: 15px; font-weight: 700; color: #1f2628; outline: none;
   &:focus { border-color: #fe410a; box-shadow: 0 0 0 3px rgba(254, 65, 10, 0.12); }
 `;
-const IconAction = styled.button<{ $danger?: boolean; $primary?: boolean; $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
-  width: 40px; height: 40px; border-radius: 10px; border: none; cursor: pointer;
+const IconAction = styled.button<{ $size?: number; $danger?: boolean; $primary?: boolean; $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
+  width: ${({ $size }) => ($size ?? 40)}px; height: ${({ $size }) => ($size ?? 40)}px; border-radius: 10px; border: none; cursor: pointer;
   background: ${({ $primary, $danger }) => ($primary ? Pista8Theme.primary : $danger ? '#fff2ee' : '#f4f6f7')};
   color: ${({ $primary }) => ($primary ? '#fff' : Pista8Theme.secondary)};
   display: inline-flex; align-items: center; justify-content: center;
@@ -83,12 +83,37 @@ const DomainItem = styled.div`
 `;
 const DomainName = styled.div`font-size: 15px; font-weight: 900; color: #1f2628; word-break: break-word;`;
 
-const SwitchAction = styled.button<{ $active: boolean; $tooltipText?: string }>`
-  width: 44px; height: 44px; border-radius: 12px; border: 1px solid ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.18)' : 'rgba(72, 80, 84, 0.12)')};
-  background: ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.08)' : '#f4f6f7')};
-  color: ${({ $active }) => ($active ? '#fe410a' : '#5f6870')};
-  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+const ToggleTrack = styled.div<{ $active: boolean; $tooltipText?: string }>`
+  position: relative;
+  width: 40px;
+  min-width: 40px;
+  height: 22px;
+  min-height: 22px;
+  border-radius: 11px;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  background: ${({ $active }) => ($active ? Pista8Theme.primary : '#d1d5db')};
+  transition: background 0.25s ease;
+  flex-shrink: 0;
+  box-sizing: border-box;
+
+  &:hover {
+    opacity: 0.9;
+  }
   ${premiumTooltip}
+`;
+
+const ToggleThumb = styled.span<{ $active: boolean }>`
+  position: absolute;
+  top: 3px;
+  left: ${({ $active }) => ($active ? '21px' : '3px')};
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: left 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
 `;
 const IssuesBox = styled.div`
   border-radius: 18px; background: #fff5ef; border: 1px solid rgba(217, 76, 29, 0.14);
@@ -334,7 +359,7 @@ export default function FacultiesManager() {
 
       <FormCard>
         <FormHeader>
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <FormTitleText>Agregar áreas</FormTitleText>
             <FormHint>Escribe el nombre y guarda para añadirlo al catálogo.</FormHint>
           </div>
@@ -397,9 +422,9 @@ export default function FacultiesManager() {
 
       <ListCard>
         <ListHeader>
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, lineHeight: 1.2 }}>
             <FormTitleText>Lista del catálogo</FormTitleText>
-            <FormHint>{loading ? '' : `${faculties.length} facultad(es) registrada(s)`}</FormHint>
+            <FormHint>{loading ? '' : `${faculties.length} áreas registradas`}</FormHint>
           </div>
           <RefreshButton onClick={() => loadFaculties()} tooltip="Recargar catálogo" tooltipPosition="bottom" tooltipAlign="right" />
         </ListHeader>
@@ -418,19 +443,20 @@ export default function FacultiesManager() {
                     <StatusBadge status={faculty.isActive ? 'activo' : 'inactivo'} />
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <IconAction type="button" $tooltipText="Editar" onClick={() => openEditModal(faculty)}>
-                    <Pencil size={18} strokeWidth={2.4} />
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <IconAction type="button" $size={32} $tooltipText="Editar" onClick={() => openEditModal(faculty)}>
+                    <Pencil size={16} strokeWidth={2.4} />
                   </IconAction>
-
-                  <SwitchAction
-                    type="button"
+                  <ToggleTrack
+                    role="switch"
+                    aria-checked={faculty.isActive}
                     $active={faculty.isActive}
+                    aria-label={faculty.isActive ? `Pausar ${faculty.name}` : `Activar ${faculty.name}`}
                     $tooltipText={faculty.isActive ? 'Pausar' : 'Activar'}
-                    onClick={() => void toggleFacultyStatus(faculty)}
+                    onClick={() => toggleFacultyStatus(faculty)}
                   >
-                    {faculty.isActive ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
-                  </SwitchAction>
+                    <ToggleThumb $active={faculty.isActive} />
+                  </ToggleTrack>
                 </div>
               </DomainItem>
             ))}

@@ -23,7 +23,16 @@ export const FIREBASE_ADMIN_TOKEN = 'FIREBASE_ADMIN';
             console.warn('⚠️ FIREBASE_ADMIN_CONFIG is not defined and firebase-admin.json not found. Mocking Firebase.');
             return {
               auth: () => ({
-                verifyIdToken: async () => ({ uid: 'mock-uid' }),
+                verifyIdToken: async (token: string) => {
+                  try {
+                    const payloadB64 = token.split('.')[1];
+                    const payload = Buffer.from(payloadB64, 'base64').toString('utf8');
+                    const parsed = JSON.parse(payload);
+                    return { ...parsed, uid: parsed.sub || parsed.user_id || 'mock-uid' };
+                  } catch (e) {
+                    return { uid: 'mock-uid' };
+                  }
+                },
               }),
               firestore: () => ({}),
               messaging: () => ({}),
@@ -41,7 +50,16 @@ export const FIREBASE_ADMIN_TOKEN = 'FIREBASE_ADMIN';
           console.warn('⚠️ Failed to initialize Firebase Admin SDK. Mocking it.', (e as Error).message);
           return {
             auth: () => ({
-              verifyIdToken: async () => ({ uid: 'mock-uid' }),
+              verifyIdToken: async (token: string) => {
+                try {
+                  const payloadB64 = token.split('.')[1];
+                  const payload = Buffer.from(payloadB64, 'base64').toString('utf8');
+                  const parsed = JSON.parse(payload);
+                  return { ...parsed, uid: parsed.sub || parsed.user_id || 'mock-uid' };
+                } catch (err) {
+                  return { uid: 'mock-uid' };
+                }
+              },
             }),
           };
         }

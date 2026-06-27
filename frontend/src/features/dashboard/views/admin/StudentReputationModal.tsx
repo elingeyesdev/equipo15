@@ -105,13 +105,13 @@ const Avatar = styled.div<{ $url?: string | null }>`
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: ${({ $url }) => ($url ? `url(${$url}) center/cover` : '#f1f5f9')};
+  background: ${({ $url }) => ($url ? `url(${$url}) center/cover` : '#fff2ee')};
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   font-weight: 800;
-  color: #94a3b8;
+  color: ${Pista8Theme.primary};
   flex-shrink: 0;
   overflow: hidden;
   border: 2px solid rgba(72, 80, 84, 0.06);

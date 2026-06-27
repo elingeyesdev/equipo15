@@ -61,7 +61,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         firebaseUid: firebaseUser.uid,
         email: firebaseUser.email,
         displayName: firebaseUser.displayName || '',
-        preventCreation: true,
       });
       return response.data?.data || null;
     } catch {

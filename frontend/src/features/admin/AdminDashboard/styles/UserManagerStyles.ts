@@ -222,10 +222,11 @@ export const UserEmail = styled.span`
 `;
 
 const roleColors: Record<string, { bg: string; fg: string }> = {
-  ADMIN:   { bg: '#FE410A18', fg: '#FE410A' },
-  COMPANY: { bg: '#6366f118', fg: '#6366f1' },
-  JUDGE:   { bg: '#f59e0b18', fg: '#d97706' },
-  USER:    { bg: '#10b98118', fg: '#059669' },
+  ADMIN:        { bg: '#FE410A18', fg: '#FE410A' },
+  ORGANIZATION: { bg: '#FE410A18', fg: '#FE410A' },
+  COMPANY:      { bg: '#FE410A18', fg: '#FE410A' },
+  JUDGE:        { bg: '#FE410A18', fg: '#FE410A' },
+  USER:         { bg: '#FE410A18', fg: '#FE410A' },
 };
 
 export const RoleBadge = styled.span<{ $role: string }>`

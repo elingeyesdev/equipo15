@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
 import { premiumTooltip } from '../../dashboard/styles/CommonStyles';
-import { Lightbulb, Flame, Brain, Trash2, ShieldAlert } from 'lucide-react';
+import { Lightbulb, Flame, Brain, Trash2, ShieldAlert, Pencil } from 'lucide-react';
 import type { PlaneIdea } from '../types';
 import LikeButton from './LikeButton';
 import FavoriteButton from './FavoriteButton';
@@ -340,82 +340,23 @@ const StatPill = styled.div<{ $color: string }>`
   }
 `;
 
-const BaseAnimatedButton = styled.button`
-  cursor: pointer;
-  width: 44px;
-  height: 44px;
-  border: 1.5px solid rgba(72, 80, 84, 0.1);
-  position: relative;
-  border-radius: 99px;
-  background: rgba(248, 249, 250, 0.9);
-  transition: width 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-  transition-delay: 0.1s;
+const ActionIconButton = styled.button<{ $danger?: boolean }>`
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: ${({ $danger }) => ($danger ? '#fff2ee' : '#f4f6f7')};
+  color: ${({ $danger }) => ($danger ? '#ef4444' : '#64748b')};
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  padding: 0;
-  overflow: hidden;
-  box-sizing: border-box;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 
   &:hover {
-    width: 120px;
-    background: white;
-    transition-delay: 0.1s;
-  }
-
-  &:hover > .paragraph {
-    visibility: visible;
-    opacity: 1;
-    transition-delay: 0.2s;
-  }
-
-  &:hover > .icon-wrapper .icon {
-    transform: scale(1.05);
-  }
-
-  .paragraph {
-    color: #1a1f22;
-    visibility: hidden;
-    opacity: 0;
-    font-size: 12px;
-    margin: 0;
-    width: calc(100% - 44px);
-    text-align: center;
-    padding-left: 8px;
-    transition: opacity 0.15s linear, visibility 0.15s linear;
-    font-weight: 800;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .icon-wrapper {
-    width: 41px;
-    height: 41px;
-    position: absolute;
-    top: 0;
-    right: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .icon {
-    transform: scale(0.8);
-    transition: transform 0.2s ease;
-  }
-`;
-
-const AnimatedDeleteButton = styled(BaseAnimatedButton)`
-  color: #ef4444;
-  &:hover {
-    border-color: #ef4444;
-  }
-`;
-
-const AnimatedEditButton = styled(BaseAnimatedButton)`
-  color: ${Pista8Theme.primary};
-  &:hover {
-    border-color: ${Pista8Theme.primary};
+    background: ${({ $danger }) => ($danger ? '#fee2e2' : '#e2e8f0')};
+    color: ${({ $danger }) => ($danger ? '#dc2626' : '#334155')};
   }
 `;
 
@@ -713,23 +654,13 @@ export const IdeaDetailModal = ({ idea, onClose, showStats = false }: IdeaDetail
 
               {canEditOrDeleteParticipant && (
                 <>
-                  <AnimatedEditButton type="button" onClick={() => setShowEditModal(true)}>
-                    <p className="paragraph"> editar </p>
-                    <span className="icon-wrapper">
-                      <svg className="icon" width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </span>
-                  </AnimatedEditButton>
+                  <ActionIconButton type="button" onClick={() => setShowEditModal(true)} title="Editar propuesta">
+                    <Pencil size={18} />
+                  </ActionIconButton>
                   
-                  <AnimatedDeleteButton type="button" onClick={triggerDelete}>
-                    <p className="paragraph"> eliminar </p>
-                    <span className="icon-wrapper">
-                      <svg className="icon" width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6 7V18C6 19.1046 6.89543 20 8 20H16C17.1046 20 18 19.1046 18 18V7M6 7H5M6 7H8M18 7H19M18 7H16M10 11V16M14 11V16M8 7V5C8 3.89543 8.89543 3 10 3H14C15.1046 3 16 3.89543 16 5V7M8 7H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </span>
-                  </AnimatedDeleteButton>
+                  <ActionIconButton $danger type="button" onClick={triggerDelete} title="Eliminar propuesta">
+                    <Trash2 size={18} />
+                  </ActionIconButton>
 
                   <InfoTooltip 
                     text="Tienes 24 horas desde la publicación para editar o eliminar tu propuesta" 

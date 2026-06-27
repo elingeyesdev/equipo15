@@ -77,13 +77,13 @@ const JudgeAvatar = styled.div<{ $url?: string | null }>`
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: ${({ $url }) => ($url ? `url(${$url}) center/cover` : '#f1f5f9')};
+  background: ${({ $url }) => ($url ? `url(${$url}) center/cover` : '#fff2ee')};
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 15px;
   font-weight: 800;
-  color: #94a3b8;
+  color: ${Pista8Theme.primary};
   flex-shrink: 0;
 `;
 
@@ -157,7 +157,7 @@ const ScoreCardName = styled.div`
 const ScoreCardValue = styled.div`
   font-size: 18px;
   font-weight: 900;
-  color: #0f172a;
+  color: ${Pista8Theme.primary};
 `;
 
 const ScoreCardWeight = styled.div`

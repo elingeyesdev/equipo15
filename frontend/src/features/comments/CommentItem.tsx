@@ -73,7 +73,7 @@ const ReplyButton = styled.button`
   position: relative;
   width: 32px;
   height: 32px;
-  border: 1px solid rgba(72, 80, 84, 0.2);
+  border: none;
   background: transparent;
   color: #fe410a;
   cursor: pointer;
@@ -85,8 +85,7 @@ const ReplyButton = styled.button`
   justify-content: center;
 
   &:hover:not(:disabled) {
-    background: #fe410a08;
-    border-color: #fe410a;
+    background: #fe410a15;
     transform: translateY(-2px);
   }
 
@@ -150,7 +149,7 @@ const EditButton = styled.button`
   position: relative;
   width: 32px;
   height: 32px;
-  border: 1px solid rgba(72, 80, 84, 0.2);
+  border: none;
   background: transparent;
   color: #1976d2;
   cursor: pointer;
@@ -162,8 +161,7 @@ const EditButton = styled.button`
   justify-content: center;
 
   &:hover:not(:disabled) {
-    background: #1976d208;
-    border-color: #1976d2;
+    background: #1976d215;
     transform: translateY(-2px);
   }
 
@@ -227,7 +225,7 @@ const WithdrawButton = styled.button`
   position: relative;
   width: 32px;
   height: 32px;
-  border: 1px solid rgba(72, 80, 84, 0.2);
+  border: none;
   background: transparent;
   color: #c62828;
   cursor: pointer;
@@ -239,8 +237,7 @@ const WithdrawButton = styled.button`
   justify-content: center;
 
   &:hover:not(:disabled) {
-    background: #c6282808;
-    border-color: #c62828;
+    background: #c6282815;
     transform: translateY(-2px);
   }
 

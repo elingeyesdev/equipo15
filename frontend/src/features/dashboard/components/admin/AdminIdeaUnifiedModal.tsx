@@ -137,13 +137,13 @@ const JudgeAvatar = styled.div<{ $url?: string | null }>`
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: ${({ $url }) => ($url ? `url(${$url}) center/cover` : '#f1f5f9')};
+  background: ${({ $url }) => ($url ? `url(${$url}) center/cover` : '#fff2ee')};
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 15px;
   font-weight: 800;
-  color: #94a3b8;
+  color: ${Pista8Theme.primary};
   flex-shrink: 0;
 `;
 
@@ -221,7 +221,7 @@ const ScoreCardName = styled.div`
 const ScoreCardValue = styled.div`
   font-size: 18px;
   font-weight: 900;
-  color: #0f172a;
+  color: ${Pista8Theme.primary};
 `;
 
 const ScoreCardWeight = styled.div`
@@ -289,6 +289,8 @@ const CommentRow = styled.div`
   }
 `;
 
+
+
 const CommentAvatar = styled.div<{ $url?: string | null }>`
   width: 36px;
   height: 36px;
@@ -344,128 +346,55 @@ const CommentText = styled.p`
   word-break: break-word;
 `;
 
-const CommentActionBtn = styled.button<{ $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
+const CommentActionBtn = styled.button<{ $danger?: boolean; $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
   ${premiumTooltip}
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: white;
-  border: 1px solid rgba(72, 80, 84, 0.12);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: ${({ $danger }) => ($danger ? '#fff2ee' : '#f4f6f7')};
+  color: ${({ $danger }) => ($danger ? '#ef4444' : '#64748b')};
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  overflow: hidden;
-  position: relative;
-  gap: 2px;
-  opacity: 0.9;
-
-  .svgIcon {
-    width: 10px;
-    transition-duration: 0.3s;
-  }
-
-  .svgIcon path {
-    fill: ${Pista8Theme.primary};
-  }
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 
   &:hover {
-    transition-duration: 0.3s;
-    background-color: rgb(255, 69, 69);
-    border-color: rgb(255, 69, 69);
-    box-shadow: 0 4px 12px rgba(255, 69, 69, 0.2);
-    align-items: center;
-    gap: 0;
-    opacity: 1;
-
-    .svgIcon path {
-      fill: white;
-    }
-  }
-
-  .bin-top {
-    transform-origin: bottom right;
-  }
-  &:hover .bin-top {
-    transition-duration: 0.5s;
-    transform: rotate(160deg);
+    background: ${({ $danger }) => ($danger ? '#fee2e2' : '#e2e8f0')};
+    color: ${({ $danger }) => ($danger ? '#dc2626' : '#334155')};
   }
 `;
 
-const BaseAnimatedButton = styled.button`
-  cursor: pointer;
-  width: 50px;
-  height: 50px;
-  border: none;
-  position: relative;
-  border-radius: 10px;
-  background: white;
-  box-shadow: 1px 1px 5px 0.2px rgba(0, 0, 0, 0.2);
-  transition: width 0.2s linear;
-  transition-delay: 0.2s;
-  display: flex;
+const DeleteIdeaButton = styled.button<{ $tooltipText?: string; $tooltipPosition?: 'top' | 'bottom'; $tooltipAlign?: 'center' | 'right' }>`
+  display: inline-flex;
   align-items: center;
-  justify-content: flex-start;
-  padding: 0;
-  overflow: hidden;
+  justify-content: center;
+  gap: 8px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
 
-  &:hover {
-    width: 150px;
-    transition-delay: 0.2s;
+  &:hover:not(:disabled) {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220,38,38,0.15);
   }
-
-  &:hover > .paragraph {
-    visibility: visible;
-    opacity: 1;
-    transition-delay: 0.4s;
+  
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
   }
-
-  &:hover > .icon-wrapper .icon {
-    transform: scale(1.1);
-  }
-
-  .paragraph {
-    color: #1a1f22;
-    visibility: hidden;
-    opacity: 0;
-    font-size: 14px;
-    margin: 0;
-    width: calc(100% - 50px);
-    text-align: center;
-    padding-left: 10px;
-    transition: opacity 0.2s linear, visibility 0.2s linear;
-    font-weight: bold;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .icon-wrapper {
-    width: 50px;
-    height: 50px;
-    position: absolute;
-    top: 0;
-    right: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .icon {
-    transform: scale(0.9);
-    transition: transform 0.2s linear;
-  }
-`;
-
-const DeleteIdeaButton = styled(BaseAnimatedButton)`
-  &:hover > .icon-wrapper .icon path {
-    stroke: #e11d48;
-  }
-  .icon path {
-    stroke: #e11d48;
-  }
+  
+  ${premiumTooltip}
 `;
 
 const ConfirmOverlay = styled.div`
@@ -773,32 +702,12 @@ export function AdminIdeaUnifiedModal({
             <CommentText>{node.content}</CommentText>
           </CommentContentCol>
           <CommentActionBtn
-            type="button"
-            $tooltipText="Moderar"
+            $danger
+            $tooltipText="Eliminar comentario"
             $tooltipPosition="top"
-            $tooltipAlign="center"
-            onClick={() => setSelectedCommentIdForMod(node.id)}
+            onClick={() => handleCommentModerated(node.id)}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 69 14" className="svgIcon bin-top">
-              <g clipPath="url(#clip0_35_24)">
-                <path fill="black" d="M20.8232 2.62734L19.9948 4.21304C19.8224 4.54309 19.4808 4.75 19.1085 4.75H4.92857C2.20246 4.75 0 6.87266 0 9.5C0 12.1273 2.20246 14.25 4.92857 14.25H64.0714C66.7975 14.25 69 12.1273 69 9.5C69 6.87266 66.7975 4.75 64.0714 4.75H49.8915C49.5192 4.75 49.1776 4.54309 49.0052 4.21305L48.1768 2.62734C47.3451 1.00938 45.6355 0 43.7719 0H25.2281C23.3645 0 21.6549 1.00938 20.8232 2.62734ZM64.0023 20.0648C64.0397 19.4882 63.5822 19 63.0044 19H5.99556C5.4178 19 4.96025 19.4882 4.99766 20.0648L8.19375 69.3203C8.44018 73.0758 11.6746 76 15.5712 76H53.4288C57.3254 76 60.5598 73.0758 60.8062 69.3203L64.0023 20.0648Z" />
-              </g>
-              <defs>
-                <clipPath id="clip0_35_24">
-                  <rect fill="white" height={14} width={69} />
-                </clipPath>
-              </defs>
-            </svg>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 69 57" className="svgIcon bin-bottom">
-              <g clipPath="url(#clip0_35_22)">
-                <path fill="black" d="M20.8232 -16.3727L19.9948 -14.787C19.8224 -14.4569 19.4808 -14.25 19.1085 -14.25H4.92857C2.20246 -14.25 0 -12.1273 0 -9.5C0 -6.8727 2.20246 -4.75 4.92857 -4.75H64.0714C66.7975 -4.75 69 -6.8727 69 -9.5C69 -12.1273 66.7975 -14.25 64.0714 -14.25H49.8915C49.5192 -14.25 49.1776 -14.4569 49.0052 -14.787L48.1768 -16.3727C47.3451 -17.9906 45.6355 -19 43.7719 -19H25.2281C23.3645 -19 21.6549 -17.9906 20.8232 -16.3727ZM64.0023 1.0648C64.0397 0.4882 63.5822 0 63.0044 0H5.99556C5.4178 0 4.96025 0.4882 4.99766 1.0648L8.19375 50.3203C8.44018 54.0758 11.6746 57 15.5712 57H53.4288C57.3254 57 60.5598 54.0758 60.8062 50.3203L64.0023 1.0648Z" />
-              </g>
-              <defs>
-                <clipPath id="clip0_35_22">
-                  <rect fill="white" height={57} width={69} />
-                </clipPath>
-              </defs>
-            </svg>
+            <Trash2 size={16} />
           </CommentActionBtn>
         </CommentRow>
         {node.replies &&
@@ -924,12 +833,8 @@ export function AdminIdeaUnifiedModal({
 
                     <div style={{ display: 'flex', justifyContent: 'center', marginTop: '8px' }}>
                       <DeleteIdeaButton type="button" onClick={() => setShowDeleteConfirm(true)}>
-                        <p className="paragraph"> eliminar </p>
-                        <span className="icon-wrapper">
-                          <svg className="icon" width="30px" height="30px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 7V18C6 19.1046 6.89543 20 8 20H16C17.1046 20 18 19.1046 18 18V7M6 7H5M6 7H8M18 7H19M18 7H16M10 11V16M14 11V16M8 7V5C8 3.89543 8.89543 3 10 3H14C15.1046 3 16 3.89543 16 5V7M8 7H16" stroke="#e11d48" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </span>
+                        <Trash2 size={16} />
+                        Eliminar propuesta
                       </DeleteIdeaButton>
                     </div>
                   </>

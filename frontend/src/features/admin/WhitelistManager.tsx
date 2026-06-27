@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ListManagerSkeleton } from '../../components/SkeletonLoaders';
 import styled, { keyframes } from 'styled-components';
-import { ToggleLeft, ToggleRight } from 'lucide-react';
+
 import { toast } from 'sonner';
 import { adminService } from '@/services/admin.service';
 import { getStoredImpersonationToken } from '@/utils/impersonation-session';
@@ -30,7 +30,7 @@ const Panel = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 8px;
 `;
 
 const HeaderStrip = styled.section`
@@ -100,7 +100,7 @@ const FormHeader = styled.div`
 const FormTitle = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 `;
 
 const FormTitleText = styled.h3`
@@ -114,6 +114,7 @@ const FormHint = styled.p`
   margin: 0;
   color: #66727a;
   font-size: 13px;
+  line-height: 1.5;
 `;
 
 const Actions = styled.div`
@@ -216,28 +217,37 @@ const IconAction = styled.button<{ $size?: number; $danger?: boolean; $primary?:
 
 
 
-const SwitchAction = styled.button<{ $active: boolean; $tooltipText?: string }>`
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  border: 1px solid ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.18)' : 'rgba(72, 80, 84, 0.12)')};
-  background: ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.08)' : '#f4f6f7')};
-  color: ${({ $active }) => ($active ? '#fe410a' : '#5f6870')};
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+const ToggleTrack = styled.div<{ $active: boolean; $tooltipText?: string }>`
+  position: relative;
+  width: 40px;
+  min-width: 40px;
+  height: 22px;
+  min-height: 22px;
+  border-radius: 11px;
+  border: none;
   cursor: pointer;
-  transition: transform ${Pista8Theme.transition.normal} ease, background ${Pista8Theme.transition.normal} ease;
+  padding: 0;
+  background: ${({ $active }) => ($active ? Pista8Theme.primary : '#d1d5db')};
+  transition: background 0.25s ease;
+  flex-shrink: 0;
+  box-sizing: border-box;
 
   &:hover {
-    transform: translateY(-1px);
-    background: ${({ $active }) => ($active ? 'rgba(254, 65, 10, 0.12)' : 'rgba(72, 80, 84, 0.08)')};
-  }
-
-  svg {
-    display: block;
+    opacity: 0.9;
   }
   ${premiumTooltip}
+`;
+
+const ToggleThumb = styled.span<{ $active: boolean }>`
+  position: absolute;
+  top: 3px;
+  left: ${({ $active }) => ($active ? '21px' : '3px')};
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: left 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
 `;
 
 const IssuesBox = styled.div`
@@ -564,7 +574,7 @@ export default function WhitelistManager() {
 
       <ListCard>
         <ListHeader>
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <FormTitleText>Lista activa</FormTitleText>
             <FormHint>
               {loading ? '' : `${domains.length} registro${domains.length === 1 ? '' : 's'} autorizado${domains.length === 1 ? '' : 's'}`}
@@ -596,20 +606,17 @@ export default function WhitelistManager() {
                   </DomainMeta>
                 </DomainText>
 
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <SwitchAction
-                    type="button"
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <ToggleTrack
+                    role="switch"
+                    aria-checked={domain.isActive}
                     $active={domain.isActive}
                     aria-label={domain.isActive ? `Pausar ${domain.domain}` : `Activar ${domain.domain}`}
                     $tooltipText={domain.isActive ? 'Pausar' : 'Activar'}
                     onClick={() => toggleDomainStatus(domain)}
                   >
-                    {domain.isActive ? (
-                      <ToggleRight size={22} strokeWidth={2.4} />
-                    ) : (
-                      <ToggleLeft size={22} strokeWidth={2.4} />
-                    )}
-                  </SwitchAction>
+                    <ToggleThumb $active={domain.isActive} />
+                  </ToggleTrack>
                 </div>
               </DomainItem>
             ))}
