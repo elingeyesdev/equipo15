@@ -1,8 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-
-const DEFAULT_SOCKET_URL = import.meta.env.VITE_API_URL
-  ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
-  : 'http://localhost:3000';
+import { getActiveSocketUrl } from './failover';
 
 class SocketManager {
   private socket: Socket | null = null;
@@ -20,7 +17,7 @@ class SocketManager {
       try {
         const token = await getToken();
         if (!this.socket) {
-          this.socket = io(DEFAULT_SOCKET_URL, {
+          this.socket = io(getActiveSocketUrl(), {
             reconnection: true,
             reconnectionDelay: 1000,
             auth: { token },
