@@ -33,7 +33,7 @@ import {
 
 
 const CriteriaSection = styled.div`
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 `;
 
 const SectionTitle = styled(AdminSectionTitle)`
@@ -57,7 +57,7 @@ const AccordionHeader = styled.button`
   width: 100%;
   border: none;
   background: transparent;
-  padding: 16px 18px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -74,8 +74,8 @@ const JudgeInfo = styled.div`
 `;
 
 const JudgeAvatar = styled.div<{ $url?: string | null }>`
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 12px;
   background: ${({ $url }) => ($url ? `url(${$url}) center/cover` : '#fff2ee')};
   display: flex;
@@ -124,7 +124,7 @@ const ChevronWrap = styled.span<{ $open: boolean }>`
 `;
 
 const AccordionBody = styled.div`
-  padding: 0 18px 18px;
+  padding: 0 14px 14px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -140,7 +140,7 @@ const ScoreCard = styled.div`
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -155,7 +155,7 @@ const ScoreCardName = styled.div`
 `;
 
 const ScoreCardValue = styled.div`
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 900;
   color: ${Pista8Theme.primary};
 `;
@@ -171,7 +171,7 @@ const FeedbackBox = styled.div`
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 14px 16px;
+  padding: 12px 14px;
 `;
 
 const FeedbackLabel = styled.div`

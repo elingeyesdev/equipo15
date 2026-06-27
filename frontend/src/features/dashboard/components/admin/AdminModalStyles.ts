@@ -131,7 +131,7 @@ export const AdminCloseBtn = styled.button`
 export const AdminModalBody = styled.div`
   flex: 1;
   overflow-y: auto;
-  padding: 20px 28px 28px;
+  padding: 12px 28px 16px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -157,7 +157,7 @@ export const AdminSummaryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   width: 100%;
 
   @media (max-width: 640px) {
@@ -172,20 +172,20 @@ export const AdminSummaryGrid = styled.div`
 export const AdminSummaryCard = styled.div<{ $accent: string }>`
   background: ${({ $accent }) => `${$accent}0d`};
   border: 1px solid ${({ $accent }) => `${$accent}22`};
-  border-radius: 14px;
-  padding: 14px 16px;
+  border-radius: 12px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 4px;
+  gap: 2px;
 `;
 
 export const AdminSummaryValue = styled.span<{ $accent: string }>`
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 900;
   color: ${({ $accent }) => $accent};
-  line-height: 1;
+  line-height: 1.2;
 `;
 
 export const AdminSummaryLabel = styled.span`
@@ -197,8 +197,8 @@ export const AdminSummaryLabel = styled.span`
 `;
 
 export const AdminSectionTitle = styled.h3`
-  margin: 0 0 12px;
-  font-size: 12px;
+  margin: 0 0 8px;
+  font-size: 11px;
   font-weight: 800;
   color: #475569;
   text-transform: uppercase;
@@ -210,7 +210,7 @@ export const AdminCriteriaGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   width: 100%;
 
   @media (max-width: 640px) {
@@ -221,20 +221,20 @@ export const AdminCriteriaGrid = styled.div`
 export const AdminCriteriaCard = styled.div`
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 14px 16px;
+  border-radius: 12px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 4px;
+  gap: 2px;
 `;
 
 export const AdminCriteriaValue = styled.span`
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 900;
   color: ${Pista8Theme.primary};
-  line-height: 1;
+  line-height: 1.2;
 `;
 
 export const AdminCriteriaName = styled.span`

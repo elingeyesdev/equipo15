@@ -345,7 +345,7 @@ const ActionBtnGroup = styled.div`
   gap: 8px;
 `;
 
-const IconAction = styled.button<{ $disabled?: boolean; $tooltipText?: string }>`
+const IconAction = styled.button<{ $disabled?: boolean; $tooltipText?: string; $tooltipAlign?: 'center' | 'right' }>`
   width: 36px;
   height: 36px;
   border-radius: 10px;
@@ -726,6 +726,7 @@ export const StudentReputationModal = ({ userId, onClose, onPromoted }: StudentR
                                 type="button"
                                 aria-label="Auditar Propuesta"
                                 $tooltipText="Auditar Propuesta"
+                                $tooltipAlign="right"
                                 onClick={() => setDetailIdea(idea)}
                               >
                                 <Eye color="white" size={16} />
